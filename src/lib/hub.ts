@@ -283,6 +283,8 @@ export interface Mod {
   deprecation_message?: string | null;
   applies_to: string[];
   docs?: string | null;
+  /** `playground`: a `mod.yml` branch of linuxserver-playground/docker-mods; `legacy`: converted from linuxserver/docker-mods mod-list.yml, without settings data. */
+  source: 'playground' | 'legacy';
 }
 
 export interface ProxyData {
