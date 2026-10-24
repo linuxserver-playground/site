@@ -6,6 +6,8 @@ import sitemap from '@astrojs/sitemap';
 import { satteri } from '@astrojs/markdown-satteri';
 import tailwindcss from '@tailwindcss/vite';
 import satteriCallouts from 'satteri-callouts';
+import githubDark from '@shikijs/themes/github-dark-high-contrast';
+import githubLight from '@shikijs/themes/github-light-high-contrast';
 import satteriBasePath from './src/lib/markdown/satteri-base-path.mjs';
 import satteriImageLinks from './src/lib/markdown/satteri-image-links.mjs';
 
@@ -15,6 +17,17 @@ import satteriImageLinks from './src/lib/markdown/satteri-image-links.mjs';
  */
 const site = process.env.SITE_URL ?? 'https://linuxserver-playground.github.io';
 const base = process.env.BASE_PATH ?? '/site/';
+
+/**
+ * Code colours: GitHub's high-contrast themes, so every token keeps the 7:1 (AAA) contrast the rest of the
+ * site has. The light theme's comment grey (#66707b, 5:1 on white) is darkened to #4b535d (7.8:1) to pass too.
+ */
+const codeLight = {
+  ...githubLight,
+  name: 'lsio-light',
+  tokenColors: (githubLight.tokenColors ?? []).map((t) => (t.settings?.foreground?.toLowerCase() === '#66707b' ? { ...t, settings: { ...t.settings, foreground: '#4b535d' } } : t)),
+};
+const codeDark = { ...githubDark, name: 'lsio-dark' };
 
 export default defineConfig({
   site,
@@ -38,7 +51,7 @@ export default defineConfig({
       hastPlugins: [satteriCallouts({ theme: 'github' }), satteriBasePath(base)],
     }),
     shikiConfig: {
-      themes: { light: 'github-light', dark: 'github-dark' },
+      themes: { light: codeLight, dark: codeDark },
       defaultColor: false,
       wrap: false,
     },

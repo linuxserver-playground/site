@@ -3,13 +3,23 @@ import Layout from '@/layouts/Layout.astro';
 import ImageRow from '@/components/ImageRow.astro';
 import Otter from '@/components/Otter.astro';
 import CommandSearch from '@/components/islands/CommandSearch';
-import { withBase } from '@/lib/base';
+import { BASE, withBase } from '@/lib/base';
+import { docRedirects, getDocs } from '@/lib/docs';
 import { relative } from '@/lib/format';
 import { recentlyUpdated, SNAPSHOT_DATE } from '@/lib/images';
 
 const popular = recentlyUpdated(6);
+// Old documentation URLs (/general/<slug>/, /selkies/..., /FAQ/) -> their page here, from the docs' `aliases`.
+const redirects = docRedirects(await getDocs());
 ---
 
+<script is:inline define:vars={{ redirects, base: BASE }}>
+  // A URL from the retired docs site (with or without this site's base path) goes straight to the page it became.
+  var path = location.pathname.replace(/\/?$/, '/');
+  if (base && path.indexOf(base + '/') === 0) path = path.slice(base.length);
+  var to = redirects[path.toLowerCase()];
+  if (to) location.replace(base + to + location.search + location.hash);
+</script>
 <Layout section="none" title="Page not found" description="This page drifted off. Search for an image or head back to the fleet." noindex>
   <section class="relative overflow-hidden border-b border-[var(--raft-hair)]">
     <div class="raft-aurora pointer-events-none absolute inset-0" aria-hidden="true"></div>
@@ -19,7 +29,7 @@ const popular = recentlyUpdated(6);
         <p class="font-mono text-sm text-primary">HTTP 404</p>
         <h1 class="mt-3 text-4xl font-semibold tracking-tight md:text-6xl">This page drifted off.</h1>
         <p class="mt-5 max-w-md text-lg text-muted-foreground">
-          The link may be old: our blog used to live at different addresses. Search for what you were after, or head back to the fleet.
+          The link may be old: our blog and our docs used to live at different addresses. Search for what you were after, or head back to the fleet.
         </p>
         <div class="mt-8 max-w-md">
           <CommandSearch client:load indexUrl={withBase('/search-index.json')} searchUrl={withBase('/search/')} trigger="input" placeholder="Search images and posts…" className="h-11 rounded-md" />
@@ -27,6 +37,7 @@ const popular = recentlyUpdated(6);
         <p class="mt-6 flex flex-wrap gap-4 text-sm">
           <a href={withBase('/')} class="font-medium underline underline-offset-4 hover:text-primary">Home</a>
           <a href={withBase('/images/')} class="font-medium underline underline-offset-4 hover:text-primary">All images</a>
+          <a href={withBase('/docs/')} class="font-medium underline underline-offset-4 hover:text-primary">Docs</a>
           <a href={withBase('/blog/')} class="font-medium underline underline-offset-4 hover:text-primary">Blog</a>
         </p>
       </div>

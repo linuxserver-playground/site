@@ -3,7 +3,7 @@
  * either the manifest's own description of the item or a fact from our documentation (linked); nothing
  * is inferred about an image beyond what the hub says about it. Browser-safe.
  */
-import { LINKS } from './site';
+import { withBase } from './base';
 import { COMMON_ENV, effectiveEnv, flagOn, hostNet, isOn, modEnvValue, privileged, valueOf, type LabModel, type LabState } from './lab';
 
 export interface Hint {
@@ -16,7 +16,7 @@ export interface Hint {
   field?: string;
 }
 
-const DOCS = LINKS.docs.replace(/\/$/, '');
+const DOCS = withBase('/docs');
 
 /** Static facts, each with the page it comes from. */
 export const FACTS = {

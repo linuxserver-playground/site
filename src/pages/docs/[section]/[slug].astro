@@ -1,0 +1,38 @@
+---
+import { render } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import DocsShell from '@/components/DocsShell.astro';
+import { docPath, docSlug, getSections, isSectionIndex, prevNext, type Doc, type SectionView } from '@/lib/docs';
+import { docJsonLd } from '@/lib/jsonld';
+
+// /docs/<section>/<slug>/ for every page but the sections' index.md (those are /docs/<section>/)
+export async function getStaticPaths() {
+  const sections = await getSections();
+  return sections.flatMap((section) => section.pages.map((doc) => ({ params: { section: section.id, slug: docSlug(doc) }, props: { doc, section } })));
+}
+
+const { doc, section } = Astro.props as { doc: Doc; section: SectionView };
+if (isSectionIndex(doc)) throw new Error(`${doc.id} is a section index`);
+const { Content, headings } = await render(doc);
+const { prev, next } = prevNext(doc, section);
+const crumbs = [
+  { name: 'Docs', href: '/docs/' },
+  { name: section.title, href: section.path },
+  { name: doc.data.title, href: docPath(doc) },
+];
+---
+
+<Layout
+  section="docs"
+  title={doc.data.title}
+  description={doc.data.description}
+  type="article"
+  modifiedTime={doc.data.updated}
+  tags={doc.data.tags}
+  breadcrumbs={crumbs}
+  jsonLd={[docJsonLd({ title: doc.data.title, description: doc.data.description, path: docPath(doc), section: section.title, updated: doc.data.updated }, Astro.site)]}
+>
+  <DocsShell section={section} doc={doc} title={doc.data.title} description={doc.data.description} headings={headings} crumbs={crumbs} prev={prev} next={next}>
+    <Content />
+  </DocsShell>
+</Layout>

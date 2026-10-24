@@ -24,7 +24,7 @@ export function imageJsonLd(image: Image, site: URL | undefined): Record<string,
     datePublished: image.initial_date,
     downloadUrl: `https://${image.ref}`,
     codeRepository: image.github_url,
-    sameAs: [image.github_url, image.docs_url],
+    sameAs: [image.github_url],
     offers: { '@type': 'Offer', price: 0, priceCurrency: 'USD' },
     publisher: orgRef(site),
   };
@@ -54,5 +54,32 @@ export function itemListJsonLd(name: string, items: { name: string; url: string 
     name,
     numberOfItems: items.length,
     itemListElement: items.map((it, i) => ({ '@type': 'ListItem', position: i + 1, name: it.name, url: abs(it.url, site) })),
+  };
+}
+
+export interface DocJsonLdInput {
+  title: string;
+  description: string;
+  /** Root-relative path, e.g. /docs/general/swag/. */
+  path: string;
+  section: string;
+  updated?: Date;
+}
+
+/** A documentation page. The organisation is the author: docs are maintained collectively. */
+export function docJsonLd(doc: DocJsonLdInput, site: URL | undefined): Record<string, unknown> {
+  const url = abs(doc.path, site);
+  return {
+    '@type': 'TechArticle',
+    headline: doc.title,
+    description: doc.description,
+    url,
+    mainEntityOfPage: url,
+    articleSection: doc.section,
+    inLanguage: SITE.lang,
+    ...(doc.updated ? { dateModified: doc.updated.toISOString() } : {}),
+    author: orgRef(site),
+    publisher: orgRef(site),
+    isPartOf: { '@type': 'WebSite', '@id': `${abs('/', site)}#website` },
   };
 }

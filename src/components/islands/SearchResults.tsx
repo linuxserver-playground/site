@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { search, type SearchHit } from '@/lib/pagefind-client';
 
 /**
- * Full-text search over every post and image page (Pagefind). The form is a plain GET form, so
+ * Full-text search over every docs page, post and image page (Pagefind). The form is a plain GET form, so
  * /search/?q=… works as a link and without JavaScript the browser simply reloads with the query.
  */
 export default function SearchResults({ action }: { action: string }) {
@@ -36,7 +36,7 @@ export default function SearchResults({ action }: { action: string }) {
     <div>
       <form action={action} method="get" role="search" onSubmit={submit} className="raft-panel flex items-center gap-2 p-2">
         <label htmlFor="raft-search" className="sr-only">
-          Search posts and images
+          Search docs, posts and images
         </label>
         <div className="relative flex-1">
           <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
