@@ -87,7 +87,14 @@ from the hub in the browser, only when their tab is opened, with a loading state
   build of each branch (the hub copies it there) and from the GitHub Release asset otherwise. GitHub Pages
   serves it as `application/gzip` without `Content-Encoding`, so the island inflates it with
   `DecompressionStream`. Hardlinks are already deduplicated upstream; the treemap sums regular files only
-  and colours them by owning package purl.
+  and colours them by owning package purl. The hierarchy (`lib/explorer.ts` `buildTree`) is built once per
+  table; `lib/treemap.ts` lays the focused directory out qdirstat-style with d3-hierarchy's
+  `treemapSquarify`, nesting layer → directory → file until tiles would fall under 6 × 6 px, folding the
+  siblings too small to draw into one dashed "N more files" tile so areas always add up. It re-lays out on
+  zoom and on container resize; only the tiles it returns are rendered (about a thousand for a 30k-file
+  table). Whole tiles are the click target, directories are focusable buttons (Enter zooms in, Backspace or
+  Escape zooms out), hover or focus shows a tooltip, and the "Largest here" list beside the map is the
+  text alternative. Depth is a per-level lightness shift plus a cushion gradient; the hue stays the package.
 - **Packages**: `/api/v1/catalog/<image>/builds/<tag>/packages.<arch>.json`, which the hub serves for the
   newest build of each branch; older builds link to the syft document on their Release.
 - The fleet-wide **package search** keeps only the index in the snapshot and fetches
@@ -104,7 +111,7 @@ report (`{HUB_URL}/builds/<image>/<tag>/`), as CONVENTIONS.md §10 prescribes.
 | `/` | home: stats, latest builds, weekly spotlight, rankings, blog |
 | `/images/` | searchable, filterable catalogue (state in the query string, e.g. `?category=Games&sort=stars`) |
 | `/images/<name>/` | every image, deprecated ones included: quick start (compose, docker run, Kubernetes, quadlet), "Install on…", setup, parameters, version tags with their latest build, builds, mods, SWAG sample, changelog |
-| `/images/<name>/builds/<tag>/` | one retained build: record, platforms, tests, diff to the previous build, annotated Dockerfile, layer table, init graph, file treemap, packages, config and labels, release notes |
+| `/images/<name>/builds/<tag>/` | one retained build: record, platforms, tests, file treemap, packages, config and labels, diff to the previous build, annotated Dockerfile, layer table, init graph, release notes |
 | `/fleet/` | base images and their digests, builds behind their base, every retained build, hub health |
 | `/packages/` | fleet-wide package search (`?q=musl&type=apk`) |
 | `/mods/` | the mods index with text and per-image filters (`?image=sonarr`) |
