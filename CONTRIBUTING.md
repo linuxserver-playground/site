@@ -76,7 +76,7 @@ that names the file and field. You'll know before anything goes live.
 - Videos go in `public/media/<your-slug>/` and are embedded with
   `<video controls playsinline preload="metadata" src="/media/<your-slug>/clip.mp4"></video>`.
 - Link to other posts as `/blog/<slug>/` and to images as `/images/<name>/`.
-- Refer to images as `lscr.io/linuxserver/<name>:latest`.
+- Refer to images as `ghcr.io/linuxserver-playground/<name>:latest`.
 
 ## The weekly spotlight
 

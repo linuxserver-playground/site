@@ -64,7 +64,7 @@ export default function Explorer(props: Props) {
             <ul className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
               {props.arches.map((a) => (
                 <li key={a}>
-                  <a href={props.filesUrls[a]?.[0]} className="underline-offset-4 hover:text-foreground hover:underline">
+                  <a href={props.filesUrls[a]?.[0]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
                     files.{a}.json.gz ({fileCount(a)} layers)
                   </a>
                 </li>

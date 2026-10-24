@@ -38,16 +38,18 @@ export default function DockerfileView({ dockerfile, layers, initialArch }: Prop
   const instructions = React.useMemo(() => parseInstructions(text), [text]);
 
   // Map each layer to the instruction whose line range contains the layer's lines.
+  // Layers that match no instruction here came with the base image: they are attributed to FROM.
   const bytesByInstruction = React.useMemo(() => {
-    const m = new Map<number, { size: number; layers: number[] }>();
+    const m = new Map<number, { size: number; layers: number[]; base: boolean }>();
+    const from = instructions.find((i) => i.keyword === 'FROM');
     for (const l of table) {
       const range = layerLines(l, text);
-      if (!range) continue;
-      const ins = instructions.find((i) => range[0] >= i.start && range[0] <= i.end) ?? instructions.find((i) => i.start <= range[0] && i.end >= range[1]);
+      const ins = range ? (instructions.find((i) => range[0] >= i.start && range[0] <= i.end) ?? from) : from;
       if (!ins) continue;
-      const cur = m.get(ins.start) ?? { size: 0, layers: [] };
+      const cur = m.get(ins.start) ?? { size: 0, layers: [], base: false };
       cur.size += l.size;
       cur.layers.push(l.index);
+      if (!range) cur.base = true;
       m.set(ins.start, cur);
     }
     return m;
@@ -60,7 +62,7 @@ export default function DockerfileView({ dockerfile, layers, initialArch }: Prop
 
   return (
     <div>
-      <IslandHeader title={`Dockerfile${arch === 'arm64' ? '.aarch64' : ''} · ${instructions.length} instructions · ${fmtBytes(total)} in layers`} note="Bytes per instruction come from the layer table; instructions without a layer added nothing.">
+      <IslandHeader title={`Dockerfile${arch === 'arm64' ? '.aarch64' : ''} · ${instructions.length} instructions · ${fmtBytes(total)} in layers`} note="Bytes per instruction come from the layer table; FROM carries the base image's layers, instructions without a layer added nothing.">
         <ArchToggle arches={arches} value={arch} onChange={setArch} />
         <CopyButton text={text} label="Copy Dockerfile" />
       </IslandHeader>
@@ -74,17 +76,17 @@ export default function DockerfileView({ dockerfile, layers, initialArch }: Prop
               const annotated = ins && !/^(#)/.test(line);
               return (
                 <span key={n} className="grid grid-cols-[2.5rem_7.5rem_minmax(0,1fr)] gap-x-3">
-                  <span className="select-none text-right text-muted-foreground/70 tabular-nums" aria-hidden="true">
+                  <span className="select-none text-right text-muted-foreground tabular-nums" aria-hidden="true">
                     {n}
                   </span>
                   <span className="select-none tabular-nums">
                     {annotated && (
-                      <span className="flex items-center gap-1.5" title={b ? `layer${b.layers.length > 1 ? 's' : ''} ${b.layers.join(', ')}` : 'no layer'}>
-                        <span className={b ? 'text-foreground' : 'text-muted-foreground/70'}>{b ? fmtBytes(b.size, 0) : '0 B'}</span>
+                      <span className="flex items-center gap-1.5" title={b ? `${b.base ? 'base image ' : ''}layer${b.layers.length > 1 ? 's' : ''} ${b.layers.join(', ')}` : 'no layer'}>
+                        <span className={b ? 'text-foreground' : 'text-muted-foreground'}>{b ? fmtBytes(b.size, 0) : '0 B'}</span>
                         <span className="h-1.5 w-10 overflow-hidden rounded-sm bg-[var(--raft-bar-track)]" aria-hidden="true">
                           {b && <span className="block h-full rounded-sm bg-[var(--raft-bar)]" style={{ width: `${Math.max(2, (b.size / max) * 100)}%` }} />}
                         </span>
-                        <span className="sr-only">{b ? `, added ${fmtBytes(b.size)} in layer ${b.layers.join(', ')}` : ', added no layer'}</span>
+                        <span className="sr-only">{b ? `, ${b.base ? 'base image brings' : 'added'} ${fmtBytes(b.size)} in layer ${b.layers.join(', ')}` : ', added no layer'}</span>
                       </span>
                     )}
                   </span>

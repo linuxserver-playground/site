@@ -100,7 +100,7 @@ export default function PackageBrowser({ image, tag, arches, urls, summary, fall
           {fallback?.[arch] && (
             <p className="mt-2">
               This build's table is on its{' '}
-              <a href={fallback[arch]} className="underline-offset-4 hover:text-foreground hover:underline" target="_blank" rel="noopener">
+              <a href={fallback[arch]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
                 GitHub Release<span className="sr-only"> (opens in a new tab)</span>
               </a>{' '}
               as the raw syft document.
@@ -187,7 +187,7 @@ export default function PackageBrowser({ image, tag, arches, urls, summary, fall
             </div>
           )}
           <p className="border-t border-[var(--raft-hair)] px-3.5 py-2 font-mono text-[0.6875rem] text-muted-foreground">
-            <a href={urls[arch]} className="underline-offset-4 hover:text-foreground hover:underline" target="_blank" rel="noopener">
+            <a href={urls[arch]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
               {image}:{tag} packages.{arch}.json<span className="sr-only"> (opens in a new tab)</span>
             </a>
           </p>

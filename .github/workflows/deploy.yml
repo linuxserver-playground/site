@@ -1,8 +1,8 @@
-# Builds the site and publishes it to GitHub Pages: on every push to main, daily (so stats, image data
-# and the weekly spotlight stay fresh), and on demand from the Actions tab.
+# Builds the site and publishes it to GitHub Pages: on every push to main, daily, when the hub tells us it
+# has new data (repository_dispatch type `hub-updated`, sent by the hub's deploy workflow), and on demand.
 #
-# Staging: https://linuxserver.github.io/site/ (noindex). At the domain cut-over set SITE_URL to
-# https://www.linuxserver.io, BASE_PATH to /, remove PUBLIC_NOINDEX, and add public/CNAME.
+# Every run first refreshes src/data/ from the hub (HUB_URL), GitHub and Open Collective and commits the
+# snapshots, so the build is reproducible from the repository alone.
 name: Deploy
 
 on:
@@ -10,6 +10,8 @@ on:
     branches: [main]
   schedule:
     - cron: '17 4 * * *'
+  repository_dispatch:
+    types: [hub-updated]
   workflow_dispatch:
 
 permissions:
@@ -22,9 +24,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SITE_URL: https://linuxserver.github.io
+  SITE_URL: https://linuxserver-playground.github.io
   BASE_PATH: /site/
-  PUBLIC_NOINDEX: '1'
+  HUB_URL: ${{ vars.HUB_URL || 'https://linuxserver-playground.github.io/hub' }}
+  GITHUB_ORG: linuxserver-playground
 
 jobs:
   build:
@@ -39,8 +42,7 @@ jobs:
 
       - run: npm ci
 
-      - name: Refresh data snapshots
-        if: github.event_name != 'push'
+      - name: Refresh data snapshots from the hub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run data

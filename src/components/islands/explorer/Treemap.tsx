@@ -106,7 +106,8 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
   const describe = (n: TreeNode) => {
     const layer = n.layer !== undefined ? layers[arch]?.[n.layer] : undefined;
     return [
-      n.kind === 'layer' ? `Layer ${n.layer}` : n.path,
+      n.kind === 'layer' ? `layer ${n.layer}` : n.name,
+      n.kind === 'dir' || n.kind === 'file' ? n.path : '',
       `${fmtBytes(n.size)} (${pct(n.size, tree?.size ?? 0)} of the image)`,
       n.kind !== 'file' ? `${n.files.toLocaleString('en-GB')} files` : purlLabel(n.pkg),
       n.kind === 'layer' && layer ? tidyInstruction(layer.created_by).slice(0, 80) : n.kind === 'dir' ? `mostly ${purlName(n.pkg)}` : `layer ${n.layer}`,
@@ -158,14 +159,15 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
                   const fill = n.kind === 'layer' ? (dark ? 'oklch(0.3 0.03 290)' : 'oklch(0.93 0.02 290)') : pkgColor(n.pkg, { dark });
                   const label = n.kind === 'layer' ? `layer ${n.layer}` : n.name;
                   const showLabel = w >= MIN_LABEL_W && h >= MIN_LABEL_H;
-                  const desc = describe(n);
+                  const shown = label.length > w / 6.5 ? label.slice(0, Math.max(1, Math.floor(w / 6.5) - 1)) + '…' : label;
+                  const desc = [...(showLabel && shown !== label ? [shown] : []), ...describe(n)];
                   return (
                     <g
                       key={`${n.path}-${i}`}
                       transform={`translate(${d.x0},${d.y0})`}
                       role={zoomable ? 'button' : 'img'}
                       tabIndex={zoomable ? 0 : -1}
-                      aria-label={desc.join('; ')}
+                      aria-label={desc.filter(Boolean).join('; ')}
                       onClick={() => zoomInto(n)}
                       onKeyDown={(e) => {
                         if (zoomable && (e.key === 'Enter' || e.key === ' ')) {
@@ -178,7 +180,7 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
                       className={zoomable ? 'cursor-zoom-in outline-none focus-visible:[&>rect]:stroke-[var(--ring)] focus-visible:[&>rect]:stroke-2' : 'outline-none'}
                       style={anim ? { transition: 'transform 200ms ease-out' } : undefined}
                     >
-                      <title>{desc.join('\n')}</title>
+                      <title>{desc.filter(Boolean).join('\n')}</title>
                       <rect
                         width={w}
                         height={h}
@@ -195,12 +197,12 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
                           className="pointer-events-none font-mono"
                           style={{ fontSize: 11, fill: isGroup ? 'var(--foreground)' : dark ? '#fff' : '#0e0b18', paintOrder: 'stroke', stroke: isGroup ? 'var(--card)' : 'none', strokeWidth: 3 }}
                         >
-                          {label.length > w / 6.5 ? label.slice(0, Math.max(1, Math.floor(w / 6.5) - 1)) + '…' : label}
-                          {!isGroup && h >= 30 && w >= 72 && (
-                            <tspan x={6} dy={13} style={{ fontSize: 10, opacity: 0.85 }}>
-                              {fmtBytes(n.size, 0)}
-                            </tspan>
-                          )}
+                          {shown}
+                        </text>
+                      )}
+                      {showLabel && !isGroup && h >= 30 && w >= 72 && (
+                        <text x={6} y={28} aria-hidden="true" className="pointer-events-none font-mono" style={{ fontSize: 10, fill: dark ? '#fff' : '#0e0b18', opacity: 0.85 }}>
+                          {fmtBytes(n.size, 0)}
                         </text>
                       )}
                     </g>
@@ -209,7 +211,7 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
               </svg>
             </div>
             <p className="mt-2 min-h-[2.5rem] font-mono text-xs text-muted-foreground" aria-live="polite">
-              {hover ? describe(hover).join(' · ') : 'Hover or focus a block for details.'}
+              {hover ? describe(hover).filter(Boolean).join(' · ') : 'Hover or focus a block for details.'}
             </p>
           </div>
 
@@ -255,7 +257,7 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
               Unowned bytes are files no package manager claims: the application itself, scripts and generated data.
             </p>
             <p className="mt-2 font-mono text-[0.6875rem] text-muted-foreground">
-              <a href={urls[arch]?.[0]} className="underline-offset-4 hover:text-foreground hover:underline" target="_blank" rel="noopener">
+              <a href={urls[arch]?.[0]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
                 {image}:{tag} files.{arch}.json.gz<span className="sr-only"> (opens in a new tab)</span>
               </a>
             </p>

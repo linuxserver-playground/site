@@ -127,7 +127,7 @@ export default function ModsBrowser({ mods, targets, images, base }: Props) {
                       {m.target === 'universal' ? (
                         'universal'
                       ) : known.has(m.target) ? (
-                        <a href={`${base}/images/${m.target}/`} className="underline-offset-4 hover:text-foreground hover:underline">
+                        <a href={`${base}/images/${m.target}/`} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
                           {m.target}
                         </a>
                       ) : (

@@ -27,7 +27,7 @@ export function blockMarkdown(s: string): string {
     if (!block) continue;
     const fence = block.match(/^```\w*\n([\s\S]*?)\n```$/);
     if (fence) {
-      out.push(`<pre><code>${esc(fence[1])}</code></pre>`);
+      out.push(`<pre class="max-w-full overflow-x-auto border border-[var(--raft-hair)] text-foreground"><code>${esc(fence[1])}</code></pre>`);
       continue;
     }
     const lines = block.split('\n');
