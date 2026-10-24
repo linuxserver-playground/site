@@ -1,0 +1,57 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import PackageSearch from '@/components/islands/PackageSearch';
+import { BASE } from '@/lib/base';
+import { getPackageIndex, packageEcosystems } from '@/lib/fleet';
+import { formatDate } from '@/lib/format';
+import { hubApi } from '@/lib/hub';
+import { SNAPSHOT_DATE } from '@/lib/images';
+
+const index = getPackageIndex();
+const ecosystems = packageEcosystems();
+const crumbs = [{ name: 'Packages', href: '/packages/' }];
+---
+
+<Layout
+  section="packages"
+  title="Packages"
+  description={`Which LinuxServer.io image ships which package: ${index.length.toLocaleString('en-GB')} packages across the fleet, with versions per release tag and architecture.`}
+  breadcrumbs={crumbs}
+>
+  <PageHeader
+    eyebrow="Packages"
+    title="Who ships what"
+    lede="Every package in every newest build, normalised from the SBOM attached to each release. Search for a library to see which images carry it, in which version, on which architecture."
+    crumbs={crumbs}
+  >
+    <dl class="mt-8 flex flex-wrap gap-x-8 gap-y-3 font-mono text-sm">
+      <div class="flex items-baseline gap-2">
+        <dt class="sr-only">Packages</dt>
+        <dd class="text-foreground">{index.length.toLocaleString('en-GB')}</dd>
+        <dd class="text-muted-foreground" aria-hidden="true">packages</dd>
+      </div>
+      {
+        ecosystems.slice(0, 5).map((e) => (
+          <div class="flex items-baseline gap-2">
+            <dt class="sr-only">{e.type} packages</dt>
+            <dd class="text-foreground">{e.count.toLocaleString('en-GB')}</dd>
+            <dd class="text-muted-foreground" aria-hidden="true">{e.type}</dd>
+          </div>
+        ))
+      }
+      <div class="flex items-baseline gap-2">
+        <dt class="text-muted-foreground">updated</dt>
+        <dd><time datetime={SNAPSHOT_DATE.toISOString()}>{formatDate(SNAPSHOT_DATE)}</time></dd>
+      </div>
+    </dl>
+  </PageHeader>
+
+  <div class="raft-container pt-10">
+    <PackageSearch client:load index={index} ecosystems={ecosystems} apiBase={hubApi('packages/')} base={BASE} />
+    <p class="mt-6 text-xs text-muted-foreground">
+      The index comes from <a href={hubApi('packages.json')} class="font-mono underline-offset-4 hover:text-foreground hover:underline">api/v1/packages.json</a>; package details are read from the hub when you select one.
+      Older builds keep their package table on their GitHub Release.
+    </p>
+  </div>
+</Layout>

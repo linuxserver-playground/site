@@ -1,69 +1,24 @@
 /**
- * The image catalogue, read from the src/data/images.json snapshot (api.linuxserver.io).
- * Refresh with `npm run data`.
+ * The image catalogue, read from the src/data/catalog.json snapshot of the hub's /api/v1/catalog.json.
+ * Refresh with `npm run data` (or `npm run data:local` against a hub checkout).
  */
 import { getCollection } from 'astro:content';
 import type { ImageMetadata } from 'astro';
-import snapshot from '@/data/images.json';
-import hub from '@/data/hub.json';
+import snapshot from '@/data/catalog.json';
+import categoriesSnapshot from '@/data/categories.json';
+import type { Category as HubCategory, ImageDetail } from './hub';
 import { isoWeek } from './format';
 
-export interface EnvVar { name: string; value: string; desc: string; optional: boolean }
-export interface Volume { path: string; host_path: string; desc: string; optional: boolean }
-export interface Port { external: string; internal: string; desc: string; optional: boolean }
-export interface Device { path: string; host_path: string; desc: string; optional: boolean }
-export interface Cap { cap_add: string; desc: string; optional: boolean }
-export interface SecurityOpt { run_var: string; compose_var: string; desc: string; optional: boolean }
-export interface Custom { name: string; name_compose: string; value: string | string[]; desc: string; optional: boolean }
+export type { ImageConfig, ImageDetail, ReleaseInfo } from './hub';
 
-export interface ImageConfig {
-  application_setup?: string;
-  readonly_supported?: boolean;
-  nonroot_supported?: boolean;
-  env_vars?: EnvVar[];
-  volumes?: Volume[];
-  ports?: Port[];
-  devices?: Device[];
-  caps?: Cap[];
-  security_opt?: SecurityOpt[];
-  custom?: Custom[];
-  networking?: string;
-  privileged?: boolean;
-  hostname?: { hostname: string; desc: string; optional: boolean };
-  mac_address?: { mac_address: string; desc: string; optional: boolean };
-}
-
-export interface RawImage {
-  name: string;
-  initial_date?: string;
-  github_url: string;
-  project_url?: string;
-  project_logo?: string;
-  description: string;
-  version: string;
-  version_timestamp: string;
-  category: string;
-  stable: boolean;
-  deprecated: boolean;
-  stars: number;
-  monthly_pulls: number;
-  tags: { tag: string; desc: string }[];
-  architectures: { arch: string; tag: string }[];
-  changelog?: { date: string; desc: string }[];
-  config?: ImageConfig;
-}
-
-export interface Image extends RawImage {
-  /** Display name: "adguardhome-sync" stays as is; the API has no separate title. */
-  title: string;
-  categories: string[];
+export interface Image extends ImageDetail {
   /** Description with Markdown links reduced to their text. */
   summary: string;
   arm64: boolean;
-  hubPulls: number | null;
-  docsUrl: string;
   url: string;
   logo: ImageMetadata | null;
+  /** `ghcr.io/linuxserver-playground/<name>` */
+  ref: string;
 }
 
 const logos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/logos/*.{png,jpg,gif,svg,webp}', { eager: true });
@@ -84,27 +39,23 @@ export function plainDescription(s: string): string {
     .trim();
 }
 
-const pulls = (hub as { pulls: Record<string, number> }).pulls;
-
-const all: Image[] = (snapshot.images as RawImage[])
+const all: Image[] = (snapshot.images as unknown as ImageDetail[])
   .map((i) => ({
     ...i,
-    title: i.name,
-    categories: (i.category ?? '')
-      .split(',')
-      .map((c) => c.trim())
-      .filter(Boolean),
+    categories: i.categories?.length ? i.categories : (i.category ?? '').split(',').map((c) => c.trim()).filter(Boolean),
     summary: plainDescription(i.description ?? ''),
     arm64: i.architectures.some((a) => a.arch === 'arm64'),
-    hubPulls: pulls[i.name] ?? null,
-    docsUrl: `https://docs.linuxserver.io/images/docker-${i.name}/`,
     url: `/images/${i.name}/`,
     logo: logoFor(i.name),
+    ref: i.registries.ghcr,
   }))
   .sort((a, b) => a.name.localeCompare(b.name));
 
-/** When the snapshot was taken. Use this, not `new Date()`, for "updated 3 days ago" style text. */
+/** When the hub last refreshed its data. Use this, not `new Date()`, for "updated 3 days ago" style text. */
 export const SNAPSHOT_DATE = new Date(snapshot.last_updated.replace(' ', 'T'));
+
+/** `2026-10-24 20:55:30+00:00` -> Date */
+export const hubDate = (s: string) => new Date(s.replace(' ', 'T'));
 
 export const getAllImages = () => all;
 export const getImages = () => all.filter((i) => !i.deprecated);
@@ -114,19 +65,15 @@ export interface Category {
   name: string;
   slug: string;
   count: number;
+  images: string[];
 }
 
+/** From the hub's /api/v1/categories.json, largest first. */
 export function getCategories(): Category[] {
-  const counts = new Map<string, number>();
-  for (const i of getImages()) for (const c of i.categories) counts.set(c, (counts.get(c) ?? 0) + 1);
-  return [...counts]
-    .map(([name, count]) => ({ name, count, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-') }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  return [...(categoriesSnapshot as HubCategory[])].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
-/** "Highest rated": most GitHub stars. */
-export const mostStarred = (n = 8) => [...getImages()].sort((a, b) => b.stars - a.stars).slice(0, n);
-export const mostPulled = (n = 8) => [...getImages()].sort((a, b) => b.monthly_pulls - a.monthly_pulls).slice(0, n);
+export const mostStarred = (n = 8) => [...getImages()].sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name)).slice(0, n);
 export const recentlyUpdated = (n = 8) =>
   [...getImages()].sort((a, b) => b.version_timestamp.localeCompare(a.version_timestamp)).slice(0, n);
 
@@ -143,7 +90,7 @@ export function relatedImages(image: Image, n = 4): Image[] {
     .filter((i) => i.name !== image.name)
     .map((i) => ({ i, score: i.categories.filter((c) => cats.has(c)).length }))
     .filter((x) => x.score > 0)
-    .sort((a, b) => b.score - a.score || b.i.monthly_pulls - a.i.monthly_pulls)
+    .sort((a, b) => b.score - a.score || b.i.stars - a.i.stars || a.i.name.localeCompare(b.i.name))
     .slice(0, n)
     .map((x) => x.i);
 }
@@ -191,63 +138,42 @@ export async function getSpotlight(now = new Date()): Promise<Spotlight> {
 }
 
 // ---------------------------------------------------------------------------------------------------
-// Quick start snippets, generated from the image's config the same way docs.linuxserver.io does.
+// Quick start snippets. The hub generates them with `builder.snippets` (optional entries marked
+// `#optional`); the required-only variant strips those lines and any list key left empty.
 
-const q = (s: string) => (/[\s:#{}[\],&*?|<>=!%@`'"]/.test(s) || s === '' ? JSON.stringify(s) : s);
+const OPTIONAL = /\s*(`#optional`|#\s?optional)\s*\\?\s*$/;
+
+function stripOptional(snippet: string): string {
+  const lines = snippet.split('\n');
+  const kept: string[] = [];
+  for (const line of lines) {
+    if (OPTIONAL.test(line)) {
+      // docker run continuation lines end with " \"; dropping one must not break the chain, and it
+      // doesn't: every remaining line still ends with its own backslash.
+      continue;
+    }
+    kept.push(line);
+  }
+  // A compose key whose children were all optional ("volumes:" followed by nothing deeper) goes too.
+  const indent = (s: string) => s.match(/^\s*/)![0].length;
+  return kept
+    .filter((line, i) => {
+      if (!/^\s+[\w-]+:\s*$/.test(line)) return true;
+      const next = kept[i + 1];
+      return next !== undefined && indent(next) > indent(line);
+    })
+    .join('\n');
+}
 
 export function composeSnippet(image: Image, { optional = true } = {}): string {
-  const c = image.config ?? {};
-  const keep = <T extends { optional: boolean }>(xs?: T[]) => (xs ?? []).filter((x) => optional || !x.optional);
-  const opt = (x: { optional: boolean }) => (x.optional ? ' # optional' : '');
-  const L: string[] = ['---', 'services:', `  ${image.name}:`, `    image: ${SITE_REGISTRY}/${image.name}:latest`, `    container_name: ${image.name}`];
-
-  if (c.networking) L.push(`    network_mode: ${c.networking}`);
-  if (c.privileged) L.push('    privileged: true');
-  if (c.hostname && (optional || !c.hostname.optional)) L.push(`    hostname: ${q(c.hostname.hostname)}${opt(c.hostname)}`);
-  if (c.mac_address && (optional || !c.mac_address.optional)) L.push(`    mac_address: ${q(c.mac_address.mac_address)}${opt(c.mac_address)}`);
-  const caps = keep(c.caps);
-  if (caps.length) L.push('    cap_add:', ...caps.map((x) => `      - ${x.cap_add}${opt(x)}`));
-  const sec = keep(c.security_opt);
-  if (sec.length) L.push('    security_opt:', ...sec.map((x) => `      - ${x.compose_var}${opt(x)}`));
-  const env = keep(c.env_vars);
-  if (env.length) L.push('    environment:', ...env.map((e) => `      - ${e.name}=${e.value}${opt(e)}`));
-  const vols = keep(c.volumes);
-  if (vols.length) L.push('    volumes:', ...vols.map((v) => `      - ${v.host_path}:${v.path}${opt(v)}`));
-  const ports = c.networking === 'host' ? [] : keep(c.ports);
-  if (ports.length) L.push('    ports:', ...ports.map((p) => `      - ${p.external}:${p.internal}${opt(p)}`));
-  const devs = keep(c.devices);
-  if (devs.length) L.push('    devices:', ...devs.map((d) => `      - ${d.host_path}:${d.path}${opt(d)}`));
-  for (const x of keep(c.custom)) {
-    if (Array.isArray(x.value)) L.push(`    ${x.name_compose}:`, ...x.value.map((v) => `      - ${v}`));
-    else L.push(`    ${x.name_compose}: ${q(x.value)}${opt(x)}`);
-  }
-  L.push('    restart: unless-stopped');
-  return L.join('\n');
+  const s = image.snippets.docker_compose.trimEnd();
+  return optional ? s : stripOptional(s);
 }
 
 export function dockerRunSnippet(image: Image, { optional = true } = {}): string {
-  const c = image.config ?? {};
-  const keep = <T extends { optional: boolean }>(xs?: T[]) => (xs ?? []).filter((x) => optional || !x.optional);
-  const opt = (x: { optional: boolean }) => (x.optional ? ' `#optional`' : '');
-  const L: string[] = ['docker run -d', `  --name=${image.name}`];
-  if (c.networking) L.push(`  --net=${c.networking}`);
-  if (c.privileged) L.push('  --privileged');
-  if (c.hostname && (optional || !c.hostname.optional)) L.push(`  --hostname=${c.hostname.hostname}${opt(c.hostname)}`);
-  if (c.mac_address && (optional || !c.mac_address.optional)) L.push(`  --mac-address=${c.mac_address.mac_address}${opt(c.mac_address)}`);
-  for (const x of keep(c.caps)) L.push(`  --cap-add=${x.cap_add}${opt(x)}`);
-  for (const x of keep(c.security_opt)) L.push(`  --security-opt ${x.run_var}${opt(x)}`);
-  for (const e of keep(c.env_vars)) L.push(`  -e ${e.name}=${e.value}${opt(e)}`);
-  if (c.networking !== 'host') for (const p of keep(c.ports)) L.push(`  -p ${p.external}:${p.internal}${opt(p)}`);
-  for (const v of keep(c.volumes)) L.push(`  -v ${v.host_path}:${v.path}${opt(v)}`);
-  for (const d of keep(c.devices)) L.push(`  --device ${d.host_path}:${d.path}${opt(d)}`);
-  for (const x of keep(c.custom)) {
-    for (const v of Array.isArray(x.value) ? x.value : [x.value]) L.push(`  --${x.name}=${v}${opt(x)}`);
-  }
-  L.push('  --restart unless-stopped', `  ${SITE_REGISTRY}/${image.name}:latest`);
-  return L.join(' \\\n');
+  const s = image.snippets.docker_run.trimEnd();
+  return optional ? s : stripOptional(s);
 }
-
-const SITE_REGISTRY = 'lscr.io/linuxserver';
 
 /** Slim records for client-side islands (catalogue filtering, command palette). Logos are resolved by the caller. */
 export interface ImageCard {
@@ -258,9 +184,12 @@ export interface ImageCard {
   updated: string;
   added?: string;
   stars: number;
-  monthlyPulls: number;
   arm64: boolean;
   deprecated: boolean;
+  /** Base image family from the manifest (alpine, ubuntu…). */
+  base?: string;
+  /** Number of live branches (release tags). */
+  channels: number;
   url: string;
   logo?: string;
 }
@@ -272,11 +201,12 @@ export function toCard(i: Image, logo?: string): ImageCard {
     categories: i.categories,
     version: i.version,
     updated: i.version_timestamp,
-    added: i.initial_date,
+    added: i.initial_date ?? undefined,
     stars: i.stars,
-    monthlyPulls: i.monthly_pulls,
     arm64: i.arm64,
     deprecated: i.deprecated,
+    base: i.base ?? undefined,
+    channels: i.releases.length,
     url: i.url,
     logo,
   };

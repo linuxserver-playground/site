@@ -1,0 +1,65 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import ModsBrowser from '@/components/islands/ModsBrowser';
+import { BASE } from '@/lib/base';
+import { getMods, MODS_SOURCE, modTargets } from '@/lib/fleet';
+import { formatDate } from '@/lib/format';
+import { hubApi } from '@/lib/hub';
+import { getAllImages, SNAPSHOT_DATE } from '@/lib/images';
+
+const mods = getMods();
+const targets = modTargets();
+const universal = mods.filter((m) => m.target === 'universal').length;
+const crumbs = [{ name: 'Mods', href: '/mods/' }];
+---
+
+<Layout
+  section="mods"
+  title="Docker mods"
+  description={`${mods.length} Docker mods for LinuxServer.io images: ${universal} universal and ${mods.length - universal} image-specific, with the DOCKER_MODS value for each.`}
+  breadcrumbs={crumbs}
+>
+  <PageHeader
+    eyebrow="Mods"
+    title="Extend an image at start-up"
+    lede="A mod is a small layer applied when the container starts, set with the DOCKER_MODS environment variable. Universal mods work with every image; the rest target one."
+    crumbs={crumbs}
+  >
+    <dl class="mt-8 flex flex-wrap gap-x-8 gap-y-3 font-mono text-sm">
+      <div class="flex items-baseline gap-2">
+        <dt class="sr-only">Mods</dt>
+        <dd class="text-foreground">{mods.length}</dd>
+        <dd class="text-muted-foreground" aria-hidden="true">mods</dd>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <dt class="sr-only">Universal mods</dt>
+        <dd class="text-foreground">{universal}</dd>
+        <dd class="text-muted-foreground" aria-hidden="true">universal</dd>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <dt class="sr-only">Images with mods</dt>
+        <dd class="text-foreground">{targets.length}</dd>
+        <dd class="text-muted-foreground" aria-hidden="true">images targeted</dd>
+      </div>
+      <div class="flex items-baseline gap-2">
+        <dt class="text-muted-foreground">updated</dt>
+        <dd><time datetime={SNAPSHOT_DATE.toISOString()}>{formatDate(SNAPSHOT_DATE)}</time></dd>
+      </div>
+    </dl>
+  </PageHeader>
+
+  <div class="raft-container pt-10">
+    <div class="raft-panel mb-8 p-5 text-sm">
+      <h2 class="raft-eyebrow">How to use a mod</h2>
+      <p class="mt-2 text-muted-foreground">
+        Add <code class="font-mono text-foreground">-e DOCKER_MODS=ghcr.io/linuxserver/mods:universal-git</code> to your run command, or an <code class="font-mono text-foreground">environment:</code> entry in compose. Several mods are separated with
+        <code class="font-mono text-foreground">|</code>. The mod is pulled on every start, so pin a specific mod tag if you need reproducibility.
+      </p>
+    </div>
+    <ModsBrowser client:load mods={mods} targets={targets} images={getAllImages().map((i) => i.name)} base={BASE} />
+    <p class="mt-8 text-xs text-muted-foreground">
+      Index source: {MODS_SOURCE}. From <a href={hubApi('mods.json')} class="font-mono underline-offset-4 hover:text-foreground hover:underline">api/v1/mods.json</a>.
+    </p>
+  </div>
+</Layout>

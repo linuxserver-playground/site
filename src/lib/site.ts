@@ -2,17 +2,17 @@
 
 export const SITE = {
   name: 'LinuxServer.io',
-  url: 'https://www.linuxserver.io',
-  title: 'LinuxServer.io: community-built Docker images',
+  url: 'https://linuxserver-playground.github.io/site/',
+  title: 'LinuxServer.io v2 playground: transparent Docker images',
   description:
-    'LinuxServer.io builds and maintains the largest collection of community Docker images: standardised, regularly updated and properly documented, for everyone.',
-  tagline: 'Building and maintaining community images',
+    'The LinuxServer.io v2 playground builds community Docker images from one manifest each, and shows what is inside every build: layers, files, packages, init graph and the diff to the previous build.',
+  tagline: 'Building community images, transparently',
   locale: 'en_GB',
   lang: 'en-GB',
   postsPerPage: 12,
   feedItems: 20,
   fediverse: '@linuxserver@linuxserver.io',
-  registry: 'lscr.io/linuxserver',
+  registry: 'ghcr.io/linuxserver-playground',
 };
 
 export interface NavItem {
@@ -22,35 +22,41 @@ export interface NavItem {
   description?: string;
 }
 
-/** Primary navigation. Docs, Info and Status are separate sites. */
+/** Primary navigation. Docs and the control plane are separate sites. */
 export const NAV: NavItem[] = [
   { label: 'Images', href: '/images/', description: 'Browse every container we maintain' },
+  { label: 'Fleet', href: '/fleet/', description: 'Base images, staleness and the latest builds' },
+  { label: 'Mods', href: '/mods/', description: 'Docker mods for every image' },
+  { label: 'Stores', href: '/stores/', description: 'Unraid, Portainer, CasaOS, Umbrel and more' },
   { label: 'Blog', href: '/blog/', description: 'News, guides and release notes' },
-  { label: 'Docs', href: 'https://docs.linuxserver.io/', external: true, description: 'Setup guides for every image' },
   { label: 'Support', href: '/support/', description: 'Discord, forum and GitHub' },
   { label: 'About', href: '/about/', description: 'Who we are and how we work' },
 ];
 
 export const NAV_SECONDARY: NavItem[] = [
-  { label: 'Info', href: 'https://info.linuxserver.io', external: true, description: 'Fleet and build information' },
-  { label: 'Status', href: 'https://status.linuxserver.io/', external: true, description: 'Service status' },
+  { label: 'Packages', href: '/packages/', description: 'Which image ships which package' },
+  { label: 'Docs', href: 'https://docs.linuxserver.io/', external: true, description: 'Setup guides for every image' },
+  { label: 'Live builds', href: 'https://ci.thelamer.duckdns.org:8443', external: true, description: 'The control plane: build queue and live status' },
 ];
 
 export const DONATE_URL = 'https://opencollective.com/linuxserver/donate';
 
 export const LINKS = {
-  github: 'https://github.com/linuxserver',
+  github: 'https://github.com/linuxserver-playground',
   discord: 'https://discord.gg/YWrKVTn',
   discussions: 'https://github.com/orgs/linuxserver/discussions',
   docs: 'https://docs.linuxserver.io/',
-  info: 'https://info.linuxserver.io',
-  status: 'https://status.linuxserver.io/',
+  /** The control plane: live build status, queue and scheduler. Linked, never embedded. */
+  control: 'https://ci.thelamer.duckdns.org:8443',
+  /** The hub: the static API every number on this site comes from. */
+  hub: 'https://linuxserver-playground.github.io/hub/',
+  conventions: 'https://github.com/linuxserver-playground/builder/blob/main/CONVENTIONS.md',
   mastodon: 'https://mastodon.linuxserver.io/@linuxserver',
   bluesky: 'https://bsky.app/profile/linuxserver.io',
   opencollective: 'https://opencollective.com/linuxserver',
-  team: 'https://github.com/orgs/linuxserver/people',
+  team: 'https://github.com/orgs/linuxserver-playground/people',
   /** Where posts are edited ("Edit on GitHub" links). */
-  repo: 'https://github.com/linuxserver/site',
+  repo: 'https://github.com/linuxserver-playground/site',
 };
 
 export interface Social {
@@ -133,14 +139,14 @@ export const PILLARS = [
   {
     id: 'updates',
     title: 'Regular updates',
-    body: 'When an upstream application or its dependencies change, our pipeline rebuilds automatically. Version tags tell you exactly what each build contains.',
-    link: { label: 'Fleet info', href: 'https://info.linuxserver.io' },
+    body: 'When an upstream application, a package or the base image changes, the shared workflow rebuilds automatically. Version tags tell you exactly what each build contains.',
+    link: { label: 'See the fleet', href: '/fleet/' },
   },
   {
     id: 'docs',
-    title: 'First-class documentation',
-    body: 'Every image ships with a clear, thorough setup guide, on GitHub and in one dedicated documentation space.',
-    link: { label: 'Read the docs', href: 'https://docs.linuxserver.io/' },
+    title: 'Transparent builds',
+    body: 'Every release attaches its build record: layers, files, packages, init graph and test results. This site shows all of it, and the diff to the build before.',
+    link: { label: 'Explore a build', href: '/fleet/#builds' },
   },
   {
     id: 'support',

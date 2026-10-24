@@ -6,13 +6,12 @@
 import * as React from 'react';
 import type { ImageCard } from './images';
 
-export type SortKey = 'popular' | 'stars' | 'name' | 'updated' | 'newest';
+export type SortKey = 'updated' | 'stars' | 'name' | 'newest';
 export type Arch = 'any' | 'arm64';
 
 export const SORTS: { value: SortKey; label: string }[] = [
-  { value: 'popular', label: 'Most pulled' },
+  { value: 'updated', label: 'Recently built' },
   { value: 'stars', label: 'Most starred' },
-  { value: 'updated', label: 'Recently updated' },
   { value: 'newest', label: 'Newest' },
   { value: 'name', label: 'Name (A–Z)' },
 ];
@@ -25,7 +24,7 @@ export interface CatalogState {
   deprecated: boolean;
 }
 
-const DEFAULTS: CatalogState = { query: '', category: '', arch: 'any', sort: 'popular', deprecated: false };
+const DEFAULTS: CatalogState = { query: '', category: '', arch: 'any', sort: 'updated', deprecated: false };
 
 function readUrl(): CatalogState {
   if (typeof window === 'undefined') return DEFAULTS;
@@ -85,8 +84,7 @@ export function filterCards(cards: ImageCard[], s: CatalogState): ImageCard[] {
     });
   }
   const by: Record<SortKey, (a: ImageCard, b: ImageCard) => number> = {
-    popular: (a, b) => b.monthlyPulls - a.monthlyPulls,
-    stars: (a, b) => b.stars - a.stars,
+    stars: (a, b) => b.stars - a.stars || a.name.localeCompare(b.name),
     name: (a, b) => a.name.localeCompare(b.name),
     updated: (a, b) => b.updated.localeCompare(a.updated),
     newest: (a, b) => (b.added ?? '').localeCompare(a.added ?? ''),

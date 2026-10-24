@@ -10,11 +10,11 @@ import satteriBasePath from './src/lib/markdown/satteri-base-path.mjs';
 import satteriImageLinks from './src/lib/markdown/satteri-image-links.mjs';
 
 /**
- * Where the site is served from. Defaults to the final home; the GitHub Pages deploy sets
- * SITE_URL=https://linuxserver.github.io and BASE_PATH=/site/ until the domain cut-over.
+ * Where the site is served from: GitHub Pages of the linuxserver-playground org, under /site/. The
+ * deploy workflow sets SITE_URL and BASE_PATH explicitly; a custom domain changes only these two.
  */
-const site = process.env.SITE_URL ?? 'https://www.linuxserver.io';
-const base = process.env.BASE_PATH ?? '/';
+const site = process.env.SITE_URL ?? 'https://linuxserver-playground.github.io';
+const base = process.env.BASE_PATH ?? '/site/';
 
 export default defineConfig({
   site,

@@ -1,21 +1,27 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import BuildRow from '@/components/BuildRow.astro';
+import ClassBadge from '@/components/ClassBadge.astro';
 import ImageTile from '@/components/ImageTile.astro';
 import Panel from '@/components/Panel.astro';
 import PostCard from '@/components/PostCard.astro';
 import SectionHead from '@/components/SectionHead.astro';
 import ImageLogo from '@/components/ImageLogo.astro';
 import CopyButton from '@/components/islands/CopyButton';
-import QuickStart from '@/components/islands/QuickStart';
+import InstallMenu from '@/components/islands/InstallMenu';
+import QuickStart, { type QuickStartTab } from '@/components/islands/QuickStart';
 import { withBase } from '@/lib/base';
-import { compact, formatDate, grouped, isoDate, relative } from '@/lib/format';
-import { composeSnippet, dockerRunSnippet, getAllImages, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
+import { buildResult, buildUrl, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
+import { installOptions, modsForImage } from '@/lib/fleet';
+import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/format';
+import { controlImageUrl, hubApi, hubHistoryUrl, HUB_URL } from '@/lib/hub';
+import { composeSnippet, dockerRunSnippet, getAllImages, hubDate, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { imageJsonLd } from '@/lib/jsonld';
+import { blockMarkdown, inlineMarkdown } from '@/lib/markdown/inline';
 import { getPosts, postsForImage } from '@/lib/posts';
-import { SITE } from '@/lib/site';
 import { toPostViews } from '@/lib/views';
-import { AlertTriangle, ArrowUpRight, Check, Minus } from 'lucide-react';
+import { AlertTriangle, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
 
 export function getStaticPaths() {
   return getAllImages().map((image) => ({ params: { name: image.name }, props: { image } }));
@@ -24,19 +30,27 @@ export function getStaticPaths() {
 const { image } = Astro.props as { image: Image };
 const related = relatedImages(image, 4);
 const posts = await toPostViews(postsForImage(image.name, await getPosts(), 3));
-const snippets = {
-  compose: composeSnippet(image),
-  composeRequired: composeSnippet(image, { optional: false }),
-  run: dockerRunSnippet(image),
-  runRequired: dockerRunSnippet(image, { optional: false }),
-};
+const extras = getImageExtras(image.name);
+const builds = getBuilds(image.name);
+const history = getHistory(image.name);
+const historyCount = Object.values(history).reduce((a, b) => a + b.length, 0);
+const mods = modsForImage(image.name);
 const c = image.config ?? {};
+
+const quickStart: QuickStartTab[] = [
+  { key: 'compose', label: 'Docker Compose', text: composeSnippet(image), textRequired: composeSnippet(image, { optional: false }), aria: 'docker-compose.yml', source: hubApi(`catalog/${image.name}/docker-compose.yml`) },
+  { key: 'run', label: 'docker run', text: dockerRunSnippet(image), textRequired: dockerRunSnippet(image, { optional: false }), aria: 'docker run command' },
+  ...(extras.kubernetes ? [{ key: 'k8s', label: 'Kubernetes', text: extras.kubernetes.trimEnd(), aria: 'Kubernetes manifest', source: image.links.kubernetes ?? undefined }] : []),
+  ...(extras.quadlet ? [{ key: 'quadlet', label: 'Quadlet', text: extras.quadlet.trimEnd(), aria: 'Podman quadlet', source: image.links.quadlet ?? undefined }] : []),
+];
+const install = installOptions(image.name, { kubernetes: !!extras.kubernetes, quadlet: !!extras.quadlet, proxy: !!extras.proxy?.subdomain });
+
 const crumbs = [
   { name: 'Images', href: '/images/' },
   { name: image.name, href: image.url },
 ];
-const pull = `docker pull ${SITE.registry}/${image.name}:latest`;
-const built = new Date(image.version_timestamp.replace(' ', 'T'));
+const pull = `docker pull ${image.ref}:latest`;
+const built = hubDate(image.version_timestamp);
 const description = image.summary.length > 155 ? image.summary.slice(0, 152).replace(/\s+\S*$/, '') + '…' : image.summary;
 
 const tables = [
@@ -65,12 +79,21 @@ const tables = [
   },
 ].filter((t) => t.rows.length);
 
-const facts: { label: string; value: string; title?: string }[] = [
-  { label: 'Pulls last month', value: grouped(image.monthly_pulls) },
-  ...(image.hubPulls ? [{ label: 'Docker Hub pulls', value: compact(image.hubPulls), title: grouped(image.hubPulls) }] : []),
+// Version tags with their latest build: image.tags lists the published tags; releases says what each publishes.
+const tagRows = image.tags.map((t) => {
+  const release = image.releases.find((r) => r.release_tag === t.tag);
+  const build = release?.tag ? builds.find((b) => b.tag === release.tag) : undefined;
+  return { ...t, release, build };
+});
+
+const facts: { label: string; value: string; title?: string; href?: string }[] = [
+  ...(image.upstream_version ? [{ label: 'Upstream version', value: image.upstream_version }] : []),
   { label: 'GitHub stars', value: grouped(image.stars) },
   { label: 'Last build', value: relative(built, SNAPSHOT_DATE), title: formatDate(built) },
   ...(image.initial_date ? [{ label: 'First build', value: formatDate(image.initial_date) }] : []),
+  ...(image.base ? [{ label: 'Base', value: image.base, href: '/fleet/' }] : []),
+  { label: 'Release channels', value: String(image.releases.length) },
+  ...(builds.length ? [{ label: 'Retained builds', value: `${builds.length} of ${historyCount}` }] : []),
 ];
 const support = [
   { label: 'Read-only root filesystem', ok: !!c.readonly_supported },
@@ -78,10 +101,13 @@ const support = [
   { label: 'arm64 build', ok: image.arm64 },
 ];
 const links = [
-  { label: 'Documentation', href: image.docsUrl },
+  { label: 'Documentation', href: image.docs_url },
   ...(c.application_setup ? [{ label: 'Application setup', href: c.application_setup }] : []),
   { label: 'Source on GitHub', href: image.github_url },
-  ...(image.project_url ? [{ label: `${image.name} project`, href: image.project_url }] : []),
+  { label: 'Package on GHCR', href: image.registries.packages_url },
+  ...(image.project_url ? [{ label: `${image.title} project`, href: image.project_url }] : []),
+  { label: 'Live build status', href: controlImageUrl(image.name) },
+  { label: 'Hub API record', href: hubApi(`catalog/${image.name}.json`) },
 ];
 const changelog = image.changelog ?? [];
 ---
@@ -107,6 +133,7 @@ const changelog = image.changelog ?? [];
             <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">{image.name}</h1>
             <span class="rounded-md border border-[var(--raft-hair-strong)] px-2 py-0.5 font-mono text-xs">{image.version}</span>
             {image.deprecated && <span class="rounded-md bg-destructive/15 px-2 py-0.5 font-mono text-xs text-destructive">deprecated</span>}
+            {image.archived && <span class="rounded-md border border-[var(--raft-hair-strong)] px-2 py-0.5 font-mono text-xs text-muted-foreground">archived</span>}
           </div>
           <p class="mt-3 max-w-3xl text-lg text-muted-foreground">{image.summary}</p>
           {
@@ -142,10 +169,14 @@ const changelog = image.changelog ?? [];
             <AlertTriangle className="mt-0.5 size-5 shrink-0 text-destructive" aria-hidden="true" />
             <div>
               <p class="font-semibold">This image is deprecated</p>
-              <p class="mt-1 text-sm text-muted-foreground">
-                It is no longer maintained and receives no further updates. The details below are kept for reference; you can find{' '}
-                <a href={withBase('/images/')} class="font-medium text-foreground underline underline-offset-4">maintained alternatives</a> in the catalogue.
-              </p>
+              {image.deprecation_message ? (
+                <p class="mt-1 text-sm text-muted-foreground" set:html={inlineMarkdown(image.deprecation_message)} />
+              ) : (
+                <p class="mt-1 text-sm text-muted-foreground">
+                  It is no longer maintained and receives no further updates. The details below are kept for reference; you can find{' '}
+                  <a href={withBase('/images/')} class="font-medium text-foreground underline underline-offset-4">maintained alternatives</a> in the catalogue.
+                </p>
+              )}
             </div>
           </div>
         )
@@ -154,12 +185,34 @@ const changelog = image.changelog ?? [];
       <section aria-labelledby="quick-start">
         <h2 id="quick-start" class="text-xl font-semibold tracking-tight">Quick start</h2>
         <p class="mt-2 text-sm text-muted-foreground">
-          Generated from the image's own configuration. Replace the <code class="font-mono text-foreground">/path/to</code> folders with real paths on your host.
+          Generated by the hub from the image's manifest. Replace the <code class="font-mono text-foreground">/path/to</code> folders with real paths on your host.
         </p>
         <Panel class="mt-4" bodyClass="bg-[var(--raft-code-bg)]">
-          <QuickStart client:visible name={image.name} {...snippets} />
+          <QuickStart client:visible name={image.name} tabs={quickStart} />
         </Panel>
+        {
+          install.length > 0 && (
+            <div class="mt-5">
+              <h3 class="raft-eyebrow">Install on …</h3>
+              <div class="mt-3">
+                <InstallMenu client:visible image={image.name} options={install} />
+              </div>
+              <p class="mt-3 text-xs text-muted-foreground">
+                Store templates are generated by the hub from the same manifest. <a href={withBase('/stores/')} class="underline-offset-4 hover:text-foreground hover:underline">How each platform imports them</a>.
+              </p>
+            </div>
+          )
+        }
       </section>
+
+      {
+        image.setup_instructions && (
+          <section aria-labelledby="setup">
+            <h2 id="setup" class="text-xl font-semibold tracking-tight">Application setup</h2>
+            <div class="post-body prose mt-3 max-w-none text-[0.9375rem] text-muted-foreground prose-p:my-2 prose-a:text-foreground dark:prose-invert" set:html={blockMarkdown(image.setup_instructions)} />
+          </section>
+        )
+      }
 
       {
         tables.length > 0 && (
@@ -184,7 +237,7 @@ const changelog = image.changelog ?? [];
                         <th scope="row" class="w-[40%] px-4 py-3 font-mono text-[0.8125rem] font-normal break-all text-foreground">
                           {r.key}
                         </th>
-                        <td class="px-4 py-3 text-muted-foreground">{r.desc}</td>
+                        <td class="px-4 py-3 text-muted-foreground" set:html={inlineMarkdown(r.desc)} />
                         <td class="px-4 py-3 text-right whitespace-nowrap">
                           <span
                             class:list={[
@@ -205,6 +258,58 @@ const changelog = image.changelog ?? [];
         )
       }
 
+      <section aria-labelledby="tags">
+        <h2 id="tags" class="text-xl font-semibold tracking-tight">Version tags</h2>
+        <p class="mt-2 text-sm text-muted-foreground">Each tag is published by one live branch; the build behind it is linked.</p>
+        <div class="raft-panel mt-4 overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] font-mono text-[0.6875rem] text-muted-foreground uppercase">
+              <tr>
+                <th scope="col" class="px-4 py-2.5 font-normal">Tag</th>
+                <th scope="col" class="px-4 py-2.5 font-normal">Latest build</th>
+                <th scope="col" class="px-4 py-2.5 font-normal">Built</th>
+                <th scope="col" class="px-4 py-2.5 font-normal">Tests</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--raft-hair)]">
+              {
+                tagRows.map((t) => (
+                  <tr class="align-top">
+                    <th scope="row" class="px-4 py-3 font-normal">
+                      <code class="font-mono text-[0.8125rem] text-foreground">:{t.tag}</code>
+                      <span class="mt-0.5 block text-xs text-muted-foreground">{t.desc}</span>
+                      {t.release && <span class="mt-0.5 block font-mono text-[0.6875rem] text-muted-foreground">branch {t.release.branch} · {t.release.channel}</span>}
+                    </th>
+                    <td class="px-4 py-3 font-mono text-xs">
+                      {t.release?.tag ? (
+                        t.build ? (
+                          <a href={withBase(buildUrl(image.name, t.build.tag))} class="text-foreground underline-offset-4 hover:text-primary hover:underline">
+                            {t.release.tag}
+                          </a>
+                        ) : (
+                          <span>{t.release.tag}</span>
+                        )
+                      ) : (
+                        <span class="text-muted-foreground">no build yet</span>
+                      )}
+                      {t.release?.platforms.length ? <span class="mt-0.5 block text-muted-foreground">{t.release.platforms.join(' · ')}</span> : null}
+                    </td>
+                    <td class="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                      {t.release?.created ? <time datetime={t.release.created}>{formatDate(t.release.created)}</time> : '–'}
+                    </td>
+                    <td class="px-4 py-3 text-xs whitespace-nowrap">
+                      {t.release?.test_success === true && <span class="inline-flex items-center gap-1 text-[var(--raft-ok)]"><Check className="size-3.5" aria-hidden="true" /> passed</span>}
+                      {t.release?.test_success === false && <span class="inline-flex items-center gap-1 text-destructive"><X className="size-3.5" aria-hidden="true" /> failed</span>}
+                      {(t.release?.test_success ?? null) === null && <span class="text-muted-foreground">–</span>}
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section aria-labelledby="arch">
         <h2 id="arch" class="text-xl font-semibold tracking-tight">Architectures</h2>
         <p class="mt-2 text-sm text-muted-foreground">Pulling <code class="font-mono text-foreground">:latest</code> picks the right one for your host automatically.</p>
@@ -220,19 +325,153 @@ const changelog = image.changelog ?? [];
         </ul>
       </section>
 
-      <section aria-labelledby="tags">
-        <h2 id="tags" class="text-xl font-semibold tracking-tight">Tags</h2>
-        <ul class="raft-panel mt-4 grid grid-cols-1 divide-[var(--raft-hair)] md:grid-cols-2 [&>li]:border-b [&>li]:border-[var(--raft-hair)] md:[&>li:nth-child(odd)]:border-r">
+      <section aria-labelledby="builds">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="builds" class="text-xl font-semibold tracking-tight">Builds</h2>
+            <p class="mt-2 text-sm text-muted-foreground">
+              The hub keeps the newest ten builds per branch{historyCount > builds.length && `; ${historyCount - builds.length} older ${historyCount - builds.length === 1 ? 'release stays' : 'releases stay'} on GitHub`}. Open one to explore its layers, files, packages and the diff to the build before.
+            </p>
+          </div>
           {
-            image.tags.map((t) => (
-              <li class="flex items-baseline justify-between gap-4 px-4 py-2.5">
-                <code class="font-mono text-[0.8125rem] text-foreground">:{t.tag}</code>
-                <span class="text-right text-sm text-muted-foreground">{t.desc}</span>
-              </li>
-            ))
+            builds.length > 0 && (
+              <a href={hubHistoryUrl(image.name)} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
+                CI history on the hub <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+              </a>
+            )
           }
-        </ul>
+        </div>
+        {
+          builds.length === 0 ? (
+            <p class="raft-panel mt-4 px-4 py-6 text-sm text-muted-foreground">No build has been ingested by the hub yet.</p>
+          ) : (
+            <div class="raft-panel mt-4 overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] font-mono text-[0.6875rem] text-muted-foreground uppercase">
+                  <tr>
+                    <th scope="col" class="px-4 py-2.5 font-normal">Tag</th>
+                    <th scope="col" class="px-4 py-2.5 font-normal">Built</th>
+                    <th scope="col" class="px-4 py-2.5 font-normal">Reason</th>
+                    <th scope="col" class="px-4 py-2.5 font-normal">Change</th>
+                    <th scope="col" class="px-4 py-2.5 font-normal">Result</th>
+                    <th scope="col" class="px-4 py-2.5 text-right font-normal">Size</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--raft-hair)]">
+                  {builds.map((b) => {
+                    const result = buildResult(b);
+                    return (
+                      <tr class="align-top">
+                        <th scope="row" class="px-4 py-3 font-normal">
+                          <a href={withBase(buildUrl(image.name, b.tag))} class="font-mono text-[0.8125rem] text-foreground underline-offset-4 hover:text-primary hover:underline">
+                            {b.tag}
+                          </a>
+                          <span class="mt-0.5 block font-mono text-[0.6875rem] text-muted-foreground">
+                            {b.branch} · {shortSha(b.commit)}
+                          </span>
+                        </th>
+                        <td class="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                          <time datetime={b.created} title={b.created}>
+                            {formatDate(b.created)}
+                          </time>
+                        </td>
+                        <td class="px-4 py-3 text-xs text-muted-foreground">{reasonLabel(b.reason)}</td>
+                        <td class="px-4 py-3 text-xs">
+                          <ClassBadge classification={b.classification} />
+                        </td>
+                        <td class="px-4 py-3 text-xs whitespace-nowrap">
+                          <span class:list={['inline-flex items-center gap-1', result === 'success' ? 'text-[var(--raft-ok)]' : result === 'failure' ? 'text-destructive' : 'text-muted-foreground']}>
+                            {result === 'success' ? <Check className="size-3.5" aria-hidden="true" /> : result === 'failure' ? <X className="size-3.5" aria-hidden="true" /> : <Minus className="size-3.5" aria-hidden="true" />}
+                            {result}
+                          </span>
+                        </td>
+                        <td class="px-4 py-3 text-right font-mono text-xs whitespace-nowrap text-muted-foreground tabular-nums">
+                          {b.platforms.map((p) => (
+                            <span class="block">
+                              <span class="text-foreground">{bytes(p.size)}</span> {p.arch}
+                            </span>
+                          ))}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
       </section>
+
+      {
+        (mods.own.length > 0 || mods.universal.length > 0) && (
+          <section aria-labelledby="mods">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 id="mods" class="text-xl font-semibold tracking-tight">Mods</h2>
+                <p class="mt-2 text-sm text-muted-foreground">
+                  Add a mod with <code class="font-mono text-foreground">DOCKER_MODS=&lt;image&gt;</code>; several are separated with <code class="font-mono text-foreground">|</code>.
+                </p>
+              </div>
+              <a href={withBase(`/mods/?image=${encodeURIComponent(image.name)}`)} class="inline-flex items-center gap-1 text-sm font-medium hover:text-primary">
+                All mods for {image.name} <ArrowRight className="size-3.5" aria-hidden="true" />
+              </a>
+            </div>
+            {mods.own.length > 0 ? (
+              <ul class="raft-panel mt-4 divide-y divide-[var(--raft-hair)]">
+                {mods.own.map((m) => (
+                  <li class="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0">
+                      <a href={m.url} target="_blank" rel="noopener" class="font-medium hover:text-primary">
+                        {m.title}
+                        <span class="sr-only"> (opens in a new tab)</span>
+                      </a>
+                      {m.deprecated && <span class="ml-2 rounded bg-destructive/15 px-1.5 py-px font-mono text-[0.6875rem] text-destructive">deprecated</span>}
+                      <p class="mt-0.5 text-sm text-muted-foreground" set:html={inlineMarkdown(m.summary)} />
+                    </div>
+                    <div class="flex shrink-0 items-center gap-1 rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] py-0.5 pr-0.5 pl-2.5 font-mono text-xs">
+                      <span class="truncate">{m.image}</span>
+                      <CopyButton client:visible text={m.image} label={`Copy ${m.title} mod image`} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p class="raft-panel mt-4 px-4 py-4 text-sm text-muted-foreground">
+                No mod targets {image.name} specifically; the {mods.universal.length} universal mods work with every image.
+              </p>
+            )}
+            {mods.own.length > 0 && mods.universal.length > 0 && (
+              <p class="mt-3 text-xs text-muted-foreground">Plus {mods.universal.length} universal mods that work with every image.</p>
+            )}
+          </section>
+        )
+      }
+
+      {
+        extras.proxy?.subdomain && (
+          <section aria-labelledby="proxy">
+            <h2 id="proxy" class="text-xl font-semibold tracking-tight">SWAG reverse proxy</h2>
+            <p class="mt-2 text-sm text-muted-foreground">
+              Generated from the manifest's proxy block: {image.name} listens on {extras.proxy.scheme}://{image.name}:{extras.proxy.port}. Copy the sample to{' '}
+              <code class="font-mono text-foreground">/config/nginx/proxy-confs/{image.name}.subdomain.conf</code> in SWAG and restart it.
+              {extras.proxy.base_url_note && <span class="block mt-1" set:html={inlineMarkdown(extras.proxy.base_url_note)} />}
+            </p>
+            <Panel class="mt-4" title={`${image.name}.subdomain.conf.sample`} bodyClass="relative bg-[var(--raft-code-bg)]">
+              <CopyButton slot="actions" client:visible text={extras.proxy.subdomain} label="Copy subdomain proxy conf" className="size-7" />
+              <pre class="max-h-[22rem] overflow-auto p-4 font-mono text-[0.75rem] leading-relaxed" tabindex="0" aria-label="SWAG subdomain proxy conf"><code>{extras.proxy.subdomain}</code></pre>
+            </Panel>
+            {extras.proxy.subfolder && (
+              <details class="mt-3">
+                <summary class="cursor-pointer font-mono text-xs text-muted-foreground hover:text-foreground">{image.name}.subfolder.conf.sample</summary>
+                <Panel class="mt-3" bodyClass="relative bg-[var(--raft-code-bg)]">
+                  <pre class="max-h-[22rem] overflow-auto p-4 pr-14 font-mono text-[0.75rem] leading-relaxed" tabindex="0" aria-label="SWAG subfolder proxy conf"><code>{extras.proxy.subfolder}</code></pre>
+                  <CopyButton client:visible text={extras.proxy.subfolder} label="Copy subfolder proxy conf" className="absolute top-2 right-2" variant="secondary" />
+                </Panel>
+              </details>
+            )}
+          </section>
+        )
+      }
 
       {
         changelog.length > 0 && (
@@ -248,7 +487,7 @@ const changelog = image.changelog ?? [];
                   <time datetime={e.date} class="font-mono text-xs text-muted-foreground tabular-nums">
                     {formatDate(e.date)}
                   </time>
-                  <p class="mt-0.5 text-sm">{e.desc}</p>
+                  <p class="mt-0.5 text-sm" set:html={inlineMarkdown(e.desc)} />
                 </li>
               ))}
             </ol>
@@ -261,7 +500,7 @@ const changelog = image.changelog ?? [];
                       <time datetime={e.date} class="mr-3 font-mono text-xs text-muted-foreground tabular-nums">
                         {e.date}
                       </time>
-                      {e.desc}
+                      <span set:html={inlineMarkdown(e.desc)} />
                     </li>
                   ))}
                 </ol>
@@ -280,8 +519,8 @@ const changelog = image.changelog ?? [];
             facts.map((f) => (
               <div class="flex items-baseline justify-between gap-4">
                 <dt class="text-muted-foreground">{f.label}</dt>
-                <dd class="font-mono text-foreground tabular-nums" title={f.title}>
-                  {f.value}
+                <dd class="min-w-0 truncate font-mono text-foreground tabular-nums" title={f.title ?? f.value}>
+                  {f.href ? <a href={withBase(f.href)} class="underline-offset-4 hover:text-primary hover:underline">{f.value}</a> : f.value}
                 </dd>
               </div>
             ))
@@ -299,6 +538,20 @@ const changelog = image.changelog ?? [];
           }
         </ul>
       </div>
+      {
+        builds.length > 0 && (
+          <nav class="raft-panel p-2" aria-label="Latest builds">
+            <h2 class="raft-eyebrow px-3 pt-2 pb-1">Latest builds</h2>
+            <ol>
+              {builds.slice(0, 3).map((b) => (
+                <li>
+                  <BuildRow build={{ image: image.name, summary: b, url: buildUrl(image.name, b.tag) }} compact />
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )
+      }
       <nav class="raft-panel p-2" aria-label="Resources">
         <ul>
           {
@@ -315,7 +568,7 @@ const changelog = image.changelog ?? [];
         </ul>
       </nav>
       <p class="px-1 font-mono text-[0.6875rem] text-muted-foreground">
-        Data from api.linuxserver.io, <time datetime={isoDate(SNAPSHOT_DATE)}>{formatDate(SNAPSHOT_DATE)}</time>
+        Data from <a href={HUB_URL + '/'} class="underline-offset-4 hover:text-foreground hover:underline">the hub</a>, <time datetime={isoDate(SNAPSHOT_DATE)}>{formatDate(SNAPSHOT_DATE)}</time>
       </p>
     </aside>
   </div>

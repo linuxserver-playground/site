@@ -1,0 +1,352 @@
+/**
+ * Shapes served by the hub's static API (lsio_hub/models.py in linuxserver-playground/hub) and the URL
+ * helpers for everything the site links to or fetches from it. Browser-safe: no astro:* imports, so the
+ * explorer islands can import from here too.
+ */
+import hub from '@/data/hub.json';
+
+export type Arch = 'amd64' | 'arm64';
+
+// ---------------------------------------------------------------------------------------------------
+// v1 image shapes (field for field the original api.linuxserver.io response)
+
+export interface EnvVar { name: string; value: string; desc: string; optional: boolean }
+export interface Volume { path: string; host_path: string; desc: string; optional: boolean }
+export interface Port { external: string; internal: string; desc: string; optional: boolean }
+export interface Device { path: string; host_path: string; desc: string; optional: boolean }
+export interface Cap { cap_add: string; desc: string; optional: boolean }
+export interface SecurityOpt { run_var: string; compose_var: string; desc: string; optional: boolean }
+export interface Custom { name: string; name_compose: string; value: string | string[]; desc: string; optional: boolean }
+
+export interface ImageConfig {
+  application_setup?: string | null;
+  readonly_supported?: boolean | null;
+  nonroot_supported?: boolean | null;
+  privileged?: boolean | null;
+  networking?: string | null;
+  hostname?: { hostname: string; desc: string; optional: boolean } | null;
+  mac_address?: { mac_address: string; desc: string; optional: boolean } | null;
+  env_vars?: EnvVar[] | null;
+  volumes?: Volume[] | null;
+  ports?: Port[] | null;
+  custom?: Custom[] | null;
+  security_opt?: SecurityOpt[] | null;
+  devices?: Device[] | null;
+  caps?: Cap[] | null;
+}
+
+export interface ReleaseInfo {
+  branch: string;
+  release_tag: string;
+  channel: string;
+  tag?: string | null;
+  upstream_version?: string | null;
+  created?: string | null;
+  release_url?: string | null;
+  test_success?: boolean | null;
+  base?: string | null;
+  platforms: string[];
+}
+
+export interface ImageLinks {
+  builds: string;
+  docs: string;
+  proxy?: string | null;
+  kubernetes?: string | null;
+  quadlet?: string | null;
+  mods: string;
+}
+
+/** `/api/v1/catalog/{name}.json`: an image with everything the hub knows about it. */
+export interface ImageDetail {
+  name: string;
+  initial_date?: string | null;
+  github_url: string;
+  project_url?: string | null;
+  project_logo?: string | null;
+  /** Markdown; may contain links. */
+  description: string;
+  /** Release tag of the newest `latest` build (`<upstream>-ls<N>`), or `latest` before the first build. */
+  version: string;
+  /** `YYYY-MM-DD HH:MM:SS+00:00` */
+  version_timestamp: string;
+  category: string;
+  stable: boolean;
+  deprecated: boolean;
+  stars: number;
+  tags: { tag: string; desc: string }[];
+  architectures: { arch: string; tag: string }[];
+  changelog?: { date: string; desc: string }[] | null;
+  config: ImageConfig;
+  title: string;
+  categories: string[];
+  deprecation_message?: string | null;
+  setup_instructions?: string | null;
+  archived: boolean;
+  release_url?: string | null;
+  upstream_version?: string | null;
+  base?: string | null;
+  releases: ReleaseInfo[];
+  docs_url: string;
+  registries: { ghcr: string; packages_url: string };
+  snippets: { docker_compose: string; docker_run: string };
+  links: ImageLinks;
+}
+
+export interface Category { name: string; slug: string; count: number; images: string[] }
+
+// ---------------------------------------------------------------------------------------------------
+// Builds
+
+export interface BuildBase { family: string; image: string; digest?: string | null; build_version?: string | null }
+
+export interface PlatformBuild {
+  arch: Arch;
+  result: 'success' | 'failure' | 'cancelled' | 'skipped';
+  digest?: string | null;
+  /** Sum of compressed layer sizes in bytes. */
+  size?: number | null;
+  uncompressed_size?: number | null;
+  layers?: number | null;
+  runner?: string | null;
+  build_seconds?: number | null;
+}
+
+export interface BuildLinks {
+  build: string;
+  diff: string;
+  layers: Partial<Record<Arch, string>>;
+  packages: Partial<Record<Arch, string>>;
+  release?: string | null;
+  /** `files.<arch>.json.gz` on the Release. */
+  files: Partial<Record<Arch, string>>;
+  test_report?: string | null;
+}
+
+export type Classification = 'upstream' | 'packages' | 'linuxserver' | 'base' | 'mixed' | 'none' | 'initial';
+
+/** One entry of `/api/v1/catalog/{name}/builds.json`. */
+export interface BuildSummary {
+  tag: string;
+  branch: string;
+  release_tag?: string | null;
+  upstream_version: string;
+  semver?: string | null;
+  ls_build: number;
+  created: string;
+  reason: string;
+  commit: string;
+  test_success?: boolean | null;
+  base: BuildBase;
+  platforms: PlatformBuild[];
+  classification?: Classification | null;
+  links: BuildLinks;
+}
+
+export interface HistoryEntry { tag: string; created: string; release_url?: string | null }
+
+export interface BuildsData {
+  image: string;
+  builds: BuildSummary[];
+  history: Record<string, HistoryEntry[]>;
+}
+
+export interface InitUnit {
+  name: string;
+  type: 'oneshot' | 'longrun' | 'bundle' | string;
+  depends_on: string[];
+  source?: 'base' | 'image' | 'mod' | null;
+  script?: string | null;
+}
+
+/** `build.json` as attached to the Release (schemas/bundle.schema.json in the builder). */
+export interface Bundle {
+  schema: number;
+  image: string;
+  repository: string;
+  branch: string;
+  mode: 'live' | 'dev' | 'pr';
+  pull_request?: number | null;
+  version: {
+    upstream: string;
+    upstream_clean: string;
+    semver?: string | null;
+    ls_build: number;
+    tag: string;
+    release_tag?: string | null;
+    tags?: string[] | null;
+    source?: string | null;
+    source_url?: string | null;
+  };
+  commit: string;
+  created: string;
+  reason: string;
+  previous?: { tag?: string | null; release_url?: string | null } | null;
+  base: BuildBase;
+  platforms: PlatformBuild[];
+  index_digest?: string | null;
+  labels: Record<string, string>;
+  config: {
+    env?: string[] | null;
+    exposed_ports?: string[] | null;
+    volumes?: string[] | null;
+    entrypoint?: string[] | null;
+    cmd?: string[] | null;
+    user?: string | null;
+    working_dir?: string | null;
+  };
+  dockerfile: Partial<Record<Arch, string>>;
+  init_graph?: { d2?: string | null; units?: InitUnit[] | null } | null;
+  packages?: Record<string, { count: number; distro: string; hash: string; by_type?: Record<string, number> | null }> | null;
+  test: { enabled: boolean; success: boolean; per_arch?: Record<string, boolean> | null; report_url?: string | null };
+  notes?: { linuxserver?: string | null; upstream?: string | null; upstream_url?: string | null } | null;
+  assets: { name: string; size: number; sha256: string; url?: string | null }[];
+  workflow: { run_id: number; run_url: string; workflows_ref: string; ci_version?: string | null };
+}
+
+export interface Layer {
+  index: number;
+  digest: string;
+  diff_id?: string | null;
+  /** Compressed bytes. */
+  size: number;
+  uncompressed_size?: number | null;
+  /** The Dockerfile instruction. */
+  created_by?: string | null;
+  /** [start, end] line numbers from provenance. */
+  dockerfile_lines?: [number, number] | null;
+  from_base?: boolean | null;
+  empty?: boolean | null;
+}
+
+export interface PackageChange { name: string; version?: string | null; from?: string | null; to?: string | null; purl?: string | null }
+export interface EcosystemDiff { added: PackageChange[]; removed: PackageChange[]; upgraded: PackageChange[]; downgraded: PackageChange[] }
+
+export interface Diff {
+  image: string;
+  branch: string;
+  tag: string;
+  previous_tag?: string | null;
+  classification: Classification;
+  reasons: string[];
+  upstream: { from?: string | null; to?: string | null; changed: boolean };
+  base: { from?: BuildBase | null; to: BuildBase; changed: boolean };
+  size: Record<string, { from?: number | null; to?: number | null; delta?: number | null }>;
+  config: {
+    env: { added: string[]; removed: string[]; changed: { name: string; from?: string | null; to?: string | null }[] };
+    exposed_ports: { added: string[]; removed: string[] };
+    volumes: { added: string[]; removed: string[] };
+  };
+  /** Unified diff per architecture; empty when unchanged. */
+  dockerfile: Record<string, string>;
+  packages?: Record<string, Record<string, EcosystemDiff>> | null;
+  totals: { added: number; removed: number; upgraded: number; downgraded: number };
+}
+
+/** One entry of `files.<arch>.json.gz` (bundle.schema.json `$defs/file_entry`). Hardlinks are deduplicated upstream. */
+export interface FileEntry {
+  path: string;
+  /** Index into the layer table. */
+  layer: number;
+  type: 'file' | 'dir' | 'symlink' | 'hardlink' | 'device' | 'other';
+  size?: number;
+  mode?: string;
+  uid?: number;
+  gid?: number;
+  digest?: string;
+  link_target?: string;
+  /** Owning package purl when known. */
+  package?: string;
+  mime?: string;
+  executable?: boolean;
+}
+
+export interface Package { name: string; version: string; type: string; purl?: string | null; licenses: string[] }
+export interface PackagesData { image: string; tag: string; arch: Arch; count: number; packages: Package[] }
+
+// ---------------------------------------------------------------------------------------------------
+// Mods, proxy, packages index, fleet, stores
+
+export interface Mod {
+  name: string;
+  target: string;
+  title: string;
+  summary: string;
+  branch: string;
+  url: string;
+  image: string;
+  maintainers: string[];
+  platforms: string[];
+  bases: string[];
+  env: { name: string; description: string; default?: string | null; required: boolean }[];
+  deprecated: boolean;
+  deprecation_message?: string | null;
+  applies_to: string[];
+  docs?: string | null;
+}
+
+export interface ProxyData {
+  image: string;
+  port: number;
+  scheme: string;
+  subdomain?: string | null;
+  subfolder?: string | null;
+  base_url_note?: string | null;
+  config: Record<string, unknown>;
+}
+
+export interface PackageIndexEntry { name: string; slug: string; types: string[]; images: number }
+export interface PackageHolder { image: string; tag: string; branch: string; arch: Arch; version: string; type: string; purl?: string | null }
+export interface PackageData { name: string; slug: string; types: string[]; versions: string[]; images: string[]; holders: PackageHolder[] }
+
+export interface BaseUsage {
+  image: string;
+  family: string;
+  images: string[];
+  newest_digest?: string | null;
+  newest_seen?: string | null;
+  digests: { digest: string; first_seen: string; last_seen: string; images: string[] }[];
+}
+
+export interface StaleImage {
+  image: string;
+  branch: string;
+  tag: string;
+  built: string;
+  base: string;
+  base_digest?: string | null;
+  newest_base_digest?: string | null;
+  newest_base_built: string;
+  reason: string;
+}
+
+export interface StoreEntry { platform: string; name: string; url: string; how_to: string }
+
+export interface HubStatus {
+  health: 'Success' | 'Failed';
+  images: number;
+  deprecated: number;
+  sources: Record<string, { ok: boolean; checked_at: string; fetched_at?: string | null; error?: string | null }>;
+  rejected: Record<string, { checked_at: string; release_url?: string | null; error: string }>;
+}
+
+// ---------------------------------------------------------------------------------------------------
+// URLs
+
+/** The hub's public URL, without a trailing slash (from the snapshot; `HUB_URL` at refresh time). */
+export const HUB_URL: string = (hub as { url: string }).url.replace(/\/+$/, '');
+export const HUB_META = hub as { url: string; source: 'local' | 'remote'; fetched: string; last_updated: string; status: HubStatus | null };
+
+export const hubApi = (path: string) => `${HUB_URL}/api/v1/${path.replace(/^\/+/, '')}`;
+/** The hub's rendered CI report page for one build. */
+export const hubReportUrl = (image: string, tag: string) => `${HUB_URL}/builds/${image}/${tag}/`;
+export const hubHistoryUrl = (image: string) => `${HUB_URL}/builds/${image}/`;
+/** The hub's copy of `files.<arch>.json.gz`, kept for the newest build of each branch. */
+export const hubFilesUrl = (image: string, tag: string, arch: Arch) => `${HUB_URL}/builds/${image}/${tag}/files.${arch}.json.gz`;
+export const hubPackagesUrl = (image: string, tag: string, arch: Arch) => hubApi(`catalog/${image}/builds/${tag}/packages.${arch}.json`);
+export const hubPackageUrl = (slug: string) => hubApi(`packages/${slug}.json`);
+export const hubStoreUrl = (path: string) => `${HUB_URL}/stores/${path.replace(/^\/+/, '')}`;
+
+/** Live build status is the control plane's job; the site only links there (CONVENTIONS.md §10). */
+export const CONTROL_URL = 'https://ci.thelamer.duckdns.org:8443';
+export const controlImageUrl = (name: string) => `${CONTROL_URL}/images/${name}`;
