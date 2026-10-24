@@ -13,9 +13,9 @@ depend on is the hub (`linuxserver-playground/hub`), plus GitHub (team) and Open
 | Path | What |
 | --- | --- |
 | `src/data/` | Snapshots written by `scripts/refresh-data.mjs`: `catalog.json`, `images/<name>.json`, `builds/<image>/<tag>.json`, `mods.json`, `stores.json`, `fleet.json`, `packages.json`, `categories.json`, `stats.json`, `hub.json`, `team.json`, `backers.json`. |
-| `src/lib/` | Data layer. `hub.ts` (API shapes and URL helpers), `images.ts`, `builds.ts`, `fleet.ts`, `stats.ts`, `explorer.ts` (browser-safe helpers), posts, feeds, JSON-LD, formatting. |
+| `src/lib/` | Data layer. `hub.ts` (API shapes and URL helpers), `images.ts`, `builds.ts`, `fleet.ts`, `stats.ts`, `explorer.ts` (browser-safe helpers), `lab.ts` and `hints.ts` (the config lab: model, renderers, URL token, hints), `proxy.ts` (the SWAG proxy lab), posts, feeds, JSON-LD, formatting. |
 | `src/pages/` | Routes. `images/[name].astro`, `images/[name]/builds/[tag].astro`, `fleet.astro`, `packages.astro`, `mods.astro`, `stores.astro`, blog, about, support, donate, search. |
-| `src/components/` | Astro components; `islands/` React islands; `islands/explorer/` the explorer views; `ui/` shadcn components (do not edit). |
+| `src/components/` | Astro components; `islands/` React islands (`ConfigLab`, `ProxyLab`, catalogue, search…); `islands/explorer/` the explorer views; `ui/` shadcn components (do not edit). |
 | `src/content/` | Blog posts, authors, `spotlight.yaml`. |
 | `src/styles/globals.css` | Design tokens and utilities (Raft). |
 | `scripts/` | `refresh-data.mjs`, `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `new-post.mjs`. |
@@ -53,6 +53,13 @@ including `$defs/layer` and `$defs/file_entry` for `files.<arch>.json.gz`), `Dif
 `Stats`, `Status`. Types live in `src/lib/hub.ts`; a hub change that renames or removes a field is a change
 here too. Produces no schema. See `CONVENTIONS.md` in the builder repository, in particular §6 (the bundle)
 and §10 (who renders what: the site is hub-driven, the control plane is linked for live status only).
+
+The config lab (`src/lib/lab.ts`) re-renders the compose and run snippets client-side and must stay byte
+for byte equal to the hub's snippets in its default and all-optional states (they follow
+`builder/snippets.py`); the quadlet, Kubernetes and SWAG outputs are the hub's text with targeted line
+edits, never regenerated. A change to the builder's snippet or generator format is a change here too.
+Hints (`src/lib/hints.ts`) quote the manifest or the documentation; never add a hint that states something
+the hub does not say about the image.
 
 ## Pull request rules
 

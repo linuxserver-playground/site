@@ -41,11 +41,14 @@ src/
     spotlight.yaml   images that take turns in the weekly spotlight
   lib/             data layer: hub types and URLs, images, builds, fleet, stats, posts, feeds, JSON-LD
     explorer.ts      browser-safe helpers for the explorer islands (gzip fetch, file tree, colours)
+    lab.ts           the config lab: model from the hub data, visitor state, compose/run/quadlet/k8s renderers, URL token
+    hints.ts         the lab's guided hints (manifest descriptions plus documented facts, linked)
+    proxy.ts         the reverse proxy lab: targeted line edits on the hub's SWAG samples
   pages/           routes: each gathers its data in the frontmatter and renders the page
   layouts/         Layout.astro: <html>, <head> (via BaseHead), header, footer
   styles/          globals.css: Tailwind, fonts, colour tokens (:root and .dark), utilities, article typography
   components/      Astro components: page header, panels, post cards, image rows, build rows, logos, otters
-    islands/       React islands: ⌘K search, catalogue, quick start, install menu, package search, mods browser
+    islands/       React islands: ⌘K search, catalogue, config lab, proxy lab, install menu, package search, mods browser
     islands/explorer/   treemap, Dockerfile annotator, layer table, init graph, package browser, diff viewer
     ui/            shadcn/ui components (Radix). Do not edit; restyle with `className`
 scripts/           data refresh, new-post, brand assets, screenshots, accessibility and overflow checks
@@ -104,13 +107,66 @@ The hub sends `Access-Control-Allow-Origin: *`, so these cross-origin fetches ne
 Live build status is never embedded: build pages link to the control plane and to the hub's rendered test
 report (`{HUB_URL}/builds/<image>/<tag>/`), as CONVENTIONS.md §10 prescribes.
 
+### The config lab
+
+The quick start on an image page is a builder, not a static snippet. At build time `lib/lab.ts`
+`buildLabModel` turns the hub's `ImageDetail` (`config`, `snippets`, `releases`, `tags`), the image's
+generated Kubernetes manifest and quadlet unit, and the mods that apply to it (`modsForImage`) into a
+`LabModel`; the `ConfigLab` island (`client:visible`) holds the visitor's choices in React state and
+renders the four outputs from them on every change. Nothing is fetched or stored.
+
+- **Fidelity.** With the default state the compose and run output is the hub's required-only snippet,
+  character for character; with every optional item on it is the full snippet minus the `#optional`
+  markers. The renderers follow `builder/snippets.py` key for key (quoting included), so keep them in step
+  when the builder changes. The quadlet and Kubernetes tabs are the hub's own text with the choices
+  substituted line by line (environment, image tag, volumes, ports, devices, capabilities; non-root drops
+  `PUID`/`PGID` from the ConfigMap), so their structure never drifts from what the hub ships.
+- **What `config` does not carry** (`:ro` volumes, whether host networking or privileged mode are
+  optional, the external application block) is read from the compose snippet. `options` and `secret` per
+  variable exist in the manifest schema but not in the hub's v1 `Config` yet; the lab reads them
+  defensively and falls back to the builder's rule for secrets (names containing `TOKEN`, `PASS` or
+  `KEY`). Read-only and non-root caveats are the documented general ones, since the hub does not pass
+  the manifest's per-image notes.
+- **Mods** come from the same index as the mods page (`mods.json`, image-specific then universal). Ticked
+  mods join one `DOCKER_MODS` value with `|` in the order they were ticked; a mod with a `mod.yml` shows
+  its settings as inputs, a legacy entry links to its README.
+- **Hints** (`lib/hints.ts`) are the manifest's own descriptions of what was chosen plus a small table of
+  facts from the documentation, each linked. Nothing about an image is inferred beyond what the hub says.
+- **The link token.** "Copy link to this config" writes the state to the URL hash and copies the URL;
+  loading a page with the hash restores it. The format is `#lab:` followed by query pairs holding only
+  what differs from the defaults: `t` tag, `n` container name, `r` restart policy, `u` uid:gid, `on`
+  (repeated) the ids of optional items turned on (`e:TZ`, `v:/tv`, `p:80`, `d:/dev/dri`, `c:NET_ADMIN`,
+  `s:<security_opt>`, `x:<flag>`, `hostname`, `mac`, `net`, `priv`, `ro`, `nonroot`), `v.<id>` an edited
+  value, `m` (repeated) mod ids in order, `me.<mod>/<NAME>` a mod setting. Unknown ids are ignored and
+  values flagged as secrets are never serialised. Example:
+  `#lab:on=v:/tv&v.v:/tv=/mnt/tv&v.e:TZ=Europe/London&m=universal-cloudflared`.
+
+### The reverse proxy lab
+
+Images with a `proxy` block get a "Reverse proxy with SWAG" section: the hub's generated samples
+(`images/<name>.json` `proxy`, from `/api/v1/catalog/<name>/proxy.json`) with the mode (subdomain, or
+subfolder when supported), container name, upstream port, scheme and authentication chosen by the visitor.
+`lib/proxy.ts` applies those as targeted line edits (`set $upstream_*`, and uncommenting the
+`#include /config/nginx/<auth>-server.conf;` / `-location.conf;` pair or the `auth_basic` lines), so the
+output is always the hub's sample plus the chosen lines; API locations keep auth off as the sample has them.
+
+### Inside the latest image
+
+Right after the quick start, an image page features its latest live build (the newest build of the branch
+that publishes `latest`, else the newest of all): base image, upstream version, compressed size and layer
+count per architecture, package count per architecture from the build record, test result, when and why
+it was built, an "Explore this build" button to the build page, and a compact treemap of its files
+(`CompactTreemap`, the explorer's `Treemap` with `compact`), which fetches `files.<arch>.json.gz` the same
+way the build page does, hub copy first, only once the panel scrolls into view. Without a file table or a
+build record the panel shows the facts and the button only.
+
 ### Pages
 
 | URL | |
 | --- | --- |
 | `/` | home: stats, latest builds, weekly spotlight, rankings, blog |
 | `/images/` | searchable, filterable catalogue (state in the query string, e.g. `?category=Games&sort=stars`) |
-| `/images/<name>/` | every image, deprecated ones included: quick start (compose, docker run, Kubernetes, quadlet), "Install on…", setup, parameters, version tags with their latest build, builds, mods, SWAG sample, changelog |
+| `/images/<name>/` | every image, deprecated ones included: the config lab (compose, docker run, Kubernetes, quadlet built from your choices), "Install on…", inside the latest image (facts and a compact treemap), setup, parameters, version tags with their latest build, builds, mods, the SWAG proxy lab, changelog |
 | `/images/<name>/builds/<tag>/` | one retained build: record, platforms, tests, file treemap, packages, config and labels, diff to the previous build, annotated Dockerfile, layer table, init graph, release notes |
 | `/fleet/` | base images and their digests, builds behind their base, every retained build, hub health |
 | `/packages/` | fleet-wide package search (`?q=musl&type=apk`) |
