@@ -13,6 +13,8 @@ interface Props {
   urls: Partial<Record<Arch, string[]>>;
   layers: Partial<Record<Arch, Layer[]>>;
   initialArch?: Arch;
+  /** Reduced height, a shorter "largest here" list and no legend: the image page's preview. */
+  compact?: boolean;
 }
 
 const STRIP_FONT = 10.5;
@@ -189,7 +191,7 @@ const Tiles = React.memo(function Tiles({ tiles, dark, total, layers, gradientId
  * a directory to zoom in; the breadcrumb, Backspace or Escape zoom out. The list beside the map carries
  * the same numbers in text, so nothing depends on colour or on reading the picture.
  */
-export default function Treemap({ image, tag, arches, urls, layers, initialArch }: Props) {
+export default function Treemap({ image, tag, arches, urls, layers, initialArch, compact = false }: Props) {
   const [arch, setArch] = React.useState<Arch>(initialArch ?? arches[0]);
   const [state, setState] = React.useState<{ status: 'loading' | 'ready' | 'error'; files?: FileEntry[]; error?: string }>({ status: 'loading' });
   const [path, setPath] = React.useState<string[]>([]);
@@ -225,7 +227,8 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
   let focus = tree;
   for (const p of path) focus = focus?.children?.find((c) => c.path === p) ?? focus;
 
-  const height = Math.round(Math.min(640, Math.max(300, width * (width < 640 ? 0.9 : 0.56))));
+  const height = compact ? Math.round(Math.min(340, Math.max(220, width * 0.45))) : Math.round(Math.min(640, Math.max(300, width * (width < 640 ? 0.9 : 0.56))));
+  const listed = compact ? 6 : 10;
   const tiles = React.useMemo(() => (focus ? layoutTiles(focus, width, height) : []), [focus, width, height]);
 
   const anim = !reducedMotion();
@@ -405,7 +408,7 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
           <aside className="border-t border-[var(--raft-hair)] p-4 text-sm lg:border-t-0 lg:border-l" aria-label="Treemap details">
             <h3 className="raft-eyebrow">Largest here</h3>
             <ol className="mt-2 space-y-1">
-              {(focus.children ?? []).slice(0, 10).map((c) => (
+              {(focus.children ?? []).slice(0, listed).map((c) => (
                 <li key={c.path}>
                   <button
                     type="button"
@@ -420,12 +423,14 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
                   </button>
                 </li>
               ))}
-              {(focus.children?.length ?? 0) > 10 && (
+              {(focus.children?.length ?? 0) > listed && (
                 <li className="px-1 py-0.5 font-mono text-xs text-muted-foreground">
-                  and {((focus.children?.length ?? 0) - 10).toLocaleString('en-GB')} more entries, {fmtBytes((focus.children ?? []).slice(10).reduce((a, c) => a + c.size, 0))}
+                  and {((focus.children?.length ?? 0) - listed).toLocaleString('en-GB')} more entries, {fmtBytes((focus.children ?? []).slice(listed).reduce((a, c) => a + c.size, 0))}
                 </li>
               )}
             </ol>
+            {!compact && (
+              <>
             <h3 className="raft-eyebrow mt-5">Legend</h3>
             <ul className="mt-2 space-y-1" aria-label="Bytes by owning package">
               {legend.map((t) => (
@@ -453,6 +458,8 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch 
               Directories wear their dominant package's hue, paler than the files inside; each nesting level is a shade {dark ? 'lighter' : 'darker'}. Dashed tiles fold the
               entries too small to draw, so areas always add up. Unowned bytes are files no package manager claims: the application itself, scripts and generated data.
             </p>
+              </>
+            )}
             <p className="mt-2 font-mono text-[0.6875rem] text-muted-foreground">
               <a href={urls[arch]?.[0]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
                 {image}:{tag} files.{arch}.json.gz<span className="sr-only"> (opens in a new tab)</span>
