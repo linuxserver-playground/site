@@ -9,7 +9,6 @@ import DiffViewer from '@/components/islands/explorer/DiffViewer';
 import DockerfileView from '@/components/islands/explorer/DockerfileView';
 import Explorer from '@/components/islands/explorer/Explorer';
 import InitGraph from '@/components/islands/explorer/InitGraph';
-import LayerTable from '@/components/islands/explorer/LayerTable';
 import { withBase } from '@/lib/base';
 import { allBuildRecords, buildResult, buildUrl, getBuilds, getBuildSummary, isNewestOfBranch, previousBuild, reasonLabel, type BuildRecord } from '@/lib/builds';
 import { bytes, formatDate, isoDate, relative, shortDigest, shortSha } from '@/lib/format';
@@ -35,7 +34,6 @@ const prev = summary ? previousBuild(image.name, summary) : undefined;
 const newest = summary ? isNewestOfBranch(image.name, summary) : false;
 const arches = b.platforms.filter((p) => p.result === 'success').map((p) => p.arch) as Arch[];
 const result = buildResult({ platforms: b.platforms, test_success: b.test.enabled ? b.test.success : null });
-const totalSize = b.platforms.find((p) => p.arch === 'amd64')?.size ?? b.platforms[0]?.size ?? null;
 
 const filesUrls: Partial<Record<Arch, string[]>> = {};
 const packagesUrls: Partial<Record<Arch, string>> = {};
@@ -47,6 +45,7 @@ for (const a of arches) {
   const syft = b.assets.find((x) => x.name === `packages.${a}.json.gz`)?.url;
   if (syft) packagesFallback[a] = syft;
 }
+const layersUrls = Object.fromEntries(arches.map((a) => [a, summary?.links.layers[a] ?? hubApi(`catalog/${image.name}/builds/${tag}/layers.${a}.json`)])) as Partial<Record<Arch, string>>;
 const packagesSummary = Object.fromEntries(Object.entries(b.packages ?? {}).map(([a, s]) => [a, { count: s.count, distro: s.distro, by_type: s.by_type }])) as Partial<
   Record<Arch, { count: number; distro: string; by_type?: Record<string, number> | null }>
 >;
@@ -301,20 +300,13 @@ const units = b.init_graph?.units ?? [];
     <!-- Dockerfile -->
     <section aria-labelledby="dockerfile">
       <h2 id="dockerfile" class="text-xl font-semibold tracking-tight">Dockerfile, annotated</h2>
-      <p class="mt-2 text-sm text-muted-foreground">As built, after the <code class="font-mono">LSIO_FIRST_PARTY</code> injection, with the bytes each instruction added to the image.</p>
-      <Panel class="mt-4">
-        <DockerfileView client:visible dockerfile={b.dockerfile} layers={record.layers} initialArch={arches[0]} />
-      </Panel>
-    </section>
-
-    <!-- Layers -->
-    <section aria-labelledby="layers">
-      <h2 id="layers" class="text-xl font-semibold tracking-tight">Layers</h2>
       <p class="mt-2 text-sm text-muted-foreground">
-        {totalSize !== null && <>{bytes(totalSize)} compressed over {record.layers[arches[0]]?.length ?? b.platforms[0]?.layers ?? '?'} layers. </>}Each row is one layer of the pushed image with the instruction that produced it.
+        As built, after the <code class="font-mono">LSIO_FIRST_PARTY</code> injection. A LinuxServer image is a base image plus one <code class="font-mono">RUN</code> and
+        one <code class="font-mono">COPY</code>, so the layer table folds into the gutter: each instruction carries the compressed and on-disk bytes of the layer it produced,
+        and the base image's layers are summed above the text.
       </p>
       <Panel class="mt-4">
-        <LayerTable client:visible layers={record.layers} dockerfile={b.dockerfile} initialArch={arches[0]} />
+        <DockerfileView client:visible dockerfile={b.dockerfile} layers={record.layers} base={b.base.image} layersUrls={layersUrls} initialArch={arches[0]} />
       </Panel>
     </section>
 
@@ -324,7 +316,9 @@ const units = b.init_graph?.units ?? [];
         <section aria-labelledby="init">
           <h2 id="init" class="text-xl font-semibold tracking-tight">Init graph</h2>
           <p class="mt-2 text-sm text-muted-foreground">
-            The s6-rc units that run when the container starts, from the bundle's <code class="font-mono">init_graph</code>. Arrows point from a dependency to the unit that waits for it.
+            The s6-rc units that run when the container starts, from the bundle's <code class="font-mono">init_graph</code>, laid out by stage from left to right: a unit sits one
+            stage after the last thing it waits for. This image's units are drawn in full; the steps inherited from the base image fold into one node per run of stages, click to
+            expand them. Select a unit for its dependencies and, for this image's own units, the run script.
           </p>
           <Panel class="mt-4">
             <InitGraph client:visible units={units} image={image.name} />
@@ -372,7 +366,7 @@ const units = b.init_graph?.units ?? [];
               { label: 'Release on GitHub', href: summary?.links.release ?? `https://github.com/${b.repository}/releases/tag/${tag}` },
               { label: 'build.json (hub API)', href: summary?.links.build ?? hubApi(`catalog/${image.name}/builds/${tag}.json`) },
               { label: 'diff.json', href: summary?.links.diff ?? hubApi(`catalog/${image.name}/builds/${tag}/diff.json`) },
-              ...arches.map((a) => ({ label: `layers.${a}.json`, href: summary?.links.layers[a] ?? hubApi(`catalog/${image.name}/builds/${tag}/layers.${a}.json`) })),
+              ...arches.map((a) => ({ label: `layers.${a}.json`, href: layersUrls[a]! })),
               ...arches.map((a) => ({ label: `files.${a}.json.gz`, href: filesUrls[a]![0] })),
               ...b.assets.filter((x) => x.url && /^package_versions\./.test(x.name)).map((x) => ({ label: x.name, href: x.url! })),
               { label: 'Build history on the hub', href: hubHistoryUrl(image.name) },

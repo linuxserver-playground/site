@@ -2,7 +2,7 @@
 
 The public website of the [LinuxServer.io v2 playground](https://github.com/linuxserver-playground): home,
 the image catalogue with a page for every image, a page for every retained build with the transparent
-image explorer (layers, files, packages, init graph, diff), the fleet, package, mods and stores views, the
+image explorer (files, packages, annotated Dockerfile, init graph, diff), the fleet, package, mods and stores views, the
 blog, and the about, support and donate pages. Built with [Astro](https://astro.build), Tailwind CSS and
 [shadcn/ui](https://ui.shadcn.com), with no server or database.
 
@@ -49,7 +49,7 @@ src/
   styles/          globals.css: Tailwind, fonts, colour tokens (:root and .dark), utilities, article typography
   components/      Astro components: page header, panels, post cards, image rows, build rows, logos, otters
     islands/       React islands: ⌘K search, catalogue, config lab, proxy lab, install menu, package search, mods browser
-    islands/explorer/   treemap, Dockerfile annotator, layer table, init graph, package browser, diff viewer
+    islands/explorer/   treemap, Dockerfile annotator (with per-layer sizes), init graph, package browser, diff viewer
     ui/            shadcn/ui components (Radix). Do not edit; restyle with `className`
 scripts/           data refresh, new-post, brand assets, screenshots, accessibility and overflow checks
 ```
@@ -67,7 +67,7 @@ whose public members are the team (default `linuxserver-playground`).
 | --- | --- | --- |
 | `catalog.json` | hub `/api/v1/catalog.json` | catalogue, image pages, quick start snippets, version tags, release channels |
 | `images/<name>.json` | hub `/api/v1/catalog/<name>/builds.json`, `proxy.json`, `kubernetes.yaml`, `quadlet.container` | builds table and history, SWAG sample, Kubernetes and quadlet tabs, "Install on…" |
-| `builds/<image>/<tag>.json` | hub `/api/v1/catalog/<name>/builds/<tag>.json`, `/diff.json`, `/layers.<arch>.json` | build pages: record, diff, annotated Dockerfile, layer table, init graph |
+| `builds/<image>/<tag>.json` | hub `/api/v1/catalog/<name>/builds/<tag>.json`, `/diff.json`, `/layers.<arch>.json` | build pages: record, diff, annotated Dockerfile with its layer sizes, init graph |
 | `categories.json` | hub `/api/v1/categories.json` | catalogue filters |
 | `mods.json` | hub `/api/v1/mods.json` | mods page, mods on image pages |
 | `stores.json` | hub `/api/v1/stores/index.json` | stores page, "Install on…" buttons |
@@ -104,6 +104,23 @@ from the hub in the browser, only when their tab is opened, with a loading state
   `/api/v1/packages/<slug>.json` when a package is selected.
 
 The hub sends `Access-Control-Allow-Origin: *`, so these cross-origin fetches need nothing on our side.
+
+Two more views are static from the snapshot:
+
+- **Dockerfile, annotated**: there is no separate layer table, because a LinuxServer image is its base plus
+  one `RUN` and one `COPY`. `layers.<arch>.json` is folded into the Dockerfile gutter instead: every
+  instruction shows the compressed and on-disk bytes of the layer it produced with a bar proportional to
+  the compressed size, the base image's layers are summed into one line above the text, and the raw table
+  stays one click away. Layers are attributed by the hub's `dockerfile_lines` provenance when present;
+  without it the final stage's `RUN`/`COPY`/`ADD` instructions are matched to the tail of the table in order
+  (`lib/explorer.ts` `attributeLayers`), with the text match as a last resort.
+- **Init graph**: `init_graph.units` drawn as a left-to-right stage view (`lib/explorer.ts` `initStages`:
+  a unit's stage is the longest dependency path below it). This image's units and mods are full nodes with
+  their type; the base image's `init-*` steps fold into one "base init · N units" node per run of base-only
+  stages, expandable to a compact list, so the drawing stays a few rows tall instead of a thirty-row tower.
+  Edges are drawn between visible nodes only (dashed when one end is a collapsed group). Selecting one of
+  the image's units shows its run script with a copy button; a text list ordered by stage carries the same
+  information for screen readers, `prefers-reduced-motion` and screens under 640 px.
 Live build status is never embedded: build pages link to the control plane and to the hub's rendered test
 report (`{HUB_URL}/builds/<image>/<tag>/`), as CONVENTIONS.md §10 prescribes.
 
@@ -167,7 +184,7 @@ build record the panel shows the facts and the button only.
 | `/` | home: stats, latest builds, weekly spotlight, rankings, blog |
 | `/images/` | searchable, filterable catalogue (state in the query string, e.g. `?category=Games&sort=stars`) |
 | `/images/<name>/` | every image, deprecated ones included: the config lab (compose, docker run, Kubernetes, quadlet built from your choices), "Install on…", inside the latest image (facts and a compact treemap), setup, parameters, version tags with their latest build, builds, mods, the SWAG proxy lab, changelog |
-| `/images/<name>/builds/<tag>/` | one retained build: record, platforms, tests, file treemap, packages, config and labels, diff to the previous build, annotated Dockerfile, layer table, init graph, release notes |
+| `/images/<name>/builds/<tag>/` | one retained build: record, platforms, tests, file treemap, packages, config and labels, diff to the previous build, annotated Dockerfile with per-instruction layer sizes, init graph by stage, release notes |
 | `/fleet/` | base images and their digests, builds behind their base, every retained build, hub health |
 | `/packages/` | fleet-wide package search (`?q=musl&type=apk`) |
 | `/mods/` | the mods index with text and per-image filters (`?image=sonarr`) |
@@ -191,7 +208,7 @@ their contrast ratios are at the top of `src/styles/globals.css`.
 - **Accessibility (WCAG 2.2 AA everywhere, AAA contrast for text):** one `<h1>` per page and no skipped heading levels;
   landmarks (`header`, `nav[aria-label]`, `main#main`, `footer`); visible focus; `aria-current="page"` in nav;
   text contrast ≥ 7:1 (≥ 4.5:1 for large/UI text); no information by colour alone (the treemap and the init
-  graph carry their data in text lists too); respect `prefers-reduced-motion`; images have `alt`; external
+  graph carry their data in text lists too); SVG buttons' accessible names start with their visible text; respect `prefers-reduced-motion`; images have `alt`; external
   links that open new tabs say so to screen readers; everything works by keyboard, SVG nodes included.
 - **SEO:** pass `title`, `description`, `breadcrumbs` and `jsonLd` (`lib/jsonld.ts`) to the Layout. Use real `<a href>`
   links for everything navigational; islands must server-render a useful initial state.

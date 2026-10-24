@@ -1,8 +1,7 @@
 import * as React from 'react';
 import type { Arch, FileEntry, Layer } from '@/lib/hub';
-import { buildTree, fmtBytes, layerColor, loadFiles, packageTotals, pct, pkgColor, pkgTone, purlLabel, purlName, reducedMotion, type TreeNode } from '@/lib/explorer';
+import { buildTree, fmtBytes, layerColor, loadFiles, packageTotals, pct, pkgColor, pkgTone, purlLabel, purlName, reducedMotion, tidyInstruction, type TreeNode } from '@/lib/explorer';
 import { ellipsise, fitChars, layoutTiles, MIN_TILE, STRIP, type Tile } from '@/lib/treemap';
-import { tidyInstruction } from './LayerTable';
 import ArchToggle, { IslandHeader, LoadError, Loading } from './ArchToggle';
 
 interface Props {
