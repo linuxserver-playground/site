@@ -3,7 +3,7 @@
 The public website of the [LinuxServer.io v2 playground](https://github.com/linuxserver-playground): home,
 the image catalogue with a page for every image, a page for every retained build with the transparent
 image explorer (files, packages, annotated Dockerfile, init graph, diff), the fleet, package, mods and stores views, the
-blog, and the about, support and donate pages. Built with [Astro](https://astro.build), Tailwind CSS and
+blog, the documentation, and the about, support and donate pages. Built with [Astro](https://astro.build), Tailwind CSS and
 [shadcn/ui](https://ui.shadcn.com), with no server or database.
 
 Deployed to https://linuxserver-playground.github.io/site/ from `main` by `.github/workflows/deploy.yml`.
@@ -23,7 +23,7 @@ npm run preview           # serve dist/
 npm run check             # TypeScript / Astro diagnostics
 ```
 
-Writing a blog post? See [CONTRIBUTING.md](CONTRIBUTING.md), or just run `npm run new-post`.
+Writing a blog post or a docs page? See [CONTRIBUTING.md](CONTRIBUTING.md), or just run `npm run new-post` or `npm run new-doc`.
 
 ## How it fits together
 
@@ -37,9 +37,11 @@ src/
   assets/team/     team avatars, likewise
   content/
     posts/         one folder per blog post (index.md + images)
+    docs/          documentation: one Markdown file per page under its section folder (general, selkies, misc, faq), images alongside
     authors/       one YAML file per author
     spotlight.yaml   images that take turns in the weekly spotlight
-  lib/             data layer: hub types and URLs, images, builds, fleet, stats, posts, feeds, JSON-LD
+  lib/             data layer: hub types and URLs, images, builds, fleet, stats, posts, docs, feeds, JSON-LD
+    docs-sections.ts the documentation's sections, shared by the content schema and the docs pages
     explorer.ts      browser-safe helpers for the explorer islands (gzip fetch, file tree, colours)
     lab.ts           the config lab: model from the hub data, visitor state, compose/run/quadlet/k8s renderers, URL token
     hints.ts         the lab's guided hints (manifest descriptions plus documented facts, linked)
@@ -47,11 +49,11 @@ src/
   pages/           routes: each gathers its data in the frontmatter and renders the page
   layouts/         Layout.astro: <html>, <head> (via BaseHead), header, footer
   styles/          globals.css: Tailwind, fonts, colour tokens (:root and .dark), utilities, article typography
-  components/      Astro components: page header, panels, post cards, image rows, build rows, logos, otters
+  components/      Astro components: page header, panels, post cards, image rows, build rows, logos, otters, the docs shell and sidebar
     islands/       React islands: ⌘K search, catalogue, config lab, proxy lab, install menu, package search, mods browser
     islands/explorer/   treemap, Dockerfile annotator (with per-layer sizes), init graph, package browser, diff viewer
     ui/            shadcn/ui components (Radix). Do not edit; restyle with `className`
-scripts/           data refresh, new-post, brand assets, screenshots, accessibility and overflow checks
+scripts/           data refresh, new-post, new-doc, brand assets, screenshots, accessibility and overflow checks
 ```
 
 ### Data
@@ -190,10 +192,24 @@ build record the panel shows the facts and the button only.
 | `/mods/` | the mods index with text and per-image filters (`?image=sonarr`) |
 | `/stores/` | every store and generated artefact with its import URL and how-to |
 | `/blog/`, `/blog/page/<n>/`, `/blog/<slug>/`, `/blog/tags/`, `/blog/authors/<id>/` | blog |
-| `/search/?q=` | full-text search (Pagefind) |
+| `/docs/` | documentation landing: every section with its pages, search |
+| `/docs/<section>/` | a section: its own page (`index.md`) if it has one, then its pages in order |
+| `/docs/<section>/<slug>/` | one documentation page: sidebar of the section, table of contents, previous/next, edit link |
+| `/search/?q=` | full-text search (Pagefind) over docs, posts and image pages |
 | `/about/`, `/support/`, `/donate/` | |
 | `/blog/rss.xml`, `/blog/atom.xml` | feeds |
 | `/search-index.json` | index for the ⌘K palette |
+
+### Documentation
+
+`src/content/docs/<section>/<slug>.md` is one page at `/docs/<section>/<slug>/`; a section's `index.md` is
+its own page at `/docs/<section>/`. The sections (`general`, `selkies`, `misc`, `faq`) are declared in
+`src/lib/docs-sections.ts`, which the content schema uses to validate every page's `section`, and the
+sidebar orders pages by `order` under their optional `group`. Image pages are not documentation: the hub
+renders them from `image.yml`. Old docs-site URLs are listed in each page's `aliases`, which the 404 page
+turns into client-side redirects and `public/_redirects` lists for hosts that support it. Mkdocs syntax
+was converted on import: admonitions became callouts, tabs and FAQ details became headings, Mermaid
+diagrams became text. Authoring is described in [CONTRIBUTING.md](CONTRIBUTING.md#writing-docs).
 
 ### Design
 
