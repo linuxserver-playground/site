@@ -1,0 +1,128 @@
+---
+import { Image } from 'astro:assets';
+import Layout from '@/layouts/Layout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Pagination from '@/components/Pagination.astro';
+import PostCard from '@/components/PostCard.astro';
+import Icon from '@/components/Icon.astro';
+import { withBase } from '@/lib/base';
+import { formatDate, isoDate, plural } from '@/lib/format';
+import { collectTags, getPosts, type AuthorView, type Page, type TagInfo } from '@/lib/posts';
+import type { Crumb } from '@/lib/seo';
+import type { PostView } from '@/lib/views';
+
+/** A page of the blog: the index and its pages 2+, or every post with a tag or by an author. */
+interface Props {
+  page: Page<PostView>;
+  tag?: TagInfo;
+  author?: AuthorView;
+}
+const { page, tag, author } = Astro.props;
+
+const crumbs: Crumb[] = [{ name: 'Blog', href: '/blog/' }];
+let title: string, eyebrow: string, h1: string, description: string, lede: string;
+if (tag) {
+  crumbs.push({ name: 'Topics', href: '/blog/tags/' }, { name: tag.name, href: `/blog/tags/${tag.slug}/` });
+  [title, eyebrow, h1] = [`Posts tagged ${tag.name}`, 'Topic', `#${tag.slug}`];
+  description = lede = `${plural(tag.count, 'post')} tagged “${tag.name}” on the LinuxServer.io blog.`;
+} else if (author) {
+  crumbs.push({ name: author.name, href: `/blog/authors/${author.id}/` });
+  [title, eyebrow, h1] = [`Posts by ${author.name}`, 'Author', author.name];
+  description = lede = `${plural(page.total, 'post')} by ${author.name} on the LinuxServer.io blog.`;
+} else {
+  const n = page.currentPage;
+  [title, eyebrow, h1] = [n > 1 ? `Blog, page ${n}` : 'Blog', 'Blog', 'News, guides and release notes'];
+  description = `News, guides and release notes from the LinuxServer.io team.${n > 1 ? ` Page ${n}.` : ''}`;
+  lede = 'From the people who build the images: release notes, deep dives, guides and the occasional opinion.';
+}
+
+// Most used tags, for the filter chips
+const topTags = collectTags(await getPosts()).slice(0, 14);
+const featured = !tag && !author && page.currentPage === 1 ? page.data[0] : undefined;
+const rest = featured ? page.data.slice(1) : page.data;
+const roleLabel = { team: 'Team member', alumni: 'Former team member', guest: 'Guest author' } as const;
+---
+
+<Layout section="blog" title={title} description={description} breadcrumbs={crumbs}>
+  <PageHeader eyebrow={eyebrow} title={h1} lede={lede} crumbs={crumbs}>
+    {
+      author && (
+        <div class="mt-6 flex items-center gap-3">
+          <span class="grid size-11 place-items-center rounded-full bg-gradient-to-br from-otter-magenta to-otter-violet font-mono text-sm font-semibold text-white" aria-hidden="true">
+            {author.initials}
+          </span>
+          <div class="text-sm">
+            <p class="font-medium">{roleLabel[author.role]}</p>
+            {author.github && (
+              <a href={`https://github.com/${author.github}`} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-foreground">
+                <Icon name="github" class="size-3.5" />@{author.github}<span class="sr-only"> on GitHub (opens in a new tab)</span>
+              </a>
+            )}
+          </div>
+        </div>
+      )
+    }
+    <div class="mt-8 flex flex-wrap items-center gap-2">
+      <nav aria-label="Topics" class="contents">
+        <a
+          href={withBase('/blog/')}
+          aria-current={!tag && !author ? 'page' : undefined}
+          class="rounded-md border border-[var(--raft-hair)] bg-background/50 px-2.5 py-1 font-mono text-xs text-muted-foreground hover:text-foreground aria-[current=page]:border-primary aria-[current=page]:text-foreground"
+          >all</a
+        >
+        {
+          topTags.map((t) => (
+            <a
+              href={withBase(`/blog/tags/${t.slug}/`)}
+              aria-current={tag?.slug === t.slug ? 'page' : undefined}
+              class="rounded-md border border-[var(--raft-hair)] bg-background/50 px-2.5 py-1 font-mono text-xs text-muted-foreground hover:border-[var(--raft-hair-strong)] hover:text-foreground aria-[current=page]:border-primary aria-[current=page]:text-foreground"
+            >
+              #{t.slug}
+            </a>
+          ))
+        }
+        <a href={withBase('/blog/tags/')} class="px-2 font-mono text-xs text-foreground underline-offset-4 hover:underline">all topics →</a>
+      </nav>
+      <a href={withBase('/blog/rss.xml')} class="ml-auto inline-flex items-center gap-1.5 font-mono text-xs text-muted-foreground hover:text-foreground">
+        <Icon name="rss" class="size-3.5" /> RSS
+      </a>
+    </div>
+  </PageHeader>
+
+  <div class="raft-container pt-12">
+    {
+      featured && (
+        <article class="raft-panel raft-glow-edge group relative mb-3 grid grid-cols-1 overflow-hidden md:grid-cols-[1.25fr_1fr]">
+          <div class="relative aspect-[16/9] overflow-hidden border-b border-[var(--raft-hair)] md:aspect-auto md:border-r md:border-b-0">
+            <Image
+              src={featured.hero}
+              alt=""
+              widths={[640, 960, 1280]}
+              sizes="(min-width: 768px) 55vw, 100vw"
+              loading="eager"
+              fetchpriority="high"
+              class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+            />
+          </div>
+          <div class="flex flex-col justify-center p-6 md:p-10">
+            <p class="font-mono text-xs text-muted-foreground">
+              <span class="text-primary">latest</span> · <time datetime={isoDate(featured.date)}>{formatDate(featured.date)}</time> · {featured.readingTime} min read
+            </p>
+            <h2 class="mt-3 text-2xl leading-tight font-semibold tracking-tight md:text-3xl">
+              <a href={featured.url} class="after:absolute after:inset-0 after:content-[''] group-hover:text-primary">
+                {featured.title}
+              </a>
+            </h2>
+            <p class="mt-4 line-clamp-4 text-muted-foreground">{featured.excerpt}</p>
+            {featured.byline && <p class="mt-5 text-sm">by {featured.byline.name}</p>}
+          </div>
+        </article>
+      )
+    }
+    <h2 class="sr-only">{featured ? 'More posts' : 'Posts'}</h2>
+    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {rest.map((p, i) => <PostCard post={p} eager={!featured && i < 3} />)}
+    </div>
+    <Pagination page={page} />
+  </div>
+</Layout>

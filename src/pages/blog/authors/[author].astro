@@ -1,0 +1,17 @@
+---
+import BlogList from '@/components/BlogList.astro';
+import { getAuthors, getPosts, postsByAuthor, type AuthorView } from '@/lib/posts';
+import { listing } from '../_list';
+
+export async function getStaticPaths() {
+  const authors = await getAuthors(await getPosts());
+  return authors.map((author) => ({ params: { author: author.id }, props: { author } }));
+}
+
+const { author } = Astro.props as { author: AuthorView };
+const posts = await postsByAuthor(await getPosts(), author.id);
+// Author pages list everything on one page
+const page = await listing(posts, 1, `/blog/authors/${author.id}/`, Math.max(1, posts.length));
+---
+
+<BlogList page={page} author={author} />
