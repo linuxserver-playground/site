@@ -82,12 +82,13 @@ export default function LayerTable({ layers, dockerfile, initialArch }: Props) {
                       <span className={isOpen ? 'break-words whitespace-pre-wrap' : 'line-clamp-2 break-all'}>{text || '(empty layer)'}</span>
                     </button>
                     <span className="mt-1 flex flex-wrap gap-x-3 font-mono text-[0.6875rem] text-muted-foreground">
-                      {lines && (
+                      {lines ? (
                         <span>
                           Dockerfile {lines[0] === lines[1] ? `line ${lines[0]}` : `lines ${lines[0]}–${lines[1]}`}
                         </span>
+                      ) : (
+                        <span>from the base image</span>
                       )}
-                      {l.from_base && <span>from base image</span>}
                       {l.empty && <span>empty</span>}
                       <span className="hidden sm:inline" title={l.digest}>
                         {l.digest.slice(0, 19)}…

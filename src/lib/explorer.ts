@@ -194,8 +194,13 @@ export const ARCHES: Arch[] = ['amd64', 'arm64'];
 /** True when the visitor prefers reduced motion (SSR: false). */
 export const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/** Which Dockerfile line range a layer came from: provenance when present, else a text search. */
+/**
+ * Which Dockerfile line range a layer came from: provenance when present, else a text search for the
+ * instruction. Base image layers (flagged `from_base`, or whose instruction is not in this Dockerfile)
+ * return null; the Dockerfile view attributes them to FROM.
+ */
 export function layerLines(layer: Layer, dockerfile: string): [number, number] | null {
+  if (layer.from_base) return null;
   if (layer.dockerfile_lines) return layer.dockerfile_lines;
   const created = layer.created_by ?? '';
   const lines = dockerfile.split('\n');
@@ -207,12 +212,13 @@ export function layerLines(layer: Layer, dockerfile: string): [number, number] |
   const token = body.split(/\s+/).find((t) => t && !/^--/.test(t)) ?? '';
   const starts = lines.map((l, i) => (new RegExp(`^${kw}\\b`, 'i').test(l) ? i : -1)).filter((i) => i >= 0);
   if (!starts.length) return null;
-  let start = starts.find((i) => {
+  const needle = token.replace(/^\/root\/?$/, 'root/').slice(0, 40);
+  const start = starts.find((i) => {
     const end = instructionEnd(lines, i);
     const text = lines.slice(i, end + 1).join(' ');
-    return token ? text.includes(token.slice(0, 40)) : true;
+    return needle ? text.includes(needle) : true;
   });
-  if (start === undefined) start = starts[0];
+  if (start === undefined) return null;
   return [start + 1, instructionEnd(lines, start) + 1];
 }
 

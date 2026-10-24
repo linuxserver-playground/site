@@ -16,8 +16,8 @@ interface Node {
   placeholder: boolean;
 }
 
-const W = 148;
 const H = 36;
+const CHAR = 6.7;
 const GAP_X = 18;
 const GAP_Y = 54;
 const PAD = 16;
@@ -27,7 +27,8 @@ const PAD = 16;
  * ordered by the average position of their dependencies (a few barycenter sweeps). Small enough to need
  * no layout library.
  */
-export function layout(units: InitUnit[]): { nodes: Node[]; width: number; height: number } {
+export function layout(units: InitUnit[]): { nodes: Node[]; width: number; height: number; W: number } {
+  const W = Math.max(120, Math.ceil(24 + 10 + CHAR * Math.max(...units.flatMap((u) => [u.name, ...u.depends_on]).map((n) => n.length), 8)));
   const byName = new Map<string, InitUnit>(units.map((u) => [u.name, u]));
   // Dependencies on units the bundle didn't list (a mod's unit, say) become placeholders.
   for (const u of units) for (const d of u.depends_on) if (!byName.has(d)) byName.set(d, { name: d, type: 'bundle', depends_on: [], source: null });
@@ -81,7 +82,7 @@ export function layout(units: InitUnit[]): { nodes: Node[]; width: number; heigh
     });
   });
   const height = PAD * 2 + layers.length * H + (layers.length - 1) * GAP_Y;
-  return { nodes, width, height };
+  return { nodes, width, height, W };
 }
 
 const TYPE_GLYPH: Record<string, string> = { oneshot: '▸', longrun: '∞', bundle: '⊞' };
@@ -93,7 +94,7 @@ const TYPE_GLYPH: Record<string, string> = { oneshot: '▸', longrun: '∞', bun
  * information for screen readers and small screens.
  */
 export default function InitGraph({ units, image }: Props) {
-  const { nodes, width, height } = React.useMemo(() => layout(units), [units]);
+  const { nodes, width, height, W } = React.useMemo(() => layout(units), [units]);
   const [selected, setSelected] = React.useState<string | null>(null);
   const byName = React.useMemo(() => new Map(nodes.map((n) => [n.unit.name, n])), [nodes]);
   const sel = selected ? byName.get(selected) : undefined;
@@ -161,7 +162,7 @@ export default function InitGraph({ units, image }: Props) {
                 role="button"
                 tabIndex={0}
                 aria-pressed={isSel}
-                aria-label={`${n.unit.name}: ${n.unit.type}${n.unit.source ? `, from ${n.unit.source === 'image' ? image : n.unit.source}` : ''}${n.unit.depends_on.length ? `, after ${n.unit.depends_on.join(', ')}` : ', starts first'}`}
+                aria-label={`${n.unit.name} ${n.unit.type}${n.unit.source ? `, from ${n.unit.source === 'image' ? image : n.unit.source}` : ''}${n.unit.depends_on.length ? `, after ${n.unit.depends_on.join(', ')}` : ', starts first'}`}
                 onClick={() => setSelected(isSel ? null : n.unit.name)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
@@ -175,9 +176,11 @@ export default function InitGraph({ units, image }: Props) {
               >
                 <rect width={W} height={H} rx={6} fill="var(--card)" stroke={isSel ? 'var(--primary)' : 'var(--raft-hair-strong)'} strokeWidth={isSel ? 2 : 1} strokeDasharray={n.placeholder ? '4 3' : undefined} />
                 <rect x={0} y={0} width={4} height={H} rx={2} fill={color} />
-                <text x={12} y={H / 2 + 4} fill="var(--foreground)" style={{ fontSize: 11 }}>
-                  <tspan fill="var(--muted-foreground)">{TYPE_GLYPH[n.unit.type] ?? '·'} </tspan>
-                  {n.unit.name.length > 17 ? n.unit.name.slice(0, 16) + '…' : n.unit.name}
+                <text x={12} y={H / 2 + 4} fill="var(--muted-foreground)" style={{ fontSize: 11 }} aria-hidden="true">
+                  {TYPE_GLYPH[n.unit.type] ?? '·'}
+                </text>
+                <text x={26} y={H / 2 + 4} fill="var(--foreground)" style={{ fontSize: 11 }}>
+                  {n.unit.name}
                 </text>
               </g>
             );

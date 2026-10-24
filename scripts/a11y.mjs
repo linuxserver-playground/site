@@ -4,7 +4,7 @@
  *
  *   node scripts/a11y.mjs <baseUrl> [path ...]
  *
- * e.g. node scripts/a11y.mjs http://localhost:4321 / /images/ /images/webtop/ /blog/
+ * e.g. node scripts/a11y.mjs http://localhost:4321/site / /images/ /images/sonarr/ /blog/
  * Exits non-zero when violations are found.
  */
 import { chromium } from 'playwright';
@@ -17,7 +17,24 @@ if (!base) {
 }
 const list = paths.length
   ? paths
-  : ['/', '/images/', '/images/webtop/', '/blog/', '/blog/tags/', '/blog/webtop-5-0-and-selkies-2-0-everything-everywhere-all-in-one-release/', '/support/', '/donate/', '/about/', '/search/', '/404/'];
+  : [
+      '/',
+      '/images/',
+      '/images/sonarr/',
+      '/images/sonarr/builds/4.0.20.3014-ls1/',
+      '/fleet/',
+      '/packages/',
+      '/mods/',
+      '/stores/',
+      '/blog/',
+      '/blog/tags/',
+      '/blog/webtop-5-0-and-selkies-2-0-everything-everywhere-all-in-one-release/',
+      '/support/',
+      '/donate/',
+      '/about/',
+      '/search/',
+      '/404/',
+    ];
 
 const browser = await chromium.launch();
 let total = 0;

@@ -151,7 +151,7 @@ export default function PackageSearch({ index, ecosystems, apiBase, base }: Prop
           <div className="raft-panel grid min-h-64 place-items-center gap-2 p-8 text-center text-sm" role="alert">
             <p>Could not load {selected}.</p>
             <p className="font-mono text-xs text-muted-foreground">{detail.error}</p>
-            <a href={`${apiBase}${encodeURIComponent(selected)}.json`} className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline" target="_blank" rel="noopener">
+            <a href={`${apiBase}${encodeURIComponent(selected)}.json`} className="text-xs text-muted-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
               Open the API document<span className="sr-only"> (opens in a new tab)</span>
             </a>
           </div>
@@ -209,7 +209,7 @@ export default function PackageSearch({ index, ecosystems, apiBase, base }: Prop
                           )}
                         </td>
                         <td className="px-4 py-1.5 font-mono text-xs">
-                          <a href={`${base}/images/${image}/builds/${h.tag}/`} className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+                          <a href={`${base}/images/${image}/builds/${h.tag}/`} className="text-muted-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
                             {h.tag}
                           </a>
                           <span className="ml-2 text-[0.6875rem] text-muted-foreground">{h.branch}</span>
@@ -225,7 +225,7 @@ export default function PackageSearch({ index, ecosystems, apiBase, base }: Prop
               </table>
             </div>
             <p className="border-t border-[var(--raft-hair)] px-4 py-2 font-mono text-[0.6875rem] text-muted-foreground">
-              <a href={`${apiBase}${encodeURIComponent(d.slug)}.json`} className="underline-offset-4 hover:text-foreground hover:underline" target="_blank" rel="noopener">
+              <a href={`${apiBase}${encodeURIComponent(d.slug)}.json`} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
                 api/v1/packages/{d.slug}.json<span className="sr-only"> (opens in a new tab)</span>
               </a>
             </p>

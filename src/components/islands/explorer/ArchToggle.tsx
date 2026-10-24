@@ -43,7 +43,7 @@ export function LoadError({ error, url, retry }: { error: string; url?: string; 
       <p className="text-sm font-medium">Could not load this view.</p>
       <p className="font-mono text-xs text-muted-foreground">{error}</p>
       {url && (
-        <a href={url} className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline" target="_blank" rel="noopener">
+        <a href={url} className="text-xs text-muted-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
           Open the data file directly<span className="sr-only"> (opens in a new tab)</span>
         </a>
       )}
