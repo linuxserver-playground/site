@@ -11,7 +11,7 @@ interface Props {
 
 const KINDS: { key: keyof EcosystemDiff; label: string; sign: string; tone: string }[] = [
   { key: 'added', label: 'added', sign: '+', tone: 'text-[var(--raft-ok)]' },
-  { key: 'removed', label: 'removed', sign: '−', tone: 'text-destructive' },
+  { key: 'removed', label: 'removed', sign: '−', tone: 'text-[var(--raft-danger)]' },
   { key: 'upgraded', label: 'upgraded', sign: '↑', tone: 'text-foreground' },
   { key: 'downgraded', label: 'downgraded', sign: '↓', tone: 'text-[var(--raft-violet)]' },
 ];
@@ -26,7 +26,7 @@ function DockerfileDiff({ text }: { text: string }) {
     <pre className="overflow-x-auto bg-[var(--raft-code-bg)] p-3 font-mono text-xs leading-5" tabIndex={0} aria-label="Dockerfile unified diff">
       <code>
         {text.split('\n').map((l, i) => {
-          const cls = l.startsWith('+') && !l.startsWith('+++') ? 'bg-[var(--raft-ok)]/10 text-[var(--raft-ok)]' : l.startsWith('-') && !l.startsWith('---') ? 'bg-destructive/10 text-destructive' : l.startsWith('@@') ? 'text-[var(--raft-violet)]' : 'text-muted-foreground';
+          const cls = l.startsWith('+') && !l.startsWith('+++') ? 'bg-[var(--raft-ok)]/10 text-[var(--raft-ok)]' : l.startsWith('-') && !l.startsWith('---') ? 'bg-[var(--raft-danger)]/10 text-[var(--raft-danger)]' : l.startsWith('@@') ? 'text-[var(--raft-violet)]' : 'text-muted-foreground';
           return (
             <span key={i} className={`block ${cls}`}>
               {l || ' '}
@@ -191,12 +191,12 @@ export default function DiffViewer({ diff, previousUrl }: Props) {
         ) : (
           <ul className="mt-2 grid grid-cols-1 gap-x-6 gap-y-1 font-mono text-xs md:grid-cols-2">
             {cfg.env.added.map((x) => <Row key={`e+${x}`} sign="+" tone="text-[var(--raft-ok)]" label="env" value={x} />)}
-            {cfg.env.removed.map((x) => <Row key={`e-${x}`} sign="−" tone="text-destructive" label="env" value={x} />)}
+            {cfg.env.removed.map((x) => <Row key={`e-${x}`} sign="−" tone="text-[var(--raft-danger)]" label="env" value={x} />)}
             {cfg.env.changed.map((x) => <Row key={`e~${x.name}`} sign="~" tone="text-foreground" label="env" value={`${x.name}: ${x.from ?? ''} → ${x.to ?? ''}`} />)}
             {cfg.exposed_ports.added.map((x) => <Row key={`p+${x}`} sign="+" tone="text-[var(--raft-ok)]" label="port" value={x} />)}
-            {cfg.exposed_ports.removed.map((x) => <Row key={`p-${x}`} sign="−" tone="text-destructive" label="port" value={x} />)}
+            {cfg.exposed_ports.removed.map((x) => <Row key={`p-${x}`} sign="−" tone="text-[var(--raft-danger)]" label="port" value={x} />)}
             {cfg.volumes.added.map((x) => <Row key={`v+${x}`} sign="+" tone="text-[var(--raft-ok)]" label="volume" value={x} />)}
-            {cfg.volumes.removed.map((x) => <Row key={`v-${x}`} sign="−" tone="text-destructive" label="volume" value={x} />)}
+            {cfg.volumes.removed.map((x) => <Row key={`v-${x}`} sign="−" tone="text-[var(--raft-danger)]" label="volume" value={x} />)}
           </ul>
         )}
       </section>
