@@ -1,6 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import BarList from '@/components/BarList.astro';
+import BuildRow from '@/components/BuildRow.astro';
 import ImageRow from '@/components/ImageRow.astro';
 import Panel from '@/components/Panel.astro';
 import PostCard from '@/components/PostCard.astro';
@@ -13,16 +13,18 @@ import CopyButton from '@/components/islands/CopyButton';
 import { Kbd } from '@/components/ui/kbd';
 import { withBase } from '@/lib/base';
 import { compact, formatDate, relative } from '@/lib/format';
-import { composeSnippet, getSpotlight, mostPulled, mostStarred, recentlyUpdated, SNAPSHOT_DATE, type Image } from '@/lib/images';
+import { allBuilds } from '@/lib/builds';
+import { HUB_URL } from '@/lib/hub';
+import { composeSnippet, getSpotlight, mostStarred, newest, recentlyUpdated, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { getLatestPosts } from '@/lib/posts';
 import { DONATE_URL, LINKS, PILLARS, SITE } from '@/lib/site';
-import { stat } from '@/lib/stats';
+import { hasBackers, stat } from '@/lib/stats';
 import { toCards, toPostViews } from '@/lib/views';
-import { ArrowRight, ArrowUpRight, BookOpen, Heart, Layers, LifeBuoy, RefreshCw } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Heart, Layers, LifeBuoy, RefreshCw, ScanSearch } from 'lucide-react';
 
 const spotlight = await getSpotlight();
 const posts = await toPostViews(await getLatestPosts(3));
-const popular = mostPulled(8);
+const latestBuilds = allBuilds().slice(0, 6);
 const s = spotlight.image;
 
 // The hero terminal shows the spotlight image's minimal compose file: real, copyable, and different every week.
@@ -36,14 +38,14 @@ const toRows = async (images: Image[], metric: (i: Image) => [string, string]) =
     return { name: c.name, url: withBase(c.url), logo: c.logo, summary: c.summary, metric: value, metricLabel: label };
   });
 const lists = [
-  { key: 'pulled', label: 'Most pulled', rows: await toRows(popular, (i) => [compact(i.monthly_pulls), 'pulls / mo']) },
-  { key: 'starred', label: 'Most starred', rows: await toRows(mostStarred(8), (i) => [compact(i.stars), 'stars']) },
   { key: 'updated', label: 'Just rebuilt', rows: await toRows(recentlyUpdated(8), (i) => [relative(i.version_timestamp.replace(' ', 'T'), SNAPSHOT_DATE), i.version.split('-ls')[0].slice(0, 14)]) },
+  { key: 'starred', label: 'Most starred', rows: await toRows(mostStarred(8), (i) => [compact(i.stars), 'stars']) },
+  { key: 'newest', label: 'Newest', rows: await toRows(newest(8), (i) => [formatDate(i.initial_date!), 'added']) },
 ];
 
-const armPct = Math.round((stat.arm64.raw / stat.images.raw) * 100);
-const pillarIcons = { standardised: Layers, updates: RefreshCw, docs: BookOpen, support: LifeBuoy } as const;
-const sources = [stat.hubPulls, stat.monthlyPulls, stat.images, stat.stars, stat.backers, stat.years, stat.updatedThisWeek, stat.arm64];
+const armPct = stat.images.raw ? Math.round((stat.arm64.raw / stat.images.raw) * 100) : 0;
+const pillarIcons = { standardised: Layers, updates: RefreshCw, docs: ScanSearch, support: LifeBuoy } as const;
+const sources = [stat.images, stat.builds, stat.stars, ...(hasBackers ? [stat.backers] : []), stat.years, stat.updatedThisWeek, stat.arm64];
 const changelog = (s.changelog ?? []).slice(0, 3);
 const hl = (line: string) => {
   // Tiny YAML highlighter for the hero: keys, values and comments get token colours.
@@ -74,8 +76,8 @@ const hl = (line: string) => {
           Docker images, maintained like <span class="raft-gradient-text">infrastructure</span>.
         </h1>
         <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground">
-          {stat.images.value} community images on one curated base, rebuilt automatically when upstream moves, documented properly and supported by real
-          people. Free and open source, always.
+          Community images on one curated base, rebuilt automatically when upstream moves, with every build's layers, files, packages and tests in the
+          open. Free and open source, always.
         </p>
         <div class="mt-8 flex flex-wrap items-center gap-3">
           <a
@@ -122,16 +124,16 @@ const hl = (line: string) => {
       eyebrow="Fleet telemetry"
       title="The numbers behind the images"
       id="fleet-title"
-      description="Collected from Docker Hub, our own API, GitHub and Open Collective when this site was built."
+      description="Collected from the hub, GitHub and Open Collective when this site was built. No pull counts: the playground publishes to GHCR only and has no download statistics."
     />
 
     <div class="mt-10 grid grid-cols-1 gap-3 lg:grid-cols-12">
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:col-span-7 lg:grid-cols-3">
-        <StatTile stat={stat.hubPulls} hero note="src-hub-pulls" class="sm:col-span-2 lg:col-span-3">
-          <p class="mt-2 text-sm text-muted-foreground">Pulls from Docker Hub alone since 2015. GHCR and lscr.io come on top.</p>
-          <div class="mt-5 grid grid-cols-3 gap-px overflow-hidden rounded-md border border-[var(--raft-hair)] bg-[var(--raft-hair)]">
+        <StatTile stat={stat.images} hero note="src-images" class="sm:col-span-2 lg:col-span-3">
+          <p class="mt-2 text-sm text-muted-foreground">Each built from one manifest by the shared workflow, with its build record attached to the release.</p>
+          <div class:list={['mt-5 grid gap-px overflow-hidden rounded-md border border-[var(--raft-hair)] bg-[var(--raft-hair)]', hasBackers ? 'grid-cols-3' : 'grid-cols-2']}>
             {
-              [stat.monthlyPulls, stat.stars, stat.backers].map((x) => (
+              [stat.builds, stat.stars, ...(hasBackers ? [stat.backers] : [])].map((x) => (
                 <div class="bg-card p-3">
                   <p class="text-lg font-semibold tracking-tight sm:text-xl" aria-describedby={`src-${x.id}`}>
                     <span aria-hidden="true">{x.value}</span>
@@ -145,8 +147,8 @@ const hl = (line: string) => {
             }
           </div>
         </StatTile>
-        <StatTile stat={stat.images} note="src-images" />
         <StatTile stat={stat.years} note="src-years" />
+        <StatTile stat={stat.builds} note="src-builds" />
         <div class="raft-panel flex flex-col p-5 sm:col-span-2 lg:col-span-1" aria-describedby="src-updated-week">
           <p class="raft-eyebrow flex items-center gap-2"><span class="raft-pulse" aria-hidden="true"></span> This week</p>
           <p class="mt-3 text-3xl font-semibold tracking-[-0.045em] md:text-4xl">
@@ -176,15 +178,14 @@ const hl = (line: string) => {
         </div>
       </div>
 
-      <Panel as="figure" title="top images · pulls in the last month" class="lg:col-span-5" bodyClass="p-5 pt-6">
-        <BarList
-          title="Most pulled images in the last month"
-          unit="pulls in the last month"
-          items={popular.map((i) => ({ label: i.name, value: i.monthly_pulls, href: i.url }))}
-        />
-        <p class="mt-5 border-t border-[var(--raft-hair)] pt-4 text-sm text-muted-foreground">
-          <span class="font-mono text-foreground">{stat.monthlyPulls.value}</span> pulls across the whole fleet last month.
-          <a href={withBase('/images/?sort=popular')} class="ml-1 font-medium text-foreground underline-offset-4 hover:underline">Full ranking</a>
+      <Panel as="aside" title="latest builds · what changed" class="lg:col-span-5" bodyClass="p-2" labelledby="latest-builds">
+        <h3 id="latest-builds" class="sr-only">Latest builds</h3>
+        <ol class="divide-y divide-[var(--raft-hair)]">
+          {latestBuilds.map((b) => <li><BuildRow build={b} /></li>)}
+        </ol>
+        <p class="border-t border-[var(--raft-hair)] px-3 pt-3 pb-1 text-sm text-muted-foreground">
+          Every build links to its layers, files, packages and the diff to the build before.
+          <a href={withBase('/fleet/#builds')} class="ml-1 font-medium text-foreground underline-offset-4 hover:underline">All builds</a>
         </p>
       </Panel>
     </div>
@@ -193,7 +194,10 @@ const hl = (line: string) => {
       <summary class="cursor-pointer font-mono hover:text-foreground">Sources and method</summary>
       <ul class="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2">
         {sources.map((x) => <li id={`src-${x.id}`}><span class="text-foreground">{x.label}</span>: {x.source}</li>)}
-        <li>Data snapshot: <time datetime={SNAPSHOT_DATE.toISOString()}>{formatDate(SNAPSHOT_DATE)}</time></li>
+        <li>
+          Data snapshot: <time datetime={SNAPSHOT_DATE.toISOString()}>{formatDate(SNAPSHOT_DATE)}</time> from{' '}
+          <a href={HUB_URL + '/'} class="underline-offset-4 hover:text-foreground hover:underline">{HUB_URL.replace('https://', '')}</a>
+        </li>
       </ul>
     </details>
   </section>
@@ -335,8 +339,8 @@ const hl = (line: string) => {
           <p class="raft-eyebrow"><span class="text-primary" aria-hidden="true">//</span> Run by volunteers</p>
           <h2 id="cta-title" class="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">Everyone here does this in their free time.</h2>
           <p class="mt-4 max-w-2xl text-muted-foreground">
-            No one at LinuxServer.io is paid. {stat.backers.value} backers on Open Collective help keep the build servers running. If our images save you time,
-            consider joining them.
+            No one at LinuxServer.io is paid.{hasBackers && ` ${stat.backers.value} backers on Open Collective help keep the build servers running.`} If our
+            images save you time, consider joining them.
           </p>
         </div>
         <div class="flex flex-wrap gap-3">

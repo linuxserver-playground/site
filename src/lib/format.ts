@@ -34,6 +34,31 @@ export function compactLong(n: number, digits = 1): string {
 
 export const grouped = (n: number) => n.toLocaleString('en-GB');
 
+/** 87898777 -> "83.8 MB" (binary units written the way container tools print them). */
+export function bytes(n: number | null | undefined, digits = 1): string {
+  if (n === null || n === undefined) return '–';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let v = n;
+  let u = 0;
+  while (v >= 1024 && u < units.length - 1) {
+    v /= 1024;
+    u++;
+  }
+  return `${u === 0 ? v : v.toFixed(v >= 100 ? 0 : digits)} ${units[u]}`;
+}
+
+/** "+1.2 MB" / "-340 KB" / "±0" */
+export function bytesDelta(n: number | null | undefined): string {
+  if (n === null || n === undefined) return '–';
+  if (n === 0) return '±0';
+  return `${n > 0 ? '+' : '−'}${bytes(Math.abs(n))}`;
+}
+
+/** "42585b63" */
+export const shortSha = (sha: string, n = 8) => sha.slice(0, n);
+/** "sha256:5210…2d35" */
+export const shortDigest = (d: string | null | undefined) => (d ? `${d.slice(0, 15)}…${d.slice(-4)}` : '–');
+
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const MONTHS_LONG = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 

@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Download, LayoutGrid, List, Search, Star, X } from 'lucide-react';
+import { LayoutGrid, List, Search, Star, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -210,16 +210,12 @@ export default function Catalog({ cards, categories, snapshot, base }: Props) {
                   <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{c.summary}</p>
                   <div className="mt-auto flex items-center gap-3.5 pt-4 font-mono text-xs whitespace-nowrap text-muted-foreground tabular-nums">
                     <span className="inline-flex items-center gap-1">
-                      <Download className="size-3.5" aria-hidden="true" />
-                      {short(c.monthlyPulls)}
-                      <span className="sr-only"> pulls per month</span>
-                    </span>
-                    <span className="inline-flex items-center gap-1">
                       <Star className="size-3.5" aria-hidden="true" />
                       {short(c.stars)}
                       <span className="sr-only"> GitHub stars</span>
                     </span>
-                    {c.categories[0] && <span className="min-w-0 truncate">{c.categories[0]}</span>}
+                    {c.base && <span className="min-w-0 truncate">{c.base}</span>}
+                    {c.categories[0] && <span className="hidden min-w-0 truncate sm:inline">{c.categories[0]}</span>}
                     {c.arm64 && <span className="ml-auto shrink-0 rounded border border-[var(--raft-hair)] px-1.5 py-px">arm64</span>}
                   </div>
                 </article>
@@ -232,7 +228,7 @@ export default function Catalog({ cards, categories, snapshot, base }: Props) {
               <span>Image</span>
               <span>Version</span>
               <span>Built</span>
-              <span className="text-right">Pulls/mo</span>
+              <span className="text-right">Base</span>
               <span className="text-right">Stars</span>
             </div>
             <ul className="divide-y divide-[var(--raft-hair)]">
@@ -253,11 +249,8 @@ export default function Catalog({ cards, categories, snapshot, base }: Props) {
                     </span>
                     <span className="hidden truncate font-mono text-xs text-muted-foreground md:block">{c.version}</span>
                     <span className="hidden font-mono text-xs text-muted-foreground md:block">{relative(c.updated.replace(' ', 'T'), now)}</span>
+                    <span className="hidden truncate text-right font-mono text-xs text-muted-foreground md:block">{c.base ?? ''}</span>
                     <span className="text-right font-mono text-sm tabular-nums">
-                      {short(c.monthlyPulls)}
-                      <span className="sr-only"> pulls per month</span>
-                    </span>
-                    <span className="hidden text-right font-mono text-sm text-muted-foreground tabular-nums md:block">
                       {short(c.stars)}
                       <span className="sr-only"> stars</span>
                     </span>

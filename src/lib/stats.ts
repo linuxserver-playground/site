@@ -1,29 +1,34 @@
 /**
- * Headline numbers, from src/data/stats.json (written by `npm run data`).
- * Each stat carries its own label, long-form text for screen readers and a source note, so every page
- * presents the same facts the same honest way.
+ * Headline numbers, from src/data/stats.json (written by `npm run data` from the hub's /api/v1/stats.json,
+ * GitHub and Open Collective). Each stat carries its own label, long-form text for screen readers and a
+ * source note, so every page presents the same facts the same honest way. There are no pull counts: the
+ * playground publishes to GHCR only and the hub has no download statistics, so none are shown.
  */
 import raw from '@/data/stats.json';
-import { compact, compactLong, grouped } from './format';
+import { grouped } from './format';
 
 export const STATS = raw as {
   generated: string;
+  last_updated: string;
   images: number;
   deprecated: number;
-  monthly_pulls: number;
-  hub_pulls: number;
   stars: number;
+  builds: number;
+  retained_builds: number;
   arm64: number;
+  readonly_supported: number;
+  nonroot_supported: number;
   updated_this_week: number;
-  since: string;
+  categories: number;
+  since: string | null;
   team: number;
-  backers: number;
+  backers: number | null;
 };
 
 export interface Stat {
   id: string;
   value: string;
-  /** Raw number, for count-up animations. */
+  /** Raw number, for meters and percentages. */
   raw: number;
   suffix?: string;
   label: string;
@@ -32,41 +37,34 @@ export interface Stat {
   source: string;
 }
 
-const years = Math.floor((Date.parse(STATS.generated) - Date.parse(STATS.since)) / (365.25 * 864e5));
+const HUB = 'The hub, /api/v1/stats.json.';
+const sinceYear = STATS.since ? new Date(STATS.since).getUTCFullYear() : null;
+const years = sinceYear ? Math.floor((Date.parse(STATS.generated) - Date.parse(STATS.since!)) / (365.25 * 864e5)) : 0;
 
 const stats = {
-  hubPulls: {
-    id: 'hub-pulls',
-    value: compact(STATS.hub_pulls),
-    raw: STATS.hub_pulls,
-    suffix: '+',
-    label: 'Docker Hub pulls',
-    long: `More than ${compactLong(STATS.hub_pulls)} pulls from Docker Hub alone`,
-    source: 'Docker Hub, all linuxserver repositories. GHCR and lscr.io pulls are not included.',
-  },
-  monthlyPulls: {
-    id: 'monthly-pulls',
-    value: compact(STATS.monthly_pulls),
-    raw: STATS.monthly_pulls,
-    label: 'pulls every month',
-    long: `${compactLong(STATS.monthly_pulls)} pulls in the last month`,
-    source: 'api.linuxserver.io, last 30 days, current images.',
-  },
   images: {
     id: 'images',
     value: grouped(STATS.images),
     raw: STATS.images,
     label: 'maintained images',
     long: `${STATS.images} actively maintained images`,
-    source: 'api.linuxserver.io, excluding deprecated images.',
+    source: `${HUB} Deprecated images are not counted.`,
+  },
+  builds: {
+    id: 'builds',
+    value: grouped(STATS.builds),
+    raw: STATS.builds,
+    label: 'build records',
+    long: `${grouped(STATS.builds)} build records held by the hub`,
+    source: `${HUB} The newest ten builds per branch are kept; older ones stay on their GitHub Release.`,
   },
   stars: {
     id: 'stars',
-    value: compact(STATS.stars),
+    value: grouped(STATS.stars),
     raw: STATS.stars,
     label: 'GitHub stars',
-    long: `${grouped(STATS.stars)} stars across our image repositories`,
-    source: 'GitHub, sum over current image repositories.',
+    long: `${grouped(STATS.stars)} stars across the image repositories`,
+    source: 'GitHub, summed over current image repositories by the hub (hourly).',
   },
   arm64: {
     id: 'arm64',
@@ -74,7 +72,7 @@ const stats = {
     raw: STATS.arm64,
     label: 'multi-arch images',
     long: `${STATS.arm64} images built for both x86-64 and arm64`,
-    source: 'api.linuxserver.io architectures.',
+    source: 'Catalogue architectures (from each image’s build platforms).',
   },
   updatedThisWeek: {
     id: 'updated-week',
@@ -82,7 +80,31 @@ const stats = {
     raw: STATS.updated_this_week,
     label: 'images rebuilt this week',
     long: `${STATS.updated_this_week} images rebuilt in the last seven days`,
-    source: 'api.linuxserver.io build timestamps.',
+    source: `${HUB} Build timestamps in the seven days before the hub’s last refresh.`,
+  },
+  readonly: {
+    id: 'readonly',
+    value: grouped(STATS.readonly_supported),
+    raw: STATS.readonly_supported,
+    label: 'read-only capable',
+    long: `${STATS.readonly_supported} images support a read-only root filesystem`,
+    source: `${HUB} \`readonly_supported\` in the manifest.`,
+  },
+  nonroot: {
+    id: 'nonroot',
+    value: grouped(STATS.nonroot_supported),
+    raw: STATS.nonroot_supported,
+    label: 'run as non-root',
+    long: `${STATS.nonroot_supported} images support running as a non-root user`,
+    source: `${HUB} \`nonroot_supported\` in the manifest.`,
+  },
+  categories: {
+    id: 'categories',
+    value: grouped(STATS.categories),
+    raw: STATS.categories,
+    label: 'categories',
+    long: `${STATS.categories} categories`,
+    source: HUB,
   },
   years: {
     id: 'years',
@@ -90,23 +112,23 @@ const stats = {
     raw: years,
     suffix: '+',
     label: 'years of images',
-    long: `Building images since ${new Date(STATS.since).getUTCFullYear()}`,
-    source: 'Oldest first-build date in api.linuxserver.io.',
+    long: sinceYear ? `Building images since ${sinceYear}` : 'Years of images',
+    source: 'Oldest first-build date in the catalogue.',
   },
   team: {
     id: 'team',
     value: String(STATS.team),
     raw: STATS.team,
-    label: 'volunteers',
-    long: `${STATS.team} volunteer team members`,
-    source: 'Public members of the linuxserver GitHub organisation.',
+    label: 'public members',
+    long: `${STATS.team} public members of the GitHub organisation`,
+    source: 'Public members of the linuxserver-playground GitHub organisation.',
   },
   backers: {
     id: 'backers',
-    value: grouped(STATS.backers),
-    raw: STATS.backers,
+    value: grouped(STATS.backers ?? 0),
+    raw: STATS.backers ?? 0,
     label: 'backers',
-    long: `${grouped(STATS.backers)} backers on Open Collective`,
+    long: `${grouped(STATS.backers ?? 0)} backers on Open Collective`,
     source: 'Open Collective.',
   },
 } satisfies Record<string, Stat>;
@@ -114,4 +136,9 @@ const stats = {
 /** Every stat typed as Stat, so optional fields like `suffix` can be read on any of them. */
 export const stat: Record<keyof typeof stats, Stat> = stats;
 
-export const SINCE_YEAR = new Date(STATS.since).getUTCFullYear();
+/** Stats whose number exists; a tile for a missing one would be a lie. */
+export const hasBackers = STATS.backers !== null;
+export const hasTeam = STATS.team > 0;
+export const hasSince = sinceYear !== null;
+
+export const SINCE_YEAR = sinceYear ?? new Date(STATS.generated).getUTCFullYear();

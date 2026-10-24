@@ -1,0 +1,394 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Breadcrumbs from '@/components/Breadcrumbs.astro';
+import ClassBadge from '@/components/ClassBadge.astro';
+import ImageLogo from '@/components/ImageLogo.astro';
+import Panel from '@/components/Panel.astro';
+import CopyButton from '@/components/islands/CopyButton';
+import DiffViewer from '@/components/islands/explorer/DiffViewer';
+import DockerfileView from '@/components/islands/explorer/DockerfileView';
+import Explorer from '@/components/islands/explorer/Explorer';
+import InitGraph from '@/components/islands/explorer/InitGraph';
+import LayerTable from '@/components/islands/explorer/LayerTable';
+import { withBase } from '@/lib/base';
+import { allBuildRecords, buildResult, buildUrl, getBuilds, getBuildSummary, isNewestOfBranch, previousBuild, reasonLabel, type BuildRecord } from '@/lib/builds';
+import { bytes, formatDate, isoDate, relative, shortDigest, shortSha } from '@/lib/format';
+import { hubApi, hubFilesUrl, hubHistoryUrl, hubPackagesUrl, hubReportUrl, type Arch } from '@/lib/hub';
+import { getImage, SNAPSHOT_DATE, type Image } from '@/lib/images';
+import { blockMarkdown } from '@/lib/markdown/inline';
+import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
+
+export function getStaticPaths() {
+  return allBuildRecords()
+    .filter(({ image }) => getImage(image))
+    .map(({ image, tag, record }) => ({ params: { name: image, tag }, props: { image: getImage(image)!, record } }));
+}
+
+const { image, record } = Astro.props as { image: Image; record: BuildRecord };
+const b = record.build;
+const tag = b.version.tag;
+const summary = getBuildSummary(image.name, tag);
+const builds = getBuilds(image.name);
+const index = builds.findIndex((x) => x.tag === tag);
+const newerSameBranch = builds.slice(0, Math.max(index, 0)).reverse().find((x) => x.branch === b.branch);
+const prev = summary ? previousBuild(image.name, summary) : undefined;
+const newest = summary ? isNewestOfBranch(image.name, summary) : false;
+const arches = b.platforms.filter((p) => p.result === 'success').map((p) => p.arch) as Arch[];
+const result = buildResult({ platforms: b.platforms, test_success: b.test.enabled ? b.test.success : null });
+const totalSize = b.platforms.find((p) => p.arch === 'amd64')?.size ?? b.platforms[0]?.size ?? null;
+
+const filesUrls: Partial<Record<Arch, string[]>> = {};
+const packagesUrls: Partial<Record<Arch, string>> = {};
+const packagesFallback: Partial<Record<Arch, string>> = {};
+for (const a of arches) {
+  const release = summary?.links.files[a] ?? b.assets.find((x) => x.name === `files.${a}.json.gz`)?.url;
+  filesUrls[a] = newest ? [hubFilesUrl(image.name, tag, a), ...(release ? [release] : [])] : release ? [release, hubFilesUrl(image.name, tag, a)] : [hubFilesUrl(image.name, tag, a)];
+  if (newest) packagesUrls[a] = summary?.links.packages[a] ?? hubPackagesUrl(image.name, tag, a);
+  const syft = b.assets.find((x) => x.name === `packages.${a}.json.gz`)?.url;
+  if (syft) packagesFallback[a] = syft;
+}
+const packagesSummary = Object.fromEntries(Object.entries(b.packages ?? {}).map(([a, s]) => [a, { count: s.count, distro: s.distro, by_type: s.by_type }])) as Partial<
+  Record<Arch, { count: number; distro: string; by_type?: Record<string, number> | null }>
+>;
+
+const crumbs = [
+  { name: 'Images', href: '/images/' },
+  { name: image.name, href: image.url },
+  { name: 'Builds', href: `${image.url}#builds` },
+  { name: tag, href: buildUrl(image.name, tag) },
+];
+const pull = `docker pull ${image.ref}:${tag}`;
+const description = `Build ${tag} of ${image.name}: ${b.platforms.map((p) => `${p.arch} ${bytes(p.size)}`).join(', ')}, base ${b.base.image}, ${reasonLabel(b.reason)}${summary?.classification ? `, ${summary.classification} change` : ''}.`;
+
+const facts: { label: string; value: string; href?: string; mono?: boolean; title?: string }[] = [
+  { label: 'Upstream version', value: b.version.upstream, mono: true },
+  { label: 'LinuxServer build', value: `ls${b.version.ls_build}`, mono: true },
+  { label: 'Branch', value: `${b.branch} → :${b.version.release_tag ?? b.branch}`, mono: true },
+  { label: 'Commit', value: shortSha(b.commit), href: `https://github.com/${b.repository}/commit/${b.commit}`, mono: true, title: b.commit },
+  { label: 'Built', value: formatDate(b.created), title: b.created },
+  { label: 'Reason', value: reasonLabel(b.reason) },
+  { label: 'Base image', value: b.base.image, mono: true },
+  ...(b.base.digest ? [{ label: 'Base digest', value: shortDigest(b.base.digest), mono: true, title: b.base.digest }] : []),
+  ...(b.index_digest ? [{ label: 'Index digest', value: shortDigest(b.index_digest), mono: true, title: b.index_digest }] : []),
+  ...(b.version.source_url ? [{ label: 'Version source', value: b.version.source ?? 'upstream', href: b.version.source_url }] : []),
+  { label: 'Workflow run', value: `#${b.workflow.run_id}`, href: b.workflow.run_url, mono: true },
+  { label: 'CI contract', value: `workflows@${b.workflow.workflows_ref}${b.workflow.ci_version ? ` · ci ${b.workflow.ci_version}` : ''} · bundle v${b.schema}`, mono: true },
+];
+const tagList = b.version.tags ?? [];
+const units = b.init_graph?.units ?? [];
+---
+
+<Layout section="images" title={`${image.name} ${tag}`} description={description} breadcrumbs={crumbs}>
+  <header class="relative overflow-hidden border-b border-[var(--raft-hair)]" data-pagefind-body>
+    <div class="raft-aurora pointer-events-none absolute inset-0 opacity-50" aria-hidden="true"></div>
+    <div class="raft-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
+    <div class="raft-container relative py-10 md:py-12">
+      <Breadcrumbs crumbs={crumbs} />
+      <div class="mt-8 flex flex-col gap-5 md:flex-row md:items-center">
+        <a href={withBase(image.url)} class="grid size-16 shrink-0 place-items-center rounded-xl border border-[var(--raft-hair-strong)] bg-card p-2.5 shadow-[var(--raft-shadow)]" aria-label={`Back to ${image.name}`}>
+          <ImageLogo image={image} size={44} class="size-11" loading="eager" />
+        </a>
+        <div class="min-w-0">
+          <p class="font-mono text-sm text-muted-foreground">
+            <a href={withBase(image.url)} class="hover:text-foreground">{image.name}</a> · build
+          </p>
+          <div class="mt-1 flex flex-wrap items-center gap-3">
+            <h1 class="font-mono text-3xl font-semibold tracking-tight md:text-4xl">{tag}</h1>
+            <span class:list={['inline-flex items-center gap-1 rounded-md px-2 py-0.5 font-mono text-xs', result === 'success' ? 'bg-[var(--raft-ok)]/15 text-[var(--raft-ok)]' : result === 'failure' ? 'bg-destructive/15 text-destructive' : 'border border-[var(--raft-hair-strong)] text-muted-foreground']}>
+              {result === 'success' ? <Check className="size-3.5" aria-hidden="true" /> : result === 'failure' ? <X className="size-3.5" aria-hidden="true" /> : <Minus className="size-3.5" aria-hidden="true" />}
+              {result}
+            </span>
+            <ClassBadge classification={summary?.classification} class="text-xs" />
+            {newest && <span class="rounded-md border border-[var(--raft-hair-strong)] px-2 py-0.5 font-mono text-xs text-muted-foreground">newest on {b.branch}</span>}
+          </div>
+          <p class="mt-3 flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs text-muted-foreground">
+            <span><time datetime={b.created}>{formatDate(b.created)}</time> · {relative(b.created, SNAPSHOT_DATE)}</span>
+            <span>{b.platforms.map((p) => `${p.arch} ${bytes(p.size)}`).join(' · ')}</span>
+            <span>{b.base.image.replace('ghcr.io/linuxserver/', '')}</span>
+          </p>
+        </div>
+      </div>
+      <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div class="flex max-w-2xl flex-1 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] bg-[var(--raft-code-bg)] py-1 pr-1 pl-4 font-mono text-sm">
+          <span class="min-w-0 flex-1 truncate"><span class="text-primary" aria-hidden="true">$ </span>{pull}</span>
+          <CopyButton client:visible text={pull} label="Copy docker pull command" variant="secondary" />
+        </div>
+        <nav aria-label="Neighbouring builds" class="flex items-center gap-2 font-mono text-xs">
+          {
+            prev && (
+              <a href={withBase(buildUrl(image.name, prev.tag))} class="inline-flex h-9 items-center gap-1 rounded-md border border-[var(--raft-hair)] px-2.5 text-muted-foreground hover:border-[var(--raft-hair-strong)] hover:text-foreground">
+                <ArrowLeft className="size-3.5" aria-hidden="true" /> {prev.tag}
+              </a>
+            )
+          }
+          {
+            newerSameBranch && (
+              <a href={withBase(buildUrl(image.name, newerSameBranch.tag))} class="inline-flex h-9 items-center gap-1 rounded-md border border-[var(--raft-hair)] px-2.5 text-muted-foreground hover:border-[var(--raft-hair-strong)] hover:text-foreground">
+                {newerSameBranch.tag} <ArrowRight className="size-3.5" aria-hidden="true" />
+              </a>
+            )
+          }
+        </nav>
+      </div>
+    </div>
+  </header>
+
+  <div class="raft-container mt-10 space-y-12" data-pagefind-body>
+    <!-- Record -->
+    <section aria-labelledby="record" class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <div class="raft-panel p-5">
+        <h2 id="record" class="raft-eyebrow">Build record</h2>
+        <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-2.5 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
+          {
+            facts.map((f) => (
+              <>
+                <dt class="text-muted-foreground sm:pr-2">{f.label}</dt>
+                <dd class:list={['min-w-0 break-all', f.mono && 'font-mono text-[0.8125rem]']} title={f.title}>
+                  {f.href ? (
+                    <a href={f.href} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-foreground underline-offset-4 hover:text-primary hover:underline">
+                      {f.value}
+                      <ArrowUpRight className="size-3 text-muted-foreground" aria-hidden="true" />
+                      <span class="sr-only">(opens in a new tab)</span>
+                    </a>
+                  ) : (
+                    f.value
+                  )}
+                </dd>
+              </>
+            ))
+          }
+        </dl>
+        {
+          tagList.length > 0 && (
+            <details class="mt-4 border-t border-[var(--raft-hair)] pt-3">
+              <summary class="cursor-pointer font-mono text-xs text-muted-foreground hover:text-foreground">{tagList.length} tags pushed</summary>
+              <ul class="mt-2 flex flex-wrap gap-1.5">
+                {tagList.map((t) => (
+                  <li class="rounded border border-[var(--raft-hair)] px-1.5 py-px font-mono text-[0.6875rem]">{t}</li>
+                ))}
+              </ul>
+            </details>
+          )
+        }
+      </div>
+
+      <div class="space-y-3">
+        <div class="raft-panel overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <caption class="border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] px-4 py-2.5 text-left font-mono text-xs text-muted-foreground uppercase">Platforms</caption>
+            <thead class="sr-only">
+              <tr>
+                <th scope="col">Architecture</th>
+                <th scope="col">Result</th>
+                <th scope="col">Size</th>
+                <th scope="col">Digest</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--raft-hair)]">
+              {
+                b.platforms.map((p) => (
+                  <tr class="align-top">
+                    <th scope="row" class="px-4 py-3 font-mono text-[0.8125rem] font-normal">
+                      {p.arch}
+                      {p.runner && <span class="block text-[0.6875rem] text-muted-foreground">{p.runner}</span>}
+                    </th>
+                    <td class="px-4 py-3 text-xs whitespace-nowrap">
+                      <span class:list={['inline-flex items-center gap-1', p.result === 'success' ? 'text-[var(--raft-ok)]' : p.result === 'failure' ? 'text-destructive' : 'text-muted-foreground']}>
+                        {p.result === 'success' ? <Check className="size-3.5" aria-hidden="true" /> : p.result === 'failure' ? <X className="size-3.5" aria-hidden="true" /> : <Minus className="size-3.5" aria-hidden="true" />}
+                        {p.result}
+                      </span>
+                      {p.build_seconds != null && <span class="block font-mono text-[0.6875rem] text-muted-foreground">{Math.round(p.build_seconds)} s</span>}
+                    </td>
+                    <td class="px-4 py-3 font-mono text-xs whitespace-nowrap tabular-nums">
+                      {bytes(p.size)}
+                      <span class="block text-[0.6875rem] text-muted-foreground">
+                        {bytes(p.uncompressed_size)} on disk{p.layers != null && ` · ${p.layers} layers`}
+                      </span>
+                    </td>
+                    <td class="px-4 py-3 font-mono text-[0.6875rem] text-muted-foreground" title={p.digest ?? undefined}>
+                      {shortDigest(p.digest)}
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <div class="raft-panel p-5">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <h2 class="raft-eyebrow">Tests</h2>
+            <a href={summary?.links.test_report ?? hubReportUrl(image.name, tag)} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm font-medium hover:text-primary">
+              Full report on the hub <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+            </a>
+          </div>
+          {
+            !b.test.enabled ? (
+              <p class="mt-3 text-sm text-muted-foreground">Testing is disabled for this image.</p>
+            ) : (
+              <ul class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {Object.entries(b.test.per_arch ?? Object.fromEntries(arches.map((a) => [a, b.test.success]))).map(([a, ok]) => (
+                  <li class="flex items-center justify-between gap-3 rounded-md border border-[var(--raft-hair)] px-3 py-2 text-sm">
+                    <span class="font-mono text-[0.8125rem]">{a}</span>
+                    <span class:list={['inline-flex items-center gap-1 text-xs', ok ? 'text-[var(--raft-ok)]' : 'text-destructive']}>
+                      {ok ? <Check className="size-3.5" aria-hidden="true" /> : <X className="size-3.5" aria-hidden="true" />}
+                      {ok ? 'passed' : 'failed'}
+                    </span>
+                    <a href={`${hubReportUrl(image.name, tag)}${a}/`} target="_blank" rel="noopener" class="font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+                      report<span class="sr-only"> for {a} (opens in a new tab)</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )
+          }
+          <p class="mt-3 text-xs text-muted-foreground">
+            The hub renders the test table, screenshot and container log from the release's <code class="font-mono">test.&lt;arch&gt;.tar.gz</code>.
+            {b.test.report_url && (
+              <>
+                {' '}Live status of the run is on the{' '}
+                <a href={b.test.report_url} target="_blank" rel="noopener" class="underline-offset-4 hover:text-foreground hover:underline">control plane<span class="sr-only"> (opens in a new tab)</span></a>.
+              </>
+            )}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Diff -->
+    <section aria-labelledby="diff">
+      <h2 id="diff" class="text-xl font-semibold tracking-tight">Changes since the previous build</h2>
+      <p class="mt-2 text-sm text-muted-foreground">
+        The hub diffs every build against the one before it on the same branch: packages by ecosystem, image config, base digest, size and the Dockerfile.
+      </p>
+      <Panel class="mt-4">
+        {
+          record.diff ? (
+            <DiffViewer client:visible diff={record.diff} previousUrl={prev ? withBase(buildUrl(image.name, prev.tag)) : undefined} />
+          ) : (
+            <p class="px-4 py-6 text-sm text-muted-foreground">The hub has no diff for this build.</p>
+          )
+        }
+      </Panel>
+    </section>
+
+    <!-- Dockerfile -->
+    <section aria-labelledby="dockerfile">
+      <h2 id="dockerfile" class="text-xl font-semibold tracking-tight">Dockerfile, annotated</h2>
+      <p class="mt-2 text-sm text-muted-foreground">As built, after the <code class="font-mono">LSIO_FIRST_PARTY</code> injection, with the bytes each instruction added to the image.</p>
+      <Panel class="mt-4">
+        <DockerfileView client:visible dockerfile={b.dockerfile} layers={record.layers} initialArch={arches[0]} />
+      </Panel>
+    </section>
+
+    <!-- Layers -->
+    <section aria-labelledby="layers">
+      <h2 id="layers" class="text-xl font-semibold tracking-tight">Layers</h2>
+      <p class="mt-2 text-sm text-muted-foreground">
+        {totalSize !== null && <>{bytes(totalSize)} compressed over {record.layers[arches[0]]?.length ?? b.platforms[0]?.layers ?? '?'} layers. </>}Each row is one layer of the pushed image with the instruction that produced it.
+      </p>
+      <Panel class="mt-4">
+        <LayerTable client:visible layers={record.layers} dockerfile={b.dockerfile} initialArch={arches[0]} />
+      </Panel>
+    </section>
+
+    <!-- Init graph -->
+    {
+      units.length > 0 && (
+        <section aria-labelledby="init">
+          <h2 id="init" class="text-xl font-semibold tracking-tight">Init graph</h2>
+          <p class="mt-2 text-sm text-muted-foreground">
+            The s6-rc units that run when the container starts, from the bundle's <code class="font-mono">init_graph</code>. Arrows point from a dependency to the unit that waits for it.
+          </p>
+          <Panel class="mt-4">
+            <InitGraph client:visible units={units} image={image.name} />
+          </Panel>
+        </section>
+      )
+    }
+
+    <!-- Explorer -->
+    <section aria-labelledby="explorer">
+      <h2 id="explorer" class="text-xl font-semibold tracking-tight">Explore the image</h2>
+      <p class="mt-2 text-sm text-muted-foreground">
+        Every file and package in the pushed image. The file table (<code class="font-mono">files.&lt;arch&gt;.json.gz</code>) and the package table are fetched from the hub when you open a tab.
+      </p>
+      <Panel class="mt-4">
+        <Explorer
+          client:visible
+          image={image.name}
+          tag={tag}
+          arches={arches}
+          filesUrls={filesUrls}
+          packagesUrls={packagesUrls}
+          packagesFallback={packagesFallback}
+          packagesSummary={packagesSummary}
+          layers={record.layers}
+          config={b.config}
+          labels={b.labels}
+          packagesBase={withBase('/packages/')}
+        />
+      </Panel>
+    </section>
+
+    <!-- Notes and assets -->
+    <section aria-labelledby="notes" class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div class="raft-panel p-5">
+        <h2 id="notes" class="raft-eyebrow">Release notes</h2>
+        {
+          b.notes?.linuxserver && (
+            <div class="mt-3">
+              <h3 class="text-sm font-semibold">LinuxServer changes</h3>
+              <div class="post-body prose mt-1 max-w-none text-sm text-muted-foreground prose-p:my-1.5 dark:prose-invert" set:html={blockMarkdown(b.notes.linuxserver)} />
+            </div>
+          )
+        }
+        {
+          b.notes?.upstream && (
+            <details class="mt-4">
+              <summary class="cursor-pointer text-sm font-semibold hover:text-primary">
+                Upstream changes{b.version.upstream && ` for ${b.version.upstream}`}
+              </summary>
+              <div class="post-body prose mt-2 max-w-none text-sm text-muted-foreground prose-p:my-1.5 dark:prose-invert" set:html={blockMarkdown(b.notes.upstream)} />
+              {b.notes.upstream_url && (
+                <p class="mt-2 text-xs">
+                  <a href={b.notes.upstream_url} target="_blank" rel="noopener" class="underline-offset-4 hover:text-foreground hover:underline">
+                    Source<span class="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </p>
+              )}
+            </details>
+          )
+        }
+        {!b.notes?.linuxserver && !b.notes?.upstream && <p class="mt-3 text-sm text-muted-foreground">No notes were attached to this release.</p>}
+      </div>
+      <nav class="raft-panel p-2" aria-label="Release assets and API">
+        <h2 class="raft-eyebrow px-3 pt-2 pb-1">Data behind this page</h2>
+        <ul class="text-sm">
+          {
+            [
+              { label: 'Release on GitHub', href: summary?.links.release ?? `https://github.com/${b.repository}/releases/tag/${tag}` },
+              { label: 'build.json (hub API)', href: summary?.links.build ?? hubApi(`catalog/${image.name}/builds/${tag}.json`) },
+              { label: 'diff.json', href: summary?.links.diff ?? hubApi(`catalog/${image.name}/builds/${tag}/diff.json`) },
+              ...arches.map((a) => ({ label: `layers.${a}.json`, href: summary?.links.layers[a] ?? hubApi(`catalog/${image.name}/builds/${tag}/layers.${a}.json`) })),
+              ...arches.map((a) => ({ label: `files.${a}.json.gz`, href: filesUrls[a]![0] })),
+              ...b.assets.filter((x) => x.url && /^package_versions\./.test(x.name)).map((x) => ({ label: x.name, href: x.url! })),
+              { label: 'Build history on the hub', href: hubHistoryUrl(image.name) },
+            ].map((l) => (
+              <li>
+                <a href={l.href} target="_blank" rel="noopener" class="flex items-center justify-between gap-2 rounded-md px-3 py-1.5 font-mono text-xs hover:bg-muted">
+                  <span class="truncate">{l.label}</span>
+                  <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <span class="sr-only">(opens in a new tab)</span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="px-3 pt-3 pb-1 font-mono text-[0.6875rem] text-muted-foreground">
+          Snapshot <time datetime={isoDate(SNAPSHOT_DATE)}>{formatDate(SNAPSHOT_DATE)}</time>
+        </p>
+      </nav>
+    </section>
+  </div>
+</Layout>

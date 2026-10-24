@@ -1,0 +1,47 @@
+---
+/** Dense row for one build: image, tag, when, classification and result. Links to the build page. */
+import ClassBadge from '@/components/ClassBadge.astro';
+import ImageLogo from '@/components/ImageLogo.astro';
+import { buildResult, type BuildRef } from '@/lib/builds';
+import { withBase } from '@/lib/base';
+import { relative } from '@/lib/format';
+import { getImage, SNAPSHOT_DATE } from '@/lib/images';
+import { Check, X, Minus } from 'lucide-react';
+
+interface Props {
+  build: BuildRef;
+  /** Hide the image name and logo (on an image's own page). */
+  compact?: boolean;
+}
+const { build, compact = false } = Astro.props;
+const image = getImage(build.image);
+const result = buildResult(build.summary);
+const ResultIcon = result === 'success' ? Check : result === 'failure' ? X : Minus;
+const resultClass = result === 'success' ? 'text-[var(--raft-ok)]' : result === 'failure' ? 'text-destructive' : 'text-muted-foreground';
+---
+
+<a href={withBase(build.url)} class="group flex items-center gap-3.5 rounded-md px-3 py-2.5 transition-colors hover:bg-muted focus-visible:bg-muted">
+  {
+    !compact && image && (
+      <span class="grid size-9 shrink-0 place-items-center rounded-md border border-[var(--raft-hair)] bg-[var(--raft-surface)] p-1">
+        <ImageLogo image={image} size={28} class="size-7" />
+      </span>
+    )
+  }
+  <span class="min-w-0 flex-1">
+    <span class="flex min-w-0 items-baseline gap-2">
+      {!compact && <span class="truncate font-medium text-foreground group-hover:text-primary">{build.image}</span>}
+      <span class:list={['truncate font-mono text-xs', compact ? 'text-foreground group-hover:text-primary' : 'text-muted-foreground']}>{build.summary.tag}</span>
+    </span>
+    <span class="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[0.8125rem] text-muted-foreground">
+      <time datetime={build.summary.created} class="font-mono text-xs">{relative(build.summary.created, SNAPSHOT_DATE)}</time>
+      <span aria-hidden="true">·</span>
+      <ClassBadge classification={build.summary.classification} />
+      <span class="truncate">{build.summary.base.image.replace('ghcr.io/linuxserver/', '')}</span>
+    </span>
+  </span>
+  <span class:list={['inline-flex shrink-0 items-center gap-1 font-mono text-xs', resultClass]}>
+    <ResultIcon className="size-4" aria-hidden="true" />
+    {result}
+  </span>
+</a>
