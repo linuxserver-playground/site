@@ -118,8 +118,10 @@ export interface BuildLinks {
   layers: Partial<Record<Arch, string>>;
   packages: Partial<Record<Arch, string>>;
   release?: string | null;
-  /** `files.<arch>.json.gz` on the Release. */
+  /** `files.<arch>.json.gz`: the hub's copy for the newest build of each branch, else the Release asset. */
   files: Partial<Record<Arch, string>>;
+  /** The Release asset, always. */
+  files_release?: Partial<Record<Arch, string>> | null;
   test_report?: string | null;
 }
 

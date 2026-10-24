@@ -11,13 +11,16 @@ import ImageLogo from '@/components/ImageLogo.astro';
 import CopyButton from '@/components/islands/CopyButton';
 import InstallMenu from '@/components/islands/InstallMenu';
 import ConfigLab from '@/components/islands/ConfigLab';
+import ProxyLab from '@/components/islands/ProxyLab';
+import CompactTreemap from '@/components/islands/explorer/CompactTreemap';
 import { withBase } from '@/lib/base';
-import { buildResult, buildUrl, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
+import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
 import { installOptions, modsForImage } from '@/lib/fleet';
 import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/format';
-import { controlImageUrl, hubApi, hubHistoryUrl, HUB_URL } from '@/lib/hub';
+import { controlImageUrl, hubApi, hubFilesUrl, hubHistoryUrl, HUB_URL, type Arch } from '@/lib/hub';
 import { getAllImages, hubDate, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { buildLabModel } from '@/lib/lab';
+import type { ProxySample } from '@/lib/proxy';
 import { imageJsonLd } from '@/lib/jsonld';
 import { blockMarkdown, inlineMarkdown } from '@/lib/markdown/inline';
 import { getPosts, postsForImage } from '@/lib/posts';
@@ -44,6 +47,44 @@ const labSources = {
   kubernetes: image.links.kubernetes ?? undefined,
   quadlet: image.links.quadlet ?? undefined,
 };
+const proxySample: ProxySample | null = extras.proxy?.subdomain
+  ? {
+      image: image.name,
+      subdomain: extras.proxy.subdomain.trimEnd(),
+      subfolder: extras.proxy.subfolder?.trimEnd() ?? null,
+      port: extras.proxy.port,
+      scheme: extras.proxy.scheme,
+      name: extras.proxy.subdomain.match(/set \$upstream_app (\S+);/)?.[1] ?? image.name,
+      baseUrlNote: extras.proxy.base_url_note ?? null,
+    }
+  : null;
+
+// The latest live build: the newest build of the branch that publishes `latest`, else the newest of all.
+const latestTag = image.releases.find((r) => r.release_tag === 'latest')?.tag;
+const latest = (latestTag && builds.find((b) => b.tag === latestTag)) || builds[0];
+const latestRecord = latest ? getBuildRecord(image.name, latest.tag) : undefined;
+const latestArches = latest ? (latest.platforms.filter((p) => p.result === 'success').map((p) => p.arch) as Arch[]) : [];
+const latestFiles: Partial<Record<Arch, string[]>> = {};
+for (const a of latestArches) {
+  const urls = [latest!.links.files[a], latest!.links.files_release?.[a], hubFilesUrl(image.name, latest!.tag, a)].filter((u): u is string => !!u);
+  if (urls.length) latestFiles[a] = [...new Set(urls)];
+}
+const latestHasFiles = latestArches.some((a) => (latestFiles[a]?.length ?? 0) > 0) && !!latestRecord;
+const latestResult = latest ? buildResult(latest) : null;
+const latestFacts: { label: string; value: string; mono?: boolean; title?: string }[] = latest
+  ? [
+      { label: 'Base image', value: latest.base.image.replace('ghcr.io/linuxserver/', ''), mono: true, title: latest.base.image },
+      { label: 'Upstream version', value: latest.upstream_version, mono: true },
+      ...latest.platforms
+        .filter((p) => p.result === 'success')
+        .map((p) => ({ label: `${p.arch} compressed`, value: `${bytes(p.size)}${p.layers ? ` · ${p.layers} layers` : ''}`, mono: true })),
+      ...Object.entries(latestRecord?.build.packages ?? {}).map(([a, s]) => ({ label: `${a} packages`, value: `${grouped(s.count)} · ${s.distro}`, mono: true })),
+      { label: 'Tests', value: latest.test_success === null || latest.test_success === undefined ? 'not run' : latest.test_success ? 'passed' : 'failed' },
+      { label: 'Built', value: relative(latest.created, SNAPSHOT_DATE), title: formatDate(latest.created) },
+      { label: 'Reason', value: reasonLabel(latest.reason) },
+    ]
+  : [];
+
 const install = installOptions(image.name, { kubernetes: !!extras.kubernetes, quadlet: !!extras.quadlet, proxy: !!extras.proxy?.subdomain });
 
 const crumbs = [
@@ -205,6 +246,45 @@ const changelog = image.changelog ?? [];
           )
         }
       </section>
+
+      {
+        latest && (
+          <section aria-labelledby="inside">
+            <div class="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 id="inside" class="text-xl font-semibold tracking-tight">Inside the latest image</h2>
+                <p class="mt-2 text-sm text-muted-foreground">
+                  <span class="font-mono text-foreground">{image.ref}:{latest.tag}</span>, the newest build of the <span class="font-mono">{latest.branch}</span> branch: what it is made of, from the
+                  build record and the file table the hub keeps for it.
+                </p>
+              </div>
+              <a
+                href={withBase(buildUrl(image.name, latest.tag))}
+                class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground hover:bg-primary/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                Explore this build <ArrowRight className="size-4" aria-hidden="true" />
+              </a>
+            </div>
+            <Panel class="mt-4">
+              <dl class="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-[var(--raft-hair)] p-4 text-sm sm:grid-cols-3 lg:grid-cols-4">
+                {latestFacts.map((f) => (
+                  <div class="min-w-0">
+                    <dt class="font-mono text-[0.6875rem] text-muted-foreground uppercase">{f.label}</dt>
+                    <dd class:list={['mt-0.5 truncate', f.mono ? 'font-mono text-xs' : '', f.label === 'Tests' ? (latestResult === 'success' ? 'text-[var(--raft-ok)]' : latestResult === 'failure' ? 'text-destructive' : '') : '']} title={f.title}>
+                      {f.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              {latestHasFiles ? (
+                <CompactTreemap client:visible image={image.name} tag={latest.tag} arches={latestArches} urls={latestFiles} layers={latestRecord!.layers} />
+              ) : (
+                <p class="px-4 py-3 text-xs text-muted-foreground">The hub has no file table for this build yet; the build page has the layer table and the diff.</p>
+              )}
+            </Panel>
+          </section>
+        )
+      }
 
       {
         image.setup_instructions && (
@@ -449,27 +529,16 @@ const changelog = image.changelog ?? [];
       }
 
       {
-        extras.proxy?.subdomain && (
+        proxySample && (
           <section aria-labelledby="proxy">
-            <h2 id="proxy" class="text-xl font-semibold tracking-tight">SWAG reverse proxy</h2>
+            <h2 id="proxy" class="text-xl font-semibold tracking-tight">Reverse proxy with SWAG</h2>
             <p class="mt-2 text-sm text-muted-foreground">
-              Generated from the manifest's proxy block: {image.name} listens on {extras.proxy.scheme}://{image.name}:{extras.proxy.port}. Copy the sample to{' '}
-              <code class="font-mono text-foreground">/config/nginx/proxy-confs/{image.name}.subdomain.conf</code> in SWAG and restart it.
-              {extras.proxy.base_url_note && <span class="block mt-1" set:html={inlineMarkdown(extras.proxy.base_url_note)} />}
+              The hub generates SWAG samples from the manifest's proxy block: {image.name} listens on {proxySample.scheme}://{proxySample.name}:{proxySample.port}. Pick how you expose it and which
+              authentication SWAG should put in front; the conf is the sample with those lines switched on.
             </p>
-            <Panel class="mt-4" title={`${image.name}.subdomain.conf.sample`} bodyClass="relative bg-[var(--raft-code-bg)]">
-              <CopyButton slot="actions" client:visible text={extras.proxy.subdomain} label="Copy subdomain proxy conf" className="size-7" />
-              <pre class="max-h-[22rem] overflow-auto p-4 font-mono text-[0.75rem] leading-relaxed" tabindex="0" aria-label="SWAG subdomain proxy conf"><code>{extras.proxy.subdomain}</code></pre>
+            <Panel class="mt-4">
+              <ProxyLab client:visible sample={proxySample} source={image.links.proxy ?? undefined} />
             </Panel>
-            {extras.proxy.subfolder && (
-              <details class="mt-3">
-                <summary class="cursor-pointer font-mono text-xs text-muted-foreground hover:text-foreground">{image.name}.subfolder.conf.sample</summary>
-                <Panel class="mt-3" bodyClass="relative bg-[var(--raft-code-bg)]">
-                  <pre class="max-h-[22rem] overflow-auto p-4 pr-14 font-mono text-[0.75rem] leading-relaxed" tabindex="0" aria-label="SWAG subfolder proxy conf"><code>{extras.proxy.subfolder}</code></pre>
-                  <CopyButton client:visible text={extras.proxy.subfolder} label="Copy subfolder proxy conf" className="absolute top-2 right-2" variant="secondary" />
-                </Panel>
-              </details>
-            )}
           </section>
         )
       }
