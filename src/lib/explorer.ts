@@ -2,7 +2,7 @@
  * Browser-safe helpers for the explorer islands: fetching the hub's gzipped file tables, building the
  * layer → directory → file hierarchy, package colours and small formatters. No astro:* imports here.
  */
-import type { Arch, FileEntry, Layer } from './hub';
+import type { Arch, FileEntry, InitUnit, Layer } from './hub';
 
 export const fmtBytes = (n: number | null | undefined, digits = 1): string => {
   if (n === null || n === undefined) return '–';
@@ -241,6 +241,46 @@ export function layerLines(layer: Layer, dockerfile: string): [number, number] |
   return [start + 1, instructionEnd(lines, start) + 1];
 }
 
+/** "RUN |3 BUILD_DATE=… /bin/sh -c echo …" -> "RUN echo …" */
+export function tidyInstruction(s: string | null | undefined): string {
+  if (!s) return '';
+  return s
+    .replace(/^RUN \|\d+\s+(?:\S+=\S*\s+)*\/bin\/sh -c\s*/, 'RUN ')
+    .replace(/^\/bin\/sh -c #\(nop\)\s*/, '')
+    .replace(/^\/bin\/sh -c\s*/, 'RUN ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export interface LayerAttribution {
+  layer: Layer;
+  /** Dockerfile line range (1-based, inclusive) of the instruction that produced the layer; null for base image layers. */
+  lines: [number, number] | null;
+}
+
+/**
+ * Which Dockerfile instruction each layer of the table came from. Provenance (`dockerfile_lines`) wins, and
+ * when the hub attributed some layers the ones it left out are the base image's. Without any provenance the
+ * final stage's layer-producing instructions (RUN, COPY, ADD) are matched to the tail of the table in order,
+ * which is how a single-stage build lays its layers over the base; the text match (`layerLines`) is the
+ * last resort when the counts disagree.
+ */
+export function attributeLayers(layers: Layer[], dockerfile: string): LayerAttribution[] {
+  if (layers.some((l) => l.dockerfile_lines)) return layers.map((l) => ({ layer: l, lines: l.from_base ? null : (l.dockerfile_lines ?? null) }));
+  const ins = parseInstructions(dockerfile);
+  const lastFrom = ins.map((i) => i.keyword).lastIndexOf('FROM');
+  const producing = ins.slice(lastFrom + 1).filter((i) => /^(RUN|COPY|ADD)$/.test(i.keyword));
+  const own = layers.filter((l) => !l.from_base && !l.empty);
+  if (producing.length && producing.length <= own.length) {
+    const tail = own.slice(own.length - producing.length);
+    return layers.map((l) => {
+      const k = tail.indexOf(l);
+      return { layer: l, lines: k >= 0 ? [producing[k].start, producing[k].end] : l.empty ? layerLines(l, dockerfile) : null };
+    });
+  }
+  return layers.map((l) => ({ layer: l, lines: layerLines(l, dockerfile) }));
+}
+
 /** Last line (0-based) of the instruction that starts at `i`, following trailing backslashes. */
 export function instructionEnd(lines: string[], i: number): number {
   let j = i;
@@ -262,4 +302,47 @@ export function parseInstructions(dockerfile: string): { keyword: string; text: 
     i = end;
   }
   return out;
+}
+
+// ---------------------------------------------------------------- init graph
+
+export interface InitStages {
+  /** Units per stage: stage 0 has no dependencies, stage n waits for something in stage n-1. */
+  stages: InitUnit[][];
+  stageOf: Map<string, number>;
+  /** Names depended on that the bundle does not list (an s6 bundle such as `legacy-services`). */
+  missing: Set<string>;
+}
+
+/**
+ * Topological stages of the s6-rc graph: a unit's stage is the longest dependency path below it, so the
+ * stages read left to right as the order things can start. Dependencies the bundle does not list count as
+ * already up (stage -1) and are reported in `missing`.
+ */
+export function initStages(units: InitUnit[]): InitStages {
+  const byName = new Map(units.map((u) => [u.name, u]));
+  const stageOf = new Map<string, number>();
+  const missing = new Set<string>();
+  const visiting = new Set<string>();
+  const depth = (name: string): number => {
+    const u = byName.get(name);
+    if (!u) {
+      missing.add(name);
+      return -1;
+    }
+    if (stageOf.has(name)) return stageOf.get(name)!;
+    if (visiting.has(name)) return 0; // cycle guard
+    visiting.add(name);
+    const d = u.depends_on.length ? Math.max(-1, ...u.depends_on.map(depth)) + 1 : 0;
+    visiting.delete(name);
+    stageOf.set(name, d);
+    return d;
+  };
+  for (const u of units) depth(u.name);
+  const stages: InitUnit[][] = [];
+  for (const u of units) (stages[stageOf.get(u.name)!] ??= []).push(u);
+  for (let i = 0; i < stages.length; i++) stages[i] ??= [];
+  const rank = (u: InitUnit) => (u.source === 'image' ? 0 : u.source === 'mod' ? 1 : 2);
+  for (const s of stages) s.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+  return { stages, stageOf, missing };
 }
