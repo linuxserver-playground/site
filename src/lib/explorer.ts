@@ -170,17 +170,36 @@ export function packageTotals(files: FileEntry[]): { pkg: string | undefined; si
 
 // ---------------------------------------------------------------- colours
 
+/** Stable hue (0-359) per package name; `undefined` (unowned) has no hue. */
+export function pkgHue(purl: string | undefined): number | undefined {
+  if (!purl) return undefined;
+  let h = 0;
+  for (const ch of purlName(purl)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return h % 360;
+}
+
 /**
  * Stable hue per package name. Chroma and lightness are fixed so every swatch keeps the same contrast
- * against the dark and light surfaces; "unowned" is a neutral grey.
+ * against the dark and light surfaces; "unowned" is a neutral grey. `depth` is the treemap's nesting
+ * cue: each level shifts lightness a little (lighter on dark, darker on light) so nesting reads without
+ * changing the hue; `muted` lowers chroma for directory tiles so files stand out inside them.
  */
-export function pkgColor(purl: string | undefined, { dark = true } = {}): string {
-  if (!purl) return dark ? 'oklch(0.42 0.01 280)' : 'oklch(0.82 0.01 280)';
-  let h = 0;
-  const name = purlName(purl);
-  for (const ch of name) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  const hue = h % 360;
-  return dark ? `oklch(0.58 0.12 ${hue})` : `oklch(0.72 0.11 ${hue})`;
+export function pkgColor(purl: string | undefined, opts: { dark?: boolean; depth?: number; muted?: boolean } = {}): string {
+  return pkgTone(purl, opts).fill;
+}
+
+/** The fill of a tile plus the ink that keeps a label readable on it (white on dark fills, near-black on light). */
+export function pkgTone(purl: string | undefined, { dark = true, depth = 0, muted = false } = {}): { fill: string; ink: string; l: number } {
+  const hue = pkgHue(purl);
+  const step = Math.min(depth, 6) * 0.03;
+  const l = hue === undefined ? (dark ? 0.36 + step : 0.86 - step) : dark ? 0.52 + step : 0.74 - step;
+  const c = hue === undefined ? 0.01 : muted ? 0.045 : dark ? 0.12 : 0.11;
+  return { fill: `oklch(${l.toFixed(3)} ${c} ${hue ?? 280})`, ink: l > 0.62 ? '#0e0b18' : '#ffffff', l };
+}
+
+/** Fill for layer tiles: a neutral violet tint, shifted by depth like the package colours. */
+export function layerColor({ dark = true } = {}): string {
+  return dark ? 'oklch(0.3 0.03 290)' : 'oklch(0.93 0.02 290)';
 }
 
 export const SOURCE_COLOR: Record<string, string> = {
