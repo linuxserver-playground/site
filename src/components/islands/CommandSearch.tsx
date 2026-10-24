@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { ArrowRight, Box, FileText, Search, TextSearch } from 'lucide-react';
+import { ArrowRight, BookOpen, Box, FileText, Search, TextSearch } from 'lucide-react';
 import {
   Command,
   CommandDialog,
@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 export interface SearchIndex {
   images: { n: string; s: string; u: string; l?: string; c: string[]; p: number }[];
   posts: { t: string; u: string; y: number; g: string[] }[];
+  /** Documentation pages: title, URL, section title, extra keywords. */
+  docs?: { t: string; u: string; s: string; k?: string }[];
   pages: { t: string; u: string; k?: string }[];
 }
 
@@ -59,6 +61,19 @@ function scorePost(p: SearchIndex['posts'][number], terms: string[]): number {
   }
   return total;
 }
+function scoreDoc(d: NonNullable<SearchIndex['docs']>[number], terms: string[]): number {
+  const title = d.t.toLowerCase();
+  const rest = `${d.s} ${d.k ?? ''}`.toLowerCase();
+  let total = 0;
+  for (const t of terms) {
+    if (title === t) total += 40;
+    else if (startsWord(title, t)) total += 20;
+    else if (title.includes(t)) total += 10;
+    else if (startsWord(rest, t)) total += 6;
+    else return 0;
+  }
+  return total;
+}
 /** Highest score first; ties go to `tiebreak` (higher first), e.g. monthly pulls for images. */
 const ranked = <T,>(items: T[], score: (x: T) => number, limit: number, tiebreak: (x: T) => number = () => 0) =>
   items
@@ -77,7 +92,7 @@ let owner: symbol | null = null;
 const loadIndex = (url: string) => (indexPromise ??= fetch(url).then((r) => r.json()));
 
 /** Open the palette from anywhere: window.dispatchEvent(new CustomEvent('lsio:search')) */
-export default function CommandSearch({ indexUrl, searchUrl, trigger = 'input', placeholder = 'Search images and posts…', className }: Props) {
+export default function CommandSearch({ indexUrl, searchUrl, trigger = 'input', placeholder = 'Search images, docs and posts…', className }: Props) {
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState('');
   const [index, setIndex] = React.useState<SearchIndex | null>(null);
@@ -143,8 +158,9 @@ export default function CommandSearch({ indexUrl, searchUrl, trigger = 'input', 
   const popular = React.useMemo(() => (index ? [...index.images].sort((a, b) => b.p - a.p).slice(0, 6) : []), [index]);
   const images = q ? ranked(index?.images ?? [], (i) => scoreImage(i, terms), 8, (i) => i.p) : popular;
   const posts = q ? ranked(index?.posts ?? [], (p) => scorePost(p, terms), 6) : (index?.posts.slice(0, 4) ?? []);
+  const docs = q ? ranked(index?.docs ?? [], (d) => scoreDoc(d, terms), 6) : [];
   const pages = (index?.pages ?? []).filter((p) => !q || terms.every((t) => `${p.t} ${p.k ?? ''}`.toLowerCase().includes(t)));
-  const first = images[0] ? `image ${images[0].n}` : posts[0] ? `post ${posts[0].t}` : pages[0] ? `page ${pages[0].t}` : q ? `fulltext ${q}` : '';
+  const first = images[0] ? `image ${images[0].n}` : docs[0] ? `doc ${docs[0].u}` : posts[0] ? `post ${posts[0].t}` : pages[0] ? `page ${pages[0].t}` : q ? `fulltext ${q}` : '';
 
   // Every keystroke: highlight the best match and scroll back to the top so it is visible.
   React.useEffect(() => {
@@ -191,7 +207,7 @@ export default function CommandSearch({ indexUrl, searchUrl, trigger = 'input', 
           open={open}
           onOpenChange={setOpen}
           title="Search LinuxServer.io"
-          description="Find an image, a blog post or a page"
+          description="Find an image, a docs page, a blog post or a page"
           className="sm:max-w-xl"
         >
           {/* cmdk's input and items need a <Command> root; this shadcn CommandDialog does not add one. */}
@@ -210,6 +226,17 @@ export default function CommandSearch({ indexUrl, searchUrl, trigger = 'input', 
                       )}
                       <span className="font-medium">{i.n}</span>
                       <span className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{i.s}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
+              {docs.length > 0 && (
+                <CommandGroup heading="Documentation">
+                  {docs.map((d) => (
+                    <CommandItem key={d.u} value={`doc ${d.u}`} onSelect={() => go(d.u)}>
+                      <BookOpen aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">{d.t}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{d.s}</span>
                     </CommandItem>
                   ))}
                 </CommandGroup>
@@ -241,7 +268,7 @@ export default function CommandSearch({ indexUrl, searchUrl, trigger = 'input', 
                   <CommandGroup>
                     <CommandItem value={`fulltext ${q}`} onSelect={() => go(`${searchUrl}?q=${encodeURIComponent(q)}`)}>
                       <TextSearch aria-hidden="true" />
-                      Search every post for “{q}”
+                      Search the whole site for “{q}”
                     </CommandItem>
                   </CommandGroup>
                 </>

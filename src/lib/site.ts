@@ -22,9 +22,10 @@ export interface NavItem {
   description?: string;
 }
 
-/** Primary navigation. Docs and the control plane are separate sites. */
+/** Primary navigation. The control plane is a separate site; the docs live here under /docs/. */
 export const NAV: NavItem[] = [
   { label: 'Images', href: '/images/', description: 'Browse every container we maintain' },
+  { label: 'Docs', href: '/docs/', description: 'How to run our containers, Selkies, policies and the FAQ' },
   { label: 'Fleet', href: '/fleet/', description: 'Base images, staleness and the latest builds' },
   { label: 'Mods', href: '/mods/', description: 'Docker mods for every image' },
   { label: 'Stores', href: '/stores/', description: 'Unraid, Portainer, CasaOS, Umbrel and more' },
@@ -35,7 +36,6 @@ export const NAV: NavItem[] = [
 
 export const NAV_SECONDARY: NavItem[] = [
   { label: 'Packages', href: '/packages/', description: 'Which image ships which package' },
-  { label: 'Docs', href: 'https://docs.linuxserver.io/', external: true, description: 'Setup guides for every image' },
   { label: 'Live builds', href: 'https://ci.thelamer.duckdns.org:8443', external: true, description: 'The control plane: build queue and live status' },
 ];
 
@@ -45,7 +45,6 @@ export const LINKS = {
   github: 'https://github.com/linuxserver-playground',
   discord: 'https://discord.gg/YWrKVTn',
   discussions: 'https://github.com/orgs/linuxserver/discussions',
-  docs: 'https://docs.linuxserver.io/',
   /** The control plane: live build status, queue and scheduler. Linked, never embedded. */
   control: 'https://ci.thelamer.duckdns.org:8443',
   /** The hub: the static API every number on this site comes from. */
@@ -55,7 +54,7 @@ export const LINKS = {
   bluesky: 'https://bsky.app/profile/linuxserver.io',
   opencollective: 'https://opencollective.com/linuxserver',
   team: 'https://github.com/orgs/linuxserver-playground/people',
-  /** Where posts are edited ("Edit on GitHub" links). */
+  /** Where posts and docs are edited ("Edit on GitHub" links). */
   repo: 'https://github.com/linuxserver-playground/site',
 };
 
@@ -85,9 +84,9 @@ export interface SupportChannel {
 export const SUPPORT_CHANNELS: SupportChannel[] = [
   {
     name: 'Documentation',
-    href: LINKS.docs,
+    href: '/docs/',
     icon: 'docs',
-    summary: 'Setup guides, parameters and FAQs for every one of our images.',
+    summary: 'How to run our containers, the FAQ, and a page for every image with its parameters and setup.',
     bestFor: 'Start here. Most questions are already answered.',
   },
   {

@@ -1,0 +1,68 @@
+---
+import { render } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import DocsShell from '@/components/DocsShell.astro';
+import { docPath, docUrl, getSections, type SectionView } from '@/lib/docs';
+import { docJsonLd, itemListJsonLd } from '@/lib/jsonld';
+
+// /docs/<section>/: the section's index.md if it has one, then its pages
+export async function getStaticPaths() {
+  return (await getSections()).map((section) => ({ params: { section: section.id }, props: { section } }));
+}
+
+const { section } = Astro.props as { section: SectionView };
+const intro = section.intro;
+const rendered = intro ? await render(intro) : undefined;
+const title = intro?.data.title ?? section.title;
+const description = intro?.data.description ?? section.description;
+const next = section.pages[0];
+const crumbs = [
+  { name: 'Docs', href: '/docs/' },
+  { name: section.title, href: section.path },
+];
+const jsonLd = [
+  itemListJsonLd(
+    `${section.title} documentation`,
+    section.pages.map((p) => ({ name: p.data.title, url: docPath(p) })),
+    Astro.site,
+  ),
+  ...(intro ? [docJsonLd({ title, description, path: section.path, section: section.title, updated: intro.data.updated }, Astro.site)] : []),
+];
+---
+
+<Layout section="docs" title={`${title} documentation`} description={description} breadcrumbs={crumbs} jsonLd={jsonLd} modifiedTime={intro?.data.updated}>
+  <DocsShell section={section} doc={intro} title={title} description={description} headings={rendered?.headings} crumbs={crumbs} next={next}>
+    {rendered && <rendered.Content />}
+    {
+      !rendered && section.pages.length > 0 && (
+        <p>
+          {section.pages.length} pages, in reading order. Start with <a href={docUrl(section.pages[0])}>{section.pages[0].data.title}</a>.
+        </p>
+      )
+    }
+    <Fragment slot="after">
+      {
+        section.pages.length > 0 && (
+          <section aria-labelledby="section-pages" class="mt-12 max-w-[46rem]">
+            <h2 id="section-pages" class="raft-eyebrow">Pages in this section</h2>
+            {section.groups.map((g) => (
+              <div class="mt-5">
+                {g.name && <h3 class="mb-2 font-mono text-xs tracking-wide text-muted-foreground uppercase">{g.name}</h3>}
+                <ol class="raft-panel divide-y divide-[var(--raft-hair)]">
+                  {g.pages.map((p) => (
+                    <li>
+                      <a href={docUrl(p)} class="group block px-4 py-3 hover:bg-muted/40">
+                        <span class="font-medium group-hover:text-primary">{p.data.title}</span>
+                        <span class="mt-0.5 block text-sm text-muted-foreground">{p.data.description}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+          </section>
+        )
+      }
+    </Fragment>
+  </DocsShell>
+</Layout>

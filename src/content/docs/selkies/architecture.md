@@ -1,0 +1,90 @@
+---
+title: Platform Architecture
+description: This page is the technical deep dive into how a Selkies container actually works, from compositor to canvas. It assumes you have read the high level overview on the home page.
+section: selkies
+order: 14
+group: Developer guide
+updated: 2026-10-20
+aliases:
+  - /selkies/developer-guide/architecture/
+---
+This page is the technical deep dive into how a Selkies container actually works, from compositor to canvas. It assumes you have read the high level overview on the [home page](/docs/selkies/).
+
+## Process topology (Wayland mode)
+
+Everything runs in one container under s6-overlay supervision:
+
+- **s6-overlay** starts four long running services:
+    - **nginx** on `:3000` and `:3001`;
+    - **pulseaudio**, with null sinks for output and input;
+    - the **selkies python server**, WebSocket on `:8082`, which in turn runs
+        - **pixelflux** in process: the Smithay compositor plus the encoders, listening on the `wayland-1` socket, and
+        - **pcmflux**, encoding Opus from the pulse monitor;
+    - **`startwm_wayland.sh`**, which starts
+        - **labwc**, a client of `wayland-1` that serves `wayland-0` and XWayland `:0`, which launches
+            - the **application from autostart**.
+
+The subtle point people miss: **pixelflux is the display server.** When the Selkies python process starts in Wayland mode it calls `ensure_wayland_display()`, which spins up a headless Smithay based compositor inside the pixelflux extension, listening on `wayland-1`. There is no separate compositor daemon and no DRM or seat management, the "monitor" is a buffer that pixelflux owns, on GPU or in CPU memory.
+
+labwc then runs as a *client* of that compositor (using its Wayland backend, the nested pattern) and provides window management, decorations, and XWayland on display `:0` for legacy apps. Applications connect to labwc's `wayland-0` socket. Full desktops swap labwc for a heavier nested compositor: Webtop KDE runs `kwin_wayland` nested on `wayland-1` with plasmashell on top.
+
+In X11 mode the shape is more traditional: an XLibre Xvfb built with glamor and DRI3 provides `:1` with its screen pixmap on the GPU, Openbox manages windows, and pixelflux captures the screen with a DRI3 blit into DMA-BUFs the encoder imports in place. Without a GPU, or when the DRI3 path is declined, it captures via XShm with per stripe hashing for damage detection.
+
+## The video pipeline
+
+### Capture and damage
+
+- Wayland: the compositor knows exactly which rectangles changed each frame, damage tracking is free and exact.
+- X11: on the DRI3 path the Damage extension reports whether anything changed since the last frame. On the XShm path pixelflux hashes each horizontal stripe of the framebuffer per frame (xxh3) and marks changed stripes dirty, with a "damage block" heuristic that stops re hashing regions that are continuously changing.
+- Idle screens take a fast path that costs close to zero CPU.
+
+### Encoding
+
+Six codecs behind one policy layer, each resolved to a GPU engine or a software encoder at runtime:
+
+| Path | Codecs | Shape |
+| --- | --- | --- |
+| CPU striped | JPEG, H.264 (x264, or OpenH264 in a GPL free build) | One stripe per core, parallel encode, only dirty stripes sent |
+| CPU full frame | H.265 (x265), VP8 and VP9 (libvpx), AV1 (SVT-AV1) | Whole frame per encode, no striping |
+| GPU | NVENC: H.264, H.265, AV1. VA-API: all five | Full frame, zero copy from DMA-BUF when render and encode share a device |
+
+Quality logic is shared: infinite GOP with on demand IDR frames and reference invalidation so a lost frame costs no keyframe, CRF or CBR rate control with live retuning on one quality scale mapped onto each codec's quantizer, congestion control that steers a CBR stream to what each page's link carries, 4:4:4 and 10-bit where the codec and encoder carry them, and the **paint over** system: once the screen holds still it is resent at high quality (better JPEG quality, a video burst at lower CRF, or under CBR a refinement through the rate control), cancelled instantly by motion. Selkies probes the encoding device at startup and only offers the codecs the host can serve.
+
+The full encoder and settings detail lives on the [Pixelflux page](/docs/selkies/pixelflux/).
+
+### Transport and presentation
+
+Encoded frames go to the Selkies server as callback invocations carrying a compact binary header (type, frame id, stripe geometry), and Selkies broadcasts them raw over the WebSocket, the server never re muxes or re packetizes. In the browser, WebCodecs decodes the video codec named in each frame's header, `createImageBitmap` handles JPEG stripes, and everything composites onto a canvas. Because the client acknowledges frame ids, the server maintains a per client backpressure window: slow clients get frames dropped *before* encode (keeping the H.264 reference chain valid), fast clients are never held back. Wire formats are specified in [The Streaming Protocol](/docs/selkies/protocol/).
+
+## The audio pipeline
+
+PulseAudio runs with two null sinks: `output` (what apps play into) and `input` (what apps record from). Pcmflux captures `output.monitor` and Opus encodes 48kHz stereo frames natively, which Selkies broadcasts as binary WebSocket messages, decoded in the browser by an AudioDecoder worker feeding an AudioWorklet. The reverse path takes browser mic PCM, writes it into the `input` sink through a virtual source, and applications see a working microphone.
+
+## Input
+
+Browser events become terse text messages over the same socket (`kd,<keysym>`, `m,<x>,<y>,<mask>,<mag>`, and friends). Injection differs by stack:
+
+- **Wayland**: injected through pixelflux's compositor seat, keyboard by scancode against a hot swappable xkb keymap, pointer absolute or relative, with unicode and IME text batched through an in process virtual keyboard client. The path forks no tools: the compositor is headless and synthetic, so the API is the only door. Under a nested KWin, relative motion for games goes through KWin's fake input device.
+- **X11**: in process XTEST over a vendored python-xlib, with a dynamic spare keycode overlay for keysyms the layout lacks and an XKB group lock so shortcuts work across layouts; xdotool is only a last resort fallback.
+
+Gamepads bypass the display server entirely: Selkies serves the Linux joystick and evdev protocols over Unix sockets, and the `LD_PRELOAD` interposer plus fake udev library make applications believe `/dev/input/js0` is a real Xbox 360 pad. Four slots exist, mappable to remote players.
+
+## The web layer
+
+Nginx inside the container is the single front door: it serves the static client (a React dashboard over the `selkies-web-core` engine), proxies `/api` (the data WebSocket, WebRTC signaling, the `/api/files/` browser, printed documents, the operator API, and the token control plane) to the Selkies server, optionally enforces basic auth, applies the `SUBFOLDER` prefix, which Selkies reads too, and proxies `/pelorus/` when the agent layer is on. The dashboard and the engine communicate over a documented `postMessage` API, which is the extension point for custom frontends.
+
+## Sharing and multi user
+
+One session, many sockets. Every connected client gets the same broadcast frames; roles (controller, view only, player N) gate which input messages are honored, and a page on a narrower link is sent fewer frames with the encoder predicting past the ones it skipped. In secure mode (used by SealSkin), access requires per user tokens registered through `POST /api/tokens` with the master token or read from a tokens file, and roles and gamepad slots can be re assigned live, this is what powers collaboration rooms with granular permissions.
+
+## Where the orchestration layer plugs in
+
+Nothing in the container knows about SealSkin. The orchestration contract is entirely environment variables and volumes at launch: `SUBFOLDER` for path routing, `CUSTOM_USER` and `PASSWORD` for per session auth injected by the proxy, `SELKIES_MASTER_TOKEN` (and optionally `SELKIES_TOKENS_FILE`) to switch on token mode, `DRINODE` and `DRI_NODE` for GPU placement, and a bind mounted home with an autostart script written before boot. Any scheduler that can do those five things can orchestrate the platform, that is the entire integration surface, and [SealSkin](/docs/selkies/sealskin/) is the reference implementation of it.
+
+## Performance characteristics
+
+Design consequences worth knowing when you build on this:
+
+- **Static cost is near zero.** Idle sessions consume almost no CPU or bandwidth, so dense multi session hosts work, the demonstrated benchmark is eight Firefox sessions streaming  youtube on an N97 mini PC.
+- **Zero copy changes the economics.** With render and encode on one GPU, the CPU cost of a session is input handling and websocket writes; system RAM bandwidth is untouched by pixels.
+- **Latency is dominated by the network.** The pipeline adds a frame or two; backpressure trades throughput for freshness per client automatically.

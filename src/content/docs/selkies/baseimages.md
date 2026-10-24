@@ -1,0 +1,79 @@
+---
+title: Selkies Baseimages
+description: "docker-baseimage-selkies, the image every Webtop and single-application container is built from: what it packages and how its runtime fits together."
+section: selkies
+order: 23
+group: Components
+updated: 2026-10-20
+aliases:
+  - /selkies/components/baseimages/
+---
+**Repository:** [linuxserver/docker-baseimage-selkies](https://github.com/linuxserver/docker-baseimage-selkies) · **Registries:** `ghcr.io/linuxserver/baseimage-selkies`, `lsiobase/selkies`
+
+`docker-baseimage-selkies` is the packaging layer of the platform, the image every Webtop and single application container is built FROM. It assembles the whole runtime, the compositor stack, Selkies, pixelflux and pcmflux, Nginx, PulseAudio, GPU detection, hardening, and the LinuxServer.io s6 service machinery, so that a downstream image only has to install an application and say how to start it.
+
+This page is the component overview. The [Developer Guide](/docs/selkies/developer-guide/) covers building on it ([Building Custom Images](/docs/selkies/building-images/)) and its internals in depth ([Baseimage Internals](/docs/selkies/baseimage-internals/)).
+
+## Available distros
+
+One branch and tag per base distribution, all for x86_64 and aarch64:
+
+| Distro | Tag |
+| --- | --- |
+| Alpine | `alpine324` |
+| Arch | `arch` |
+| Debian | `debiantrixie` |
+| Fedora | `fedora44` |
+| Kali | `kali` |
+| Ubuntu | `ubunturesolute` |
+
+There is deliberately **no `latest` tag** for base images. Downstream images pin a distro tag, for example `FROM ghcr.io/linuxserver/baseimage-selkies:debiantrixie`.
+
+## What is inside
+
+- **The LSIO foundation**: each tag builds on the corresponding LinuxServer.io distro baseimage, inheriting s6-overlay init, the `abc` user with PUID and PGID remapping, `TZ`, Docker mods, and the `/custom-cont-init.d` and `/custom-services.d` hooks.
+- **Selkies** (pinned release) installed into the `/lsiopy` virtualenv, with pixelflux 2.x and pcmflux 2.x, plus [Pelorus](/docs/selkies/pelorus/) preinstalled.
+- **The web client**: prebuilt dashboards under `/usr/share/selkies/`, selected at runtime by the `DASHBOARD` variable.
+- **Display servers for both stacks**: labwc (built from source with two small patches: the IPC socket Pelorus queries windows over, and a control socket Selkies asks for a second screen over) for Wayland, and an XLibre Xvfb built with glamor and DRI3 plus Openbox for X11. The Xvfb carries four LinuxServer patches: the screen pixmap lives on the GPU and the framebuffer follows RandR resizes, which is what makes zero copy capture possible on X11; it starts with spare outputs a second display is plugged into as a real monitor; DRI3 presents synchronize explicitly through timeline syncobjs where the driver supports them; and its fake vblank runs at the rate the session is captured at. Both are prebuilt per distro in [selkies-layers](https://github.com/linuxserver/selkies-layers) and copied into the image, along with wlroots 0.19.3 on distros that do not package it.
+- **[Selkies Desktop](/docs/selkies/selkies-desktop/)** at `/usr/bin/selkies-desktop`, activated by env var.
+- **Nginx** serving the client, proxying everything under `/api` (the WebSocket, WebRTC signaling, files, printing, and the operator API) to Selkies, handling basic auth, the subfolder prefix, and the `/pelorus/` proxy.
+- **PulseAudio** with null sinks (`output` and `input`) wired for stream audio and microphone return.
+- **Gamepad plumbing**: the input interposer and fake udev libraries, preloaded globally, with device nodes created at init.
+- **Printing**: `cups-daemon` and `cups-filters`, which Selkies runs as the session user so a printed document reaches the browser.
+- **Quality of life**: passwordless sudo for the desktop user, all system locales prebuilt for `LC_ALL`, `proot-apps` synced into the user home for persistent app installs, Docker in Docker support for privileged containers, and notification support.
+
+## The runtime in one diagram
+
+Five s6 services, and what each one brings up:
+
+- **`svc-nginx`** serves the web client, the `/api` proxy and `/pelorus` on `3000` and `3001`.
+- **`svc-pulseaudio`** provides the audio sinks.
+- **`svc-selkies`**, the Selkies server, starts the **pixelflux Wayland compositor** in process, on the `wayland-1` socket.
+- **`svc-de`**, the startwm script, waits for `wayland-1` and then starts **labwc or a full desktop environment**, which exposes `wayland-0` and launches the **autostart application**.
+- **`svc-watchdog`** restarts the application when `RESTART_APP` asks for it.
+
+At startup a chain of one shot init scripts configures everything from environment variables: Nginx substitution (ports, auth, subfolder, title), Wayland or X11 mode selection, first run copy of the autostart and menu defaults into `/config`, hardening (the `HARDEN_*` and `DISABLE_*` family), GPU detection and permission fixes, and gamepad device setup. Then the long running services above come up in dependency order.
+
+## The two session modes
+
+- **Wayland**: pixelflux hosts the virtual compositor; labwc (single apps) or a full desktop (Webtop flavors) nests on it. `PIXELFLUX_WAYLAND=true` is baked into images whose application or desktop runs on Wayland.
+- **X11**: XLibre Xvfb with glamor and DRI3 on `:1`, Openbox for single apps or the desktop's own window manager, and pixelflux capturing the GPU resident screen through DRI3. Selected with `PIXELFLUX_WAYLAND=false`, and the stack for applications and desktops that run best on X11.
+
+Both stacks encode with zero copy on a GPU and share the same CPU encoders without one.
+
+## The downstream contract
+
+A downstream image customizes the base by providing a handful of well known files:
+
+| File | Purpose |
+| --- | --- |
+| `/defaults/autostart_wayland` and `/defaults/autostart` | The command that launches your app (Wayland and X11 variants) |
+| `/defaults/menu_wayland.xml` and `/defaults/menu.xml` | The right click root menu |
+| `/defaults/startwm_wayland.sh` and `/defaults/startwm.sh` | Replace the whole session for full desktop images |
+| `/usr/share/selkies/www/icon.png` | The app icon used for the PWA and favicon |
+
+Plus `ENV TITLE`, and whatever packages the app needs. That is the entire interface, [Building Custom Images](/docs/selkies/building-images/) walks through real examples.
+
+## Versioning and builds
+
+Images rebuild on a weekly package check cadence and on baseimage changes, through the standard LinuxServer.io Jenkins pipeline. Each downstream repository (chromium, webtop, and the rest of the fleet) is triggered from its own upstream signal, app version bumps or OS package updates, so the whole catalog stays current without manual intervention.

@@ -2,6 +2,7 @@ import { defineCollection } from 'astro:content';
 import { file, glob } from 'astro/loaders';
 import { z } from 'astro/zod';
 import { parse as parseYaml } from 'yaml';
+import { DOC_SECTION_IDS } from './lib/docs-sections';
 
 /**
  * Blog posts: one folder per post, src/content/posts/<slug>/index.md, images alongside.
@@ -66,4 +67,33 @@ const spotlight = defineCollection({
   }),
 });
 
-export const collections = { posts, authors, spotlight };
+/**
+ * Documentation: src/content/docs/<section>/<slug>.md, one file per page, images alongside. The URL is
+ * /docs/<section>/<slug>/; a file called index.md is the section's own page at /docs/<section>/. Sections
+ * are declared in src/lib/docs-sections.ts. See CONTRIBUTING.md, "Writing docs".
+ */
+const docs = defineCollection({
+  loader: glob({
+    base: './src/content/docs',
+    pattern: '**/*.md',
+    generateId: ({ entry }) => entry.replace(/\.md$/, ''),
+  }),
+  schema: z.object({
+    title: z.string().min(1),
+    /** One or two sentences: shown on the section index, in search results and in the meta description. */
+    description: z.string().min(1),
+    /** Must be the folder the file is in; a typo here fails the build. */
+    section: z.enum(DOC_SECTION_IDS),
+    /** Position in the section's sidebar, lowest first. */
+    order: z.number().int().default(100),
+    /** Optional sub-heading in the sidebar, e.g. "Other platforms". Pages with the same group sit together. */
+    group: z.string().optional(),
+    updated: z.coerce.date().optional(),
+    tags: z.array(z.string()).default([]),
+    draft: z.boolean().default(false),
+    /** Old URLs of this page (path only, e.g. /general/swag/), for the 404 page's redirect map. */
+    aliases: z.array(z.string().regex(/^\/.*\/$/, 'an alias is a path that starts and ends with "/"')).default([]),
+  }),
+});
+
+export const collections = { posts, authors, spotlight, docs };
