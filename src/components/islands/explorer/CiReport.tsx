@@ -228,7 +228,9 @@ function Status({ s }: { s: string }) {
 /** A collapsible log: fetched the first time it is opened, monospace, with copy and download. */
 function LogDetails({ title, url, openByDefault = false, emptyText }: { title: string; url: string; openByDefault?: boolean; emptyText?: string }) {
   const [open, setOpen] = React.useState(false);
-  const [text, setText] = React.useState<string | null>(null);
+  // Keyed by URL, so switching architecture loads that architecture's file instead of keeping the last one.
+  const [loaded, setLoaded] = React.useState<{ url: string; text: string } | null>(null);
+  const text = loaded?.url === url ? loaded.text : null;
   const [state, setState] = React.useState<'idle' | 'loading' | 'missing' | 'error'>('idle');
   const [copied, setCopied] = React.useState(false);
   const [hydrated, setHydrated] = React.useState(false);
@@ -237,22 +239,25 @@ function LogDetails({ title, url, openByDefault = false, emptyText }: { title: s
     if (openByDefault) setOpen(true);
   }, [openByDefault]);
 
+  // `state` stays out of the dependencies: setting it to 'loading' would re-run the effect, whose cleanup aborts
+  // the request it just started, and the panel would wait forever.
   React.useEffect(() => {
-    if (!open || text !== null || state === 'loading') return;
+    if (!open || loaded?.url === url) return;
     const ctrl = new AbortController();
     setState('loading');
     fetch(url, { signal: ctrl.signal })
       .then(async (r) => {
         if (r.status === 404) return setState('missing');
         if (!r.ok) throw new Error(String(r.status));
-        setText(await r.text());
+        const body = await r.text();
+        setLoaded({ url, text: body });
         setState('idle');
       })
       .catch((e) => {
         if ((e as Error).name !== 'AbortError') setState('error');
       });
     return () => ctrl.abort();
-  }, [open, url, text, state]);
+  }, [open, url, loaded]);
 
   const copy = async () => {
     if (text === null) return;
