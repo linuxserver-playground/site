@@ -96,4 +96,24 @@ const docs = defineCollection({
   }),
 });
 
-export const collections = { posts, authors, spotlight, docs };
+/**
+ * Image documentation: each image's README, one file per `##` section, written by scripts/refresh-data.mjs from
+ * the hub's api/v1/catalog/<name>/docs.json into src/content/imagedocs/<image>/<order>-<section>.md. Generated;
+ * never edit these files, change the image's image.yml or the builder templates instead.
+ */
+const imagedocs = defineCollection({
+  loader: glob({
+    base: './src/content/imagedocs',
+    pattern: '*/*.md',
+    generateId: ({ entry }) => entry.replace(/\.md$/, ''),
+  }),
+  schema: z.object({
+    image: z.string(),
+    /** Slug of the heading, stable across images: application-setup, support-info, updating-info. */
+    section: z.string(),
+    title: z.string(),
+    order: z.number().int(),
+  }),
+});
+
+export const collections = { posts, authors, spotlight, docs, imagedocs };
