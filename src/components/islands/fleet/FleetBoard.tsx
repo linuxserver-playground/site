@@ -2,9 +2,11 @@
  * The fleet board: one row per image × live branch from `/api/fleet.json`, refreshed on the control
  * plane's `builds`, `runs`, `manifests`, `skips` and `scheduler_decisions` events. Filters: failures
  * first, drift, one image, free text. Members get dispatch, package check and skip controls per row.
+ * Helper repos (docker-* repos that are not images, such as docker-mods) follow in their own list and never
+ * link an image page.
  */
 import * as React from 'react';
-import { repoShort, useControl, type FleetPage, type FleetRow } from '@/lib/control';
+import { repoShort, useControl, type FleetPage, type FleetRow, type HelperRepo } from '@/lib/control';
 import { ActionButton, BranchActions, DriftPill, Empty, ExtLink, MemberOnly, Offline, PanelBar, Pill, Rel, Select, Skeleton, SkipControls, StatePill, Table, TD, TH, Toggle } from './shared';
 
 interface Props {
@@ -14,12 +16,14 @@ interface Props {
   known: string[];
   /** `withBase('/fleet/runs/')` */
   runsBase: string;
+  /** `withBase('/mods/')`: the docker-mods helper repo links the mods index. */
+  modsBase: string;
   fallback: string;
 }
 
 const severity = (r: FleetRow) => (r.result === 'failure' ? 0 : r.result === 'cancelled' ? 1 : r.result === null ? 2 : r.drift === 'ahead' ? 3 : 4);
 
-export default function FleetBoard({ imagesBase, known, runsBase, fallback }: Props) {
+export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fallback }: Props) {
   const { data, error, loading, at, reload } = useControl<FleetPage>('fleet.json', ['builds', 'runs', 'manifests', 'skips', 'scheduler_decisions', 'repos']);
   const [redFirst, setRedFirst] = React.useState(true);
   const [drift, setDrift] = React.useState('all');
@@ -116,9 +120,53 @@ export default function FleetBoard({ imagesBase, known, runsBase, fallback }: Pr
               </tbody>
             </Table>
           )}
+          {(data.helpers ?? []).filter((h) => !h.archived).length > 0 && <Helpers helpers={(data.helpers ?? []).filter((h) => !h.archived)} modsBase={modsBase} />}
         </>
       )}
     </div>
+  );
+}
+
+/** Repos named docker-* that are not images: how their branch builds stand, linking GitHub (and the mods index). */
+function Helpers({ helpers, modsBase }: { helpers: HelperRepo[]; modsBase: string }) {
+  return (
+    <section aria-label="Helper repositories" className="border-t border-[var(--raft-hair)]">
+      <h3 className="raft-eyebrow px-3.5 pt-3">helper repositories · not images</h3>
+      <ul className="divide-y divide-[var(--raft-hair)]">
+        {helpers.map((h) => (
+          <li key={h.repo} className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3.5 py-2.5 text-sm">
+            <ExtLink href={`https://github.com/${h.repo}`} className="font-mono font-medium">
+              {h.name}
+            </ExtLink>
+            <span className="font-mono text-xs text-muted-foreground">
+              {h.branches} branch{h.branches === 1 ? '' : 'es'} built
+            </span>
+            <Pill tone="ok">{h.success} passing</Pill>
+            {h.running > 0 && <Pill tone="live">{h.running} running</Pill>}
+            {h.failing.length > 0 ? (
+              <span className="flex flex-wrap items-center gap-1.5 text-xs">
+                <Pill tone="bad">{h.failing.length} failing</Pill>
+                {h.failing.map((b) => (
+                  <ExtLink key={b} href={`https://github.com/${h.repo}/actions?query=${encodeURIComponent(`branch:${b}`)}`} className="font-mono text-muted-foreground">
+                    {b}
+                  </ExtLink>
+                ))}
+              </span>
+            ) : null}
+            {h.last_run_at && (
+              <span className="font-mono text-xs text-muted-foreground">
+                last build <Rel iso={h.last_run_at} />
+              </span>
+            )}
+            {h.name === 'docker-mods' && (
+              <a href={modsBase} className="ml-auto text-xs font-medium underline-offset-4 hover:text-primary hover:underline">
+                Browse the mods
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

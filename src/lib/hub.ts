@@ -307,10 +307,11 @@ export interface Mod {
   env: { name: string; description: string; default?: string | null; required: boolean }[];
   deprecated: boolean;
   deprecation_message?: string | null;
+  /** The images the mod is for: its target, then the images its `mod.yml` lists under `images`. */
   applies_to: string[];
   docs?: string | null;
-  /** `playground`: a `mod.yml` branch of linuxserver-playground/docker-mods; `legacy`: converted from linuxserver/docker-mods mod-list.yml, without settings data. */
-  source: 'playground' | 'legacy';
+  /** A `mod.yml` branch of linuxserver-playground/docker-mods. */
+  source: 'playground';
 }
 
 export interface ProxyData {

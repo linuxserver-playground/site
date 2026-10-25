@@ -1,0 +1,16 @@
+---
+branch: "code-server-golang"
+---
+## Available Image Tags
+- `code-server-golang` : installs the latest stable version
+- `code-server-golang-X` : installs the latest major `X` version
+- `code-server-golang-X.X` : installs the latest minor `X.X` version
+- `code-server-golang-X.X.X` : installs the specific `X.X.X` version
+
+### Examples
+- `ghcr.io/linuxserver-playground/mods:code-server-golang-1.13` will install the latest `1.13` release, which is `1.13.10` as of 2020/05/07
+- `ghcr.io/linuxserver-playground/mods:code-server-golang-1` will install the latest `1` release, which is `1.14.2` as of 2020/05/07
+- `ghcr.io/linuxserver-playground/mods:code-server-golang` will install the latest stable release, which is `1.14.2` as of 2020/05/07
+- `ghcr.io/linuxserver-playground/mods:code-server-golang-1.14.2` will install the specific `1.14.2` release
+
+Visit https://hub.docker.com/r/linuxserver/mods/tags?page=1&name=code-server-golang to see all available tags

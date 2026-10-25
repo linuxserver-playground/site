@@ -15,7 +15,8 @@ interface Props {
 
 /**
  * The mods index with a text filter and a per-image filter (?image=<name>). Universal mods are listed
- * with every image. Everything is server-rendered; the filters only hide rows.
+ * with every image, those whose mod.yml lists the chosen image first. Each mod links to its page,
+ * /mods/<branch>/. Everything is server-rendered; the filters only hide rows.
  */
 export default function ModsBrowser({ mods, targets, images, base }: Props) {
   const [q, setQ] = React.useState('');
@@ -55,7 +56,8 @@ export default function ModsBrowser({ mods, targets, images, base }: Props) {
       terms.every((t) => `${m.name} ${m.title} ${m.summary} ${m.target} ${m.applies_to.join(' ')}`.toLowerCase().includes(t)),
   );
   const own = rows.filter((m) => m.target !== 'universal');
-  const universal = rows.filter((m) => m.target === 'universal');
+  const curated = image ? rows.filter((m) => m.target === 'universal' && m.applies_to.includes(image)) : [];
+  const universal = rows.filter((m) => m.target === 'universal' && !curated.includes(m));
   const deprecatedCount = mods.filter((m) => m.deprecated).length;
 
   return (
@@ -90,7 +92,7 @@ export default function ModsBrowser({ mods, targets, images, base }: Props) {
         )}
       </div>
       <p role="status" aria-live="polite" className="mt-4 px-1 font-mono text-xs text-muted-foreground">
-        {own.length} image-specific and {universal.length} universal mod{universal.length === 1 ? '' : 's'}
+        {own.length} image-specific and {curated.length + universal.length} universal mod{curated.length + universal.length === 1 ? '' : 's'}
         {image && (
           <>
             {' '}
@@ -108,7 +110,8 @@ export default function ModsBrowser({ mods, targets, images, base }: Props) {
 
       {[
         { title: image ? `For ${image}` : 'Image-specific', list: own },
-        { title: 'Universal (any image)', list: universal },
+        { title: `Universal, suggested for ${image}`, list: curated },
+        { title: curated.length ? 'Other universal mods' : 'Universal (any image)', list: universal },
       ].map((group) =>
         group.list.length ? (
           <section key={group.title} className="mt-6" aria-label={group.title}>
@@ -118,9 +121,8 @@ export default function ModsBrowser({ mods, targets, images, base }: Props) {
                 <li key={m.branch} className="raft-panel flex flex-col p-4">
                   <div className="flex items-start justify-between gap-3">
                     <h3 className="min-w-0 truncate font-semibold">
-                      <a href={m.url} target="_blank" rel="noopener" className="hover:text-primary">
+                      <a href={`${base}/mods/${m.branch}/`} className="hover:text-primary">
                         {m.title}
-                        <span className="sr-only"> (opens in a new tab)</span>
                       </a>
                     </h3>
                     <span className="shrink-0 font-mono text-[0.6875rem] text-muted-foreground">
@@ -141,7 +143,25 @@ export default function ModsBrowser({ mods, targets, images, base }: Props) {
                     </p>
                   )}
                   <p className="mt-1.5 line-clamp-3 text-sm text-muted-foreground">{m.summary}</p>
-                  {m.applies_to.length > 1 && <p className="mt-1.5 font-mono text-[0.6875rem] text-muted-foreground">also listed for {m.applies_to.filter((a) => a !== m.target).join(', ')}</p>}
+                  {m.applies_to.length > 1 && (
+                    <p className="mt-1.5 font-mono text-[0.6875rem] text-muted-foreground">
+                      {m.target === 'universal' ? 'suggested for' : 'also for'}{' '}
+                      {m.applies_to
+                        .filter((a) => a !== m.target)
+                        .map((a, i) => (
+                          <React.Fragment key={a}>
+                            {i > 0 && ', '}
+                            {known.has(a) ? (
+                              <a href={`${base}/images/${a}/`} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+                                {a}
+                              </a>
+                            ) : (
+                              a
+                            )}
+                          </React.Fragment>
+                        ))}
+                    </p>
+                  )}
                   {m.env.length > 0 && (
                     <details className="mt-2 text-xs">
                       <summary className="cursor-pointer font-mono text-muted-foreground hover:text-foreground">

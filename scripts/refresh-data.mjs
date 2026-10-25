@@ -171,7 +171,30 @@ await pool(images, 6, async (img) => {
 console.log(`  wrote src/content/imagedocs/ (${docSections} sections)`);
 
 // ---------------------------------------------------------------- fleet views
-write('mods.json', (await hubJSON('api/v1/mods.json')).data);
+const modsIndex = (await hubJSON('api/v1/mods.json')).data;
+write('mods.json', modsIndex);
+// Each mod's docs (its mod.yml `docs`) as one Markdown file in the moddocs collection, rendered on /mods/<branch>/
+// with the same pipeline as /docs/. Start clean so removed mods disappear.
+const modDocs = new URL('../content/moddocs/', dataDir);
+rmSync(modDocs, { recursive: true, force: true });
+mkdirSync(modDocs, { recursive: true });
+let modDocCount = 0;
+// Paths in a mod's docs are relative to its branch: images (and their .assets/) point at the raw files, other
+// links at the branch on GitHub, so nothing resolves against the site.
+const modRelative = (m) => (markdown) => {
+  const tree = m.url.replace(/\/$/, '');
+  const raw = tree.replace('https://github.com/', 'https://raw.githubusercontent.com/').replace('/tree/', '/');
+  const resolve = (target, image) => (/^([a-z][a-z0-9+.-]*:|#|\/)/i.test(target) ? target : `${image ? raw : tree.replace('/tree/', '/blob/')}/${target.replace(/^\.\//, '')}`);
+  return markdown
+    .replace(/(!?)\[([^\]]*)\]\(([^)\s]+)((?:\s+"[^"]*")?)\)/g, (_, bang, text, target, title) => `${bang}[${text}](${resolve(target, !!bang)}${title})`)
+    .replace(/(<img\b[^>]*\bsrc=")([^"]+)"/gi, (_, pre, target) => `${pre}${resolve(target, true)}"`);
+};
+for (const m of modsIndex.mods) {
+  if (!m.docs?.trim()) continue;
+  writeFileSync(new URL(`${m.branch}.md`, modDocs), `---\nbranch: ${JSON.stringify(m.branch)}\n---\n${modRelative(m)(m.docs)}`);
+  modDocCount++;
+}
+console.log(`  wrote src/content/moddocs/ (${modDocCount} mods)`);
 write('stores.json', (await hubJSON('api/v1/stores/index.json')).data.stores);
 write('packages.json', (await hubJSON('api/v1/packages.json')).data.packages);
 const [bases, staleness] = await Promise.all([hubJSON('api/v1/fleet/bases.json'), hubJSON('api/v1/fleet/staleness.json')]);

@@ -95,8 +95,7 @@ export function hintsFor(m: LabModel, s: LabState): Hint[] {
   const mods = s.mods.map((id) => m.mods.find((x) => x.id === id)).filter((x): x is NonNullable<typeof x> => !!x);
   if (mods.length > 1) add('mods-order', 'info', FACTS.mods.text, FACTS.mods.href, 'mods', 'Container customisation');
   for (const mod of mods) {
-    if (mod.deprecated) add(`mod-dep-${mod.id}`, 'warn', `${mod.title} is deprecated${mod.deprecationMessage ? `: ${mod.deprecationMessage}` : '.'}`, mod.url, `mod-${mod.id}`, 'Mod page');
-    if (!mod.hasManifest) add(`mod-readme-${mod.id}`, 'info', `${mod.title} has no settings data in the hub yet; its README lists the variables it reads.`, mod.url, `mod-${mod.id}`, `${mod.title} README`);
+    if (mod.deprecated) add(`mod-dep-${mod.id}`, 'warn', `${mod.title} is deprecated${mod.deprecationMessage ? `: ${mod.deprecationMessage}` : '.'}`, mod.page, `mod-${mod.id}`, 'Mod page');
     for (const e of mod.env) {
       if (e.required && modEnvValue(s, mod, e) === '') add(`mod-env-${mod.id}-${e.name}`, 'warn', `${mod.title} needs \`${e.name}\`: ${e.description}`, undefined, `mod-${mod.id}/${e.name}`);
     }
