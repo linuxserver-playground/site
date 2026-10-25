@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type { Arch, Layer } from '@/lib/hub';
+import type { Arch } from '@/lib/hub';
 import Treemap from './Treemap';
 
 interface Props {
@@ -7,7 +7,6 @@ interface Props {
   tag: string;
   arches: Arch[];
   urls: Partial<Record<Arch, string[]>>;
-  layers: Partial<Record<Arch, Layer[]>>;
 }
 
 /**
@@ -21,7 +20,7 @@ export default function CompactTreemap(props: Props) {
   if (!hydrated) {
     return (
       <p className="px-4 py-6 text-sm text-muted-foreground">
-        The file treemap needs JavaScript: it reads <span className="font-mono">files.&lt;arch&gt;.json.gz</span> from the hub and draws every file by size and owning package.{' '}
+        The file treemap needs JavaScript: it reads <span className="font-mono">files.&lt;arch&gt;.json.gz</span> from the hub and draws every file by size and kind.{' '}
         {props.arches.map((a) => (
           <a key={a} href={props.urls[a]?.[0]} className="mr-2 font-mono text-xs underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
             files.{a}.json.gz

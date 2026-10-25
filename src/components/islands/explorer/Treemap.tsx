@@ -1,6 +1,6 @@
 import * as React from 'react';
-import type { Arch, FileEntry, Layer } from '@/lib/hub';
-import { buildTree, fmtBytes, layerColor, loadFiles, packageTotals, pct, pkgColor, pkgTone, purlLabel, purlName, reducedMotion, tidyInstruction, type TreeNode } from '@/lib/explorer';
+import type { Arch, FileNode } from '@/lib/hub';
+import { buildTree, fmtBytes, fmtMode, kindColor, kindLabel, kindTone, kindTotals, loadFiles, pct, reducedMotion, type TreeNode } from '@/lib/explorer';
 import { ellipsise, fitChars, layoutTiles, MIN_TILE, STRIP, type Tile } from '@/lib/treemap';
 import ArchToggle, { IslandHeader, LoadError, Loading } from './ArchToggle';
 
@@ -10,7 +10,6 @@ interface Props {
   arches: Arch[];
   /** Candidate URLs for files.<arch>.json.gz, tried in order (hub copy, then the Release asset). */
   urls: Partial<Record<Arch, string[]>>;
-  layers: Partial<Record<Arch, Layer[]>>;
   initialArch?: Arch;
   /** Reduced height, a shorter "largest here" list and no legend: the image page's preview. */
   compact?: boolean;
@@ -59,9 +58,7 @@ function useWidth() {
 const isZoomable = (n: TreeNode) => n.kind !== 'file' && !!n.children?.length;
 
 /** What a tile is, in words: shared by the tooltip, the aria-labels and the live region. */
-function describe(n: TreeNode, tile: Tile | undefined, total: number, layers: Layer[]): { title: string; path: string; type: string; size: string; owner: string } {
-  const layer = n.layer !== undefined ? layers[n.layer] : undefined;
-  const instruction = layer ? tidyInstruction(layer.created_by) : '';
+function describe(n: TreeNode, tile: Tile | undefined, total: number): { title: string; path: string; type: string; size: string; owner: string } {
   if (tile?.more) {
     return {
       title: `${tile.more.files.toLocaleString('en-GB')} more files`,
@@ -71,32 +68,22 @@ function describe(n: TreeNode, tile: Tile | undefined, total: number, layers: La
       owner: tile.parent && isZoomable(tile.parent) && tile.parent.kind !== 'root' ? `zoom into ${tile.parent.name} to see them` : '',
     };
   }
-  if (n.kind === 'layer') {
-    return {
-      title: `layer ${n.layer}`,
-      path: instruction ? ellipsise(instruction, 120) : '',
-      type: `layer · ${n.files.toLocaleString('en-GB')} files`,
-      size: `${fmtBytes(n.size)} (${pct(n.size, total)} of the image)`,
-      owner: '',
-    };
-  }
-  if (n.kind === 'dir') {
+  if (n.kind !== 'file') {
     return {
       title: n.name,
       path: n.path,
-      type: `directory · ${n.files.toLocaleString('en-GB')} files · layer ${n.layer}`,
+      type: `directory · ${n.files.toLocaleString('en-GB')} files`,
       size: `${fmtBytes(n.size)} (${pct(n.size, total)} of the image)`,
-      owner: `mostly ${purlName(n.pkg)}`,
+      owner: `mostly ${kindLabel(n.cat)}`,
     };
   }
-  const e = n.entry;
-  const mime = e?.mime ? ` · ${e.mime}` : '';
+  const owner = n.uid || n.gid ? ` · owner ${n.uid ?? 0}:${n.gid ?? 0}` : '';
   return {
     title: n.name,
     path: n.path,
-    type: `file${mime}${e?.executable ? ' · executable' : ''} · layer ${n.layer}`,
+    type: `file · mode ${fmtMode(n.mode ?? 0o644)}${owner}`,
     size: `${fmtBytes(n.size)} (${pct(n.size, total)} of the image)`,
-    owner: purlLabel(n.pkg),
+    owner: kindLabel(n.cat),
   };
 }
 
@@ -104,7 +91,6 @@ interface TilesProps {
   tiles: Tile[];
   dark: boolean;
   total: number;
-  layers: Layer[];
   gradientId: string;
 }
 
@@ -112,7 +98,7 @@ interface TilesProps {
  * The tiles themselves. Memoised so hover and tooltip state never re-render thousands of rects; events are
  * delegated from the <svg> through `data-i`.
  */
-const Tiles = React.memo(function Tiles({ tiles, dark, total, layers, gradientId }: TilesProps) {
+const Tiles = React.memo(function Tiles({ tiles, dark, total, gradientId }: TilesProps) {
   const inner = dark ? 'rgb(255 255 255 / 0.16)' : 'rgb(10 5 25 / 0.14)';
   return (
     <>
@@ -121,10 +107,10 @@ const Tiles = React.memo(function Tiles({ tiles, dark, total, layers, gradientId
         const w = t.x1 - t.x0;
         const h = t.y1 - t.y0;
         const zoomable = !t.more && !t.thin && isZoomable(n);
-        const tone = n.kind === 'layer' ? { fill: layerColor({ dark }), ink: dark ? '#ffffff' : '#0e0b18' } : pkgTone(n.pkg, { dark, depth: t.depth, muted: n.kind === 'dir' });
-        const d = describe(n, t, total, layers);
+        const tone = kindTone(n.cat, { dark, depth: t.depth, muted: n.kind === 'dir' });
+        const d = describe(n, t, total);
         const label = [d.title, d.path && d.path !== d.title ? d.path : '', d.type, d.size, d.owner].filter(Boolean).join('; ');
-        const text = n.kind === 'layer' ? `layer ${n.layer}` : n.name;
+        const text = n.name;
         const size = fmtBytes(n.size, 0);
         let caption: string | null = null;
         let caption2: string | null = null;
@@ -185,14 +171,14 @@ const Tiles = React.memo(function Tiles({ tiles, dark, total, layers, gradientId
 });
 
 /**
- * qdirstat-style treemap of one architecture's file table (deduplicated bytes): layers, then directories
- * nested several levels deep, then files, coloured by owning package and shaded by depth. Click anywhere on
+ * qdirstat-style treemap of one architecture's file tree (deduplicated bytes): directories nested several
+ * levels deep, then files, coloured by the kind of file and shaded by depth. Click anywhere on
  * a directory to zoom in; the breadcrumb, Backspace or Escape zoom out. The list beside the map carries
  * the same numbers in text, so nothing depends on colour or on reading the picture.
  */
-export default function Treemap({ image, tag, arches, urls, layers, initialArch, compact = false }: Props) {
+export default function Treemap({ image, tag, arches, urls, initialArch, compact = false }: Props) {
   const [arch, setArch] = React.useState<Arch>(initialArch ?? arches[0]);
-  const [state, setState] = React.useState<{ status: 'loading' | 'ready' | 'error'; files?: FileEntry[]; error?: string }>({ status: 'loading' });
+  const [state, setState] = React.useState<{ status: 'loading' | 'ready' | 'error'; files?: FileNode; error?: string }>({ status: 'loading' });
   const [path, setPath] = React.useState<string[]>([]);
   const [tip, setTip] = React.useState<{ i: number; x: number; y: number; keyboard: boolean } | null>(null);
   const [attempt, setAttempt] = React.useState(0);
@@ -212,16 +198,15 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch,
     return () => ctrl.abort();
   }, [arch, urls, attempt]);
 
-  // The hierarchy and its parent links are computed once per file table; zooming only re-lays out.
-  const tree = React.useMemo(() => (state.files ? buildTree(state.files, layers[arch] ?? []) : null), [state.files, layers, arch]);
+  // The hierarchy and its parent links are computed once per file tree; zooming only re-lays out.
+  const tree = React.useMemo(() => (state.files ? buildTree(state.files) : null), [state.files]);
   const parents = React.useMemo(() => {
     const m = new Map<TreeNode, TreeNode>();
     const walk = (n: TreeNode) => n.children?.forEach((c) => (m.set(c, n), walk(c)));
     if (tree) walk(tree);
     return m;
   }, [tree]);
-  const totals = React.useMemo(() => (state.files ? packageTotals(state.files) : []), [state.files]);
-  const layerList = layers[arch] ?? [];
+  const totals = React.useMemo(() => (tree ? kindTotals(tree) : []), [tree]);
 
   let focus = tree;
   for (const p of path) focus = focus?.children?.find((c) => c.path === p) ?? focus;
@@ -295,8 +280,8 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch,
   };
 
   const hovered = tip ? tiles[tip.i] : undefined;
-  const hoveredDesc = hovered && tree ? describe(hovered.node, hovered, tree.size, layerList) : null;
-  const crumbs = [{ label: 'image', path: [] as string[] }, ...path.map((p, i) => ({ label: p.startsWith('layer ') ? p : p.split('/').pop() || p, path: path.slice(0, i + 1) }))];
+  const hoveredDesc = hovered && tree ? describe(hovered.node, hovered, tree.size) : null;
+  const crumbs = [{ label: 'image', path: [] as string[] }, ...path.map((p, i) => ({ label: p.split('/').pop() || p, path: path.slice(0, i + 1) }))];
   const tipLeft = tip ? Math.min(tip.x + 12, Math.max(0, width - 288)) : 0;
   const tipAbove = tip ? tip.y > height * 0.6 : false;
 
@@ -304,7 +289,7 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch,
     <div>
       <IslandHeader
         title={`files.${arch}.json.gz · ${tree ? `${tree.files.toLocaleString('en-GB')} files · ${fmtBytes(tree.size)} uncompressed` : tag}`}
-        note="Area is deduplicated bytes on disk, nested layer → directory → file; colour is the owning package. Click a directory to zoom in, Backspace or Escape to zoom out."
+        note="Area is deduplicated bytes on disk, nested directory → file; colour is the kind of file. Click a directory to zoom in, Backspace or Escape to zoom out."
       >
         <ArchToggle arches={arches} value={arch} onChange={setArch} />
       </IslandHeader>
@@ -369,7 +354,7 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch,
                   </linearGradient>
                 </defs>
                 <g key={path.join('\u0000')} className={anim ? 'animate-in fade-in duration-200' : undefined}>
-                  <Tiles tiles={tiles} dark={dark} total={tree.size} layers={layerList} gradientId={gradientId} />
+                  <Tiles tiles={tiles} dark={dark} total={tree.size} gradientId={gradientId} />
                 </g>
               </svg>
               {tip && hoveredDesc && (
@@ -388,7 +373,7 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch,
                     <dd className="tabular-nums">{hoveredDesc.size}</dd>
                     {hoveredDesc.owner && (
                       <>
-                        <dt className="text-muted-foreground">{hovered?.more ? 'tip' : 'package'}</dt>
+                        <dt className="text-muted-foreground">{hovered?.more ? 'tip' : 'kind'}</dt>
                         <dd className="break-all">{hoveredDesc.owner}</dd>
                       </>
                     )}
@@ -414,10 +399,10 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch,
                     onClick={() => zoomTo(c)}
                     disabled={!isZoomable(c)}
                     className="group flex w-full items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
-                    aria-label={`${c.kind === 'layer' ? `layer ${c.layer}` : c.name}, ${c.kind}, ${fmtBytes(c.size)}, ${c.kind === 'file' ? purlLabel(c.pkg) : `${c.files.toLocaleString('en-GB')} files`}${isZoomable(c) ? ', zoom in' : ''}`}
+                    aria-label={`${c.name}, ${c.kind === 'file' ? 'file' : 'directory'}, ${fmtBytes(c.size)}, ${c.kind === 'file' ? kindLabel(c.cat) : `${c.files.toLocaleString('en-GB')} files`}${isZoomable(c) ? ', zoom in' : ''}`}
                   >
-                    <span className="size-2.5 shrink-0 rounded-sm" style={{ background: c.kind === 'layer' ? layerColor({ dark }) : pkgColor(c.pkg, { dark }) }} aria-hidden="true" />
-                    <span className="min-w-0 flex-1 truncate font-mono text-xs">{c.kind === 'layer' ? `layer ${c.layer}` : c.name}</span>
+                    <span className="size-2.5 shrink-0 rounded-sm" style={{ background: kindColor(c.cat, { dark }) }} aria-hidden="true" />
+                    <span className="min-w-0 flex-1 truncate font-mono text-xs">{c.name}</span>
                     <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{fmtBytes(c.size, 0)}</span>
                   </button>
                 </li>
@@ -431,31 +416,26 @@ export default function Treemap({ image, tag, arches, urls, layers, initialArch,
             {!compact && (
               <>
             <h3 className="raft-eyebrow mt-5">Legend</h3>
-            <ul className="mt-2 space-y-1" aria-label="Bytes by owning package">
+            <ul className="mt-2 space-y-1" aria-label="Bytes by kind of file">
               {legend.map((t) => (
-                <li key={t.pkg ?? 'unowned'} className="flex items-center gap-2 px-1 py-0.5">
-                  <span className="size-2.5 shrink-0 rounded-sm" style={{ background: pkgColor(t.pkg, { dark }) }} aria-hidden="true" />
-                  <span className="min-w-0 flex-1 truncate font-mono text-xs" title={t.pkg}>
-                    {purlName(t.pkg)}
-                  </span>
+                <li key={t.cat} className="flex items-center gap-2 px-1 py-0.5">
+                  <span className="size-2.5 shrink-0 rounded-sm" style={{ background: kindColor(t.cat, { dark }) }} aria-hidden="true" />
+                  <span className="min-w-0 flex-1 truncate font-mono text-xs">{kindLabel(t.cat)}</span>
                   <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{pct(t.size, tree.size)}</span>
                 </li>
               ))}
               {legendOther > 0 && (
                 <li className="flex items-center gap-2 px-1 py-0.5 text-muted-foreground">
                   <span className="size-2.5 shrink-0" aria-hidden="true" />
-                  <span className="min-w-0 flex-1 truncate font-mono text-xs">{totals.length - 8} other packages</span>
+                  <span className="min-w-0 flex-1 truncate font-mono text-xs">{totals.length - 8} other kinds</span>
                   <span className="shrink-0 font-mono text-xs tabular-nums">{pct(legendOther, tree.size)}</span>
                 </li>
               )}
-              <li className="flex items-center gap-2 px-1 py-0.5">
-                <span className="size-2.5 shrink-0 rounded-sm border border-[var(--raft-hair-strong)]" style={{ background: layerColor({ dark }) }} aria-hidden="true" />
-                <span className="min-w-0 flex-1 truncate font-mono text-xs">layer strips</span>
-              </li>
             </ul>
             <p className="mt-4 text-xs text-muted-foreground">
-              Directories wear their dominant package's hue, paler than the files inside; each nesting level is a shade {dark ? 'lighter' : 'darker'}. Dashed tiles fold the
-              entries too small to draw, so areas always add up. Unowned bytes are files no package manager claims: the application itself, scripts and generated data.
+              Files are coloured by extension, and executables by their mode. Directories wear the hue of the kind holding most of their bytes, paler than the files inside; each
+              nesting level is a shade {dark ? 'lighter' : 'darker'}. Dashed tiles fold the entries too small to draw, so areas always add up. Symlinks and repeated hardlinks hold
+              no bytes of their own and are not drawn.
             </p>
               </>
             )}

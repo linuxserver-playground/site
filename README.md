@@ -98,10 +98,12 @@ from the hub in the browser, only when their tab is opened, with a loading state
 - **Files** (the treemap): `files.<arch>.json.gz`, from `{HUB_URL}/builds/<image>/<tag>/` for the newest
   build of each branch (the hub copies it there) and from the GitHub Release asset otherwise. GitHub Pages
   serves it as `application/gzip` without `Content-Encoding`, so the island inflates it with
-  `DecompressionStream`. Hardlinks are already deduplicated upstream; the treemap sums regular files only
-  and colours them by owning package purl. The hierarchy (`lib/explorer.ts` `buildTree`) is built once per
-  table; `lib/treemap.ts` lays the focused directory out qdirstat-style with d3-hierarchy's
-  `treemapSquarify`, nesting layer → directory → file until tiles would fall under 6 × 6 px, folding the
+  `DecompressionStream`. Current builds hold dumper's nested tree (`lsio-files/1`); older releases hold the
+  flat syft-derived table, which `lib/explorer.ts` `legacyTree` turns into the same tree. The treemap sums
+  regular files only (a hardlink counts at its first path) and colours them by kind of file: extension, then
+  the executable bit. The hierarchy (`lib/explorer.ts` `buildTree`) is built once per tree;
+  `lib/treemap.ts` lays the focused directory out qdirstat-style with d3-hierarchy's
+  `treemapSquarify`, nesting directory → file until tiles would fall under 6 × 6 px, folding the
   siblings too small to draw into one dashed "N more files" tile so areas always add up. It re-lays out on
   zoom and on container resize; only the tiles it returns are rendered (about a thousand for a 30k-file
   table). Whole tiles are the click target, directories are focusable buttons (Enter zooms in, Backspace or

@@ -54,12 +54,12 @@ export default function Explorer(props: Props) {
 
       <TabsContent value="files" forceMount className="data-[state=inactive]:hidden">
         {hydrated ? (
-          <Treemap image={props.image} tag={props.tag} arches={props.arches} urls={props.filesUrls} layers={props.layers} />
+          <Treemap image={props.image} tag={props.tag} arches={props.arches} urls={props.filesUrls} />
         ) : (
           <div className="px-4 py-8 text-sm text-muted-foreground">
             <p>
               The file treemap needs JavaScript: it reads <span className="font-mono">files.&lt;arch&gt;.json.gz</span> from the hub and lays out every file by
-              size and owning package. Without it, the layer table above and the file tables themselves are still available:
+              size and kind. Without it, the layer table above and the file tables themselves are still available:
             </p>
             <ul className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
               {props.arches.map((a) => (

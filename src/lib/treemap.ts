@@ -90,7 +90,7 @@ export function layoutTiles(focus: TreeNode, width: number, height: number): Til
       const files = folded.reduce((a, c) => a + c.files, 0);
       if (size > 0) {
         more = { count: folded.length, files, size };
-        moreNode = { name: `${files.toLocaleString('en-GB')} more files`, path: `${node.path === '/' ? '' : node.path}/…`, kind: 'dir', size, files, layer: node.layer, pkg: node.pkg, children: folded };
+        moreNode = { name: `${files.toLocaleString('en-GB')} more files`, path: `${node.path === '/' ? '' : node.path}/…`, kind: 'dir', size, files, cat: node.cat, children: folded };
         drawn.push(moreNode);
       }
     }

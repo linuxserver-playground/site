@@ -67,7 +67,8 @@ validates every post's and every docs page's front matter, and `a11y.mjs` covers
 
 Consumes the hub's API as described by its pydantic models (`lsio_hub/models.py`) and `openapi.json`:
 `ImageDetail`, `BuildsData`, `Bundle` (which is `bundle.schema.json` from `linuxserver-playground/builder`,
-including `$defs/layer` and `$defs/file_entry` for `files.<arch>.json.gz`), `Diff`, `PackagesData`,
+including `$defs/layer`, and `$defs/file_tree` for `files.<arch>.json.gz` with the legacy `$defs/file_entry`
+still read for older releases), `Diff`, `PackagesData`,
 `ModsData`, `ProxyData`, `PackageIndexData`, `PackageData`, `BasesData`, `StalenessData`, `StoresData`,
 `Stats`, `Status`, `TestsData` (`tests.json`) and `VulnsData` (`vulns.json`). Types live in `src/lib/hub.ts`;
 a hub change that renames or removes a field is a change here too. The control plane's JSON (`control/views.py`
