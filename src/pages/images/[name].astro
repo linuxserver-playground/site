@@ -13,7 +13,7 @@ import CopyButton from '@/components/islands/CopyButton';
 import ImageFleet, { type SnapshotBranch } from '@/components/islands/fleet/ImageFleet';
 import InstallMenu from '@/components/islands/InstallMenu';
 import ConfigLab from '@/components/islands/ConfigLab';
-import ProxyLab from '@/components/islands/ProxyLab';
+import ProxyTabs from '@/components/islands/ProxyTabs';
 import { withBase } from '@/lib/base';
 import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
 import { installOptions, modPath, modsForImage } from '@/lib/fleet';
@@ -182,6 +182,23 @@ const links = [
   { label: 'Hub API record', href: hubApi(`catalog/${image.name}.json`) },
 ];
 const changelog = image.changelog ?? [];
+// The sidebar's "On this page": every section this page renders, in order.
+const pageNav: { id: string; label: string; sub?: boolean }[] = [
+  { id: 'quick-start', label: 'Quick start' },
+  { id: 'tags', label: 'Version tags' },
+  { id: 'arch', label: 'Architectures' },
+  ...(latest ? [{ id: 'inside', label: 'Inside the latest image' }] : []),
+  { id: 'fleet', label: 'In the fleet' },
+  ...(SetupContent || image.setup_instructions ? [{ id: 'setup', label: 'Application setup' }] : []),
+  ...(tables.length > 0 ? [{ id: 'parameters', label: 'Parameters' }] : []),
+  // The README's other sections, indented under Parameters.
+  ...moreDocs.map((d) => ({ id: d.id, label: d.title, sub: true })),
+  { id: 'builds', label: 'Builds' },
+  ...(listedMods.length > 0 || mods.universal.length > 0 ? [{ id: 'mods', label: 'Mods' }] : []),
+  ...(proxySample ? [{ id: 'proxy', label: 'Reverse proxy' }] : []),
+  ...(changelog.length > 0 ? [{ id: 'changelog', label: 'Changelog' }] : []),
+  { id: 'support', label: 'Support' },
+];
 ---
 
 <Layout
@@ -275,6 +292,73 @@ const changelog = image.changelog ?? [];
             </div>
           )
         }
+      </section>
+
+      <section aria-labelledby="tags">
+        <AnchorHeading id="tags">Version tags</AnchorHeading>
+        <p class="mt-2 text-sm text-muted-foreground">Each tag is published by one live branch; the build behind it is linked.</p>
+        <div class="raft-panel mt-4 relative overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] font-mono text-[0.6875rem] text-muted-foreground uppercase">
+              <tr>
+                <th scope="col" class="px-4 py-2.5 font-normal">Tag</th>
+                <th scope="col" class="px-4 py-2.5 font-normal">Latest build</th>
+                <th scope="col" class="px-4 py-2.5 font-normal">Built</th>
+                <th scope="col" class="px-4 py-2.5 font-normal">Tests</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-[var(--raft-hair)]">
+              {
+                tagRows.map((t) => (
+                  <tr class="align-top">
+                    <th scope="row" class="px-4 py-3 font-normal">
+                      <code class="font-mono text-[0.8125rem] text-foreground">:{t.tag}</code>
+                      <span class="mt-0.5 block text-xs text-muted-foreground">{t.desc}</span>
+                      {t.release && <span class="mt-0.5 block font-mono text-[0.6875rem] text-muted-foreground">branch {t.release.branch} · {t.release.channel}</span>}
+                    </th>
+                    <td class="px-4 py-3 font-mono text-xs">
+                      {t.release?.tag ? (
+                        t.build ? (
+                          <a href={withBase(buildUrl(image.name, t.build.tag))} class="text-foreground underline-offset-4 hover:text-primary hover:underline">
+                            {t.release.tag}
+                          </a>
+                        ) : (
+                          <span>{t.release.tag}</span>
+                        )
+                      ) : (
+                        <span class="text-muted-foreground">no build yet</span>
+                      )}
+                      {t.release?.platforms.length ? <span class="mt-0.5 block text-muted-foreground">{t.release.platforms.join(' · ')}</span> : null}
+                    </td>
+                    <td class="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                      {t.release?.created ? <time datetime={t.release.created}>{formatDate(t.release.created)}</time> : '–'}
+                    </td>
+                    <td class="px-4 py-3 text-xs whitespace-nowrap">
+                      {t.release?.test_success === true && <span class="inline-flex items-center gap-1 text-[var(--raft-ok)]"><Check className="size-3.5" aria-hidden="true" /> passed</span>}
+                      {t.release?.test_success === false && <span class="inline-flex items-center gap-1 text-destructive"><X className="size-3.5" aria-hidden="true" /> failed</span>}
+                      {(t.release?.test_success ?? null) === null && <span class="text-muted-foreground">–</span>}
+                    </td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="arch">
+        <AnchorHeading id="arch">Architectures</AnchorHeading>
+        <p class="mt-2 text-sm text-muted-foreground">Pulling <code class="font-mono text-foreground">:latest</code> picks the right one for your host automatically.</p>
+        <ul class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+          {
+            image.architectures.map((a) => (
+              <li class="raft-panel flex items-baseline justify-between gap-4 px-4 py-3">
+                <span class="font-mono text-[0.8125rem]">{a.arch}</span>
+                <code class="font-mono text-xs text-muted-foreground">{a.tag}</code>
+              </li>
+            ))
+          }
+        </ul>
       </section>
 
       {
@@ -417,73 +501,6 @@ const changelog = image.changelog ?? [];
         ))
       }
 
-      <section aria-labelledby="tags">
-        <AnchorHeading id="tags">Version tags</AnchorHeading>
-        <p class="mt-2 text-sm text-muted-foreground">Each tag is published by one live branch; the build behind it is linked.</p>
-        <div class="raft-panel mt-4 relative overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] font-mono text-[0.6875rem] text-muted-foreground uppercase">
-              <tr>
-                <th scope="col" class="px-4 py-2.5 font-normal">Tag</th>
-                <th scope="col" class="px-4 py-2.5 font-normal">Latest build</th>
-                <th scope="col" class="px-4 py-2.5 font-normal">Built</th>
-                <th scope="col" class="px-4 py-2.5 font-normal">Tests</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-[var(--raft-hair)]">
-              {
-                tagRows.map((t) => (
-                  <tr class="align-top">
-                    <th scope="row" class="px-4 py-3 font-normal">
-                      <code class="font-mono text-[0.8125rem] text-foreground">:{t.tag}</code>
-                      <span class="mt-0.5 block text-xs text-muted-foreground">{t.desc}</span>
-                      {t.release && <span class="mt-0.5 block font-mono text-[0.6875rem] text-muted-foreground">branch {t.release.branch} · {t.release.channel}</span>}
-                    </th>
-                    <td class="px-4 py-3 font-mono text-xs">
-                      {t.release?.tag ? (
-                        t.build ? (
-                          <a href={withBase(buildUrl(image.name, t.build.tag))} class="text-foreground underline-offset-4 hover:text-primary hover:underline">
-                            {t.release.tag}
-                          </a>
-                        ) : (
-                          <span>{t.release.tag}</span>
-                        )
-                      ) : (
-                        <span class="text-muted-foreground">no build yet</span>
-                      )}
-                      {t.release?.platforms.length ? <span class="mt-0.5 block text-muted-foreground">{t.release.platforms.join(' · ')}</span> : null}
-                    </td>
-                    <td class="px-4 py-3 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                      {t.release?.created ? <time datetime={t.release.created}>{formatDate(t.release.created)}</time> : '–'}
-                    </td>
-                    <td class="px-4 py-3 text-xs whitespace-nowrap">
-                      {t.release?.test_success === true && <span class="inline-flex items-center gap-1 text-[var(--raft-ok)]"><Check className="size-3.5" aria-hidden="true" /> passed</span>}
-                      {t.release?.test_success === false && <span class="inline-flex items-center gap-1 text-destructive"><X className="size-3.5" aria-hidden="true" /> failed</span>}
-                      {(t.release?.test_success ?? null) === null && <span class="text-muted-foreground">–</span>}
-                    </td>
-                  </tr>
-                ))
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section aria-labelledby="arch">
-        <AnchorHeading id="arch">Architectures</AnchorHeading>
-        <p class="mt-2 text-sm text-muted-foreground">Pulling <code class="font-mono text-foreground">:latest</code> picks the right one for your host automatically.</p>
-        <ul class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {
-            image.architectures.map((a) => (
-              <li class="raft-panel flex items-baseline justify-between gap-4 px-4 py-3">
-                <span class="font-mono text-[0.8125rem]">{a.arch}</span>
-                <code class="font-mono text-xs text-muted-foreground">{a.tag}</code>
-              </li>
-            ))
-          }
-        </ul>
-      </section>
-
       <section aria-labelledby="builds">
         <div class="flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -610,13 +627,13 @@ const changelog = image.changelog ?? [];
       {
         proxySample && (
           <section aria-labelledby="proxy">
-            <AnchorHeading id="proxy">Reverse proxy with SWAG</AnchorHeading>
+            <AnchorHeading id="proxy">Reverse proxy</AnchorHeading>
             <p class="mt-2 text-sm text-muted-foreground">
-              The hub generates SWAG samples from the manifest's proxy block: {image.name} listens on {proxySample.scheme}://{proxySample.name}:{proxySample.port}. Pick how you expose it and which
-              authentication SWAG should put in front; the conf is the sample with those lines switched on.
+              Generated by the hub from the manifest's proxy block: {image.name} listens on {proxySample.scheme}://{proxySample.name}:{proxySample.port}. SWAG gets the full sample, with the mode and the
+              authentication you pick switched on; Caddy and Traefik get reference configs with the same upstream and open API paths.
             </p>
             <Panel class="mt-4">
-              <ProxyLab client:visible sample={proxySample} source={image.links.proxy ?? undefined} />
+              <ProxyTabs client:visible sample={proxySample} caddy={extras.proxy?.caddy?.trimEnd() ?? null} traefik={extras.proxy?.traefik?.trimEnd() ?? null} source={image.links.proxy ?? undefined} />
             </Panel>
           </section>
         )
@@ -696,7 +713,7 @@ const changelog = image.changelog ?? [];
       </section>
     </div>
 
-    <aside class="space-y-4 lg:sticky lg:top-20 lg:self-start" aria-label={`About ${image.name}`}>
+    <aside class="space-y-4" aria-label={`About ${image.name}`}>
       <div class="raft-panel p-5">
         <h2 class="raft-eyebrow">At a glance</h2>
         <dl class="mt-4 space-y-3 text-sm">
@@ -737,6 +754,27 @@ const changelog = image.changelog ?? [];
           </nav>
         )
       }
+      <div class="space-y-4 lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:overflow-y-auto">
+      <nav class="raft-panel hidden p-2 lg:block" aria-labelledby="page-nav-title" data-page-nav>
+        <h2 id="page-nav-title" class="raft-eyebrow px-3 pt-2 pb-1">On this page</h2>
+        <ol class="text-sm">
+          {
+            pageNav.map((n) => (
+              <li>
+                <a
+                  href={`#${n.id}`}
+                  class:list={[
+                    'block truncate rounded-md border-l-2 border-transparent text-muted-foreground hover:bg-muted hover:text-foreground aria-[current=location]:border-primary aria-[current=location]:text-foreground',
+                    n.sub ? 'py-1 pr-3 pl-6 text-xs leading-4' : 'px-3 py-1',
+                  ]}
+                >
+                  {n.label}
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+      </nav>
       <nav class="raft-panel p-2" aria-label="Resources">
         <ul>
           {
@@ -755,6 +793,7 @@ const changelog = image.changelog ?? [];
       <p class="px-1 font-mono text-[0.6875rem] text-muted-foreground">
         Data from <a href={HUB_URL + '/'} class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">the hub</a>, <time datetime={isoDate(SNAPSHOT_DATE)}>{formatDate(SNAPSHOT_DATE)}</time>
       </p>
+      </div>
     </aside>
   </div>
 
@@ -782,3 +821,27 @@ const changelog = image.changelog ?? [];
     )
   }
 </Layout>
+
+<script>
+  // "On this page": mark the section being read (the last heading above the top quarter of the viewport).
+  const nav = document.querySelector('[data-page-nav]');
+  if (nav) {
+    const links = [...nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')];
+    const targets = links.map((a) => document.getElementById(a.hash.slice(1))).filter((el): el is HTMLElement => !!el);
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const line = window.innerHeight / 4;
+      let current = targets[0];
+      for (const t of targets) if (t.getBoundingClientRect().top <= line) current = t;
+      for (const a of links) {
+        if (a.hash.slice(1) === current?.id) a.setAttribute('aria-current', 'location');
+        else a.removeAttribute('aria-current');
+      }
+    };
+    const schedule = () => (frame ||= requestAnimationFrame(update));
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    update();
+  }
+</script>
