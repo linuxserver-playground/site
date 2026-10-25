@@ -14,7 +14,6 @@ import ImageFleet, { type SnapshotBranch } from '@/components/islands/fleet/Imag
 import InstallMenu from '@/components/islands/InstallMenu';
 import ConfigLab from '@/components/islands/ConfigLab';
 import ProxyLab from '@/components/islands/ProxyLab';
-import CompactTreemap from '@/components/islands/explorer/CompactTreemap';
 import { withBase } from '@/lib/base';
 import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
 import { installOptions, modsForImage } from '@/lib/fleet';
@@ -22,6 +21,7 @@ import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/f
 import { CONTROL_URL, controlImageUrl } from '@/lib/control';
 import { hubApi, hubFilesUrl, hubHistoryUrl, HUB_URL, type Arch } from '@/lib/hub';
 import { getAllImages, hubDate, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
+import { getCollection, render } from 'astro:content';
 import { buildLabModel } from '@/lib/lab';
 import type { ProxySample } from '@/lib/proxy';
 import { imageJsonLd } from '@/lib/jsonld';
@@ -108,6 +108,21 @@ const crumbs = [
 ];
 const pull = `docker pull ${image.ref}:latest`;
 const built = hubDate(image.version_timestamp);
+// The image's README, section by section (src/content/imagedocs/, from the hub's docs.json). Sections the page
+// already builds natively from structured data are skipped; everything else is shown in README order, so a section
+// added to the builder templates appears here without a site change.
+const NATIVE_DOC_SECTIONS = new Set(['supported-architectures', 'version-tags', 'usage', 'parameters', 'docker-mods', 'versions']);
+const docEntries = (await getCollection('imagedocs', (e) => e.data.image === image.name)).sort((a, b) => a.data.order - b.data.order);
+const docSection = async (entry: (typeof docEntries)[number]) => ({ id: entry.data.section, title: entry.data.title, Content: (await render(entry)).Content });
+const setupDoc = docEntries.find((e) => e.data.section === 'application-setup');
+const supportDoc = docEntries.find((e) => e.data.section === 'support-info');
+const SetupContent = setupDoc ? (await docSection(setupDoc)).Content : null;
+const SupportContent = supportDoc ? (await docSection(supportDoc)).Content : null;
+const moreDocs = await Promise.all(
+  docEntries.filter((e) => !NATIVE_DOC_SECTIONS.has(e.data.section) && e !== setupDoc && e !== supportDoc).map(docSection),
+);
+const DOC_PROSE =
+  'post-body prose mt-3 max-w-none text-[0.9375rem] text-muted-foreground prose-p:my-2 prose-a:text-foreground prose-headings:text-foreground prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-base prose-h4:text-sm prose-code:text-foreground dark:prose-invert';
 const description = image.summary.length > 155 ? image.summary.slice(0, 152).replace(/\s+\S*$/, '') + '…' : image.summary;
 
 const tables = [
@@ -268,8 +283,8 @@ const changelog = image.changelog ?? [];
               <div>
                 <AnchorHeading id="inside">Inside the latest image</AnchorHeading>
                 <p class="mt-2 text-sm text-muted-foreground">
-                  <span class="font-mono text-foreground">{image.ref}:{latest.tag}</span>, the newest build of the <span class="font-mono">{latest.branch}</span> branch: what it is made of, from the
-                  build record and the file table the hub keeps for it.
+                  <span class="font-mono text-foreground">{image.ref}:{latest.tag}</span>, the newest build of the <span class="font-mono">{latest.branch}</span> branch, at a glance. Its build page
+                  has the full picture.
                 </p>
               </div>
               <a
@@ -290,11 +305,20 @@ const changelog = image.changelog ?? [];
                   </div>
                 ))}
               </dl>
-              {latestHasFiles ? (
-                <CompactTreemap client:visible image={image.name} tag={latest.tag} arches={latestArches} urls={latestFiles} />
-              ) : (
-                <p class="px-4 py-3 text-xs text-muted-foreground">The hub has no file table for this build yet; the build page has the layer table and the diff.</p>
-              )}
+              <ul class="flex flex-wrap gap-x-5 gap-y-2 px-4 py-3 text-sm">
+                {[
+                  ...(latestHasFiles ? [{ label: 'File tree and packages', hash: 'explorer' }] : []),
+                  { label: 'Tests, screenshot and logs', hash: 'ci' },
+                  { label: 'Dockerfile and layer sizes', hash: 'dockerfile' },
+                  { label: 'Init graph', hash: 'init' },
+                ].map((l) => (
+                  <li>
+                    <a href={withBase(`${buildUrl(image.name, latest.tag)}#${l.hash}`)} class="inline-flex items-center gap-1 underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+                      {l.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
             </Panel>
           </section>
         )
@@ -318,10 +342,18 @@ const changelog = image.changelog ?? [];
       </section>
 
       {
-        image.setup_instructions && (
+        (SetupContent || image.setup_instructions) && (
           <section aria-labelledby="setup">
             <AnchorHeading id="setup">Application setup</AnchorHeading>
-            <div class="post-body prose mt-3 max-w-none text-[0.9375rem] text-muted-foreground prose-p:my-2 prose-a:text-foreground dark:prose-invert" set:html={blockMarkdown(image.setup_instructions)} />
+            {/* The README's own links point at #application-setup. */}
+            <span id="application-setup" aria-hidden="true"></span>
+            {SetupContent ? (
+              <div class={DOC_PROSE}>
+                <SetupContent />
+              </div>
+            ) : (
+              <div class={DOC_PROSE} set:html={blockMarkdown(image.setup_instructions!)} />
+            )}
           </section>
         )
       }
@@ -371,6 +403,17 @@ const changelog = image.changelog ?? [];
             ))}
           </section>
         )
+      }
+
+      {
+        moreDocs.map(({ id, title, Content }) => (
+          <section aria-labelledby={id}>
+            <AnchorHeading id={id}>{title}</AnchorHeading>
+            <div class={DOC_PROSE}>
+              <Content />
+            </div>
+          </section>
+        ))
       }
 
       <section aria-labelledby="tags">
@@ -617,6 +660,13 @@ const changelog = image.changelog ?? [];
       <section aria-labelledby="support">
         <AnchorHeading id="support">Support</AnchorHeading>
         <p class="mt-2 text-sm text-muted-foreground">Questions about running {image.name}? The documentation and the community come first; the issue tracker is for behaviour that does not match this page.</p>
+        {
+          SupportContent && (
+            <div class={DOC_PROSE}>
+              <SupportContent />
+            </div>
+          )
+        }
         <ul class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
           {
             [

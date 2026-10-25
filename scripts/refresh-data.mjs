@@ -148,6 +148,28 @@ await pool(images, 6, async (img) => {
   });
 });
 
+// ---------------------------------------------------------------- image documentation
+// Each image's README, section by section (api/v1/catalog/<name>/docs.json), as one Markdown file per section in
+// the imagedocs collection, so the image page renders it with the same pipeline as /docs/ (callouts, highlighting,
+// base-path links). Start clean so removed sections disappear.
+const imageDocs = new URL('../content/imagedocs/', dataDir);
+mkdirSync(imageDocs, { recursive: true });
+for (const entry of readdirSync(imageDocs, { withFileTypes: true })) {
+  if (entry.isDirectory()) rmSync(new URL(`${entry.name}/`, imageDocs), { recursive: true, force: true });
+}
+let docSections = 0;
+await pool(images, 6, async (img) => {
+  const docs = await optional(hubJSON(`api/v1/catalog/${img.name}/docs.json`));
+  if (!docs) return;
+  mkdirSync(new URL(`${img.name}/`, imageDocs), { recursive: true });
+  docs.data.sections.forEach((s, order) => {
+    const front = `---\nimage: ${JSON.stringify(img.name)}\nsection: ${JSON.stringify(s.id)}\ntitle: ${JSON.stringify(s.title)}\norder: ${order}\n---\n`;
+    writeFileSync(new URL(`${img.name}/${String(order).padStart(2, '0')}-${s.id}.md`, imageDocs), front + s.markdown);
+    docSections++;
+  });
+});
+console.log(`  wrote src/content/imagedocs/ (${docSections} sections)`);
+
 // ---------------------------------------------------------------- fleet views
 write('mods.json', (await hubJSON('api/v1/mods.json')).data);
 write('stores.json', (await hubJSON('api/v1/stores/index.json')).data.stores);

@@ -75,6 +75,7 @@ whose public members are the team (default `linuxserver-playground`).
 | --- | --- | --- |
 | `catalog.json` | hub `/api/v1/catalog.json` | catalogue, image pages, quick start snippets, version tags, release channels |
 | `images/<name>.json` | hub `/api/v1/catalog/<name>/builds.json`, `proxy.json`, `kubernetes.yaml`, `quadlet.container` | builds table and history, SWAG sample, Kubernetes and quadlet tabs, "Install on…" |
+| `../content/imagedocs/<name>/*.md` | hub `/api/v1/catalog/<name>/docs.json` (the README builder renders, split at `##`) | the image page's documentation: application setup, read-only and non-root operation, environment variables from files, umask, user and group identifiers, support, updating, building locally |
 | `builds/<image>/<tag>.json` | hub `/api/v1/catalog/<name>/builds/<tag>.json`, `/diff.json`, `/layers.<arch>.json`, `/tests.json` | build pages: record, diff, annotated Dockerfile with its layer sizes, init graph, the CI report's summary and test table |
 | `categories.json` | hub `/api/v1/categories.json` | catalogue filters |
 | `mods.json` | hub `/api/v1/mods.json` | mods page, mods on image pages |
