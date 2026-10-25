@@ -245,7 +245,31 @@ export interface Diff {
   totals: { added: number; removed: number; upgraded: number; downgraded: number };
 }
 
-/** One entry of `files.<arch>.json.gz` (bundle.schema.json `$defs/file_entry`). Hardlinks are deduplicated upstream. */
+/**
+ * One entry of `files.<arch>.json.gz` (bundle.schema.json `$defs/file_node`), as dumper writes it: short keys,
+ * defaults left out. A directory has `c`, a symlink `l`, a hardlink `h`, a special file `t`; anything else is a
+ * regular file of `s` bytes (0 when left out). `m` is the permission bits (default 0o755 for directories, 0o644
+ * otherwise), `u`/`g` the owner (default 0).
+ */
+export interface FileNode {
+  n: string;
+  c?: FileNode[];
+  s?: number;
+  l?: string;
+  h?: string;
+  t?: 'char' | 'block' | 'fifo' | 'socket';
+  m?: number;
+  u?: number;
+  g?: number;
+}
+
+/** `files.<arch>.json.gz` (bundle.schema.json `$defs/file_tree`). */
+export interface FileTree {
+  format: 'lsio-files/1';
+  tree: FileNode;
+}
+
+/** One entry of the legacy `files.<arch>.json.gz` (`$defs/file_entry`), written before dumper; still read for older releases. */
 export interface FileEntry {
   path: string;
   /** Index into the layer table. */

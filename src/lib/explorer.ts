@@ -1,8 +1,8 @@
 /**
- * Browser-safe helpers for the explorer islands: fetching the hub's gzipped file tables, building the
- * layer → directory → file hierarchy, package colours and small formatters. No astro:* imports here.
+ * Browser-safe helpers for the explorer islands: fetching the hub's gzipped file trees, building the
+ * directory → file hierarchy, file-kind colours and small formatters. No astro:* imports here.
  */
-import type { Arch, FileEntry, InitUnit, Layer } from './hub';
+import type { Arch, FileEntry, FileNode, FileTree, InitUnit, Layer } from './hub';
 
 export const fmtBytes = (n: number | null | undefined, digits = 1): string => {
   if (n === null || n === undefined) return '–';
@@ -41,13 +41,18 @@ export async function fetchMaybeGzipJSON<T>(url: string, signal?: AbortSignal): 
   return JSON.parse(new TextDecoder().decode(bytes)) as T;
 }
 
-/** Loads `files.<arch>.json.gz`, trying the hub's copy first and the Release asset after. */
-export async function loadFiles(urls: string[], signal?: AbortSignal): Promise<FileEntry[]> {
+/**
+ * Loads `files.<arch>.json.gz`, trying the hub's copy first and the Release asset after. Current builds hold
+ * dumper's nested tree (`lsio-files/1`); releases from before it hold the flat syft-derived table, which is
+ * turned into the same tree so one code path draws both.
+ */
+export async function loadFiles(urls: string[], signal?: AbortSignal): Promise<FileNode> {
   let last: unknown;
   for (const url of urls) {
     try {
-      const data = await fetchMaybeGzipJSON<FileEntry[] | { files: FileEntry[] }>(url, signal);
-      return Array.isArray(data) ? data : data.files;
+      const data = await fetchMaybeGzipJSON<FileTree | FileEntry[] | { files: FileEntry[] }>(url, signal);
+      if (!Array.isArray(data) && 'tree' in data) return data.tree;
+      return legacyTree(Array.isArray(data) ? data : data.files);
     } catch (e) {
       last = e;
       if (signal?.aborted) throw e;
@@ -56,151 +61,150 @@ export async function loadFiles(urls: string[], signal?: AbortSignal): Promise<F
   throw last instanceof Error ? last : new Error('Could not load the file table');
 }
 
+/** The legacy flat table as a dumper-style tree. Only regular files are kept: they are all the treemap draws. */
+export function legacyTree(entries: FileEntry[]): FileNode {
+  const root: FileNode = { n: '', c: [] };
+  const dirs = new Map<string, FileNode>([['', root]]);
+  const dirFor = (path: string): FileNode => {
+    const known = dirs.get(path);
+    if (known) return known;
+    const cut = path.lastIndexOf('/');
+    const node: FileNode = { n: path.slice(cut + 1), c: [] };
+    dirFor(path.slice(0, cut)).c!.push(node);
+    dirs.set(path, node);
+    return node;
+  };
+  for (const e of entries) {
+    if (e.type !== 'file') continue;
+    const cut = e.path.lastIndexOf('/');
+    const file: FileNode = { n: e.path.slice(cut + 1) };
+    if (e.size) file.s = e.size;
+    const mode = e.mode ? parseInt(e.mode, 8) & 0o7777 : e.executable ? 0o755 : 0o644;
+    if (mode !== 0o644) file.m = mode;
+    dirFor(e.path.slice(0, cut)).c!.push(file);
+  }
+  return root;
+}
+
 // ---------------------------------------------------------------- hierarchy
 
 export interface TreeNode {
   name: string;
-  /** Full path for directories/files, "layer N" for layer nodes. */
+  /** Full path. */
   path: string;
-  kind: 'root' | 'layer' | 'dir' | 'file';
-  /** Deduplicated bytes below this node. */
+  kind: 'root' | 'dir' | 'file';
+  /** Bytes of the regular files below this node (hardlinks counted once). */
   size: number;
-  /** Number of files below this node. */
+  /** Number of regular files below this node. */
   files: number;
-  layer?: number;
-  /** Owning package (purl) for a file; the dominant package for a directory. */
-  pkg?: string;
+  /** FILE_KINDS key of a file; for a directory, the kind holding most of its bytes. */
+  cat: string;
+  /** Permission bits, uid and gid of a file, when not the defaults. */
+  mode?: number;
+  uid?: number;
+  gid?: number;
   children?: TreeNode[];
-  entry?: FileEntry;
-}
-
-/** "pkg:apk/alpine/musl@1.2.6-r3?arch=x86_64" -> "musl 1.2.6-r3" */
-export function purlLabel(purl: string | undefined): string {
-  if (!purl) return 'unowned';
-  const m = purl.match(/^pkg:([^/]+)\/(?:.*\/)?([^@?]+)(?:@([^?]+))?/);
-  if (!m) return purl;
-  return m[3] ? `${m[2]} ${m[3]}` : m[2];
-}
-export function purlName(purl: string | undefined): string {
-  if (!purl) return 'unowned';
-  const m = purl.match(/^pkg:([^/]+)\/(?:.*\/)?([^@?]+)/);
-  return m ? m[2] : purl;
-}
-export function purlType(purl: string | undefined): string {
-  const m = purl?.match(/^pkg:([^/]+)\//);
-  return m ? m[1] : '';
 }
 
 /**
- * Builds layer → directory → file. Only regular files carry bytes; directories, symlinks and the rest
- * count as entries without size. Hardlinks are already deduplicated upstream.
+ * What a file is, for its colour: by extension, then by the executable bit. Hues are fixed so every swatch keeps
+ * the same contrast; `other` is a neutral grey.
  */
-export function buildTree(files: FileEntry[], layers: Layer[]): TreeNode {
-  const root: TreeNode = { name: 'image', path: '/', kind: 'root', size: 0, files: 0, children: [] };
-  const layerNodes = new Map<number, TreeNode>();
-  const layerFor = (i: number) => {
-    let n = layerNodes.get(i);
-    if (!n) {
-      const l = layers[i];
-      n = { name: `layer ${i}`, path: `layer ${i}`, kind: 'layer', size: 0, files: 0, layer: i, children: [], pkg: l?.created_by ?? undefined };
-      layerNodes.set(i, n);
-      root.children!.push(n);
-    }
-    return n;
-  };
-  for (const f of files) {
-    if (f.type !== 'file') continue;
-    const size = f.size ?? 0;
-    const parts = f.path.split('/').filter(Boolean);
-    let node = layerFor(f.layer);
-    node.size += size;
-    node.files++;
-    root.size += size;
-    root.files++;
-    let acc = '';
-    for (let i = 0; i < parts.length - 1; i++) {
-      acc += '/' + parts[i];
-      let child = node.children!.find((c) => c.name === parts[i] && c.kind === 'dir');
-      if (!child) {
-        child = { name: parts[i], path: acc, kind: 'dir', size: 0, files: 0, layer: f.layer, children: [] };
-        node.children!.push(child);
-      }
-      child.size += size;
-      child.files++;
-      node = child;
-    }
-    node.children!.push({ name: parts[parts.length - 1] ?? f.path, path: f.path, kind: 'file', size, files: 1, layer: f.layer, pkg: f.package, entry: f });
-  }
-  // Dominant package per directory: the owner of most bytes below it.
-  const dominant = (n: TreeNode): Map<string, number> => {
-    const m = new Map<string, number>();
-    if (n.kind === 'file') {
-      m.set(n.pkg ?? '', n.size);
-      return m;
-    }
-    for (const c of n.children ?? []) for (const [k, v] of dominant(c)) m.set(k, (m.get(k) ?? 0) + v);
-    let best = '';
-    let bestV = -1;
-    for (const [k, v] of m) if (v > bestV) (best = k), (bestV = v);
-    if (n.kind !== 'layer') n.pkg = best || undefined;
-    return m;
-  };
-  dominant(root);
-  const sortRec = (n: TreeNode) => {
-    n.children?.sort((a, b) => b.size - a.size || a.name.localeCompare(b.name));
-    n.children?.forEach(sortRec);
-  };
-  sortRec(root);
-  root.children!.sort((a, b) => (a.layer ?? 0) - (b.layer ?? 0));
-  return root;
+export const FILE_KINDS: { key: string; label: string; hue?: number; test?: RegExp }[] = [
+  { key: 'library', label: 'libraries', hue: 265, test: /\.so(\.[\w.-]+)?$|\.(a|la)$/ },
+  { key: 'image', label: 'images and icons', hue: 150, test: /\.(png|svgz?|jpe?g|gif|ico|xpm|webp|bmp|icns|tiff?)$/ },
+  { key: 'font', label: 'fonts', hue: 200, test: /\.(ttf|otf|ttc|woff2?|pcf(\.gz)?|pfb|afm|bdf)$/ },
+  { key: 'translation', label: 'translations', hue: 95, test: /\.(mo|qm|po|gmo)$/ },
+  { key: 'archive', label: 'archives', hue: 55, test: /\.(gz|xz|zst|bz2|lz4|zip|tar|tgz|7z|deb|apk|whl|jar)$/ },
+  { key: 'code', label: 'scripts and source', hue: 330, test: /\.(py[cod]?|js|mjs|cjs|ts|map|pl|pm|rb|php|lua|sh|qml|class|h|hpp|c)$/ },
+  { key: 'executable', label: 'executables', hue: 25 },
+  { key: 'other', label: 'other files' },
+];
+const KIND_BY_KEY = new Map(FILE_KINDS.map((k) => [k.key, k]));
+
+export function fileKind(name: string, mode = 0o644): string {
+  const lower = name.toLowerCase();
+  for (const k of FILE_KINDS) if (k.test?.test(lower)) return k.key;
+  return mode & 0o111 ? 'executable' : 'other';
 }
 
-/** Bytes per package purl (files only), largest first. */
-export function packageTotals(files: FileEntry[]): { pkg: string | undefined; size: number; files: number }[] {
-  const m = new Map<string | undefined, { size: number; files: number }>();
-  for (const f of files) {
-    if (f.type !== 'file') continue;
-    const cur = m.get(f.package) ?? { size: 0, files: 0 };
-    cur.size += f.size ?? 0;
-    cur.files++;
-    m.set(f.package, cur);
-  }
-  return [...m].map(([pkg, v]) => ({ pkg, ...v })).sort((a, b) => b.size - a.size);
+export const kindLabel = (key: string | undefined): string => KIND_BY_KEY.get(key ?? '')?.label ?? 'other files';
+
+/** "0755" */
+export const fmtMode = (mode: number): string => mode.toString(8).padStart(4, '0');
+
+/**
+ * Builds directory → file from the dumper tree. Only regular files carry bytes; symlinks, hardlinks (counted at
+ * their first path), special files and directories without files are left out of the map.
+ */
+export function buildTree(tree: FileNode): TreeNode {
+  const walk = (node: FileNode, path: string, isRoot: boolean): [TreeNode, Map<string, number>] | null => {
+    if (!node.c) {
+      if (node.l !== undefined || node.h !== undefined || node.t !== undefined) return null;
+      const size = node.s ?? 0;
+      const mode = node.m ?? 0o644;
+      const cat = fileKind(node.n, mode);
+      const file: TreeNode = { name: node.n, path, kind: 'file', size, files: 1, cat };
+      if (node.m !== undefined) file.mode = node.m;
+      if (node.u !== undefined) file.uid = node.u;
+      if (node.g !== undefined) file.gid = node.g;
+      return [file, new Map([[cat, size]])];
+    }
+    const children: TreeNode[] = [];
+    const bytes = new Map<string, number>();
+    let size = 0;
+    let files = 0;
+    for (const c of node.c) {
+      const got = walk(c, `${path === '/' ? '' : path}/${c.n}`, false);
+      if (!got) continue;
+      children.push(got[0]);
+      size += got[0].size;
+      files += got[0].files;
+      for (const [k, v] of got[1]) bytes.set(k, (bytes.get(k) ?? 0) + v);
+    }
+    if (!files && !isRoot) return null;
+    let cat = 'other';
+    let best = -1;
+    for (const [k, v] of bytes) if (v > best) (cat = k), (best = v);
+    children.sort((a, b) => b.size - a.size || a.name.localeCompare(b.name));
+    return [{ name: isRoot ? 'image' : node.n, path, kind: isRoot ? 'root' : 'dir', size, files, cat, children }, bytes];
+  };
+  return walk(tree, '/', true)![0];
+}
+
+/** Bytes per file kind, largest first. */
+export function kindTotals(root: TreeNode): { cat: string; size: number; files: number }[] {
+  const m = new Map<string, { size: number; files: number }>();
+  const visit = (n: TreeNode) => {
+    if (n.kind === 'file') {
+      const cur = m.get(n.cat) ?? { size: 0, files: 0 };
+      cur.size += n.size;
+      cur.files++;
+      m.set(n.cat, cur);
+    } else n.children?.forEach(visit);
+  };
+  visit(root);
+  return [...m].map(([cat, v]) => ({ cat, ...v })).sort((a, b) => b.size - a.size);
 }
 
 // ---------------------------------------------------------------- colours
 
-/** Stable hue (0-359) per package name; `undefined` (unowned) has no hue. */
-export function pkgHue(purl: string | undefined): number | undefined {
-  if (!purl) return undefined;
-  let h = 0;
-  for (const ch of purlName(purl)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
-  return h % 360;
-}
-
 /**
- * Stable hue per package name. Chroma and lightness are fixed so every swatch keeps the same contrast
- * against the dark and light surfaces; "unowned" is a neutral grey. `depth` is the treemap's nesting
- * cue: each level shifts lightness a little (lighter on dark, darker on light) so nesting reads without
- * changing the hue; `muted` lowers chroma for directory tiles so files stand out inside them.
+ * The fill of a tile plus the ink that keeps a label readable on it (white on dark fills, near-black on light).
+ * Chroma and lightness are fixed per kind so every swatch keeps the same contrast against the dark and light
+ * surfaces. `depth` is the treemap's nesting cue: each level shifts lightness a little (lighter on dark, darker
+ * on light) so nesting reads without changing the hue; `muted` lowers chroma for directory tiles so files stand
+ * out inside them.
  */
-export function pkgColor(purl: string | undefined, opts: { dark?: boolean; depth?: number; muted?: boolean } = {}): string {
-  return pkgTone(purl, opts).fill;
-}
-
-/** The fill of a tile plus the ink that keeps a label readable on it (white on dark fills, near-black on light). */
-export function pkgTone(purl: string | undefined, { dark = true, depth = 0, muted = false } = {}): { fill: string; ink: string; l: number } {
-  const hue = pkgHue(purl);
+export function kindTone(cat: string | undefined, { dark = true, depth = 0, muted = false } = {}): { fill: string; ink: string; l: number } {
+  const hue = KIND_BY_KEY.get(cat ?? '')?.hue;
   const step = Math.min(depth, 6) * 0.03;
   const l = hue === undefined ? (dark ? 0.36 + step : 0.86 - step) : dark ? 0.52 + step : 0.74 - step;
   const c = hue === undefined ? 0.01 : muted ? 0.045 : dark ? 0.12 : 0.11;
   return { fill: `oklch(${l.toFixed(3)} ${c} ${hue ?? 280})`, ink: l > 0.62 ? '#0e0b18' : '#ffffff', l };
 }
 
-/** Fill for layer tiles: a neutral violet tint, shifted by depth like the package colours. */
-export function layerColor({ dark = true } = {}): string {
-  return dark ? 'oklch(0.3 0.03 290)' : 'oklch(0.93 0.02 290)';
-}
+export const kindColor = (cat: string | undefined, opts: { dark?: boolean; depth?: number; muted?: boolean } = {}): string => kindTone(cat, opts).fill;
 
 export const SOURCE_COLOR: Record<string, string> = {
   base: 'var(--raft-violet)',
