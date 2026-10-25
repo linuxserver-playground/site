@@ -3,9 +3,9 @@
 export const SITE = {
   name: 'LinuxServer.io',
   url: 'https://linuxserver-playground.github.io/site/',
-  title: 'LinuxServer.io v2 playground: transparent Docker images',
+  title: 'LinuxServer.io: community Docker images',
   description:
-    'The LinuxServer.io v2 playground builds community Docker images from one manifest each, and shows what is inside every build: layers, files, packages, init graph and the diff to the previous build.',
+    'Community Docker images on one curated base, rebuilt when upstream moves, with every build\'s layers, files, packages and tests published.',
   tagline: 'Building community images, transparently',
   locale: 'en_GB',
   lang: 'en-GB',
@@ -136,7 +136,6 @@ export interface Supporter {
 
 /** Organisations that have donated time, credit or hardware (Donate page on the Grav site). */
 export const SUPPORTERS: Supporter[] = [
-  { name: 'DigitalOcean', href: 'https://www.digitalocean.com/', contribution: 'Credit for their Droplet platform, and LSIO in their supporter programme.' },
   { name: 'Pine64', href: 'https://www.pine64.org/', contribution: 'Hardware that runs part of our aarch64 build system.' },
   { name: 'QNAP', href: 'https://www.qnap.com/', contribution: 'A test unit so we can support users on QNAP devices.' },
   { name: 'Synology', href: 'https://www.synology.com/', contribution: 'A test unit so we can support users on Synology devices.' },

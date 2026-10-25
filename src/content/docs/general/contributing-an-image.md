@@ -1,6 +1,6 @@
 ---
 title: Contributing an image
-description: "This page is for anyone opening a pull request against a docker-<name> repository in linuxserver-playground."
+description: "What belongs in an image, the repository layout, the image.yml manifest, and how to open a pull request against a docker-<name> repository."
 section: general
 order: 17
 group: Project
@@ -98,7 +98,7 @@ docker run --rm -e PUID=1000 -e PGID=1000 -e TZ=Etc/UTC -v "$PWD/testconfig:/con
 
 Confirm `[ls.io-init] done.` appears in the log, the app comes up, and it survives a restart against an **existing** `/config`, not just a fresh one. The arm64 image can be built on x86-64 after `docker run --rm --privileged ghcr.io/linuxserver/qemu-static --reset`, with `docker build -f Dockerfile.aarch64 --platform linux/arm64 ...`.
 
-Once the PR is open, GitHub Actions builds and tests both architectures and publishes `ghcr.io/linuxserver-playground/untrusted-pr/<name>:pr-<number>-<sha7>` for reviewers (fork PRs upload the image as a workflow artifact instead). A single comment on the PR is updated with the result, and the run is visible on the [control plane](https://ci.thelamer.duckdns.org:8443/pulls). PR images are deleted when the PR closes and are never for production use.
+Once the PR is open, GitHub Actions builds and tests both architectures and publishes `ghcr.io/linuxserver-playground/untrusted-pr/<name>:pr-<number>-<sha7>` for reviewers (fork PRs upload the image as a workflow artifact instead). A single comment on the PR is updated with the result, and the run is listed under [pull requests](/fleet/pulls/). PR images are deleted when the PR closes and are never for production use.
 
 ## Pull request rules
 
@@ -113,4 +113,4 @@ Once the PR is open, GitHub Actions builds and tests both architectures and publ
 
 ## Contributing to the infrastructure
 
-The builder, workflows, ci, hub, control, site and stores repositories each have an `AGENTS.md` with the same headings (Purpose, Layout, What you may edit, How to validate, Contracts, Pull request rules) that says what is specific to them. The same PR rules apply. For these pages, see [CONTRIBUTING.md in the site repository](https://github.com/linuxserver-playground/site/blob/main/CONTRIBUTING.md); remember that the image pages are generated from `image.yml` and cannot be edited there.
+The builder, workflows, ci, hub, control and site repositories each have an `AGENTS.md` with the same headings (Purpose, Layout, What you may edit, How to validate, Contracts, Pull request rules) that says what is specific to them. The same PR rules apply. For these pages, see [CONTRIBUTING.md in the site repository](https://github.com/linuxserver-playground/site/blob/main/CONTRIBUTING.md); remember that the image pages are generated from `image.yml` and cannot be edited there.

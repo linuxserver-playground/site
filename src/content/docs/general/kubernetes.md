@@ -1,6 +1,6 @@
 ---
 title: Kubernetes
-description: The Kubernetes manifest the hub generates for every image, what is in it, PUID/PGID versus securityContext, storage, GPUs, host networking, and ingress for SWAG users.
+description: The Kubernetes manifest published for every image, what is in it, PUID/PGID versus securityContext, storage, GPUs, host networking, and ingress for SWAG users.
 section: general
 order: 14
 group: Other platforms
@@ -9,7 +9,7 @@ aliases:
   - /general/kubernetes/
 ---
 > [!WARNING] Reasonable endeavours
-> We build and test on Docker. The Kubernetes manifests the hub generates are produced from the same manifest as the Docker snippets and are checked to be valid, but we do not run a cluster in CI. Kubernetes is supported on a [reasonable endeavours](/docs/misc/support-policy/#reasonable-endeavours-support) basis: we will help with what the container does, not with your cluster. This page assumes you already know how to operate one.
+> We build and test on Docker and do not run a cluster in CI. Kubernetes is supported on a [reasonable endeavours](/docs/misc/support-policy/#reasonable-endeavours-support) basis: we will help with what the container does, not with your cluster. This page assumes you already know how to operate one.
 
 ## The generated manifest
 

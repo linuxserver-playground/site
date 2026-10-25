@@ -22,11 +22,11 @@ export default function ProxyLab({ sample, source }: Props) {
   const text = React.useMemo(() => applyProxy(sample, c), [sample, c]);
   const changed = React.useMemo(() => proxyChanges(sample, c), [sample, c]);
   const file = proxyFile(sample.image, c.mode);
-  const [summary, setSummary] = React.useState('The sample as the hub generates it.');
+  const [summary, setSummary] = React.useState('Default sample.');
   const first = React.useRef(true);
   React.useEffect(() => {
     if (first.current) return void (first.current = false);
-    const t = setTimeout(() => setSummary(changed.length ? `Changed: ${changed.join(', ')}.` : 'The sample as the hub generates it.'), 400);
+    const t = setTimeout(() => setSummary(changed.length ? `Changed: ${changed.join(', ')}.` : 'Default sample.'), 400);
     return () => clearTimeout(t);
   }, [changed]);
 
@@ -131,7 +131,7 @@ export default function ProxyLab({ sample, source }: Props) {
         </p>
         {source && (
           <p className="border-t border-border px-4 py-2 font-mono text-[0.6875rem] text-muted-foreground">
-            Based on the hub's generated sample:{' '}
+            Source:{' '}
             <a href={source} className="break-all underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
               {source.replace(/^https?:\/\//, '')}
             </a>

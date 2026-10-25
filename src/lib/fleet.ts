@@ -10,7 +10,6 @@ import { HUB_URL, hubApi } from './hub';
 const MODS = mods as { source: string; mods: Mod[] };
 
 export const getMods = (): Mod[] => MODS.mods;
-export const MODS_SOURCE = MODS.source;
 
 export const getMod = (branch: string): Mod | undefined => MODS.mods.find((m) => m.branch === branch);
 

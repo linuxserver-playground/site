@@ -86,9 +86,9 @@ In most cases if you needed to write some kind of custom logic to get a plugin t
 
 If you would like to publish and support your hard work, we provide a system for a user to pass a single environment variable to the container to ingest your custom modifications.
 
-Mods are container images themselves, published to the GitHub Container Registry. In the playground each mod is a branch of [docker-mods](https://github.com/linuxserver-playground/docker-mods) described by a `mod.yml` manifest; the hub indexes every mod at [`/api/v1/mods.json`](https://linuxserver-playground.github.io/hub/api/v1/mods.json) and lists the ones that apply to an image at `/api/v1/catalog/<name>/mods.json`. To publish one you only need a GitHub account: start from the `template` branch and follow the repository's guide.
+Mods are container images themselves, published to the GitHub Container Registry. Each mod is a branch of [docker-mods](https://github.com/linuxserver-playground/docker-mods) described by a `mod.yml` manifest. Every mod is listed on the [mods page](/mods/), and each image page lists the ones that apply to it. To publish one you only need a GitHub account: start from the `template` branch and follow the repository's guide.
 
-Essentially it is a system that stashes a tarball of scripts and any other files you need in an image layer on Dockerhub. When we spin up the container we will download this tarball and extract it to /.
+Essentially it is a system that stashes a tarball of scripts and any other files you need in an image layer. When we spin up the container we will download this tarball and extract it to /.
 
 This allows community members to publish a relatively static pile of logic that will always be applied to an end user's up to date Linuxserver.io container.
 
@@ -118,7 +118,7 @@ An example of how this logic can be used to greatly expand the functionality of 
     restart: unless-stopped
 ```
 
-The source code for this mod can be found [here](https://github.com/linuxserver/docker-mods/tree/universal-cloudflared). Until the playground's mods repository is populated, the existing mods at `ghcr.io/linuxserver/mods` are what the index points at.
+The source code for this mod can be found [here](https://github.com/linuxserver-playground/docker-mods/tree/universal-cloudflared).
 
 > [!NOTE]
 > When pulling in logic from 3rd party sources, practice caution and trust the sources/community you get them from, as there are extreme security implications to consuming files from sources outside our control.

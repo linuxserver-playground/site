@@ -47,7 +47,7 @@ export const FACTS = {
   mods: { text: 'Several mods go in one `DOCKER_MODS` value separated with `|`, in this order.', href: `${DOCS}/general/container-customization/` },
   secrets: { text: 'Values flagged as secrets are masked here and left out of the shareable link.', href: undefined },
   k8sStatic: {
-    text: 'The Kubernetes manifest takes the tag and the environment from your choices; volumes, ports and security settings keep the hub\'s structure. Non-root drops PUID and PGID from the ConfigMap.',
+    text: 'Only the tag and the environment follow your choices; volumes, ports and security settings stay as shipped. Non-root drops PUID and PGID from the ConfigMap.',
     href: `${DOCS}/general/kubernetes/`,
   },
   quadlet: { text: 'Optional lines stay commented out in the unit until chosen. Copy the file to `~/.config/containers/systemd/` and run `systemctl --user daemon-reload`.', href: `${DOCS}/general/podman-quadlet/` },

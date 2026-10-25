@@ -9,7 +9,7 @@ aliases:
 ---
 Our images are rebuilt whenever the upstream application releases a new version, whenever a change is pushed to the image repository, and on a weekly package check when the packages inside the image have changed. Every rebuild that passes its tests becomes a GitHub Release tagged `<upstream>-ls<N>` and is published to `ghcr.io/linuxserver-playground/<name>`, so make sure you're always running the latest version, as it may contain important bug fixes and new features.
 
-The release notes of each image are on its GitHub Releases page and in the hub's [changelog feed](https://linuxserver-playground.github.io/hub/api/v1/changelog.xml); the per-build test report and package diff are at `https://linuxserver-playground.github.io/hub/builds/<name>/<tag>/`. See [How a build happens](/docs/general/how-a-build-happens/).
+The release notes of each image are on its GitHub Releases page and in the [changelog feed](https://linuxserver-playground.github.io/hub/api/v1/changelog.xml); each build's test results and package changes are on its page, `/images/<name>/builds/<tag>/`. See [How a build happens](/docs/general/how-a-build-happens/).
 
 ## Steps required to update
 

@@ -5,16 +5,13 @@ author: Spad
 tags:
   - docker
   - compose
-  - digitalocean
   - infrastructure
 hero: ./8041388538-c35c8c13a1-h.jpg
 ---
 
-Our infrastructure can be broadly split into three categories: Public Facing, Internal, and Builders.The latter should be pretty self-explanatory and are a mix of amd64 and aarch64 boxes that build all our images. Internal services include things like our wiki, monitoring and metrics, automation, Discord bots, etc. The bulk of our public facing services - our website, Discourse forums, Fleet, Info, and Status pages - are hosted on Digital Ocean droplets, however, we use a number of different hosting providers for our other services, in part because it's wise to distribute your eggs, in part because DO don't offer arm droplets, and in part because running 24/7 droplets of the required number and spec for our builders would simply be more expensive than more traditional hosting providers.
+Our infrastructure can be broadly split into three categories: Public Facing, Internal, and Builders.The latter should be pretty self-explanatory and are a mix of amd64 and aarch64 boxes that build all our images. Internal services include things like our wiki, monitoring and metrics, automation, Discord bots, etc. The bulk of our public facing services - our website, Discourse forums, Fleet, Info, and Status pages - are hosted on a handful of VPSes, and we use a number of different hosting providers for our other services, in part because it's wise to distribute your eggs, in part because DO don't offer arm droplets, and in part because running 24/7 droplets of the required number and spec for our builders would simply be more expensive than more traditional hosting providers.
 
-One of the nice things about DO is that we can upload and store our own custom OS images, which makes life much easier when we want to deploy Alpine-based hosts, for example, and they also offer much more detailed metrics and monitoring than our other hosting providers, which really helps with making sure we've got everything sized correctly and aren't overpaying or underperforming. They do also offer a Container Registry service, but it's designed for private, internal use, and their largest offering is only 100 GB storage, which we would burn through in no time ([Webtop](https://github.com/linuxserver/docker-webtop) alone accounts for over 3Tb of images).
-
-In the 4 years I've been part of Linuxserver I don't think we've had a single outage across our droplets, which is honestly quite impressive, and with weekly backups ([daily now available](https://www.digitalocean.com/blog/daily-backups-now-generally-available)) and on-demand snapshots we've got some pretty solid reliability for our services. However, even the best hosting provider can't protect you against someone screwing up while managing a box and so we've taken some additional steps to try and protect ourselves.
+In the 4 years I've been part of Linuxserver I don't think we've had a single outage across our hosts, which is honestly quite impressive, and with regular backups and on-demand snapshots we've got some pretty solid reliability for our services. However, even the best hosting provider can't protect you against someone screwing up while managing a box and so we've taken some additional steps to try and protect ourselves.
 
 ### Monitoring
 

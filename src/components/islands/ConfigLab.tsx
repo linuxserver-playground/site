@@ -125,7 +125,7 @@ export default function ConfigLab({ model, sources }: Props) {
   const hints = React.useMemo(() => hintsFor(m, s), [m, s]);
 
   // The visible summary is the live region; it follows the state after a pause so typing is not read out letter by letter.
-  const initialSummary = 'Defaults from the manifest: required settings only. Tick optional settings and mods to add them.';
+  const initialSummary = 'Required settings only. Tick optional settings and mods to add them.';
   const [summary, setSummary] = React.useState(initialSummary);
   React.useEffect(() => {
     if (!dirty.current) return;
@@ -484,7 +484,7 @@ export default function ConfigLab({ model, sources }: Props) {
                   {t.note && <Desc text={t.note} className="block" />}
                   {t.source && (
                     <p className="font-mono">
-                      Based on the hub's generated file:{' '}
+                      Source:{' '}
                       <a href={t.source} className="break-all underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
                         {t.source.replace(/^https?:\/\//, '')}
                       </a>
@@ -506,7 +506,7 @@ export default function ConfigLab({ model, sources }: Props) {
                 </a>
               </React.Fragment>
             ))}
-            . Each page has the mod's settings and documentation.
+            .
           </p>
         )}
         <p role="status" aria-live="polite" className="border-t border-border px-4 py-2 text-xs text-muted-foreground">

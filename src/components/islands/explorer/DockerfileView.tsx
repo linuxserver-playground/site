@@ -70,11 +70,11 @@ export default function DockerfileView({ dockerfile, layers, base, layersUrls, i
   const startOf = new Map(instructions.map((i) => [i.start, i]));
   const layersUrl = layersUrls?.[arch];
 
-  if (!arches.length) return <p className="px-4 py-6 text-sm text-muted-foreground">The bundle carries no Dockerfile text.</p>;
+  if (!arches.length) return <p className="px-4 py-6 text-sm text-muted-foreground">No Dockerfile for this build.</p>;
 
   return (
     <div>
-      <IslandHeader title={`Dockerfile${arch === 'arm64' ? '.aarch64' : ''} · ${instructions.length} instructions · ${table.length ? `${fmtBytes(own)} added over the base, ${fmtBytes(total)} in all` : 'no layer table'}`} note="Each instruction shows the compressed and on-disk bytes of the layer it produced; instructions without a layer added nothing.">
+      <IslandHeader title={`Dockerfile${arch === 'arm64' ? '.aarch64' : ''} · ${instructions.length} instructions · ${table.length ? `${fmtBytes(own)} added over the base, ${fmtBytes(total)} in all` : 'no layer table'}`}>
         <ArchToggle arches={arches} value={arch} onChange={setArch} />
         {layersUrl && (
           <a href={layersUrl} target="_blank" rel="noopener" className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">

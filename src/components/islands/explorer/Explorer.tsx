@@ -58,8 +58,7 @@ export default function Explorer(props: Props) {
         ) : (
           <div className="px-4 py-8 text-sm text-muted-foreground">
             <p>
-              The file treemap needs JavaScript: it reads <span className="font-mono">files.&lt;arch&gt;.json.gz</span> from the hub and lays out every file by
-              size and kind. Without it, the layer table above and the file tables themselves are still available:
+              The file treemap needs JavaScript. The file tables:
             </p>
             <ul className="mt-2 flex flex-wrap gap-3 font-mono text-xs">
               {props.arches.map((a) => (
@@ -98,7 +97,7 @@ export default function Explorer(props: Props) {
                       .join(', ')}
               </p>
             ))}
-            {!hydrated && <p className="mt-2">Open this tab with JavaScript enabled to search the full table.</p>}
+            {!hydrated && <p className="mt-2">The package table needs JavaScript.</p>}
           </div>
         )}
       </TabsContent>

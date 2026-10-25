@@ -9,9 +9,6 @@ aliases:
 ---
 Any exceptions to this support policy will be clearly called out in the readme for the relevant image.
 
-> [!NOTE] Playground images
-> Everything published from `linuxserver-playground` is a proof of concept of the v2 build system and is **not for production use**. This policy describes how support works for those images once the system is live; while it is a playground, all support is best effort. The production `linuxserver/*` images keep the [policy at docs.linuxserver.io](https://docs.linuxserver.io/misc/support-policy/).
-
 ## Formally Supported Images
 
 Any actively maintained image from the LinuxServer organisation, excluding base images, is in scope for support. Note that if you are running an old version of an image we will likely ask you to upgrade to the latest version before providing support, unless your issue is version-specific.
@@ -86,7 +83,7 @@ The following configurations don't fit nicely into any single category because "
 
 ## Change History
 
-* 2026-10-24 - v2 playground: LXC, Kubernetes and the platform stores move to Reasonable Endeavours with guides; PR and dev images out of scope
+* 2026-10-24 - LXC, Kubernetes and the platform stores move to Reasonable Endeavours with guides; PR and dev images out of scope
 * 2024-12-05 - Move non-root users to Weird Exceptions
 * 2024-06-13 - Add read-only running
 * 2024-02-13 - Add Weird Exceptions section

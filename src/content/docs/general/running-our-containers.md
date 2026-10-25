@@ -16,7 +16,7 @@ We have curated various base images which our main application images derive fro
 * A common dependency base between multiple images, reducing the likelihood of variation between two or more applications that share the same dependencies.
 * Reduction in image footprint on your host machine by fully utilising Docker's image layering system. Multiple containers running locally that share the same base image will reuse that image and any of its ancestors.
 
-In the playground every application image is built `FROM ghcr.io/linuxserver/baseimage-<base>:<tag>`; the base is named in the image's `image.yml` under `build.base` and shown on its page.
+Each image page names the base it is built on.
 
 ### The `/config` volume
 
@@ -26,11 +26,11 @@ We do this because we believe that it makes it easier to answer the common quest
 
 ## Where the images are
 
-Playground images are published to the GitHub Container Registry only, as `ghcr.io/linuxserver-playground/<name>`. There is no Docker Hub, `lscr.io`, Quay or GitLab mirror. The tags every release publishes are described in [How a build happens](/docs/general/how-a-build-happens/#versions-and-tags); for day-to-day use `latest` (or the branch tag such as `develop` where an image has one) is what you want.
+Images are published to the GitHub Container Registry as `ghcr.io/linuxserver-playground/<name>`. The tags every release publishes are described in [How a build happens](/docs/general/how-a-build-happens/#versions-and-tags); for day-to-day use `latest` (or the branch tag such as `develop` where an image has one) is what you want.
 
 ## Creating a Container
 
-Every image page carries a ready-made `docker compose` service and the equivalent `docker run` command, generated from the manifest with every required parameter filled in and the optional ones marked `#optional`. Start from those rather than from memory. The same snippets are available from the hub as plain files, for scripting:
+Every image page carries a ready-made `docker compose` service and the equivalent `docker run` command, with every required parameter filled in and the optional ones marked `#optional`. Start from those rather than from memory. The compose file is also available as a plain file:
 
 ```shell
 curl -fsSL https://linuxserver-playground.github.io/hub/api/v1/catalog/<name>/docker-compose.yml
@@ -53,4 +53,4 @@ docker create \
 
 ## Other ways to run them
 
-Docker on Linux is what we build and test against. The same manifest also produces a [Podman quadlet](/docs/general/podman-quadlet/), a [Kubernetes manifest](/docs/general/kubernetes/) and templates for the [app stores](/docs/general/platform-stores/) of Unraid, Portainer, CasaOS, Umbrel, Runtipi and Cosmos; those guides say what changes on each platform and what is and is not supported.
+Docker on Linux is what we build and test against. Each image also has a [Podman quadlet](/docs/general/podman-quadlet/), a [Kubernetes manifest](/docs/general/kubernetes/) and templates for the [app stores](/docs/general/platform-stores/) of Unraid, Portainer, CasaOS, Umbrel, Runtipi and Cosmos; those guides say what changes on each platform and what is and is not supported.

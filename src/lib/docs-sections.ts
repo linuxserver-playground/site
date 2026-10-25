@@ -10,7 +10,7 @@ export interface DocSection {
 }
 
 export const DOC_SECTIONS = [
-  { id: 'general', title: 'How to', description: 'Running, updating and customising our containers: compose, PUID and PGID, volumes, mods, SWAG and the other platforms we generate for.' },
+  { id: 'general', title: 'How to', description: 'Running, updating and customising our containers: compose, PUID and PGID, volumes, mods, SWAG and other platforms.' },
   { id: 'selkies', title: 'Selkies', description: 'The Selkies platform behind Webtop and the single-application images: user guide, developer guide and the components that make it up.' },
   { id: 'misc', title: 'Policies', description: 'The support policy, running as non-root or read-only, and how the project is funded.' },
   { id: 'faq', title: 'FAQ', description: 'The questions we get asked most often, with their answers.' },

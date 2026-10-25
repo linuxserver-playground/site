@@ -445,7 +445,7 @@ export default function InitGraph({ units, image }: Props) {
                           {d}
                         </button>
                       ) : (
-                        <span key={d} className="text-muted-foreground" title="Not listed in this bundle">
+                        <span key={d} className="text-muted-foreground" title="Not in this image">
                           {d}
                         </span>
                       )
@@ -482,7 +482,7 @@ export default function InitGraph({ units, image }: Props) {
             </div>
           ) : (
             <p className="mt-4 text-xs text-muted-foreground">
-              {sel.source === 'base' ? 'The script lives in the base image; the bundle carries scripts for this image’s own units only.' : 'The bundle carries no script for this unit.'}
+              {sel.source === 'base' ? 'Defined in the base image.' : 'No script for this unit.'}
             </p>
           )}
         </div>
@@ -500,7 +500,7 @@ export default function InitGraph({ units, image }: Props) {
       )}
       {missing.size > 0 && (
         <p className="border-t border-[var(--raft-hair)] px-4 py-2 font-mono text-[0.6875rem] text-muted-foreground">
-          Depended on but not listed in the bundle: {[...missing].join(', ')}
+          Dependencies not in this image: {[...missing].join(', ')}
         </p>
       )}
     </div>

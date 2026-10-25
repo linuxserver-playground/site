@@ -51,13 +51,13 @@ export default function CiReport(props: Props) {
   }, [props.tests, props.testsUrl]);
 
   if (!props.testEnabled) {
-    return <p className="px-4 py-5 text-sm text-muted-foreground">Testing is disabled for this image, so no report was produced.</p>;
+    return <p className="px-4 py-5 text-sm text-muted-foreground">Testing is disabled for this image.</p>;
   }
   if (!tests) {
     return (
       <p className="px-4 py-5 text-sm text-muted-foreground" role="status">
-        {state === 'loading' && 'Loading the test report from the hub…'}
-        {state === 'missing' && 'The hub has no test report for this build (yet). The run on the control plane has the live status.'}
+        {state === 'loading' && 'Loading the test report…'}
+        {state === 'missing' && 'No test report for this build yet.'}
         {state === 'error' && (
           <>
             The report could not be loaded.{' '}
@@ -180,8 +180,8 @@ export default function CiReport(props: Props) {
             <ul className="p-2 text-sm">
               {[
                 { label: `Harness report (${current})`, href: file('index.html') },
-                { label: 'Report index on the hub', href: props.reportDir },
-                ...(props.controlUrl ? [{ label: 'Run on the control plane', href: props.controlUrl }] : []),
+                { label: 'Report index', href: props.reportDir },
+                ...(props.controlUrl ? [{ label: 'Run status', href: props.controlUrl }] : []),
                 ...(props.runUrl ? [{ label: 'Run on GitHub', href: props.runUrl }] : []),
                 ...(summary?.tarball ? [{ label: `test.${current}.tar.gz`, href: summary.tarball }] : []),
                 { label: 'tests.json', href: props.testsUrl },
@@ -311,10 +311,10 @@ function LogDetails({ title, url, openByDefault = false, emptyText }: { title: s
         )}
         {text === null && state === 'loading' && (
           <p className="px-3 py-3 text-xs text-muted-foreground" role="status">
-            Loading from the hub…
+            Loading…
           </p>
         )}
-        {state === 'missing' && <p className="px-3 py-3 text-xs text-muted-foreground">The hub did not unpack this file for the build.</p>}
+        {state === 'missing' && <p className="px-3 py-3 text-xs text-muted-foreground">Not available for this build.</p>}
         {state === 'error' && (
           <p className="px-3 py-3 text-xs text-muted-foreground">
             Could not load it.{' '}

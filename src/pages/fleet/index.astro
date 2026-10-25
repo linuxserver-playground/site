@@ -11,7 +11,7 @@ import { buildUrl } from '@/lib/builds';
 import { CONTROL_URL } from '@/lib/control';
 import { getBases, getStaleness } from '@/lib/fleet';
 import { formatDate, relative, shortDigest } from '@/lib/format';
-import { HUB_META, hubApi } from '@/lib/hub';
+import { HUB_META, HUB_URL, hubApi } from '@/lib/hub';
 import { getImage, getImages, SNAPSHOT_DATE } from '@/lib/images';
 import { stat } from '@/lib/stats';
 import { ArrowUpRight, Check, X } from 'lucide-react';
@@ -31,10 +31,10 @@ const known = images.map((i) => i.name);
 <Layout
   section="fleet"
   title="Fleet board"
-  description="Every image and live branch of the LinuxServer.io playground: last build, released tag, upstream version and drift, next scheduled check and skip flags, live from the control plane; plus the base images the fleet is built on."
+  description="Every LinuxServer.io image and branch: last build, released tag, upstream version, next check and skip flags, plus the base images they build on."
   breadcrumbs={crumbs}
 >
-  <FleetShell current="board" title="The fleet, live" lede="One row per image and live branch: what was built last, what is released, what upstream is at, and when the scheduler looks again. Members manage the fleet from here." crumbs={crumbs} controlPath="/">
+  <FleetShell current="board" title="Fleet" lede="Every image and branch: last build, released tag, upstream version and next check." crumbs={crumbs} controlPath="/">
     <dl slot="header" class="mt-6 flex flex-wrap gap-x-8 gap-y-3 font-mono text-sm">
       {
         [stat.images, stat.builds, stat.updatedThisWeek].map((x) => (
@@ -58,14 +58,11 @@ const known = images.map((i) => i.name);
       <Panel>
         <FleetBoard client:load imagesBase={withBase('/images/')} known={known} runsBase={withBase('/fleet/runs/')} modsBase={withBase('/mods/')} fallback={`${CONTROL_URL}/`} />
       </Panel>
-      <p class="text-xs text-muted-foreground">
-        Drift compares the released tag's upstream part with the version the scheduler resolved; <span class="font-mono">unknown</span> until the first hourly check. Image names open the image page's fleet panel. Members (signed in through the control plane) see dispatch, package check, skip and re-run controls on each row; every action is logged on the <a href={withBase('/fleet/actions/')} class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">actions page</a>.
-      </p>
     </div>
 
     <div id="panel-bases" role="tabpanel" aria-labelledby="tab-bases" class="mt-5 space-y-16" hidden>
       <section aria-labelledby="bases-title" id="bases">
-        <SectionHead eyebrow="Base images" title={`${bases.length} base ${bases.length === 1 ? 'reference' : 'references'} in use`} id="bases-title" description="From /api/v1/fleet/bases.json: the FROM reference of each image's newest build, the images on it, and every digest the hub has seen a build use." />
+        <SectionHead eyebrow="Base images" title={`${bases.length} base ${bases.length === 1 ? 'reference' : 'references'} in use`} id="bases-title" link={{ label: 'bases.json', href: hubApi('fleet/bases.json') }} />
         <div class="mt-8 grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_20rem]">
           <div class="space-y-3">
             {
@@ -127,7 +124,7 @@ const known = images.map((i) => i.name);
                 </article>
               ))
             }
-            {bases.length === 0 && <p class="raft-panel p-5 text-sm text-muted-foreground">The hub has not ingested a build yet.</p>}
+            {bases.length === 0 && <p class="raft-panel p-5 text-sm text-muted-foreground">No builds yet.</p>}
           </div>
           <Panel title="images per base family" bodyClass="p-5">
             <ol class="space-y-2.5">
@@ -145,9 +142,6 @@ const known = images.map((i) => i.name);
                 ))
               }
             </ol>
-            <p class="mt-5 border-t border-[var(--raft-hair)] pt-4 text-xs text-muted-foreground">
-              Base images are pulled read-only from <span class="font-mono">ghcr.io/linuxserver/baseimage-*</span> until a base image repository joins the playground.
-            </p>
           </Panel>
         </div>
       </section>
@@ -157,7 +151,8 @@ const known = images.map((i) => i.name);
           eyebrow="Staleness"
           title={staleness.stale.length ? `${staleness.stale.length} ${staleness.stale.length === 1 ? 'build is' : 'builds are'} behind their base` : 'No build is behind its base'}
           id="stale-title"
-          description={`From /api/v1/fleet/staleness.json: ${staleness.checked} newest builds checked against the newest digest seen for their base image.`}
+          description={`${staleness.checked} newest builds checked against the newest base digest.`}
+          link={{ label: 'staleness.json', href: hubApi('fleet/staleness.json') }}
         />
         {
           staleness.stale.length > 0 ? (
@@ -198,14 +193,14 @@ const known = images.map((i) => i.name);
             </div>
           ) : (
             <p class="raft-panel mt-8 flex items-center gap-2 p-5 text-sm text-muted-foreground">
-              <Check className="size-4 text-[var(--raft-ok)]" aria-hidden="true" /> Every newest build used the newest base digest the hub has seen.
+              <Check className="size-4 text-[var(--raft-ok)]" aria-hidden="true" /> Every newest build is on the newest base digest.
             </p>
           )
         }
       </section>
 
       <section aria-labelledby="hub-title" id="hub">
-        <SectionHead eyebrow="Data source" title="The hub" id="hub-title" description="The bases and staleness above, and every image and build page, come from the hub's static API. The board and the other fleet pages read the control plane live." />
+        <SectionHead eyebrow="Data" title="Hub" id="hub-title" link={{ label: 'Hub API', href: `${HUB_URL}/` }} />
         <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <StatTile stat={stat.images} />
           <StatTile stat={stat.builds} />
@@ -216,7 +211,7 @@ const known = images.map((i) => i.name);
           status && (
             <div class="raft-panel mt-3 p-5">
               <div class="flex flex-wrap items-center justify-between gap-3">
-                <h3 class="raft-eyebrow">Hub sources</h3>
+                <h3 class="raft-eyebrow">Sources</h3>
                 <span class:list={['inline-flex items-center gap-1 font-mono text-xs', status.health === 'Success' ? 'text-[var(--raft-ok)]' : 'text-destructive']}>
                   {status.health === 'Success' ? <Check className="size-3.5" aria-hidden="true" /> : <X className="size-3.5" aria-hidden="true" />}
                   {status.health === 'Success' ? 'healthy' : 'degraded'}
@@ -257,8 +252,7 @@ const known = images.map((i) => i.name);
 
 <script>
   // Board / Bases tabs. #bases, #staleness and #hub (and ?tab=bases) open the second tab; the choice is
-  // reflected in the URL so it can be linked. Without JavaScript the board shows and the bases panel is
-  // reachable through the noscript link below the tab list.
+  // reflected in the URL so it can be linked. Without JavaScript both panels show.
   const tablist = document.querySelector<HTMLElement>('[data-tabs]');
   if (tablist) {
     const tabs = [...tablist.querySelectorAll<HTMLButtonElement>('[role="tab"]')];
