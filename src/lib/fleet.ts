@@ -34,7 +34,7 @@ export const getStores = (): StoreEntry[] => stores as StoreEntry[];
 export const getStore = (platform: string) => getStores().find((s) => s.platform === platform);
 
 /** Platforms a visitor can install an image from, in the order the buttons appear. */
-export const INSTALL_PLATFORMS = ['compose', 'unraid', 'portainer', 'casaos', 'umbrel', 'runtipi', 'cosmos', 'kubernetes', 'quadlet', 'proxy'] as const;
+export const INSTALL_PLATFORMS = ['compose', 'unraid', 'portainer', 'casaos', 'umbrel', 'runtipi', 'cosmos', 'arcane', 'kubernetes', 'quadlet', 'proxy'] as const;
 export type InstallPlatform = (typeof INSTALL_PLATFORMS)[number];
 
 export interface InstallOption {
@@ -56,6 +56,7 @@ const PLATFORM_LABELS: Record<InstallPlatform, string> = {
   umbrel: 'Umbrel',
   runtipi: 'Runtipi',
   cosmos: 'Cosmos',
+  arcane: 'Arcane',
   kubernetes: 'Kubernetes',
   quadlet: 'Podman quadlet',
   proxy: 'SWAG proxy conf',
