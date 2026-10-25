@@ -46,7 +46,9 @@ export interface FleetRow {
   /** Matching skip scopes (`image`, `image/branch`, `image/branch/version`). */
   skip: string[];
 }
-export interface FleetPage { rows: FleetRow[]; images: number; generated_at: string }
+/** A `docker-*` repo that is not an image (no image.yml on its default branch), with each branch's newest build. */
+export interface HelperRepo { repo: string; name: string; archived: boolean; branches: number; success: number; running: number; failing: string[]; last_run_at: string | null }
+export interface FleetPage { rows: FleetRow[]; images: number; helpers?: HelperRepo[]; generated_at: string }
 
 export interface Run {
   id: number;

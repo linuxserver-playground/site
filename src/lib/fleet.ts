@@ -12,19 +12,28 @@ const MODS = mods as { source: string; mods: Mod[] };
 export const getMods = (): Mod[] => MODS.mods;
 export const MODS_SOURCE = MODS.source;
 
-/** Mods for one image: those targeting it (or listing it), then universal mods. */
-export function modsForImage(name: string): { own: Mod[]; universal: Mod[] } {
-  const own = MODS.mods.filter((m) => m.target === name || (m.target !== 'universal' && m.applies_to.includes(name)));
-  const universal = MODS.mods.filter((m) => m.target === 'universal');
-  return { own, universal };
+export const getMod = (branch: string): Mod | undefined => MODS.mods.find((m) => m.branch === branch);
+
+/** The site path of a mod's page, without the base. */
+export const modPath = (m: Pick<Mod, 'branch'>) => `/mods/${m.branch}/`;
+
+/**
+ * Mods for one image, deprecated ones left out: `own` target it (or another image's mod lists it), `curated`
+ * are universal mods whose mod.yml lists it under `images`, `universal` the remaining universal mods.
+ */
+export function modsForImage(name: string): { own: Mod[]; curated: Mod[]; universal: Mod[] } {
+  const live = MODS.mods.filter((m) => !m.deprecated);
+  const own = live.filter((m) => m.target === name || (m.target !== 'universal' && m.applies_to.includes(name)));
+  const curated = live.filter((m) => m.target === 'universal' && m.applies_to.includes(name));
+  const universal = live.filter((m) => m.target === 'universal' && !curated.includes(m));
+  return { own, curated, universal };
 }
 
-/** Every image name a mod targets or is listed for, with counts. Universal mods are excluded. */
+/** Every image a mod targets or is listed for (universal mods count for the images they list), with counts. */
 export function modTargets(): { name: string; count: number }[] {
   const counts = new Map<string, number>();
   for (const m of MODS.mods) {
-    if (m.target === 'universal') continue;
-    for (const t of new Set([m.target, ...m.applies_to])) counts.set(t, (counts.get(t) ?? 0) + 1);
+    for (const t of new Set([m.target, ...m.applies_to])) if (t !== 'universal') counts.set(t, (counts.get(t) ?? 0) + 1);
   }
   return [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name));
 }

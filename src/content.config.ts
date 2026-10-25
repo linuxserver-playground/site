@@ -116,4 +116,14 @@ const imagedocs = defineCollection({
   }),
 });
 
-export const collections = { posts, authors, spotlight, docs, imagedocs };
+/**
+ * Mod documentation: the `docs` of each mod's mod.yml, written by scripts/refresh-data.mjs from the hub's
+ * api/v1/mods.json into src/content/moddocs/<branch>.md and rendered on /mods/<branch>/. Generated; change the
+ * mod.yml on the docker-mods branch instead.
+ */
+const moddocs = defineCollection({
+  loader: glob({ base: './src/content/moddocs', pattern: '*.md', generateId: ({ entry }) => entry.replace(/\.md$/, '') }),
+  schema: z.object({ branch: z.string() }),
+});
+
+export const collections = { posts, authors, spotlight, docs, imagedocs, moddocs };

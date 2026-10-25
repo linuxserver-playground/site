@@ -9,6 +9,7 @@
  * snippet (`builder.snippets` with `#optional` entries dropped), and with every optional item on it is the
  * full snippet minus the `#optional` markers: the renderers follow `builder/snippets.py` key for key.
  */
+import { withBase } from './base';
 import type { ImageDetail, Mod } from './hub';
 
 // ---------------------------------------------------------------------------------------------------
@@ -45,13 +46,14 @@ export interface LabMod {
   summary: string;
   /** The `DOCKER_MODS` value. */
   image: string;
-  url: string;
+  /** The mod's page on this site. */
+  page: string;
   universal: boolean;
+  /** A universal mod whose mod.yml lists this image. */
+  curated: boolean;
   deprecated: boolean;
   deprecationMessage?: string;
   env: LabModEnv[];
-  /** Whether the hub read a `mod.yml` (legacy mod-list entries have no settings data). */
-  hasManifest: boolean;
 }
 
 export interface LabModel {
@@ -179,12 +181,12 @@ export function buildLabModel(
       title: m.title,
       summary: m.summary,
       image: m.image,
-      url: m.url,
+      page: withBase(`/mods/${m.branch}/`),
       universal: m.target === 'universal',
+      curated: m.target === 'universal' && m.applies_to.includes(image.name),
       deprecated: m.deprecated,
       deprecationMessage: m.deprecation_message ?? undefined,
       env: m.env.map((e) => ({ name: e.name, description: e.description, default: e.default ?? '', required: e.required })),
-      hasManifest: m.source === 'playground',
     })),
     external,
     kubernetes: extras.kubernetes?.trimEnd() ?? null,

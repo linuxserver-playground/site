@@ -16,7 +16,7 @@ import ConfigLab from '@/components/islands/ConfigLab';
 import ProxyLab from '@/components/islands/ProxyLab';
 import { withBase } from '@/lib/base';
 import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
-import { installOptions, modsForImage } from '@/lib/fleet';
+import { installOptions, modPath, modsForImage } from '@/lib/fleet';
 import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/format';
 import { CONTROL_URL, controlImageUrl } from '@/lib/control';
 import { hubApi, hubFilesUrl, hubHistoryUrl, HUB_URL, type Arch } from '@/lib/hub';
@@ -45,7 +45,8 @@ const historyCount = Object.values(history).reduce((a, b) => a + b.length, 0);
 const mods = modsForImage(image.name);
 const c = image.config ?? {};
 
-const lab = buildLabModel(image, extras, [...mods.own, ...mods.universal]);
+const lab = buildLabModel(image, extras, [...mods.own, ...mods.curated, ...mods.universal]);
+const listedMods = [...mods.own, ...mods.curated];
 const labSources = {
   compose: hubApi(`catalog/${image.name}/docker-compose.yml`),
   kubernetes: image.links.kubernetes ?? undefined,
@@ -561,32 +562,31 @@ const changelog = image.changelog ?? [];
       </section>
 
       {
-        (mods.own.length > 0 || mods.universal.length > 0) && (
+        (listedMods.length > 0 || mods.universal.length > 0) && (
           <section aria-labelledby="mods">
             <div class="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <AnchorHeading id="mods">Mods</AnchorHeading>
                 <p class="mt-2 text-sm text-muted-foreground">
-                  Add a mod with <code class="font-mono text-foreground">DOCKER_MODS=&lt;image&gt;</code>; several are separated with <code class="font-mono text-foreground">|</code>.
+                  Add a mod with <code class="font-mono text-foreground">DOCKER_MODS=&lt;image&gt;</code>; several are separated with <code class="font-mono text-foreground">|</code>. The config lab above adds them for you.
                 </p>
               </div>
               <a href={withBase(`/mods/?image=${encodeURIComponent(image.name)}`)} class="inline-flex items-center gap-1 text-sm font-medium hover:text-primary">
                 All mods for {image.name} <ArrowRight className="size-3.5" aria-hidden="true" />
               </a>
             </div>
-            {mods.own.length > 0 ? (
+            {listedMods.length > 0 ? (
               <ul class="raft-panel mt-4 divide-y divide-[var(--raft-hair)]">
-                {mods.own.map((m) => (
+                {listedMods.map((m) => (
                   <li class="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div class="min-w-0">
-                      <a href={m.url} target="_blank" rel="noopener" class="font-medium hover:text-primary">
+                      <a href={withBase(modPath(m))} class="font-medium hover:text-primary">
                         {m.title}
-                        <span class="sr-only"> (opens in a new tab)</span>
                       </a>
-                      {m.deprecated && <span class="ml-2 rounded bg-destructive/15 px-1.5 py-px font-mono text-[0.6875rem] text-destructive">deprecated</span>}
+                      {m.target === 'universal' && <span class="ml-2 font-mono text-[0.6875rem] text-muted-foreground">universal</span>}
                       <p class="mt-0.5 text-sm text-muted-foreground" set:html={inlineMarkdown(m.summary)} />
                     </div>
-                    <div class="flex shrink-0 items-center gap-1 rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] py-0.5 pr-0.5 pl-2.5 font-mono text-xs">
+                    <div class="flex min-w-0 shrink-0 items-center gap-1 rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] py-0.5 pr-0.5 pl-2.5 font-mono text-xs">
                       <span class="truncate">{m.image}</span>
                       <CopyButton client:visible text={m.image} label={`Copy ${m.title} mod image`} />
                     </div>
@@ -598,8 +598,10 @@ const changelog = image.changelog ?? [];
                 No mod targets {image.name} specifically; the {mods.universal.length} universal mods work with every image.
               </p>
             )}
-            {mods.own.length > 0 && mods.universal.length > 0 && (
-              <p class="mt-3 text-xs text-muted-foreground">Plus {mods.universal.length} universal mods that work with every image.</p>
+            {listedMods.length > 0 && mods.universal.length > 0 && (
+              <p class="mt-3 text-xs text-muted-foreground">
+                Plus <a href={withBase(`/mods/?image=${encodeURIComponent(image.name)}`)} class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">{mods.universal.length} other universal mods</a> that work with every image.
+              </p>
             )}
           </section>
         )

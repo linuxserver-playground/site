@@ -168,6 +168,7 @@ export default function ConfigLab({ model, sources }: Props) {
   const net = hostNet(m, s);
 
   const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const chosenMods = s.mods.map((id) => m.mods.find((x) => x.id === id)).filter((x): x is LabMod => !!x);
   const modRows = m.mods.filter((x) => terms.every((t) => `${x.name} ${x.title} ${x.summary}`.toLowerCase().includes(t)));
 
   const envInput = (e: { id: string; name: string; value: string; options?: string[]; secret: boolean }, required: boolean) => {
@@ -421,7 +422,7 @@ export default function ConfigLab({ model, sources }: Props) {
         )}
 
         {m.mods.length > 0 && (
-          <Group title="Mods" count={s.mods.length || undefined} note={`${m.mods.filter((x) => !x.universal).length} for ${m.name} and ${m.mods.filter((x) => x.universal).length} universal. Ticked mods join one DOCKER_MODS value in the order you tick them.`}>
+          <Group title="Mods" count={s.mods.length || undefined} note={`${m.mods.filter((x) => !x.universal).length} for ${m.name}, ${m.mods.filter((x) => x.curated).length} universal mods suggested for it, and ${m.mods.filter((x) => x.universal && !x.curated).length} other universal mods. Ticked mods join one DOCKER_MODS value in the order you tick them.`}>
             <div className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
               <label htmlFor={fid('modq')} className="sr-only">
@@ -438,7 +439,7 @@ export default function ConfigLab({ model, sources }: Props) {
                       <input type="checkbox" id={fid(`mod-${mod.id}`)} className={CHECK} checked={on} onChange={(e) => toggleMod(mod.id, e.target.checked)} />
                       <span className="min-w-0">
                         <span className="font-medium">{mod.title}</span>
-                        <span className="ml-2 font-mono text-[0.6875rem] text-muted-foreground">{mod.universal ? 'universal' : m.name}</span>
+                        <span className="ml-2 font-mono text-[0.6875rem] text-muted-foreground">{mod.curated ? `universal, suggested for ${m.name}` : mod.universal ? 'universal' : m.name}</span>
                         {mod.deprecated && <span className="ml-2 rounded bg-destructive/15 px-1.5 py-px font-mono text-[0.6875rem] text-destructive">deprecated</span>}
                         <Desc text={mod.summary} className="line-clamp-2 block text-xs text-muted-foreground" />
                       </span>
@@ -494,6 +495,20 @@ export default function ConfigLab({ model, sources }: Props) {
             </TabsContent>
           ))}
         </Tabs>
+        {chosenMods.length > 0 && (
+          <p className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
+            Mods in this config:{' '}
+            {chosenMods.map((mod, i) => (
+              <React.Fragment key={mod.id}>
+                {i > 0 && ', '}
+                <a href={mod.page} className="font-medium text-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:decoration-current">
+                  {mod.title}
+                </a>
+              </React.Fragment>
+            ))}
+            . Each page has the mod's settings and documentation.
+          </p>
+        )}
         <p role="status" aria-live="polite" className="border-t border-border px-4 py-2 text-xs text-muted-foreground">
           {summary}
         </p>
@@ -542,33 +557,29 @@ function focusField(id: string) {
 }
 
 function ModSettings({ mod, s, fid, onChange }: { mod: LabMod; s: LabState; fid: (id: string) => string; onChange: (key: string, v: string) => void }) {
-  if (!mod.hasManifest || mod.env.length === 0) {
-    return (
-      <p className="mt-1.5 ml-6.5 text-xs text-muted-foreground">
-        {mod.hasManifest ? 'No settings.' : 'No settings data in the hub yet; see the'}{' '}
-        {!mod.hasManifest && (
-          <a href={mod.url} target="_blank" rel="noopener" className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
-            mod README<span className="sr-only"> (opens in a new tab)</span>
-          </a>
-        )}
-        {!mod.hasManifest && '.'}
-      </p>
-    );
-  }
+  const about = (
+    <a href={mod.page} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+      About {mod.title}
+    </a>
+  );
+  if (mod.env.length === 0) return <p className="mt-1.5 ml-6.5 text-xs text-muted-foreground">No settings. {about}</p>;
   return (
-    <ul className="mt-2 ml-6.5 space-y-2">
-      {mod.env.map((e) => {
-        const key = `${mod.id}/${e.name}`;
-        const value = modEnvValue(s, mod, e);
-        const id = fid(`mod-${key}`);
-        return (
-          <li key={e.name}>
-            <Field id={id} label={<>{e.name}{e.required && <span className="text-destructive"> *</span>}</>} hint={e.description}>
-              <Input id={id} type={/TOKEN|PASS|KEY/i.test(e.name) ? 'password' : 'text'} value={value} onChange={(ev) => onChange(key, ev.target.value)} className="font-mono text-xs" autoComplete="off" spellCheck={false} required={e.required} aria-invalid={e.required && value === '' ? true : undefined} />
-            </Field>
-          </li>
-        );
-      })}
-    </ul>
+    <div className="mt-2 ml-6.5">
+      <ul className="space-y-2">
+        {mod.env.map((e) => {
+          const key = `${mod.id}/${e.name}`;
+          const value = modEnvValue(s, mod, e);
+          const id = fid(`mod-${key}`);
+          return (
+            <li key={e.name}>
+              <Field id={id} label={<>{e.name}{e.required && <span className="text-destructive"> *</span>}</>} hint={e.description}>
+                <Input id={id} type={/TOKEN|PASS|KEY/i.test(e.name) ? 'password' : 'text'} value={value} onChange={(ev) => onChange(key, ev.target.value)} className="font-mono text-xs" autoComplete="off" spellCheck={false} required={e.required} aria-invalid={e.required && value === '' ? true : undefined} />
+              </Field>
+            </li>
+          );
+        })}
+      </ul>
+      <p className="mt-1.5 text-xs text-muted-foreground">{about}</p>
+    </div>
   );
 }
