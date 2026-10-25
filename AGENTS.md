@@ -18,9 +18,9 @@ in the browser. Data producers: the hub (`linuxserver-playground/hub`), the cont
 | --- | --- |
 | `src/data/` | Snapshots written by `scripts/refresh-data.mjs`: `catalog.json`, `images/<name>.json`, `builds/<image>/<tag>.json` (record, diff, layers, `tests`), `mods.json`, `stores.json`, `fleet.json`, `packages.json`, `categories.json`, `stats.json`, `hub.json`, `control.json` (run ids), `team.json`, `backers.json`. |
 | `src/lib/` | Data layer. `hub.ts` (API shapes and URL helpers), `control.ts` (the control plane: shapes, credentialed fetch, actions, SSE and `/api/me` hooks; browser-safe), `images.ts`, `builds.ts`, `fleet.ts`, `stats.ts`, `explorer.ts` (browser-safe helpers), `lab.ts` and `hints.ts` (the config lab: model, renderers, URL token, hints), `proxy.ts` (the SWAG proxy lab), posts, `docs.ts` and `docs-sections.ts` (the documentation), feeds, JSON-LD, formatting. |
-| `src/pages/` | Routes. `images/[name].astro`, `images/[name]/builds/[tag].astro`, `fleet/` (`index`, `runs/index`, `runs/[id]`, `queue`, `builds`, `pulls`, `issues`, `releases`, `scheduler`, `actions`), `packages.astro`, `mods.astro`, `stores.astro`, blog, `docs/` (landing, `[section]/index`, `[section]/[slug]`), about, support, donate, search. |
-| `src/components/` | Astro components (`FleetShell` for the fleet section, `AnchorHeading` for linkable sections, `DocsShell`, `DocsNav` for the documentation); `islands/` React islands (`ConfigLab`, `ProxyLab`, catalogue, search…); `islands/fleet/` the live fleet panels, sign-in and the shared pills, states and action buttons; `islands/explorer/` the explorer views, `CiReport` and `Vulns`; `ui/` shadcn components (do not edit). |
-| `src/content/` | Blog posts, authors, `spotlight.yaml`, and `docs/<section>/<slug>.md` (the documentation; schema in `src/content.config.ts`). |
+| `src/pages/` | Routes. `images/[name].astro`, `images/[name]/builds/[tag].astro`, `fleet/` (`index`, `runs/index`, `runs/[id]`, `queue`, `builds`, `pulls`, `issues`, `releases`, `scheduler`, `actions`), `packages.astro`, `mods/` (`index`, `[branch]` a page per mod), `stores.astro`, blog, `docs/` (landing, `[section]/index`, `[section]/[slug]`), about, support, donate, search. |
+| `src/components/` | Astro components (`FleetShell` for the fleet section, `AnchorHeading` for linkable sections, `DocsShell`, `DocsNav` for the documentation); `islands/` React islands (`ConfigLab`, `ProxyTabs` with `ProxyLab` for SWAG and the hub's Caddy and Traefik references, catalogue, search…); `islands/fleet/` the live fleet panels, sign-in and the shared pills, states and action buttons; `islands/explorer/` the explorer views, `CiReport` and `Vulns`; `ui/` shadcn components (do not edit). |
+| `src/content/` | Blog posts, authors, `spotlight.yaml`, and `docs/<section>/<slug>.md` (the documentation; schema in `src/content.config.ts`). `imagedocs/` and `moddocs/` are written by `npm run data` from the hub; never edit them. |
 | `src/styles/globals.css` | Design tokens and utilities (Raft). |
 | `scripts/` | `refresh-data.mjs`, `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `fleet-check.mjs`, `new-post.mjs`, `new-doc.mjs`. |
 | `.github/workflows/` | `deploy.yml` (push, daily, `repository_dispatch: hub-updated`, manual), `check.yml` (pull requests). |
@@ -81,8 +81,8 @@ results page the release notes and Discord embeds link to).
 
 The config lab (`src/lib/lab.ts`) re-renders the compose and run snippets client-side and must stay byte
 for byte equal to the hub's snippets in its default and all-optional states (they follow
-`builder/snippets.py`); the quadlet, Kubernetes and SWAG outputs are the hub's text with targeted line
-edits, never regenerated. A change to the builder's snippet or generator format is a change here too.
+`builder/snippets.py`); the quadlet, Kubernetes, SWAG, Caddy and Traefik outputs are the hub's text (with targeted line edits
+for quadlet, Kubernetes and SWAG), never regenerated. A change to the builder's snippet or generator format is a change here too.
 Hints (`src/lib/hints.ts`) quote the manifest or the documentation; never add a hint that states something
 the hub does not say about the image.
 

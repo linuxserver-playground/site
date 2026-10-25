@@ -320,6 +320,10 @@ export interface ProxyData {
   scheme: string;
   subdomain?: string | null;
   subfolder?: string | null;
+  /** A reference Caddyfile site block from the same proxy block. */
+  caddy?: string | null;
+  /** Reference Traefik labels for the image's compose service. */
+  traefik?: string | null;
   base_url_note?: string | null;
   config: Record<string, unknown>;
 }
