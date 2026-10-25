@@ -4,7 +4,7 @@ import mods from '@/data/mods.json';
 import packages from '@/data/packages.json';
 import stores from '@/data/stores.json';
 import type { BaseUsage, Mod, PackageIndexEntry, StaleImage, StoreEntry } from './hub';
-import { hubApi } from './hub';
+import { HUB_URL, hubApi } from './hub';
 
 // ---------------------------------------------------------------- mods
 const MODS = mods as { source: string; mods: Mod[] };
@@ -44,10 +44,8 @@ export interface InstallOption {
   label: string;
   /** The URL to paste or open for this image on this platform. */
   url: string;
-  /** One-line how-to from the hub's stores index, completed for this image. */
+  /** One line on how to use it. */
   howTo: string;
-  /** Where to read more. */
-  more?: string;
 }
 
 const PLATFORM_LABELS: Record<InstallPlatform, string> = {
@@ -63,12 +61,33 @@ const PLATFORM_LABELS: Record<InstallPlatform, string> = {
   proxy: 'SWAG proxy conf',
 };
 
+/** Per-image deployment files the hub publishes under /stores/<platform>/ (not stores: no import URL). */
+const DEPLOY_FILES: Partial<Record<InstallPlatform, { name: string; file: (image: string) => string; howTo: string }>> = {
+  kubernetes: {
+    name: 'Kubernetes manifest',
+    file: (image) => `kubernetes/${image}.yaml`,
+    howTo: 'Review the storage sizes and secrets, then kubectl apply -f this file.',
+  },
+  quadlet: {
+    name: 'Podman quadlet',
+    file: (image) => `quadlet/${image}.container`,
+    howTo: 'Copy to ~/.config/containers/systemd/, then systemctl --user daemon-reload and start the unit.',
+  },
+  proxy: {
+    name: 'SWAG proxy conf',
+    file: (image) => `proxy/${image}.subdomain.conf.sample`,
+    howTo: "Copy to SWAG's /config/nginx/proxy-confs/ without .sample and restart SWAG.",
+  },
+};
+
 /**
- * "Install on …" options for one image, from the hub's stores index (`/api/v1/stores/index.json`). A
- * platform the hub doesn't list is left out; a platform whose output is per image gets the image's file.
+ * "Install on …" options for one image: Docker Compose, the six stores from the hub's index
+ * (`/api/v1/stores/index.json`), and the per-image deployment files. Unraid gets the image's own template; the
+ * other stores take the store URL, since they import every image at once.
  */
 export function installOptions(image: string, opts: { kubernetes: boolean; quadlet: boolean; proxy: boolean }): InstallOption[] {
   const list: InstallOption[] = [];
+  const files = `${HUB_URL}/stores`;
   for (const platform of INSTALL_PLATFORMS) {
     if (platform === 'compose') {
       list.push({
@@ -80,19 +99,17 @@ export function installOptions(image: string, opts: { kubernetes: boolean; quadl
       });
       continue;
     }
+    const deploy = DEPLOY_FILES[platform];
+    if (deploy) {
+      if (!opts[platform as 'kubernetes' | 'quadlet' | 'proxy']) continue;
+      list.push({ platform, name: deploy.name, label: PLATFORM_LABELS[platform], url: `${files}/${deploy.file(image)}`, howTo: deploy.howTo });
+      continue;
+    }
     const store = getStore(platform);
     if (!store) continue;
-    if (platform === 'kubernetes' && !opts.kubernetes) continue;
-    if (platform === 'quadlet' && !opts.quadlet) continue;
-    if (platform === 'proxy' && !opts.proxy) continue;
-    let url = store.url;
-    let howTo = store.how_to;
-    if (platform === 'unraid') url = `${store.url.replace(/\/$/, '')}/${image}.xml`;
-    if (platform === 'kubernetes') url = `${store.url.replace(/\/$/, '')}/${image}.yaml`;
-    if (platform === 'quadlet') url = `${store.url.replace(/\/$/, '')}/${image}.container`;
-    if (platform === 'proxy') url = `${store.url.replace(/\/$/, '')}/${image}.subdomain.conf.sample`;
-    howTo = howTo.replace(/<url>/g, store.url.replace(/\/$/, '')).replace(/<name>/g, image);
-    list.push({ platform, name: store.name, label: PLATFORM_LABELS[platform], url, howTo, more: store.url });
+    const url = platform === 'unraid' ? `${files}/unraid/${image}.xml` : store.url;
+    const howTo = platform === 'unraid' ? `Copy to /boot/config/plugins/dockerMan/templates-user/ and pick it under Docker → Add Container → Template.` : store.how_to;
+    list.push({ platform, name: store.name, label: PLATFORM_LABELS[platform], url, howTo });
   }
   return list;
 }
