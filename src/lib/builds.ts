@@ -2,7 +2,7 @@
  * Builds, from the per-image and per-build snapshots (src/data/images/<name>.json and
  * src/data/builds/<image>/<tag>.json), written by `npm run data` from the hub's builds endpoints.
  */
-import type { Arch, Bundle, BuildSummary, BuildsData, Classification, Diff, HistoryEntry, Layer, ProxyData } from './hub';
+import type { Arch, Bundle, BuildSummary, BuildsData, Classification, Diff, HistoryEntry, Layer, ProxyData, TestsData } from './hub';
 
 export interface ImageExtras {
   builds: BuildsData;
@@ -15,6 +15,22 @@ export interface BuildRecord {
   build: Bundle;
   diff: Diff | null;
   layers: Partial<Record<Arch, Layer[]>>;
+  /** `tests.json` from the hub: the harness's reports with a summary. `null` when the build has no report. */
+  tests?: TestsData | null;
+}
+
+/** Every workflow run id the hub's build records name, for the pre-rendered /fleet/runs/<id>/ pages. */
+export function knownRunIds(): number[] {
+  const ids = new Set<number>();
+  for (const { record } of allBuildRecords()) if (record.build.workflow?.run_id) ids.add(record.build.workflow.run_id);
+  return [...ids];
+}
+
+/** The build tags the site has a page for, per image, so live lists can link to them. */
+export function knownBuildTags(): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  for (const { image, tag } of allBuildRecords()) (out[image] ??= []).push(tag);
+  return out;
 }
 
 const extras = import.meta.glob<{ default: ImageExtras }>('/src/data/images/*.json', { eager: true });

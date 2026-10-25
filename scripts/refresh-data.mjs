@@ -6,7 +6,8 @@
  *   hub.json              where the data came from, when, and the hub's own status endpoint
  *   catalog.json          every image in full (ImageDetail: config, snippets, releases, links)
  *   images/<name>.json    per image: retained builds and release history, proxy conf, kubernetes, quadlet
- *   builds/<image>/<tag>.json   per retained build: the bundle record, its diff and its layer tables
+ *   builds/<image>/<tag>.json   per retained build: the bundle record, its diff, its layer tables and its tests.json
+ *   control.json          the run ids the control plane knows, so /fleet/runs/<id>/ pages exist for them
  *   categories.json       categories with their images
  *   mods.json             the mods index
  *   stores.json           every store URL with its one-line how-to
@@ -28,6 +29,8 @@
  *   GITHUB_ORG    org whose public members are the team (default linuxserver-playground).
  *   GITHUB_TOKEN  avoids GitHub rate limits.
  *   --skip-github keep the existing team.json and avatars.
+ *   PUBLIC_CONTROL_URL  the control plane (default https://ci.thelamer.duckdns.org:8443); only its run ids are
+ *                 snapshotted, everything else on the fleet pages is fetched live in the browser.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -43,6 +46,7 @@ const skipGithub = args.includes('--skip-github');
 export const DEFAULT_HUB_URL = 'https://linuxserver-playground.github.io/hub';
 const HUB_URL = (process.env.HUB_URL ?? DEFAULT_HUB_URL).replace(/\/+$/, '');
 const GITHUB_ORG = process.env.GITHUB_ORG ?? 'linuxserver-playground';
+const CONTROL_URL = (process.env.PUBLIC_CONTROL_URL ?? 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
 const UA = { 'User-Agent': 'linuxserver-playground-site-build (+https://linuxserver-playground.github.io/site/)' };
 
 const dataDir = new URL('../src/data/', import.meta.url);
@@ -129,16 +133,17 @@ await pool(images, 6, async (img) => {
 
   await pool(data.builds, 4, async (b) => {
     const tagBase = `${base}/builds/${b.tag}`;
-    const [record, diff, ...layers] = await Promise.all([
+    const [record, diff, tests, ...layers] = await Promise.all([
       hubJSON(`${tagBase}.json`),
       optional(hubJSON(`${tagBase}/diff.json`)),
+      optional(hubJSON(`${tagBase}/tests.json`)),
       ...b.platforms.map((p) => optional(hubJSON(`${tagBase}/layers.${p.arch}.json`))),
     ]);
     const layerTables = {};
     b.platforms.forEach((p, i) => {
       if (layers[i]) layerTables[p.arch] = layers[i].data.layers;
     });
-    write(`builds/${img.name}/${b.tag}.json`, { build: record.data.build, diff: diff?.data.diff ?? null, layers: layerTables });
+    write(`builds/${img.name}/${b.tag}.json`, { build: record.data.build, diff: diff?.data.diff ?? null, layers: layerTables, tests: tests?.data ?? null });
     buildCount++;
   });
 });
@@ -152,6 +157,22 @@ write('fleet.json', { bases: bases.data.bases, staleness: staleness.data });
 const hubStats = (await hubJSON('api/v1/stats.json')).data.stats;
 const status = (await optional(hubJSON('api/v1/status.json')))?.data.status ?? null;
 write('hub.json', { url: HUB_URL, source: localHub ? 'local' : 'remote', fetched: new Date().toISOString(), last_updated: lastUpdated, status });
+
+// ---------------------------------------------------------------- control plane
+// Only the run ids: the fleet pages render live from the control plane's JSON API in the browser, but a
+// static site needs to know which /fleet/runs/<id>/ pages to emit. The ids of every build the hub holds are
+// added at build time; a run the snapshot misses is reached through /fleet/runs/?run=<id>.
+console.log(`${CONTROL_URL} …`);
+let control = existsSync(out('control.json')) ? JSON.parse(readFileSync(out('control.json'), 'utf8')) : { url: CONTROL_URL, fetched: null, run_ids: [] };
+try {
+  const runs = await getJSON(`${CONTROL_URL}/api/runs.json`);
+  const ids = new Set([...runs.active.map((r) => r.run.id), ...runs.recent.map((r) => r.id)]);
+  control = { url: CONTROL_URL, fetched: new Date().toISOString(), run_ids: [...ids].sort((a, b) => b - a) };
+} catch (e) {
+  console.warn(`  ! control: ${e.message} (keeping the previous control.json)`);
+  control = { ...control, url: CONTROL_URL };
+}
+write('control.json', control);
 
 // ---------------------------------------------------------------- logos
 // Copied locally so Astro can resize them to WebP and pages never hotlink GitHub.

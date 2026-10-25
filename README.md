@@ -1,10 +1,13 @@
 # LinuxServer.io v2 playground: the website
 
 The public website of the [LinuxServer.io v2 playground](https://github.com/linuxserver-playground): home,
-the image catalogue with a page for every image, a page for every retained build with the transparent
-image explorer (files, packages, annotated Dockerfile, init graph, diff), the fleet, package, mods and stores views, the
-blog, the documentation, and the about, support and donate pages. Built with [Astro](https://astro.build), Tailwind CSS and
-[shadcn/ui](https://ui.shadcn.com), with no server or database.
+the image catalogue with a page for every image, a page for every retained build with its CI report and the
+transparent image explorer (files, packages, annotated Dockerfile, init graph, diff), the fleet section
+(board, runs, queue, builds, pull requests, issues, releases, scheduler and member actions, live from the
+control plane), the package, mods and stores views, the blog, the documentation, and the about, support and
+donate pages. Built with [Astro](https://astro.build), Tailwind CSS and [shadcn/ui](https://ui.shadcn.com),
+with no server or database of its own: the single pane of glass over the hub's static API and the control
+plane's JSON API.
 
 Deployed to https://linuxserver-playground.github.io/site/ from `main` by `.github/workflows/deploy.yml`.
 It is the evolution of [linuxserver/site](https://github.com/linuxserver/site): same design system, same
@@ -32,7 +35,8 @@ src/
   data/            snapshots of the hub API, GitHub and Open Collective (npm run data). Never hand-edited
     catalog.json     every image in full (ImageDetail)
     images/<name>.json   builds and history, proxy conf, kubernetes manifest, quadlet
-    builds/<image>/<tag>.json   the bundle record, its diff and its layer tables
+    builds/<image>/<tag>.json   the bundle record, its diff, its layer tables and its tests.json
+    control.json     the control plane's URL and the run ids it knew, for the pre-rendered /fleet/runs/<id>/ pages
   assets/logos/    image logos, copied locally and optimised to WebP at build time
   assets/team/     team avatars, likewise
   content/
@@ -41,6 +45,7 @@ src/
     authors/       one YAML file per author
     spotlight.yaml   images that take turns in the weekly spotlight
   lib/             data layer: hub types and URLs, images, builds, fleet, stats, posts, docs, feeds, JSON-LD
+    control.ts       the control plane: API shapes, credentialed fetch, actions, the shared SSE hook, /api/me
     docs-sections.ts the documentation's sections, shared by the content schema and the docs pages
     explorer.ts      browser-safe helpers for the explorer islands (gzip fetch, file tree, colours)
     lab.ts           the config lab: model from the hub data, visitor state, compose/run/quadlet/k8s renderers, URL token
@@ -51,9 +56,10 @@ src/
   styles/          globals.css: Tailwind, fonts, colour tokens (:root and .dark), utilities, article typography
   components/      Astro components: page header, panels, post cards, image rows, build rows, logos, otters, the docs shell and sidebar
     islands/       React islands: ⌘K search, catalogue, config lab, proxy lab, install menu, package search, mods browser
-    islands/explorer/   treemap, Dockerfile annotator (with per-layer sizes), init graph, package browser, diff viewer
+    islands/explorer/   treemap, Dockerfile annotator (with per-layer sizes), init graph, package browser, diff viewer, CI report, vulnerabilities
+    islands/fleet/      the live fleet panels (board, runs, queue, lists, scheduler, image panel), sign-in, shared pills and actions
     ui/            shadcn/ui components (Radix). Do not edit; restyle with `className`
-scripts/           data refresh, new-post, new-doc, brand assets, screenshots, accessibility and overflow checks
+scripts/           data refresh, new-post, new-doc, brand assets, screenshots, accessibility, overflow and live fleet checks
 ```
 
 ### Data
@@ -69,7 +75,7 @@ whose public members are the team (default `linuxserver-playground`).
 | --- | --- | --- |
 | `catalog.json` | hub `/api/v1/catalog.json` | catalogue, image pages, quick start snippets, version tags, release channels |
 | `images/<name>.json` | hub `/api/v1/catalog/<name>/builds.json`, `proxy.json`, `kubernetes.yaml`, `quadlet.container` | builds table and history, SWAG sample, Kubernetes and quadlet tabs, "Install on…" |
-| `builds/<image>/<tag>.json` | hub `/api/v1/catalog/<name>/builds/<tag>.json`, `/diff.json`, `/layers.<arch>.json` | build pages: record, diff, annotated Dockerfile with its layer sizes, init graph |
+| `builds/<image>/<tag>.json` | hub `/api/v1/catalog/<name>/builds/<tag>.json`, `/diff.json`, `/layers.<arch>.json`, `/tests.json` | build pages: record, diff, annotated Dockerfile with its layer sizes, init graph, the CI report's summary and test table |
 | `categories.json` | hub `/api/v1/categories.json` | catalogue filters |
 | `mods.json` | hub `/api/v1/mods.json` | mods page, mods on image pages |
 | `stores.json` | hub `/api/v1/stores/index.json` | stores page, "Install on…" buttons |
@@ -79,6 +85,7 @@ whose public members are the team (default `linuxserver-playground`).
 | `team.json` | GitHub org public members | About page |
 | `backers.json` | Open Collective | backer count |
 | `stats.json` | hub `/api/v1/stats.json` plus the above | headline numbers |
+| `control.json` | control `/api/runs.json` (ids only) | which `/fleet/runs/<id>/` pages to pre-render; kept from the previous run when the control plane is down |
 
 There are no pull counts anywhere: the playground publishes to GHCR only and the hub has no download
 statistics, so the tiles that used to show Docker Hub and Scarf numbers are gone rather than faked.
@@ -123,8 +130,89 @@ Two more views are static from the snapshot:
   Edges are drawn between visible nodes only (dashed when one end is a collapsed group). Selecting one of
   the image's units shows its run script with a copy button; a text list ordered by stage carries the same
   information for screen readers, `prefers-reduced-motion` and screens under 640 px.
-Live build status is never embedded: build pages link to the control plane and to the hub's rendered test
-report (`{HUB_URL}/builds/<image>/<tag>/`), as CONVENTIONS.md §10 prescribes.
+
+### The CI report
+
+The build page is the canonical CI results page: release notes and the Discord embeds link to
+`${SITE_URL}/images/<name>/builds/<tag>/` (CONVENTIONS.md §10). Its "CI report" section (`#ci`) is the
+`CiReport` island, server-rendered from the snapshot's `tests.json` (`/api/v1/catalog/<name>/builds/<tag>/tests.json`:
+the harness's `test.<arch>.json` per arch plus a summary) so the per-arch result pills, the test table
+(name, status, message, seconds), startup seconds, listening ports, warnings, memory and PIDs are in the HTML
+without JavaScript. A build the snapshot has no report for fetches `tests.json` in the browser. The files
+the hub unpacks from `test.<arch>.tar.gz` under `${HUB_URL}/builds/<name>/<tag>/<arch>/` are loaded on demand:
+`screenshot.png` inline with a lightbox, `container.log`, `browser.log`, `sysinfo.txt` and `package_diff.txt`
+(the diff against the previous release, open by default) as collapsibles that fetch when opened, monospace,
+with copy and raw links; `index.html` (the harness's own report) and the run on the control plane and on
+GitHub are linked. A "Vulnerabilities" collapsible (`#vulns`) renders `vulns.json` from the same directory
+when the hub serves it (`{summary: {critical, high, medium, low, negligible, fixed, unfixed}, matches:
+[{package, version, id, severity, fix_state, fixed_in, urls}], db_date}`): fixable findings grouped by
+package, then the ones without a fix behind a caveat; nothing is rendered when the endpoint answers 404.
+
+### The fleet section
+
+`/fleet/` and its pages are shells: the HTML is the page header, the sub-navigation and the explanatory
+copy, and a `client:load` island fetches the control plane's JSON (`PUBLIC_CONTROL_URL`, default
+`https://ci.thelamer.duckdns.org:8443`; its routes are in the control repository's README, "Driving control
+from the website") and subscribes to `GET /api/stream` (one `EventSource` per page, shared by every island,
+`withCredentials: true`) to refetch, debounced, when a relevant table changes. Every fetch sends
+`credentials: "include"`. The islands render a skeleton while loading, keep the last good data through a
+failed refresh (with a one-line notice), and show an honest offline state with a retry and a link to the
+control plane's own page when it cannot be reached. Relative times are the visitor's clock, refreshed every
+30 s, with the full UTC timestamp in `title`.
+
+| Page | Document | Events |
+| --- | --- | --- |
+| `/fleet/` board, with the hub's bases and staleness under a "Bases and staleness" tab (`?tab=bases`, `#bases`, `#staleness`, `#hub`) | `/api/fleet.json` (`?image=` filters to one image) | builds, runs, manifests, skips, scheduler_decisions |
+| `/fleet/runs/` live runs with job progress and the last 50 finished; `/fleet/runs/<id>/` jobs, steps timeline, logs and build links | `/api/runs.json`, `/api/runs/{id}.json` | runs, jobs, builds |
+| `/fleet/queue/` | `/api/queue.json` | jobs, runs |
+| `/fleet/builds/` recent build summaries, then the hub's retained builds | `/api/releases.json` | builds, releases |
+| `/fleet/pulls/`, `/fleet/issues/`, `/fleet/releases/` | `/api/pulls.json`, `/api/issues.json`, `/api/releases.json` | pull_requests, issues, releases |
+| `/fleet/scheduler/` decision log (`?image=&kind=&outcome=`), next 24 hours, skip flags | `/api/scheduler.json`, `/api/skips.json` | scheduler_decisions, manifests, skips |
+| `/fleet/actions/` | `/api/actions.json` | actions |
+| image page, "In the fleet" (`#fleet`) | `/api/images/{name}.json` | as the board |
+
+`/fleet/runs/<id>/` is pre-rendered for every id in `control.json` and every `workflow.run_id` in the hub's
+build records; any other id lands on the 404 page, which sends it to `/fleet/runs/?run=<id>`, where the same
+island renders it. Build summaries link to the site's build page when the snapshot has one, else to the
+release. Image rows link to the image page's fleet panel, which server-renders the hub's view of each live
+branch (released tag, upstream version, last result) and replaces it with the control plane's rows (drift,
+next check, skip flags) when they arrive.
+
+**Sign-in and member actions.** The header's "Sign in" (`islands/fleet/SignIn`) sends the browser to
+`{CONTROL}/login?next=<current page URL>`; the control plane sets its session cookie and redirects back.
+`GET /api/me` (`{authenticated, login, avatar_url, member, csrf}`, never a 401) is read once per page and
+shared; the CSRF token stays in memory. Signed in, the header shows the avatar with a sign-out menu
+(`POST /api/logout` with `X-CSRF-Token`). When `member` is true the islands render the management controls
+inline: re-run and cancel on runs, dispatch (reason picker) and package check on board and image rows, skip
+and unskip per branch or whole image, re-read manifests (reconcile) on the scheduler page. Every control
+confirms in place (no `confirm()`), posts JSON to `POST /api/actions/{action}` with the CSRF header, shows
+`detail` from the answer, and the `actions` stream event refreshes the log. The cookie is cross-site in the
+playground (`SameSite=None; Secure`), which Chromium sends; Safari does not, so after a sign-in round trip
+that still answers unauthenticated the page shows a one-line notice. Nothing is read from a registry or
+namespace outside the organisation; the site never stores a token.
+
+### Anchors
+
+Every section of an image page and a build page has a stable, human id, and the docs' and posts' headings
+keep theirs. Other systems (release notes, Discord embeds, the control plane, support answers) can link to
+them; `scroll-margin-top` keeps the sticky header off the target, and the "#" that appears beside a heading
+on hover or focus copies the full URL (`AnchorHeading.astro`; `Layout.astro` adds the same affordance to
+article headings).
+
+| Image page `/images/<name>/` | Build page `/images/<name>/builds/<tag>/` |
+| --- | --- |
+| `#quick-start` the config lab and "Install on …" | `#record` the build record |
+| `#inside` inside the latest image | `#ci` the CI report (`#tests` the test table) |
+| `#fleet` live branches, drift, next check, member controls | `#vulns` vulnerabilities, when served |
+| `#setup` application setup | `#explorer` files, packages, config and labels |
+| `#parameters`, `#ports`, `#env`, `#volumes`, `#devices`, `#misc` | `#diff` changes since the previous build |
+| `#tags` version tags, `#arch` architectures | `#dockerfile` annotated Dockerfile |
+| `#builds` retained builds | `#init` init graph |
+| `#mods`, `#proxy` reverse proxy with SWAG | `#notes` release notes |
+| `#changelog`, `#support` | |
+
+The config lab's `#lab:` token (below) is a hash too; it takes precedence over a section id when both are
+present, so link one or the other.
 
 ### The config lab
 
@@ -185,9 +273,10 @@ build record the panel shows the facts and the button only.
 | --- | --- |
 | `/` | home: stats, latest builds, weekly spotlight, rankings, blog |
 | `/images/` | searchable, filterable catalogue (state in the query string, e.g. `?category=Games&sort=stars`) |
-| `/images/<name>/` | every image, deprecated ones included: the config lab (compose, docker run, Kubernetes, quadlet built from your choices), "Install on…", inside the latest image (facts and a compact treemap), setup, parameters, version tags with their latest build, builds, mods, the SWAG proxy lab, changelog |
-| `/images/<name>/builds/<tag>/` | one retained build: record, platforms, tests, file treemap, packages, config and labels, diff to the previous build, annotated Dockerfile with per-instruction layer sizes, init graph by stage, release notes |
-| `/fleet/` | base images and their digests, builds behind their base, every retained build, hub health |
+| `/images/<name>/` | every image, deprecated ones included: the config lab (compose, docker run, Kubernetes, quadlet built from your choices), "Install on…", inside the latest image (facts and a compact treemap), in the fleet (live), setup, parameters, version tags with their latest build, builds, mods, the SWAG proxy lab, changelog, support |
+| `/images/<name>/builds/<tag>/` | one retained build, the canonical CI results page: record, platforms, the CI report (tests, screenshot, logs, package diff), vulnerabilities, file treemap, packages, config and labels, diff to the previous build, annotated Dockerfile with per-instruction layer sizes, init graph by stage, release notes |
+| `/fleet/` | the live fleet board; the hub's base images, staleness and health under the "Bases" tab |
+| `/fleet/runs/`, `/fleet/runs/<id>/`, `/fleet/queue/`, `/fleet/builds/`, `/fleet/pulls/`, `/fleet/issues/`, `/fleet/releases/`, `/fleet/scheduler/`, `/fleet/actions/` | the fleet section, live from the control plane (above) |
 | `/packages/` | fleet-wide package search (`?q=musl&type=apk`) |
 | `/mods/` | the mods index with text and per-image filters (`?image=sonarr`) |
 | `/stores/` | every store and generated artefact with its import URL and how-to |
@@ -241,6 +330,12 @@ node scripts/a11y.mjs http://localhost:4321/site                   # axe-core, W
 node scripts/test-search.mjs http://localhost:4321/site            # the ⌘K palette end to end
 node scripts/shot.mjs http://localhost:4321/site/ out.png --full   # screenshot (--light, --mobile)
 node scripts/overflow.mjs http://localhost:4321/site/fleet/        # finds horizontal overflow at 390px
+node scripts/fleet-check.mjs http://localhost:4321/site            # the fleet islands against the live control plane, with screenshots
 ```
+
+The control plane only allows the deployed origin for CORS, so from `localhost` the fleet islands show
+their offline state; `fleet-check.mjs` replays the control plane's answers with permissive headers so the
+live rendering can be checked locally (`FLEET_EXTRA=/images/sonarr/,…` adds pages). Set
+`PUBLIC_CONTROL_URL` to point both the build and the scripts at another control plane.
 
 `npx playwright install chromium` once for the browser-based checks.
