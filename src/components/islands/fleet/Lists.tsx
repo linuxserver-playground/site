@@ -90,7 +90,7 @@ function JobsTable({ title, jobs, runsBase }: { title: string; jobs: JobView[]; 
           <thead className="sr-only">
             <tr>
               <TH>Job</TH>
-              <TH>Repository</TH>
+              <TH>Repository · branch</TH>
               <TH>Runner</TH>
               <TH>State</TH>
               <TH right>Elapsed</TH>
@@ -104,7 +104,11 @@ function JobsTable({ title, jobs, runsBase }: { title: string; jobs: JobView[]; 
                     {v.job.name}
                   </a>
                 </th>
-                <TD mono>{repoShort(v.job.repo)}</TD>
+                <TD mono>
+                  {repoShort(v.job.repo)}
+                  {v.branch && <span className="block text-[0.6875rem] text-foreground">{v.branch}</span>}
+                  {v.event && v.event !== 'push' && <span className="block text-[0.6875rem] text-muted-foreground">{v.event.replace('_', ' ')}</span>}
+                </TD>
                 <TD mono>
                   {v.job.labels.join(', ')}
                   {v.job.runner_name && <span className="block text-[0.6875rem] text-muted-foreground">{v.job.runner_name}</span>}
