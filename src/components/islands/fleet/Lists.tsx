@@ -146,7 +146,7 @@ export function Builds({ fallback, runsBase, buildsBase, known = {} }: Common) {
   return (
     <Shell title="recent builds" note={data ? `${builds.length} with a release` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the releases on the control plane" rows={6}>
       {builds.length === 0 ? (
-        <Empty>No build has reported to the control plane yet.</Empty>
+        <Empty>No builds yet.</Empty>
       ) : (
         <BuildsTable builds={builds} runsBase={runsBase} buildsBase={buildsBase} known={known} />
       )}
@@ -237,7 +237,7 @@ export function Pulls({ fallback, runsBase }: Common) {
   return (
     <Shell title="open pull requests" note={data ? `${data.pulls.length} open` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the pull requests on the control plane">
       {data && data.pulls.length === 0 ? (
-        <Empty>No pull request is open across the organisation.</Empty>
+        <Empty>No open pull requests.</Empty>
       ) : (
         data && (
           <Table label="Open pull requests">
@@ -299,7 +299,7 @@ export function Issues({ fallback }: Common) {
   return (
     <Shell title="open issues" note={data ? `${data.issues.length} open` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the issues on the control plane">
       {data && data.issues.length === 0 ? (
-        <Empty>No issue is open across the organisation.</Empty>
+        <Empty>No open issues.</Empty>
       ) : (
         data && (
           <Table label="Open issues">
@@ -356,7 +356,7 @@ export function Releases({ fallback, runsBase, buildsBase, known = {} }: Common)
   return (
     <Shell title="releases" note={data ? `${data.releases.length} newest first` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the releases on the control plane" rows={6}>
       {data && data.releases.length === 0 ? (
-        <Empty>No release has been seen yet.</Empty>
+        <Empty>No releases yet.</Empty>
       ) : (
         data && (
           <Table label="Releases">
@@ -528,7 +528,7 @@ export function Scheduler({ fallback, runsBase }: Common) {
         <section className="raft-panel overflow-hidden" aria-label="Upcoming checks">
           <PanelBar title="next 24 hours" note={data ? `${data.upcoming.length} checks` : undefined} at={at} />
           {!data && (loading || !ready) && <Skeleton rows={5} />}
-          {data && data.upcoming.length === 0 && <Empty>Nothing is scheduled; discovery has not stored a live branch yet.</Empty>}
+          {data && data.upcoming.length === 0 && <Empty>Nothing scheduled.</Empty>}
           {data && data.upcoming.length > 0 && (
             <ol className="divide-y divide-[var(--raft-hair)]">
               {data.upcoming.map((u) => (
@@ -548,7 +548,7 @@ export function Scheduler({ fallback, runsBase }: Common) {
         <section className="raft-panel overflow-hidden" aria-label="Skip flags">
           <PanelBar title="skip flags" note={skips.data ? `${skips.data.skips.length} active` : undefined} at={skips.at} />
           {!skips.data && skips.loading && <Skeleton rows={3} />}
-          {skips.data && skips.data.skips.length === 0 && <Empty>No skip flag is set; the scheduler may dispatch for every branch.</Empty>}
+          {skips.data && skips.data.skips.length === 0 && <Empty>No skip flags set.</Empty>}
           {skips.data && skips.data.skips.length > 0 && (
             <ul className="divide-y divide-[var(--raft-hair)]">
               {skips.data.skips.map((s) => (
@@ -564,9 +564,6 @@ export function Scheduler({ fallback, runsBase }: Common) {
               ))}
             </ul>
           )}
-          <p className="border-t border-[var(--raft-hair)] px-3.5 py-2 text-[0.6875rem] text-muted-foreground">
-            A flag's scope is an image, an image/branch, or an image/branch/version (held only while upstream resolves to that version). Members set and clear flags here, on the board and on image pages.
-          </p>
         </section>
       </div>
     </div>
@@ -603,7 +600,7 @@ export function Actions({ fallback }: Common) {
   return (
     <Shell title="member actions" note={data ? `last ${data.actions.length}` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the management page on the control plane">
       {data && data.actions.length === 0 ? (
-        <Empty>No member action has been logged yet.</Empty>
+        <Empty>No actions yet.</Empty>
       ) : (
         data && (
           <Table label="Member actions">

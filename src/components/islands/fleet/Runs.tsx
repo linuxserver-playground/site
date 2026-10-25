@@ -24,7 +24,7 @@ export default function RunsLive({ runsBase, buildsBase, known, fallback }: { ru
         </PanelBar>
         {!data && loading && <Skeleton rows={3} />}
         {!data && !loading && error && <Offline error={error} retry={reload} fallback={{ label: 'Open the runs page on the control plane', href: fallback }} />}
-        {data && data.active.length === 0 && <Empty>Nothing is running. The scheduler's next checks are on the scheduler page.</Empty>}
+        {data && data.active.length === 0 && <Empty>Nothing is running.</Empty>}
         {data && data.active.length > 0 && (
           <ul className="divide-y divide-[var(--raft-hair)]">
             {data.active.map((v) => (
@@ -45,7 +45,7 @@ export default function RunsLive({ runsBase, buildsBase, known, fallback }: { ru
           </h2>
         </PanelBar>
         {!data && loading && <Skeleton rows={8} />}
-        {data && data.recent.length === 0 && <Empty>No finished run yet.</Empty>}
+        {data && data.recent.length === 0 && <Empty>No finished runs yet.</Empty>}
         {data && data.recent.length > 0 && (
           <Table label="Recent runs">
             <thead className="border-b border-[var(--raft-hair)]">

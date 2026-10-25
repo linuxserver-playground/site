@@ -20,7 +20,7 @@ export default function CompactTreemap(props: Props) {
   if (!hydrated) {
     return (
       <p className="px-4 py-6 text-sm text-muted-foreground">
-        The file treemap needs JavaScript: it reads <span className="font-mono">files.&lt;arch&gt;.json.gz</span> from the hub and draws every file by size and kind.{' '}
+        The file treemap needs JavaScript.{' '}
         {props.arches.map((a) => (
           <a key={a} href={props.urls[a]?.[0]} className="mr-2 font-mono text-xs underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
             files.{a}.json.gz

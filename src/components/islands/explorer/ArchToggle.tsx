@@ -32,7 +32,7 @@ export function Loading({ what }: { what: string }) {
   return (
     <div className="grid place-items-center gap-3 px-6 py-16 text-center" role="status" aria-live="polite">
       <span className="inline-block size-6 rounded-full border-2 border-[var(--raft-hair-strong)] border-t-primary motion-safe:animate-spin" aria-hidden="true" />
-      <p className="text-sm text-muted-foreground">Loading {what} from the hub…</p>
+      <p className="text-sm text-muted-foreground">Loading {what}…</p>
     </div>
   );
 }

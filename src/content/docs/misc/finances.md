@@ -17,7 +17,6 @@ We will at all times attempt to keep a surplus of $6,000 in the bank account, or
 
 ## Annual Expenses
 
-* DigitalOcean yearly costs (currently paid for) **$1200**
 * AWS **~$200**
 * Contabo hosting **$287.76**
 * Email Hosting **$20**

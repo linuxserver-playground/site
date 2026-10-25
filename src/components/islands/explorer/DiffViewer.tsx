@@ -57,7 +57,7 @@ export default function DiffViewer({ diff, previousUrl }: Props) {
   if (diff.classification === 'initial') {
     return (
       <div className="px-4 py-6 text-sm text-muted-foreground">
-        <p>This is the first build of the {diff.branch} branch the hub has seen, so there is nothing to compare it with.</p>
+        <p>First build of the {diff.branch} branch; nothing to compare.</p>
         {diff.reasons.length > 0 && <p className="mt-1 font-mono text-xs">{diff.reasons.join('; ')}</p>}
       </div>
     );
@@ -145,7 +145,7 @@ export default function DiffViewer({ diff, previousUrl }: Props) {
           <ArchToggle arches={pkgArches.length ? pkgArches : arches} value={arch} onChange={setArch} />
         </div>
         {diff.packages == null ? (
-          <p className="mt-2 text-sm text-muted-foreground">The previous build's package table was not available, so packages could not be compared.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Package changes are not available for this build.</p>
         ) : ecoNames.length === 0 ? (
           <p className="mt-2 text-sm text-muted-foreground">No package changed on {arch}.</p>
         ) : (

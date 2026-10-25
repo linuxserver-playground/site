@@ -76,4 +76,4 @@ Plus `ENV TITLE`, and whatever packages the app needs. That is the entire interf
 
 ## Versioning and builds
 
-Images rebuild on a weekly package check cadence and on baseimage changes, through the standard LinuxServer.io Jenkins pipeline. Each downstream repository (chromium, webtop, and the rest of the fleet) is triggered from its own upstream signal, app version bumps or OS package updates, so the whole catalog stays current without manual intervention.
+Images rebuild on a weekly package check cadence and on baseimage changes, through the standard LinuxServer.io [build pipeline](/docs/general/how-a-build-happens/). Each downstream repository (chromium, webtop, and the rest of the fleet) is triggered from its own upstream signal, app version bumps or OS package updates, so the whole catalog stays current without manual intervention.

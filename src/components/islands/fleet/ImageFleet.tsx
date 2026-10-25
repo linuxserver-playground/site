@@ -4,7 +4,7 @@
  * are server-rendered first and stay when the control plane is unreachable. Members get the dispatch,
  * package-check and skip controls inline.
  */
-import { repoShort, useControl, type ImagePage } from '@/lib/control';
+import { useControl, type ImagePage } from '@/lib/control';
 import { ActionButton, BranchActions, CookieNotice, DriftPill, ExtLink, LiveDot, MemberOnly, Pill, Rel, SkipControls, StatePill, Table, TD, TH } from './shared';
 
 export interface SnapshotBranch {
@@ -39,7 +39,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
         <p className="font-mono text-xs">
           live branches
           <span className="ml-2 text-[0.6875rem] text-muted-foreground">
-            {live ? `${rows.length} from the control plane` : loading ? 'from the hub snapshot · asking the control plane…' : 'from the hub snapshot'}
+            {live ? `${rows.length}` : loading ? 'loading…' : 'snapshot'}
             {data && (data.open_pulls > 0 || data.open_issues > 0) && ` · ${data.open_pulls} open PRs · ${data.open_issues} open issues`}
           </span>
         </p>
@@ -53,12 +53,12 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
       </div>
       {error && !live && (
         <p role="status" className="border-b border-[var(--raft-hair)] px-3.5 py-2 text-xs text-muted-foreground">
-          The control plane is unreachable ({error.replace(/\.$/, '')}); the hub's last snapshot is shown.{' '}
+          Live status is unavailable ({error.replace(/\.$/, '')}); showing the last snapshot.{' '}
           <button type="button" onClick={reload} className="underline underline-offset-4 hover:text-foreground">
             Try again
           </button>
           {' · '}
-          <ExtLink href={fallback}>open on the control plane</ExtLink>
+          <ExtLink href={fallback}>status page</ExtLink>
         </p>
       )}
       <Table label={`Live branches of ${image}`}>
@@ -202,7 +202,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
           {live && rows.length === 0 && (
             <tr>
               <td colSpan={8} className="px-3 py-6 text-center text-sm text-muted-foreground">
-                The control plane has not discovered a live branch of {data?.repo.full_name ? repoShort(data.repo.full_name) : image} yet.
+                No live branches yet.
               </td>
             </tr>
           )}

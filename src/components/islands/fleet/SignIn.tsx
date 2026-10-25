@@ -55,7 +55,7 @@ export default function SignIn({ className }: { className?: string }) {
         href={`${CONTROL_URL}/login`}
         onClick={signIn}
         className={`inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-sm whitespace-nowrap text-muted-foreground transition-colors hover:bg-muted hover:text-foreground ${className ?? ''}`}
-        title="Sign in with GitHub on the control plane to manage the fleet"
+        title="Team sign-in with GitHub"
       >
         <LogIn className="size-4" aria-hidden="true" />
         <span className="hidden md:inline">Sign in</span>

@@ -76,12 +76,12 @@ export default function Vulns({ url, image, tag }: { url: string; image: string;
         </summary>
         <div className="border-t border-[var(--raft-hair)]">
           <p className="px-4 py-3 text-xs text-muted-foreground">
-            Scanned from the SBOM of {image} {tag}
-            {data.scanner ? ` with ${data.scanner}` : ''}
-            {data.db_date ? `, vulnerability database of ${data.db_date}` : ''}. A finding names a package version the database flags; whether it is reachable in this container is not assessed.
+            {image} {tag}
+            {data.scanner ? ` scanned with ${data.scanner}` : ''}
+            {data.db_date ? `, database of ${data.db_date}` : ''}. Findings match package versions only; reachability is not assessed.
           </p>
-          <Group title="Fixable" matches={fixable} note="A newer version of the package fixes these; they go away when the base image or the upstream application updates." />
-          <Group title="No fix available" matches={unfixed} note="The distribution has not shipped a fix for these yet (or has decided not to). They cannot be removed by rebuilding and are listed for completeness, not as something to act on here." muted />
+          <Group title="Fixable" matches={fixable} note="Fixed in a newer package version." />
+          <Group title="No fix available" matches={unfixed} note="No fix released by the distribution." muted />
         </div>
       </details>
     </section>

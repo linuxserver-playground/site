@@ -1,6 +1,6 @@
 ---
 title: App stores and platforms
-description: The app-store templates the hub generates for Unraid, Portainer, CasaOS, Umbrel, Runtipi, Cosmos and TrueNAS, and how to add each store to your platform.
+description: Adding our images to Unraid, Portainer, CasaOS, Umbrel, Runtipi, Cosmos, Arcane and TrueNAS.
 section: general
 order: 12
 group: Other platforms
@@ -8,28 +8,22 @@ updated: 2026-10-24
 aliases:
   - /general/platform-stores/
 ---
-The hub turns every image's `image.yml` into a template for each platform that has an app store, so what you install there is the same configuration the image page documents, with the same defaults and the same `PUID`/`PGID` semantics. The list of stores, their URLs and a one-line how-to is itself an endpoint:
-
-```
-https://linuxserver-playground.github.io/hub/api/v1/stores/index.json
-```
-
-Stores that fetch a URL point at the hub's Pages site, `https://linuxserver-playground.github.io/hub/stores/<platform>/...`. Stores that clone a git repository point at [`linuxserver-playground/stores`](https://github.com/linuxserver-playground/stores), which the hub pushes the same output to, one folder per platform. An image can opt out of a store with `publish.stores.<platform>: false` in its manifest; deprecated images move to a `deprecated/` folder where the platform has one.
+Every image has a template for each platform with an app store, carrying the same configuration, defaults and `PUID`/`PGID` semantics as its image page. The [stores page](/stores/) lists every store URL; the same list is at [`/api/v1/stores/index.json`](https://linuxserver-playground.github.io/hub/api/v1/stores/index.json).
 
 > [!NOTE] What is supported
-> Templates are checked for validity when the hub generates them and are tested against the platforms' documented formats. The platforms themselves are [reasonable endeavours](/docs/misc/support-policy/#reasonable-endeavours-support), with the exception of Unraid with our templates, which is formally supported. In every case we help with what the container does; we do not debug the store. If the template produces a container that misbehaves, the fastest way to find out whether the template or the platform is at fault is to run the compose snippet from the image page on the same machine.
+> The platforms are [reasonable endeavours](/docs/misc/support-policy/#reasonable-endeavours-support), with the exception of Unraid with our templates, which is formally supported. In every case we help with what the container does; we do not debug the store. If the template produces a container that misbehaves, the fastest way to find out whether the template or the platform is at fault is to run the compose snippet from the image page on the same machine.
 
 ## Unraid
 
 Unraid's Docker page can load templates from a GitHub repository. Under **Docker → Template Repositories** add
 
 ```
-https://github.com/linuxserver-playground/stores/tree/main/unraid
+https://github.com/linuxserver-playground/unraid-store
 ```
 
-and save. **Add Container → Template** then lists one entry per image, and the form is pre-filled with every port, path and variable from the manifest, the icon from `docs.logo`, the WebUI address from the image's `test.web` port and the `Requires` text from `publish.unraid.requirement` where an image has one. The fields are the same ones the legacy Unraid templates carried, so a container created from a playground template looks like one created from the production template.
+and save. **Add Container → Template** then lists one entry per image, and the form is pre-filled with every port, path and variable from the manifest, the icon, the WebUI address and any `Requires` text.
 
-Templates for deprecated images sit in `unraid/deprecated/`, and `unraid/ignore.list` names the images whose manifest sets `publish.stores.unraid: false`. Community Applications shows only its curated feed, so the playground templates do not appear there; this is deliberate while the images are not for production use.
+Templates for deprecated images sit in `deprecated/`.
 
 ## Portainer
 
@@ -55,29 +49,23 @@ Each app is the image's compose file with an `x-casaos` block that carries the t
 
 ## Umbrel
 
-Umbrel installs apps from community app stores, which are git repositories. Under **App Store → Community App Stores**, add the stores repository:
+Umbrel installs apps from community app stores, which are git repositories. Under **App Store → Community App Stores**, add
 
 ```
-https://github.com/linuxserver-playground/stores
+https://github.com/linuxserver-playground/umbrel-store
 ```
 
 The store id is `lsio`, so every app appears as `lsio-<name>`. Each app folder has Umbrel's `umbrel-app.yml` manifest, a compose file that routes the web UI through Umbrel's `app_proxy` and keeps data under `${APP_DATA_DIR}`, and an `exports.sh`. Umbrel runs apps as its own user; the templates keep `PUID`/`PGID` at 1000, which is Umbrel's default user id on umbrelOS.
-
-> [!NOTE]
-> Umbrel expects `umbrel-app-store.yml` at the root of the repository it clones. The hub writes the Umbrel store into the `umbrel/` folder of the stores repository alongside the other platforms; until a repository (or branch) with the Umbrel output at its root is published, the add-store step above will not find the store. Track this in the [hub repository](https://github.com/linuxserver-playground/hub).
 
 ## Runtipi
 
 Runtipi (version 4 and newer) takes additional app stores as git repositories under **Settings → App Stores**. Add
 
 ```
-https://github.com/linuxserver-playground/stores
+https://github.com/linuxserver-playground/runtipi-store
 ```
 
 Each app is `apps/<name>/config.json` (schema version 2) with the ports, form fields for the environment variables and `logo_url` pointing at the image's logo, a compose file with the `x-runtipi` metadata, and `metadata/description.md`, which is the image's summary and setup text. Runtipi substitutes `${APP_DATA_DIR}` and the form fields into the compose file at install time; `PUID`/`PGID` are presented as form fields with the manifest defaults.
-
-> [!NOTE]
-> As with Umbrel, Runtipi clones a repository whose root contains the `apps/` folder; the hub's output is in the `runtipi/` subfolder of the stores repository, so the store does not load until that output is published at a repository root. Runtipi also wants `metadata/logo.jpg` as a file, which the hub does not copy into git; the logo shows from `logo_url` where Runtipi supports it.
 
 ## Cosmos Cloud
 
@@ -87,7 +75,15 @@ Cosmos's market takes JSON sources. Under **Market → Sources**, add
 https://linuxserver-playground.github.io/hub/stores/cosmos/index.json
 ```
 
-The index lists every image with its description and icon; each `servapps/<name>/cosmos-compose.json` is the Cosmos variant of the compose file, with the routes Cosmos should create for the web UI. Cosmos manages its own reverse proxy and certificates, so the `URL` and port fields are filled by Cosmos rather than by you. The format follows the community sources Cosmos already consumes.
+The index lists every image with its description and icon; each `servapps/<name>/cosmos-compose.json` is the Cosmos variant of the compose file, with the routes Cosmos should create for the web UI. Cosmos manages its own reverse proxy and certificates, so the `URL` and port fields are filled by Cosmos rather than by you.
+
+## Arcane
+
+Arcane reads template registries as JSON. Under **Customization → Templates → Add Registry**, add
+
+```
+https://linuxserver-playground.github.io/hub/stores/arcane/registry.json
+```
 
 ## TrueNAS SCALE
 
@@ -103,4 +99,4 @@ TrueNAS applies its own ACL defaults to new datasets; if the container logs perm
 
 ## Not a store: Kubernetes, Podman, SWAG
 
-The hub also generates per-image [Kubernetes manifests](/docs/general/kubernetes/), [Podman quadlets](/docs/general/podman-quadlet/) and the [SWAG proxy confs](/docs/general/swag/) (`/stores/proxy/<name>.subdomain.conf.sample`, pulled into SWAG automatically). They are listed in the same `stores/index.json` for completeness and have their own pages.
+Every image page also has a [Kubernetes manifest](/docs/general/kubernetes/), a [Podman quadlet](/docs/general/podman-quadlet/) and, where the image has one, a [SWAG proxy conf](/docs/general/swag/).

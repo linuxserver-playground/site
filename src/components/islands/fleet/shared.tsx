@@ -98,7 +98,7 @@ export function LiveDot({ at }: { at?: Date | null }) {
 // ---------------------------------------------------------------- states
 
 /** Designed loading state: a few shimmering rows the size of the table that is coming. */
-export function Skeleton({ rows = 5, label = 'Loading from the control plane…' }: { rows?: number; label?: string }) {
+export function Skeleton({ rows = 5, label = 'Loading…' }: { rows?: number; label?: string }) {
   return (
     <div className="p-4" role="status" aria-live="polite">
       <p className="sr-only">{label}</p>
@@ -121,7 +121,7 @@ export function Offline({ error, retry, fallback }: { error: string; retry: () =
     <div className="grid place-items-center gap-2 px-6 py-12 text-center" role="alert">
       <CloudOff className="size-6 text-muted-foreground" aria-hidden="true" />
       <p className="text-sm font-medium">Live data is unavailable right now.</p>
-      <p className="max-w-md text-xs text-muted-foreground">{error} This panel reads the control plane's JSON API in your browser; nothing here is cached by the site.</p>
+      <p className="max-w-md text-xs text-muted-foreground">{error}</p>
       <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
         <button type="button" onClick={retry} className="inline-flex h-8 items-center gap-1.5 rounded-md border border-[var(--raft-hair-strong)] px-3 text-sm hover:bg-muted">
           <RefreshCw className="size-3.5" aria-hidden="true" /> Try again
@@ -412,7 +412,7 @@ export function CookieNotice() {
   if (!pending || !me || me.authenticated) return null;
   return (
     <p role="status" className="rounded-md border border-[var(--raft-amber)]/40 bg-[var(--raft-amber)]/10 px-3 py-2 text-xs text-foreground">
-      You signed in, but this browser did not send the control plane's cookie back to the site (Safari blocks cross-site cookies). Chromium-based browsers work; the control plane's own pages always do.
+      Sign-in did not carry over to this browser (Safari blocks cross-site cookies). Use a Chromium-based browser.
     </p>
   );
 }

@@ -1,6 +1,6 @@
 ---
 title: Podman quadlets
-description: "The Podman quadlet the hub generates for every image: what it contains, where to put it, rootless and user namespaces, automatic updates and drop-ins."
+description: "The Podman quadlet published for every image: what it contains, where to put it, rootless and user namespaces, automatic updates and drop-ins."
 section: general
 order: 13
 group: Other platforms
@@ -9,7 +9,7 @@ aliases:
   - /general/podman-quadlet/
 ---
 > [!WARNING] Reasonable endeavours
-> Podman, rootful or rootless, is supported on a [reasonable endeavours](/docs/misc/support-policy/#reasonable-endeavours-support) basis. The quadlets the hub generates are produced from the same manifest as the Docker snippets and checked for validity, but our CI runs Docker. Podman 4.4 or newer is required for quadlets; Podman 5 is what this page was written against.
+> Podman, rootful or rootless, is supported on a [reasonable endeavours](/docs/misc/support-policy/#reasonable-endeavours-support) basis. Our CI runs Docker. Podman 4.4 or newer is required for quadlets; Podman 5 is what this page was written against.
 
 ## The generated unit
 

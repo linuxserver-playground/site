@@ -44,10 +44,10 @@ export default function ProxyTabs({ sample, caddy, traefik, source }: Props) {
           </pre>
           <CopyButton text={r.text} label={`Copy the ${r.aria}`} className="absolute top-2 right-2" variant="secondary" />
           <div className="space-y-1 border-t border-border px-4 py-2 text-[0.6875rem] text-muted-foreground">
-            <p>{r.how} A reference generated from the same manifest as the SWAG sample: the comments say what to adapt, and authentication is commented out until you pick one.</p>
+            <p>{r.how}</p>
             {source && (
               <p className="font-mono">
-                From the hub:{' '}
+                Source:{' '}
                 <a href={source} className="break-all underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
                   {source.replace(/^https?:\/\//, '')}
                 </a>

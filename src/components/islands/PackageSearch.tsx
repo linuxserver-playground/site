@@ -139,12 +139,12 @@ export default function PackageSearch({ index, ecosystems, apiBase, base }: Prop
       <div className="min-w-0">
         {!selected && (
           <div className="raft-panel grid min-h-64 place-items-center p-8 text-center text-sm text-muted-foreground">
-            <p>Pick a package to see every image that ships it, with the version per release tag and architecture.</p>
+            <p>Pick a package to see which images ship it.</p>
           </div>
         )}
         {selected && detail.status === 'loading' && (
           <div className="raft-panel grid min-h-64 place-items-center p-8 text-center text-sm text-muted-foreground" role="status" aria-live="polite">
-            <p>Loading {selected} from the hub…</p>
+            <p>Loading {selected}…</p>
           </div>
         )}
         {selected && detail.status === 'error' && (

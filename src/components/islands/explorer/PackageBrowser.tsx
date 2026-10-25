@@ -70,7 +70,7 @@ export default function PackageBrowser({ image, tag, arches, urls, summary, fall
 
   return (
     <div>
-      <IslandHeader title={`packages.${arch}.json · ${s ? `${s.count.toLocaleString('en-GB')} packages · ${s.distro}` : tag}`} note="Normalised from the syft SBOM attached to the release. Click a package for every image that ships it.">
+      <IslandHeader title={`packages.${arch}.json · ${s ? `${s.count.toLocaleString('en-GB')} packages · ${s.distro}` : tag}`} note="Click a package to see every image that ships it.">
         <ArchToggle arches={arches} value={arch} onChange={setArch} />
       </IslandHeader>
 
@@ -96,14 +96,12 @@ export default function PackageBrowser({ image, tag, arches, urls, summary, fall
 
       {state.status === 'idle' && (
         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
-          <p>The hub serves the package table only for the newest build of each branch.</p>
+          <p>The package table is available for the newest build of each branch.</p>
           {fallback?.[arch] && (
             <p className="mt-2">
-              This build's table is on its{' '}
               <a href={fallback[arch]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
-                GitHub Release<span className="sr-only"> (opens in a new tab)</span>
-              </a>{' '}
-              as the raw syft document.
+                SBOM for this build<span className="sr-only"> (opens in a new tab)</span>
+              </a>
             </p>
           )}
         </div>

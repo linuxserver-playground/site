@@ -289,7 +289,7 @@ export default function Treemap({ image, tag, arches, urls, initialArch, compact
     <div>
       <IslandHeader
         title={`files.${arch}.json.gz · ${tree ? `${tree.files.toLocaleString('en-GB')} files · ${fmtBytes(tree.size)} uncompressed` : tag}`}
-        note="Area is deduplicated bytes on disk, nested directory → file; colour is the kind of file. Click a directory to zoom in, Backspace or Escape to zoom out."
+        note="Click a directory to zoom in; Backspace or Escape zooms out."
       >
         <ArchToggle arches={arches} value={arch} onChange={setArch} />
       </IslandHeader>
@@ -432,11 +432,6 @@ export default function Treemap({ image, tag, arches, urls, initialArch, compact
                 </li>
               )}
             </ul>
-            <p className="mt-4 text-xs text-muted-foreground">
-              Files are coloured by extension, and executables by their mode. Directories wear the hue of the kind holding most of their bytes, paler than the files inside; each
-              nesting level is a shade {dark ? 'lighter' : 'darker'}. Dashed tiles fold the entries too small to draw, so areas always add up. Symlinks and repeated hardlinks hold
-              no bytes of their own and are not drawn.
-            </p>
               </>
             )}
             <p className="mt-2 font-mono text-[0.6875rem] text-muted-foreground">
