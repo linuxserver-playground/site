@@ -22,11 +22,11 @@ export interface NavItem {
   description?: string;
 }
 
-/** Primary navigation. The control plane is a separate site; the docs live here under /docs/. */
+/** Primary navigation. The fleet pages render the control plane's live data; the docs live here under /docs/. */
 export const NAV: NavItem[] = [
   { label: 'Images', href: '/images/', description: 'Browse every container we maintain' },
   { label: 'Docs', href: '/docs/', description: 'How to run our containers, Selkies, policies and the FAQ' },
-  { label: 'Fleet', href: '/fleet/', description: 'Base images, staleness and the latest builds' },
+  { label: 'Fleet', href: '/fleet/', description: 'Live board, runs, queue, builds, scheduler and the base images' },
   { label: 'Mods', href: '/mods/', description: 'Docker mods for every image' },
   { label: 'Stores', href: '/stores/', description: 'Unraid, Portainer, CasaOS, Umbrel and more' },
   { label: 'Blog', href: '/blog/', description: 'News, guides and release notes' },
@@ -36,7 +36,23 @@ export const NAV: NavItem[] = [
 
 export const NAV_SECONDARY: NavItem[] = [
   { label: 'Packages', href: '/packages/', description: 'Which image ships which package' },
-  { label: 'Live builds', href: 'https://ci.thelamer.duckdns.org:8443', external: true, description: 'The control plane: build queue and live status' },
+  { label: 'Live runs', href: '/fleet/runs/', description: 'Every workflow run, as it happens' },
+  { label: 'Scheduler', href: '/fleet/scheduler/', description: 'Upstream checks, decisions and skip flags' },
+];
+
+export type FleetPageId = 'board' | 'runs' | 'queue' | 'builds' | 'pulls' | 'issues' | 'releases' | 'scheduler' | 'actions';
+
+/** The fleet section's pages, in the order of its sub-navigation. Each renders one control plane document live. */
+export const FLEET_PAGES: { id: FleetPageId; label: string; href: string; api: string }[] = [
+  { id: 'board', label: 'Board', href: '/fleet/', api: '/api/fleet.json' },
+  { id: 'runs', label: 'Runs', href: '/fleet/runs/', api: '/api/runs.json' },
+  { id: 'queue', label: 'Queue', href: '/fleet/queue/', api: '/api/queue.json' },
+  { id: 'builds', label: 'Builds', href: '/fleet/builds/', api: '/api/releases.json' },
+  { id: 'pulls', label: 'Pull requests', href: '/fleet/pulls/', api: '/api/pulls.json' },
+  { id: 'issues', label: 'Issues', href: '/fleet/issues/', api: '/api/issues.json' },
+  { id: 'releases', label: 'Releases', href: '/fleet/releases/', api: '/api/releases.json' },
+  { id: 'scheduler', label: 'Scheduler', href: '/fleet/scheduler/', api: '/api/scheduler.json' },
+  { id: 'actions', label: 'Actions', href: '/fleet/actions/', api: '/api/actions.json' },
 ];
 
 export const DONATE_URL = 'https://opencollective.com/linuxserver/donate';
@@ -45,7 +61,7 @@ export const LINKS = {
   github: 'https://github.com/linuxserver-playground',
   discord: 'https://discord.gg/YWrKVTn',
   discussions: 'https://github.com/orgs/linuxserver/discussions',
-  /** The control plane: live build status, queue and scheduler. Linked, never embedded. */
+  /** The control plane: its JSON API drives the fleet pages; its own HTML pages are the fallback. */
   control: 'https://ci.thelamer.duckdns.org:8443',
   /** The hub: the static API every number on this site comes from. */
   hub: 'https://linuxserver-playground.github.io/hub/',
@@ -145,7 +161,7 @@ export const PILLARS = [
     id: 'docs',
     title: 'Transparent builds',
     body: 'Every release attaches its build record: layers, files, packages, init graph and test results. This site shows all of it, and the diff to the build before.',
-    link: { label: 'Explore a build', href: '/fleet/#builds' },
+    link: { label: 'Explore a build', href: '/fleet/builds/' },
   },
   {
     id: 'support',

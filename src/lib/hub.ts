@@ -326,6 +326,63 @@ export interface StaleImage {
 
 export interface StoreEntry { platform: string; name: string; url: string; how_to: string }
 
+/** One test of the harness's `test.<arch>.json`. */
+export interface TestCase { name: string; status: 'PASS' | 'FAIL' | 'WARN' | 'SKIP' | string; message?: string | null; seconds?: number | null }
+
+/** `test.<arch>.json` as the harness wrote it (schema 1). */
+export interface TestReport {
+  schema: number;
+  image: string;
+  tag: string;
+  arch: Arch | string;
+  started?: string | null;
+  finished?: string | null;
+  success: boolean;
+  runner?: string | null;
+  ci_version?: string | null;
+  engine?: string | null;
+  startup_seconds?: number | null;
+  tests: TestCase[];
+  files?: Partial<Record<'html' | 'container_log' | 'screenshot' | 'browser_log' | 'sysinfo' | 'package_diff', string>> | null;
+  runtime?: { rss_bytes?: number | null; pids?: number | null; listening_tcp?: number[] | null; listening_udp?: number[] | null; s6_services?: string[] | null; changed_paths?: number | null } | null;
+}
+
+export interface TestSummary {
+  success: boolean;
+  passed: number;
+  failed: number;
+  total: number;
+  failed_tests: string[];
+  startup_seconds?: number | null;
+  listening_ports: string[];
+  warnings: number;
+  rss_bytes?: number | null;
+  pids?: number | null;
+  report_page?: string | null;
+  tarball?: string | null;
+}
+
+/** `/api/v1/catalog/{name}/builds/{tag}/tests.json` `data`. */
+export interface TestsData {
+  image: string;
+  tag: string;
+  enabled: boolean;
+  success: boolean | null;
+  report_url?: string | null;
+  summary: Record<string, TestSummary>;
+  reports: Record<string, TestReport>;
+}
+
+export type VulnSeverity = 'critical' | 'high' | 'medium' | 'low' | 'negligible' | 'unknown' | string;
+export interface VulnMatch { package: string; version?: string | null; id: string; severity: VulnSeverity; fix_state?: string | null; fixed_in?: string | null; urls?: string[] | null; type?: string | null; arch?: string | null }
+/** `/api/v1/catalog/{name}/builds/{tag}/vulns.json` `data`, when the hub serves it. */
+export interface VulnsData {
+  summary: { critical: number; high: number; medium: number; low: number; negligible: number; fixed: number; unfixed: number; unknown?: number };
+  matches: VulnMatch[];
+  db_date?: string | null;
+  scanner?: string | null;
+}
+
 export interface HubStatus {
   health: 'Success' | 'Failed';
   images: number;
@@ -351,6 +408,12 @@ export const hubPackagesUrl = (image: string, tag: string, arch: Arch) => hubApi
 export const hubPackageUrl = (slug: string) => hubApi(`packages/${slug}.json`);
 export const hubStoreUrl = (path: string) => `${HUB_URL}/stores/${path.replace(/^\/+/, '')}`;
 
-/** Live build status is the control plane's job; the site only links there (CONVENTIONS.md §10). */
-export const CONTROL_URL = 'https://ci.thelamer.duckdns.org:8443';
-export const controlImageUrl = (name: string) => `${CONTROL_URL}/images/${name}`;
+/** `tests.json`: the harness's per-arch reports with a summary, for builds that have a report. */
+export const hubTestsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/tests.json`);
+/** `vulns.json`: the scanner's findings, when the hub serves them. */
+export const hubVulnsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/vulns.json`);
+/** A file the hub unpacked from `test.<arch>.tar.gz`: `index.html`, `screenshot.png`, `container.log`, `browser.log`, `sysinfo.txt`, `package_diff.txt`. */
+export const hubReportFileUrl = (image: string, tag: string, arch: Arch | string, file: string) => `${HUB_URL}/builds/${image}/${tag}/${arch}/${file}`;
+
+/** The control plane: live status, the scheduler and member actions. The fleet pages read its JSON API (lib/control.ts). */
+export { CONTROL_URL, controlImageUrl } from './control';

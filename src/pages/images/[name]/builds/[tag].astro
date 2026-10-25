@@ -4,7 +4,10 @@ import Breadcrumbs from '@/components/Breadcrumbs.astro';
 import ClassBadge from '@/components/ClassBadge.astro';
 import ImageLogo from '@/components/ImageLogo.astro';
 import Panel from '@/components/Panel.astro';
+import AnchorHeading from '@/components/AnchorHeading.astro';
 import CopyButton from '@/components/islands/CopyButton';
+import CiReport from '@/components/islands/explorer/CiReport';
+import Vulns from '@/components/islands/explorer/Vulns';
 import DiffViewer from '@/components/islands/explorer/DiffViewer';
 import DockerfileView from '@/components/islands/explorer/DockerfileView';
 import Explorer from '@/components/islands/explorer/Explorer';
@@ -12,7 +15,8 @@ import InitGraph from '@/components/islands/explorer/InitGraph';
 import { withBase } from '@/lib/base';
 import { allBuildRecords, buildResult, buildUrl, getBuilds, getBuildSummary, isNewestOfBranch, previousBuild, reasonLabel, type BuildRecord } from '@/lib/builds';
 import { bytes, formatDate, isoDate, relative, shortDigest, shortSha } from '@/lib/format';
-import { hubApi, hubFilesUrl, hubHistoryUrl, hubPackagesUrl, hubReportUrl, type Arch } from '@/lib/hub';
+import { controlBuildUrl } from '@/lib/control';
+import { hubApi, hubFilesUrl, hubHistoryUrl, hubPackagesUrl, hubReportUrl, hubTestsUrl, hubVulnsUrl, type Arch } from '@/lib/hub';
 import { getImage, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { blockMarkdown } from '@/lib/markdown/inline';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
@@ -57,7 +61,7 @@ const crumbs = [
   { name: tag, href: buildUrl(image.name, tag) },
 ];
 const pull = `docker pull ${image.ref}:${tag}`;
-const description = `Build ${tag} of ${image.name}: ${b.platforms.map((p) => `${p.arch} ${bytes(p.size)}`).join(', ')}, base ${b.base.image}, ${reasonLabel(b.reason)}${summary?.classification ? `, ${summary.classification} change` : ''}.`;
+const description = `Build ${tag} of ${image.name}: CI ${result}${b.test.enabled ? (b.test.success ? ', tests passed' : ', tests failed') : ''}; ${b.platforms.map((p) => `${p.arch} ${bytes(p.size)}`).join(', ')}, base ${b.base.image}, ${reasonLabel(b.reason)}${summary?.classification ? `, ${summary.classification} change` : ''}.`;
 
 const facts: { label: string; value: string; href?: string; mono?: boolean; title?: string }[] = [
   { label: 'Upstream version', value: b.version.upstream, mono: true },
@@ -75,6 +79,16 @@ const facts: { label: string; value: string; href?: string; mono?: boolean; titl
 ];
 const tagList = b.version.tags ?? [];
 const units = b.init_graph?.units ?? [];
+
+// Section C: the CI report. tests.json is in the snapshot when the hub had it at refresh time; the island
+// fetches it otherwise and loads the screenshot, logs and package diff on demand.
+const tests = record.tests ?? null;
+const testSummary = tests ? Object.values(tests.summary) : [];
+const testsPassed = testSummary.reduce((n, x) => n + x.passed, 0);
+const testsTotal = testSummary.reduce((n, x) => n + x.total, 0);
+const testsFailedNames = [...new Set(testSummary.flatMap((x) => x.failed_tests))];
+const controlBuild = controlBuildUrl(b.repository, b.workflow.run_id);
+
 ---
 
 <Layout section="images" title={`${image.name} ${tag}`} description={description} breadcrumbs={crumbs}>
@@ -136,7 +150,7 @@ const units = b.init_graph?.units ?? [];
     <!-- Record -->
     <section aria-labelledby="record" class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div class="raft-panel p-5">
-        <h2 id="record" class="raft-eyebrow">Build record</h2>
+        <AnchorHeading id="record" class="raft-eyebrow">Build record</AnchorHeading>
         <dl class="mt-4 grid grid-cols-1 gap-x-6 gap-y-2.5 text-sm sm:grid-cols-[auto_minmax(0,1fr)]">
           {
             facts.map((f) => (
@@ -217,8 +231,8 @@ const units = b.init_graph?.units ?? [];
         <div class="raft-panel p-5">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <h2 class="raft-eyebrow">Tests</h2>
-            <a href={summary?.links.test_report ?? hubReportUrl(image.name, tag)} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm font-medium hover:text-primary">
-              Full report on the hub <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+            <a href="#ci" class="inline-flex items-center gap-1 text-sm font-medium hover:text-primary">
+              Full CI report <ArrowRight className="size-3.5" aria-hidden="true" />
             </a>
           </div>
           {
@@ -226,37 +240,66 @@ const units = b.init_graph?.units ?? [];
               <p class="mt-3 text-sm text-muted-foreground">Testing is disabled for this image.</p>
             ) : (
               <ul class="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {Object.entries(b.test.per_arch ?? Object.fromEntries(arches.map((a) => [a, b.test.success]))).map(([a, ok]) => (
-                  <li class="flex items-center justify-between gap-3 rounded-md border border-[var(--raft-hair)] px-3 py-2 text-sm">
-                    <span class="font-mono text-[0.8125rem]">{a}</span>
-                    <span class:list={['inline-flex items-center gap-1 text-xs', ok ? 'text-[var(--raft-ok)]' : 'text-destructive']}>
-                      {ok ? <Check className="size-3.5" aria-hidden="true" /> : <X className="size-3.5" aria-hidden="true" />}
-                      {ok ? 'passed' : 'failed'}
-                    </span>
-                    <a href={`${hubReportUrl(image.name, tag)}${a}/`} target="_blank" rel="noopener" class="font-mono text-xs text-muted-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
-                      report<span class="sr-only"> for {a} (opens in a new tab)</span>
-                    </a>
-                  </li>
-                ))}
+                {Object.entries(b.test.per_arch ?? Object.fromEntries(arches.map((a) => [a, b.test.success]))).map(([a, ok]) => {
+                  const sm = tests?.summary[a];
+                  return (
+                    <li class="flex items-center justify-between gap-3 rounded-md border border-[var(--raft-hair)] px-3 py-2 text-sm">
+                      <span class="font-mono text-[0.8125rem]">{a}</span>
+                      <span class:list={['inline-flex items-center gap-1 text-xs', ok ? 'text-[var(--raft-ok)]' : 'text-destructive']}>
+                        {ok ? <Check className="size-3.5" aria-hidden="true" /> : <X className="size-3.5" aria-hidden="true" />}
+                        {ok ? 'passed' : 'failed'}
+                      </span>
+                      <span class="font-mono text-xs text-muted-foreground tabular-nums">{sm ? `${sm.passed}/${sm.total}${sm.startup_seconds != null ? ` · ${sm.startup_seconds.toFixed(1)} s` : ''}` : '–'}</span>
+                    </li>
+                  );
+                })}
               </ul>
             )
           }
           <p class="mt-3 text-xs text-muted-foreground">
-            The hub renders the test table, screenshot and container log from the release's <code class="font-mono">test.&lt;arch&gt;.tar.gz</code>.
-            {b.test.report_url && (
+            {testsTotal > 0 && (
               <>
-                {' '}Live status of the run is on the{' '}
-                <a href={b.test.report_url} target="_blank" rel="noopener" class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">control plane<span class="sr-only"> (opens in a new tab)</span></a>.
+                {testsPassed} of {testsTotal} checks passed{testsFailedNames.length > 0 && <>; failed: {testsFailedNames.join(', ')}</>}.{' '}
               </>
             )}
+            Rendered below from the release's <code class="font-mono">test.&lt;arch&gt;.tar.gz</code> as the hub unpacked it.
           </p>
         </div>
       </div>
     </section>
 
+    <!-- CI report -->
+    <section aria-labelledby="ci" id="ci-section">
+      <div class="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <AnchorHeading id="ci">CI report</AnchorHeading>
+          <p class="mt-2 text-sm text-muted-foreground">
+            What the test harness saw when it started this image: every check with its message and time, how long startup took, which ports were listening, the screenshot, the container and browser logs, and the package changes against the previous release. This page is where the release notes and Discord embeds send you.
+          </p>
+        </div>
+        <nav aria-label="This run elsewhere" class="flex flex-wrap items-center gap-2 font-mono text-xs">
+          <a href={controlBuild} target="_blank" rel="noopener" class="inline-flex h-8 items-center gap-1 rounded-md border border-[var(--raft-hair)] px-2.5 text-muted-foreground hover:border-[var(--raft-hair-strong)] hover:text-foreground">
+            control plane <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+          </a>
+          <a href={b.workflow.run_url} target="_blank" rel="noopener" class="inline-flex h-8 items-center gap-1 rounded-md border border-[var(--raft-hair)] px-2.5 text-muted-foreground hover:border-[var(--raft-hair-strong)] hover:text-foreground">
+            run #{b.workflow.run_id} <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+          </a>
+          <a href={withBase(`/fleet/runs/${b.workflow.run_id}/`)} class="inline-flex h-8 items-center gap-1 rounded-md border border-[var(--raft-hair)] px-2.5 text-muted-foreground hover:border-[var(--raft-hair-strong)] hover:text-foreground">
+            run on the fleet pages <ArrowRight className="size-3.5" aria-hidden="true" />
+          </a>
+        </nav>
+      </div>
+      <Panel class="mt-4">
+        <CiReport client:load image={image.name} tag={tag} tests={tests} testEnabled={b.test.enabled} reportDir={hubReportUrl(image.name, tag)} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={controlBuild} />
+      </Panel>
+    </section>
+
+    <!-- Vulnerabilities: only when the hub serves vulns.json for this build -->
+    <Vulns client:visible url={hubVulnsUrl(image.name, tag)} image={image.name} tag={tag} />
+
     <!-- Explorer -->
     <section aria-labelledby="explorer">
-      <h2 id="explorer" class="text-xl font-semibold tracking-tight">Explore the image</h2>
+      <AnchorHeading id="explorer">Explore the image</AnchorHeading>
       <p class="mt-2 text-sm text-muted-foreground">
         Every file and package in the pushed image. The treemap nests layers, directories and files by deduplicated bytes on disk, coloured by owning package: click any
         directory to zoom in, use the breadcrumb, Backspace or Escape to zoom out. The file table (<code class="font-mono">files.&lt;arch&gt;.json.gz</code>) and the package
@@ -282,7 +325,7 @@ const units = b.init_graph?.units ?? [];
 
     <!-- Diff -->
     <section aria-labelledby="diff">
-      <h2 id="diff" class="text-xl font-semibold tracking-tight">Changes since the previous build</h2>
+      <AnchorHeading id="diff">Changes since the previous build</AnchorHeading>
       <p class="mt-2 text-sm text-muted-foreground">
         The hub diffs every build against the one before it on the same branch: packages by ecosystem, image config, base digest, size and the Dockerfile.
       </p>
@@ -299,7 +342,7 @@ const units = b.init_graph?.units ?? [];
 
     <!-- Dockerfile -->
     <section aria-labelledby="dockerfile">
-      <h2 id="dockerfile" class="text-xl font-semibold tracking-tight">Dockerfile, annotated</h2>
+      <AnchorHeading id="dockerfile">Dockerfile, annotated</AnchorHeading>
       <p class="mt-2 text-sm text-muted-foreground">
         As built, after the <code class="font-mono">LSIO_FIRST_PARTY</code> injection. A LinuxServer image is a base image plus one <code class="font-mono">RUN</code> and
         one <code class="font-mono">COPY</code>, so the layer table folds into the gutter: each instruction carries the compressed and on-disk bytes of the layer it produced,
@@ -314,7 +357,7 @@ const units = b.init_graph?.units ?? [];
     {
       units.length > 0 && (
         <section aria-labelledby="init">
-          <h2 id="init" class="text-xl font-semibold tracking-tight">Init graph</h2>
+          <AnchorHeading id="init">Init graph</AnchorHeading>
           <p class="mt-2 text-sm text-muted-foreground">
             The s6-rc units that run when the container starts, from the bundle's <code class="font-mono">init_graph</code>, laid out by stage from left to right: a unit sits one
             stage after the last thing it waits for. This image's units are drawn in full; the steps inherited from the base image fold into one node per run of stages, click to
@@ -330,7 +373,7 @@ const units = b.init_graph?.units ?? [];
     <!-- Notes and assets -->
     <section aria-labelledby="notes" class="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
       <div class="raft-panel p-5">
-        <h2 id="notes" class="raft-eyebrow">Release notes</h2>
+        <AnchorHeading id="notes" class="raft-eyebrow">Release notes</AnchorHeading>
         {
           b.notes?.linuxserver && (
             <div class="mt-3">
@@ -366,6 +409,8 @@ const units = b.init_graph?.units ?? [];
               { label: 'Release on GitHub', href: summary?.links.release ?? `https://github.com/${b.repository}/releases/tag/${tag}` },
               { label: 'build.json (hub API)', href: summary?.links.build ?? hubApi(`catalog/${image.name}/builds/${tag}.json`) },
               { label: 'diff.json', href: summary?.links.diff ?? hubApi(`catalog/${image.name}/builds/${tag}/diff.json`) },
+              ...(tests ? [{ label: 'tests.json', href: hubTestsUrl(image.name, tag) }] : []),
+              { label: 'CI report on the hub', href: hubReportUrl(image.name, tag) },
               ...arches.map((a) => ({ label: `layers.${a}.json`, href: layersUrls[a]! })),
               ...arches.map((a) => ({ label: `files.${a}.json.gz`, href: filesUrls[a]![0] })),
               ...b.assets.filter((x) => x.url && /^package_versions\./.test(x.name)).map((x) => ({ label: x.name, href: x.url! })),

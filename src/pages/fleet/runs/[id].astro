@@ -1,0 +1,30 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import FleetShell from '@/components/FleetShell.astro';
+import { RunDetail } from '@/components/islands/fleet/Runs';
+import control from '@/data/control.json';
+import { withBase } from '@/lib/base';
+import { knownBuildTags, knownRunIds } from '@/lib/builds';
+import { CONTROL_URL } from '@/lib/control';
+
+// One page per run id the snapshot knows: the control plane's active and recent runs at refresh time plus
+// every run a hub build record names. Newer runs are reached through /fleet/runs/?run=<id> (404.astro).
+export function getStaticPaths() {
+  const ids = new Set<number>([...(control as { run_ids: number[] }).run_ids, ...knownRunIds()]);
+  return [...ids].map((id) => ({ params: { id: String(id) } }));
+}
+
+const { id } = Astro.params as { id: string };
+const crumbs = [
+  { name: 'Fleet', href: '/fleet/' },
+  { name: 'Runs', href: '/fleet/runs/' },
+  { name: `#${id}`, href: `/fleet/runs/${id}/` },
+];
+const known = knownBuildTags();
+---
+
+<Layout section="fleet" title={`Run ${id}`} description={`Workflow run ${id} on the LinuxServer.io playground: jobs, steps timeline, logs and the build it produced, live from the control plane.`} breadcrumbs={crumbs} noindex>
+  <FleetShell current="runs" title={`Run #${id}`} lede="Jobs, steps and the build this run produced, live from the control plane. Members can cancel it while it runs or re-run its failed jobs." crumbs={crumbs} controlPath={`/runs/${id}`}>
+    <RunDetail client:load id={id} runsBase={withBase('/fleet/runs/')} buildsBase={withBase('/images/')} known={known} fallback={`${CONTROL_URL}/runs/${id}`} />
+  </FleetShell>
+</Layout>

@@ -1,0 +1,58 @@
+---
+/**
+ * The frame every fleet page shares: the page header with the live-data note, the section's sub-navigation
+ * (board, runs, queue, builds, pulls, issues, releases, scheduler, actions) and the page body.
+ * Fleet pages are shells: the data in them is fetched from the control plane in the browser.
+ */
+import PageHeader from '@/components/PageHeader.astro';
+import { withBase } from '@/lib/base';
+import { CONTROL_URL } from '@/lib/control';
+import type { Crumb } from '@/lib/seo';
+import { FLEET_PAGES, type FleetPageId } from '@/lib/site';
+import { ArrowUpRight } from 'lucide-react';
+
+interface Props {
+  current: FleetPageId;
+  title: string;
+  lede: string;
+  crumbs: Crumb[];
+  /** The control plane's own page for this view, linked as the fallback. */
+  controlPath: string;
+}
+const { current, title, lede, crumbs, controlPath } = Astro.props;
+const page = FLEET_PAGES.find((p) => p.id === current)!;
+---
+
+<PageHeader eyebrow={`Fleet · ${page.label}`} title={title} lede={lede} crumbs={crumbs}>
+  <p class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-muted-foreground">
+    <span class="inline-flex items-center gap-2"><span class="raft-pulse" aria-hidden="true"></span> live from the control plane</span>
+    <a href={`${CONTROL_URL}${controlPath}`} target="_blank" rel="noopener" class="inline-flex items-center gap-1 hover:text-foreground">
+      {CONTROL_URL.replace(/^https?:\/\//, '')}{controlPath} <ArrowUpRight className="size-3" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+    </a>
+  </p>
+  <slot name="header" />
+</PageHeader>
+
+<nav aria-label="Fleet pages" class="border-b border-[var(--raft-hair)] bg-background/80 backdrop-blur-xl">
+  <div class="raft-container">
+    <ul class="-mb-px flex gap-1 overflow-x-auto py-1 [scrollbar-width:thin]">
+      {
+        FLEET_PAGES.map((p) => (
+          <li class="shrink-0">
+            <a
+              href={withBase(p.href)}
+              aria-current={p.id === current ? 'page' : undefined}
+              class="relative inline-flex h-9 items-center rounded-md px-3 text-sm text-muted-foreground hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-3 aria-[current=page]:after:-bottom-1 aria-[current=page]:after:h-px aria-[current=page]:after:bg-primary"
+            >
+              {p.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</nav>
+
+<div class="raft-container pt-8">
+  <slot />
+</div>

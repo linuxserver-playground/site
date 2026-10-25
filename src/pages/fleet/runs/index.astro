@@ -1,0 +1,25 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import FleetShell from '@/components/FleetShell.astro';
+import RunsLive, { RunFromQuery } from '@/components/islands/fleet/Runs';
+import { withBase } from '@/lib/base';
+import { knownBuildTags } from '@/lib/builds';
+import { CONTROL_URL } from '@/lib/control';
+
+const crumbs = [
+  { name: 'Fleet', href: '/fleet/' },
+  { name: 'Runs', href: '/fleet/runs/' },
+];
+const known = knownBuildTags();
+---
+
+<Layout section="fleet" title="Runs" description="Workflow runs across the LinuxServer.io playground, live: every active run with its jobs' progress, and the last fifty finished ones." breadcrumbs={crumbs}>
+  <FleetShell current="runs" title="Runs" lede="Every GitHub Actions run the control plane sees, as it happens: jobs and their steps, elapsed time, stuck detection, and the build each run produced." crumbs={crumbs} controlPath="/runs">
+    <RunFromQuery client:load runsBase={withBase('/fleet/runs/')} buildsBase={withBase('/images/')} known={known} controlUrl={CONTROL_URL} />
+    <RunsLive client:load runsBase={withBase('/fleet/runs/')} buildsBase={withBase('/images/')} known={known} fallback={`${CONTROL_URL}/runs`} />
+    <p class="mt-4 text-xs text-muted-foreground">
+      A job is flagged <span class="font-mono">stuck?</span> when it has run longer than the 95th percentile of its own history (ten samples at least, else an hour). Open a run for its steps timeline; a run the site has not pre-rendered a page for is reached through <span class="font-mono">/fleet/runs/?run=&lt;id&gt;</span>.
+    </p>
+  </FleetShell>
+</Layout>
+

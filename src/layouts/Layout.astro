@@ -6,6 +6,7 @@ import Logo from '@/components/Logo.astro';
 import CommandSearch from '@/components/islands/CommandSearch';
 import MobileNav from '@/components/islands/MobileNav';
 import ThemeToggle from '@/components/islands/ThemeToggle';
+import SignIn from '@/components/islands/fleet/SignIn';
 import { withBase } from '@/lib/base';
 import { formatDate } from '@/lib/format';
 import { HUB_URL } from '@/lib/hub';
@@ -45,7 +46,8 @@ const footerCols = [
       { label: 'FAQ', href: '/docs/faq/' },
       { label: 'Blog', href: '/blog/' },
       { label: 'Hub API', href: LINKS.hub, external: true },
-      { label: 'Live builds', href: LINKS.control, external: true },
+      { label: 'Live runs', href: '/fleet/runs/' },
+      { label: 'Control plane', href: LINKS.control, external: true },
       { label: 'Conventions', href: LINKS.conventions, external: true },
       { label: 'Search', href: '/search/' },
     ],
@@ -143,6 +145,7 @@ const footerCols = [
             <Icon name="github" class="size-[1.05rem]" />
           </a>
           <ThemeToggle client:idle />
+          <SignIn client:idle />
           <a
             href={withBase('/donate/')}
             class="ml-1 hidden h-8 items-center rounded-md bg-foreground px-3 text-sm font-medium text-background transition-opacity hover:opacity-90 sm:inline-flex"
@@ -163,6 +166,31 @@ const footerCols = [
     <main id="main" tabindex="-1" class="outline-none">
       <slot />
     </main>
+
+    <script>
+      // Section anchors. Headings rendered by AnchorHeading.astro carry their "#" already; article bodies
+      // (docs, posts) get one added to every heading with an id. Clicking copies the full URL and still
+      // navigates to the fragment, so the link is also shareable by hand.
+      for (const h of document.querySelectorAll<HTMLElement>('.post-body :where(h2, h3, h4)[id]')) {
+        if (h.querySelector('[data-anchor]')) continue;
+        const a = document.createElement('a');
+        a.href = `#${h.id}`;
+        a.className = 'heading-anchor';
+        a.dataset.anchor = '';
+        a.setAttribute('aria-label', 'Copy link to this section');
+        a.textContent = '#';
+        h.append(a);
+      }
+      document.addEventListener('click', (e) => {
+        const a = (e.target as HTMLElement).closest<HTMLAnchorElement>('a[data-anchor]');
+        if (!a || !navigator.clipboard) return;
+        const url = new URL(a.getAttribute('href')!, location.href).href;
+        navigator.clipboard.writeText(url).then(() => {
+          a.dataset.copied = '';
+          setTimeout(() => delete a.dataset.copied, 1600);
+        }, () => {});
+      });
+    </script>
 
     <footer class="mt-28 border-t border-[var(--raft-hair)] bg-[var(--raft-surface)]">
       <div class="raft-container grid grid-cols-1 gap-12 py-14 md:grid-cols-[1.1fr_2fr]">
