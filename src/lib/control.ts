@@ -86,7 +86,8 @@ export interface Job {
   created_at: string;
   updated_at: string;
 }
-export interface JobView { job: Job; elapsed_seconds: number | null; threshold_seconds: number | null; stuck: boolean }
+/** `branch` and `event` come from the job's run (queue page only; jobs carry no branch). */
+export interface JobView { job: Job; elapsed_seconds: number | null; threshold_seconds: number | null; stuck: boolean; branch?: string | null; event?: string | null }
 export interface Build {
   repo: string;
   run_id: number;
