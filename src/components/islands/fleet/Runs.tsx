@@ -213,7 +213,8 @@ function JobBars({ jobs, selected, onSelect }: { jobs: JobView[]; selected?: num
 }
 
 function BuildLine({ build, buildsBase, known }: { build: Build; buildsBase: string; known: Record<string, string[]> }) {
-  const sitePage = build.version_tag && known[build.image]?.includes(build.version_tag) ? `${buildsBase}${build.image}/builds/${build.version_tag}/` : null;
+  // A page the site was built with, or one it renders from the hub (control has seen the release go live).
+  const sitePage = build.version_tag && (known[build.image]?.includes(build.version_tag) || build.publish_state === 'live') ? `${buildsBase}${build.image}/builds/${build.version_tag}/` : null;
   return (
     <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-[var(--raft-hair)] pt-2.5 font-mono text-xs">
       <span className="text-muted-foreground">build</span>

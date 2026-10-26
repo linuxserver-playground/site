@@ -78,7 +78,8 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
           {live
             ? rows.map((r) => {
                 const scope = `${image}/${r.branch}`;
-                const page = r.released && knownTags.includes(r.released) ? `${buildsBase}${r.released}/` : null;
+                // Every released tag has a page: a static one, or one the site renders from the hub.
+                const page = r.released ? `${buildsBase}${r.released}/` : null;
                 return (
                   <tr key={r.branch} className={r.result === 'failure' ? 'bg-destructive/[0.04]' : undefined}>
                     <th scope="row" className="px-3 py-2.5 align-top font-mono text-xs font-normal">
