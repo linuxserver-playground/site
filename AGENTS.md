@@ -83,6 +83,8 @@ The config lab (`src/lib/lab.ts`) re-renders the compose and run snippets client
 for byte equal to the hub's snippets in its default and all-optional states (they follow
 `builder/snippets.py`); the quadlet, Kubernetes, SWAG, Caddy and Traefik outputs are the hub's text (with targeted line edits
 for quadlet, Kubernetes and SWAG), never regenerated. A change to the builder's snippet or generator format is a change here too.
+Release notes are the one place external HTML is shown: always through `renderNotes` (`src/lib/markdown/notes.ts`),
+which sanitises to an allowlist; never `set:html` notes or other upstream text any other way.
 Hints (`src/lib/hints.ts`) quote the manifest or the documentation; never add a hint that states something
 the hub does not say about the image.
 
