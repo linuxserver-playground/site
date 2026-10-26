@@ -382,10 +382,15 @@ export function setMe(m: Me | null) {
   for (const l of meListeners) l(m);
 }
 
-/** `null` until `/api/me` has answered; then who is signed in (or the anonymous answer). */
+/**
+ * `null` until `/api/me` has answered; then who is signed in (or the anonymous answer). The first render is
+ * always `null`, like the server's, even when another island already has the answer: islands hydrate at
+ * different times, and starting from a known `me` would not match the server-rendered HTML.
+ */
 export function useMe(): Me | null {
-  const [me, set] = React.useState<Me | null>(meValue);
+  const [me, set] = React.useState<Me | null>(null);
   React.useEffect(() => {
+    set(meValue);
     meListeners.add(set);
     loadMe();
     return () => {
