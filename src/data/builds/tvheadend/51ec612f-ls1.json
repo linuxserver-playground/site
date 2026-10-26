@@ -1,0 +1,964 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "tvheadend",
+  "repository": "linuxserver-playground/docker-tvheadend",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "51ec612f",
+   "upstream_clean": "51ec612f",
+   "ls_build": 1,
+   "tag": "51ec612f-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "51ec612f-ls1",
+    "version-51ec612f",
+    "amd64-latest",
+    "amd64-51ec612f-ls1",
+    "amd64-version-51ec612f",
+    "arm64v8-latest",
+    "arm64v8-51ec612f-ls1",
+    "arm64v8-version-51ec612f"
+   ],
+   "source": "github_commit",
+   "source_url": "https://github.com/tvheadend/tvheadend/commit/51ec612fa22c4c78b4697e4c262c943da9cbd6cc"
+  },
+  "commit": "e9fa84fb37849ba2b597807ff68ca2df38c6ac87",
+  "created": "2026-10-26T00:52:45Z",
+  "reason": "upstream",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/baseimage-alpine:3.20",
+   "digest": "sha256:37c85bdd640fd71bf95221f8a8c8cffb151cd91ae114e9917a690a4e702344c3"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:6f5285576e869ca8c93a37dc4519102d659529f3ec1a9cb63b3ec1975c6bb9f6",
+    "size": 301989937,
+    "uncompressed_size": 703150439,
+    "layers": 12,
+    "runner": "Linux-X64",
+    "build_seconds": 170
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:966a5532fb4ab9de0269083647b2dbc1c444d2f713e794868e7e88fd02dc7bd9",
+    "size": 286257599,
+    "uncompressed_size": 650708976,
+    "layers": 12,
+    "runner": "Linux-ARM64",
+    "build_seconds": 140
+   }
+  ],
+  "index_digest": "sha256:640856e2efa19a7f3a4ebd67a1ba3d70a3fabb9c1238684d992e06df8342fe71",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 51ec612f-ls1 Build-date:- 2026-10-26T00:42:45Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine:3.20@sha256:37c85bdd640fd71bf95221f8a8c8cffb151cd91ae114e9917a690a4e702344c3",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "51ec612f",
+   "maintainer": "saarg",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T00:42:45Z",
+   "org.opencontainers.image.description": "Tvheadend works as a proxy server: is a TV streaming server and recorder for Linux, FreeBSD and Android supporting DVB-S, DVB-S2, DVB-C, DVB-T, ATSC, ISDB-T, IPTV, SAT>IP and HDHomeRun as input sources.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-tvheadend",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "d05beb0cf278e1d09e63885e202e3e47c4f12b1a",
+   "org.opencontainers.image.revision": "e9fa84fb37849ba2b597807ff68ca2df38c6ac87",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-tvheadend",
+   "org.opencontainers.image.title": "Tvheadend",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-tvheadend/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "51ec612f-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "9981/tcp",
+    "9982/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\n############## picons stage ##############\n# built by https://github.com/linuxserver/picons-builder\nFROM ghcr.io/linuxserver/picons-builder as piconsstage\n\nENV LSIO_FIRST_PARTY=true\n\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.20 as buildstage\n\nENV LSIO_FIRST_PARTY=true\n############## build stage ##############\n\n# package versions\nARG ARGTABLE_VER=\"2.13\"\n\n# environment settings\nARG TZ=\"Etc/UTC\"\nARG TVHEADEND_COMMIT\nENV HOME=\"/config\"\n\n# copy patches and picons\nCOPY patches/ /tmp/patches/\nCOPY --from=piconsstage /picons.tar.bz2 /picons.tar.bz2\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    autoconf \\\n    automake \\\n    bsd-compat-headers \\\n    build-base \\\n    cmake \\\n    ffmpeg4-dev \\\n    file \\\n    findutils \\\n    gettext-dev \\\n    git \\\n    gnu-libiconv-dev \\\n    libdvbcsa-dev \\\n    libgcrypt-dev \\\n    libhdhomerun-dev \\\n    libtool \\\n    libva-dev \\\n    libvpx-dev \\\n    libxml2-dev \\\n    libxslt-dev \\\n    linux-headers \\\n    openssl-dev \\\n    opus-dev \\\n    patch \\\n    pcre2-dev \\\n    pkgconf \\\n    pngquant \\\n    python3 \\\n    sdl2-dev \\\n    uriparser-dev \\\n    x264-dev \\\n    x265-dev \\\n    zlib-dev\n\nRUN \\\n  echo \"**** remove musl iconv.h and replace with gnu-iconv.h ****\" && \\\n  rm -rf /usr/include/iconv.h && \\\n  cp /usr/include/gnu-libiconv/iconv.h /usr/include/iconv.h\n\nRUN \\\n  echo \"**** compile tvheadend ****\" && \\\n  if [ -z ${TVHEADEND_COMMIT+x} ]; then \\\n    TVHEADEND_COMMIT=$(curl -sX GET https://api.github.com/repos/tvheadend/tvheadend/commits/master \\\n    | jq -r '. | .sha'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/tvheadend && \\\n  git clone https://github.com/tvheadend/tvheadend.git /tmp/tvheadend && \\\n  cd /tmp/tvheadend && \\\n  git checkout ${TVHEADEND_COMMIT} && \\\n  ./configure \\\n    `#Encoding` \\\n    --disable-ffmpeg_static \\\n    --disable-libfdkaac_static \\\n    --disable-libtheora_static \\\n    --disable-libopus_static \\\n    --disable-libvorbis_static \\\n    --disable-libvpx_static \\\n    --disable-libx264_static \\\n    --disable-libx265_static \\\n    --disable-libfdkaac \\\n    --enable-libopus \\\n    --enable-libvorbis \\\n    --enable-libvpx \\\n    --enable-libx264 \\\n    --enable-libx265 \\\n    \\\n    `#Options` \\\n    --disable-avahi \\\n    --disable-dbus_1 \\\n    --disable-bintray_cache \\\n    --disable-execinfo \\\n    --disable-hdhomerun_static \\\n    --enable-hdhomerun_client \\\n    --enable-libav \\\n    --enable-pngquant \\\n    --enable-trace \\\n    --enable-vaapi \\\n    --infodir=/usr/share/info \\\n    --localstatedir=/var \\\n    --mandir=/usr/share/man \\\n    --prefix=/usr \\\n    --python=python3 \\\n    --sysconfdir=/config && \\\n  make -j 2 && \\\n  make DESTDIR=/tmp/tvheadend-build install\n\nRUN \\\n  echo \"**** compile argtable2 ****\" && \\\n  ARGTABLE_VER1=\"${ARGTABLE_VER//./-}\" && \\\n  mkdir -p \\\n    /tmp/argtable && \\\n  curl -s -o \\\n  /tmp/argtable-src.tar.gz -L \\\n    \"https://sourceforge.net/projects/argtable/files/argtable/argtable-${ARGTABLE_VER}/argtable${ARGTABLE_VER1}.tar.gz\" && \\\n  tar xf \\\n  /tmp/argtable-src.tar.gz -C \\\n    /tmp/argtable --strip-components=1 && \\\n  cp /tmp/patches/config.* /tmp/argtable && \\\n  cd /tmp/argtable && \\\n  ./configure \\\n    --prefix=/usr && \\\n  make -j 2 && \\\n  make check && \\\n  make DESTDIR=/tmp/argtable-build install && \\\n  echo \"**** copy to /usr for comskip dependency ****\" && \\\n  cp -pr /tmp/argtable-build/usr/* /usr/\n\nRUN \\\n  echo \"***** compile comskip ****\" && \\\n  git clone https://github.com/erikkaashoek/Comskip /tmp/comskip && \\\n  cd /tmp/comskip && \\\n  ./autogen.sh && \\\n  ./configure \\\n    --bindir=/usr/bin \\\n    --sysconfdir=/config/comskip && \\\n  make -j 2 && \\\n  make DESTDIR=/tmp/comskip-build install\n\nRUN \\\n  echo \"***** extract picons ****\" && \\\n  mkdir -p /picons && \\\n  tar xf \\\n    /picons.tar.bz2 -C \\\n    /picons\n\n############## runtime stage ##############\nFROM ghcr.io/linuxserver/baseimage-alpine:3.20\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"saarg\"\n\n# environment settings\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    bsd-compat-headers \\\n    ffmpeg \\\n    ffmpeg4-libavcodec \\\n    ffmpeg4-libavdevice \\\n    ffmpeg4-libavfilter \\\n    ffmpeg4-libavformat \\\n    ffmpeg4-libavutil \\\n    ffmpeg4-libpostproc \\\n    ffmpeg4-libswresample \\\n    ffmpeg4-libswscale \\\n    gnu-libiconv \\\n    libdvbcsa \\\n    libhdhomerun-libs \\\n    libva \\\n    libva-intel-driver \\\n    intel-media-driver \\\n    libvpx \\\n    libxml2 \\\n    libxslt \\\n    linux-headers \\\n    mesa-va-gallium \\\n    opus \\\n    pcre2 \\\n    perl \\\n    perl-datetime-format-strptime \\\n    perl-json \\\n    perl-json-xs \\\n    py3-requests \\\n    python3 \\\n    uriparser \\\n    x264 \\\n    x265 \\\n    xmltv \\\n    zlib && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# copy local files and buildstage artifacts\nCOPY --from=buildstage /tmp/argtable-build/usr/ /usr/\nCOPY --from=buildstage /tmp/comskip-build/usr/ /usr/\nCOPY --from=buildstage /tmp/tvheadend-build/usr/ /usr/\nCOPY --from=buildstage /picons /picons\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 9981 9982\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\n############## picons stage ##############\n# built by https://github.com/linuxserver/picons-builder\nFROM ghcr.io/linuxserver/picons-builder as piconsstage\n\nENV LSIO_FIRST_PARTY=true\n\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.20 as buildstage\n\nENV LSIO_FIRST_PARTY=true\n############## build stage ##############\n\n# package versions\nARG ARGTABLE_VER=\"2.13\"\n\n# environment settings\nARG TZ=\"Etc/UTC\"\nARG TVHEADEND_COMMIT\nENV HOME=\"/config\"\n\n# copy patches and picons\nCOPY patches/ /tmp/patches/\nCOPY --from=piconsstage /picons.tar.bz2 /picons.tar.bz2\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    autoconf \\\n    automake \\\n    bsd-compat-headers \\\n    build-base \\\n    cmake \\\n    ffmpeg4-dev \\\n    file \\\n    findutils \\\n    gettext-dev \\\n    git \\\n    gnu-libiconv-dev \\\n    libdvbcsa-dev \\\n    libgcrypt-dev \\\n    libhdhomerun-dev \\\n    libtool \\\n    libva-dev \\\n    libvpx-dev \\\n    libxml2-dev \\\n    libxslt-dev \\\n    linux-headers \\\n    openssl-dev \\\n    opus-dev \\\n    patch \\\n    pcre2-dev \\\n    pkgconf \\\n    pngquant \\\n    python3 \\\n    sdl2-dev \\\n    uriparser-dev \\\n    x264-dev \\\n    x265-dev \\\n    zlib-dev\n\nRUN \\\n  echo \"**** remove musl iconv.h and replace with gnu-iconv.h ****\" && \\\n  rm -rf /usr/include/iconv.h && \\\n  cp /usr/include/gnu-libiconv/iconv.h /usr/include/iconv.h\n\nRUN \\\n  echo \"**** compile tvheadend ****\" && \\\n  if [ -z ${TVHEADEND_COMMIT+x} ]; then \\\n    TVHEADEND_COMMIT=$(curl -sX GET https://api.github.com/repos/tvheadend/tvheadend/commits/master \\\n    | jq -r '. | .sha'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/tvheadend && \\\n  git clone https://github.com/tvheadend/tvheadend.git /tmp/tvheadend && \\\n  cd /tmp/tvheadend && \\\n  git checkout ${TVHEADEND_COMMIT} && \\\n  ./configure \\\n    `#Encoding` \\\n    --disable-ffmpeg_static \\\n    --disable-libfdkaac_static \\\n    --disable-libtheora_static \\\n    --disable-libopus_static \\\n    --disable-libvorbis_static \\\n    --disable-libvpx_static \\\n    --disable-libx264_static \\\n    --disable-libx265_static \\\n    --disable-libfdkaac \\\n    --enable-libopus \\\n    --enable-libvorbis \\\n    --enable-libvpx \\\n    --enable-libx264 \\\n    --enable-libx265 \\\n    \\\n    `#Options` \\\n    --disable-avahi \\\n    --disable-dbus_1 \\\n    --disable-bintray_cache \\\n    --disable-execinfo \\\n    --disable-hdhomerun_static \\\n    --enable-hdhomerun_client \\\n    --enable-libav \\\n    --enable-pngquant \\\n    --enable-trace \\\n    --enable-vaapi \\\n    --infodir=/usr/share/info \\\n    --localstatedir=/var \\\n    --mandir=/usr/share/man \\\n    --prefix=/usr \\\n    --python=python3 \\\n    --sysconfdir=/config && \\\n  make -j 2 && \\\n  make DESTDIR=/tmp/tvheadend-build install\n\nRUN \\\n  echo \"**** compile argtable2 ****\" && \\\n  ARGTABLE_VER1=\"${ARGTABLE_VER//./-}\" && \\\n  mkdir -p \\\n    /tmp/argtable && \\\n  curl -s -o \\\n  /tmp/argtable-src.tar.gz -L \\\n    \"https://sourceforge.net/projects/argtable/files/argtable/argtable-${ARGTABLE_VER}/argtable${ARGTABLE_VER1}.tar.gz\" && \\\n  tar xf \\\n  /tmp/argtable-src.tar.gz -C \\\n    /tmp/argtable --strip-components=1 && \\\n  cp /tmp/patches/config.* /tmp/argtable && \\\n  cd /tmp/argtable && \\\n  ./configure \\\n    --prefix=/usr && \\\n  make -j 2 && \\\n  make check && \\\n  make DESTDIR=/tmp/argtable-build install && \\\n  echo \"**** copy to /usr for comskip dependency ****\" && \\\n  cp -pr /tmp/argtable-build/usr/* /usr/\n\nRUN \\\n  echo \"***** compile comskip ****\" && \\\n  git clone https://github.com/erikkaashoek/Comskip /tmp/comskip && \\\n  cd /tmp/comskip && \\\n  ./autogen.sh && \\\n  ./configure \\\n    --bindir=/usr/bin \\\n    --sysconfdir=/config/comskip && \\\n  make -j 2 && \\\n  make DESTDIR=/tmp/comskip-build install\n\nRUN \\\n  echo \"***** extract picons ****\" && \\\n  mkdir -p /picons && \\\n  tar xf \\\n    /picons.tar.bz2 -C \\\n    /picons\n\n\n############## runtime stage ##############\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.20\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"saarg\"\n\n# environment settings\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    bsd-compat-headers \\\n    ffmpeg \\\n    ffmpeg4-libavcodec \\\n    ffmpeg4-libavdevice \\\n    ffmpeg4-libavfilter \\\n    ffmpeg4-libavformat \\\n    ffmpeg4-libavutil \\\n    ffmpeg4-libpostproc \\\n    ffmpeg4-libswresample \\\n    ffmpeg4-libswscale \\\n    gnu-libiconv \\\n    libdvbcsa \\\n    libhdhomerun-libs \\\n    libva \\\n    libvpx \\\n    libxml2 \\\n    libxslt \\\n    linux-headers \\\n    mesa-va-gallium \\\n    opus \\\n    pcre2 \\\n    perl \\\n    perl-datetime-format-strptime \\\n    perl-json \\\n    perl-json-xs \\\n    py3-requests \\\n    python3 \\\n    uriparser \\\n    x264 \\\n    x265 \\\n    xmltv \\\n    zlib && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# copy local files and buildstage artifacts\nCOPY --from=buildstage /tmp/argtable-build/usr/ /usr/\nCOPY --from=buildstage /tmp/comskip-build/usr/ /usr/\nCOPY --from=buildstage /tmp/tvheadend-build/usr/ /usr/\nCOPY --from=buildstage /picons /picons\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 9981 9982\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"tvheadend:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-video-config -> init-config-end\n  init-os-end -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  base -> init-mods\n  init-config-end -> init-mods\n  init-mods -> init-mods-end\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  base -> init-os-end\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-migrations -> init-os-end\n  init-custom-files -> init-services\n  init-mods-end -> init-services\n  init-config -> init-tvheadend-config\n  init-tvheadend-config -> init-video-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-tvheadend\n  svc-tvheadend -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.20\"\n}\n\"tvheadend:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-video-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "base",
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods",
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "base",
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile",
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files",
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-tvheadend-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make folders\nmkdir -p \\\n    /config/comskip\n\n# copy config\nif [[ ! -e /config/dvr/config ]]; then\n    (mkdir -p /config/dvr/config && cp /defaults/7a5edfbe189851e5b1d1df19c93962f0 /config/dvr/config/7a5edfbe189851e5b1d1df19c93962f0)\nfi\nif [[ ! -e /config/comskip/comskip.ini ]]; then\n    cp /defaults/comskip.ini.org /config/comskip/comskip.ini\nfi\nif [[ ! -e /config/config ]]; then\n    (cp /defaults/config /config/config)\nfi\n\n# permissions\necho \"Setting permissions\"\nlsiown -R abc:abc /config\n"
+    },
+    {
+     "name": "init-video-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-tvheadend-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nFILES=$(find /dev/dri /dev/dvb -type c -print 2>/dev/null)\n\nfor i in $FILES\ndo\n    VIDEO_GID=$(stat -c '%g' \"$i\")\n    if id -G abc | grep -qw \"$VIDEO_GID\"; then\n        touch /groupadd\n    else\n        if [ ! \"${VIDEO_GID}\" == '0' ]; then\n            VIDEO_NAME=$(getent group \"${VIDEO_GID}\" | awk -F: '{print $1}')\n            if [ -z \"${VIDEO_NAME}\" ]; then\n                VIDEO_NAME=\"video$(head /dev/urandom | tr -dc 'a-z0-9' | head -c8)\"\n                groupadd \"$VIDEO_NAME\"\n                groupmod -g \"$VIDEO_GID\" \"$VIDEO_NAME\"\n            fi\n            usermod -a -G \"$VIDEO_NAME\" abc\n            touch /groupadd\n        fi\n    fi\ndone\n\nif [ -n \"${FILES}\" ] && [ ! -f \"/groupadd\" ]; then\n    usermod -a -G root abc\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-tvheadend",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 9981\" \\\n        s6-setuidgid abc /usr/bin/tvheadend -C -c /config $RUN_OPTS\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 321,
+    "distro": "Alpine Linux v3.20",
+    "hash": "c819f37f",
+    "by_type": {
+     "cpan": 5,
+     "apk": 311,
+     "python": 5
+    }
+   },
+   "arm64": {
+    "count": 317,
+    "distro": "Alpine Linux v3.20",
+    "hash": "d3835892",
+    "by_type": {
+     "cpan": 5,
+     "apk": 307,
+     "python": 5
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/tvheadend/builds/51ec612f-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-tvheadend/commits/51ec612f-ls1",
+   "upstream": "spawn: follow symbolic links when looking up an executable\n\nfind_exec() checks each candidate with lstat() and requires a regular\nfile, so a symbolic link never qualifies: lstat() describes the link\nitself. A post-processor, pre-processor, post-remove or pipe:// command\ngiven by name is then skipped when the executable it resolves to in\nPATH is a link. Use stat() so the link target is checked. A dangling\nlink still fails and is skipped.",
+   "upstream_url": "https://github.com/tvheadend/tvheadend/commit/51ec612fa22c4c78b4697e4c262c943da9cbd6cc"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 88873,
+    "sha256": "4b4c9be9ed7f27ad6226142f1d4c3dfc5822aa416056dabcaa8ba656e4ea3f82",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5871,
+    "sha256": "667b6a5d9a26180ec8f2fee05fca5e96bceee18ad0c74482103e36b7bd26f245",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 408258,
+    "sha256": "84fa6dd5a7fd43cfed82612113846cb28dc294f361f66a367969368feee64501",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2282,
+    "sha256": "ee651d567bb092409d3a5efa6a50d2becad00a8b117bbfdbc78851bb3b76b123",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 54598,
+    "sha256": "f63bdeebb85002a3b145b0233316998961468099922f370c26787d5698a8999d",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 20930,
+    "sha256": "36f1ac47077656d8c05f50d4019d50b0f233f0da1836d671b0ff992743b7abe2",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 87463,
+    "sha256": "4defbb75768709319fa6ac8ee099915010d3bce02022741f5148a44cb17018ba",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5826,
+    "sha256": "e6e33e7d05bfdf56cca872887b0f3fec8ee6465e93e94b12ea39e5d57df1f608",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 407350,
+    "sha256": "4096f16c324b7064418d5c23b01945dacd0284c5d1f731232dd058ef28750214",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2283,
+    "sha256": "950600ca24fcb4c4e324709688ad2b73728c123361bdda7d7a2734dbdf8f7c99",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 54971,
+    "sha256": "04155cd3263e35e1bbc94134ac58b8b8a62c8e31b84aa110c60d034e91b9a2ee",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 20670,
+    "sha256": "7f59525f73c5e3c5ed2517a57b6fdce54fb600a22f47affcefce9878d668a722",
+    "url": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40250380644,
+   "run_url": "https://github.com/linuxserver-playground/docker-tvheadend/actions/runs/40250380644",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "tvheadend",
+  "branch": "master",
+  "tag": "51ec612f-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "51ec612f",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.20",
+    "digest": "sha256:37c85bdd640fd71bf95221f8a8c8cffb151cd91ae114e9917a690a4e702344c3"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 301989937
+   },
+   "arm64": {
+    "to": 286257599
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "9981/tcp",
+     "9982/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:3cb94bc898aaa63227da2d538b3734364836275dda806a1de0e0aae74b2cf10c",
+    "diff_id": "sha256:d24fc32ffc2694ea58134d765cdfabed670cc8e4459a73252c512792a6fc031e",
+    "size": 6040840,
+    "uncompressed_size": 13086944,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:3baea33f91f324a0620af05317929b3b44456377ac55ddc6ab9d3e8ef4b5f820",
+    "diff_id": "sha256:a7fc79b7dacd0269612e3c8f1b3db9672d387acd614ec6a6e02bc62a3e52e778",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:eb872f3fc98b05f2572f163e31b0f3a1a5f2fd48fd090d15e45cc27be3473f46",
+    "diff_id": "sha256:bba20642c6384e427dc7e1c44a0f0d1742c613f4205a714a0dd69c9caa10a9c6",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:0f3b79a53bdf5744c5323ed48ec84aa5a10f5b0cca5d4b451906e3b8383678a4",
+    "diff_id": "sha256:85a322aa7b02971f3bbc1daab0ba5c3e72ecd0d28bf0e144f72ab0eac6a8f4cc",
+    "size": 6156502,
+    "uncompressed_size": 14341659,
+    "created_by": "RUN |5 BUILD_DATE=2026-05-09T14:22:38+00:00 VERSION=4266f722-ls42 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:78638a2ae620096fd5e1077762c4db94f7c92f8d1efdad971f2ed8f4c6a924b8",
+    "diff_id": "sha256:d974498b5fa05af7b5c36f422e62ce8cebb3e7501df0ed50fcff860f4aeeb260",
+    "size": 4647,
+    "uncompressed_size": 9330,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:18b9591482286cfa26c60e16560e750af3392b582b194504ca67d55374e986ad",
+    "diff_id": "sha256:7c49ddd1ae6b5a30811716d3c8e372d670dd5b0b5668f72091bf6b68365dd285",
+    "size": 166122812,
+    "uncompressed_size": 509304826,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-26T00:42:45Z VERSION=51ec612f-ls1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     bsd-compat-headers     ffmpeg     ffmpeg4-libavcodec     ffmpeg4-libavdevice     ffmpeg4-libavfilter     ffmpeg4-libavformat     ffmpeg4-libavutil     ffmpeg4-libpostproc     ffmpeg4-libswresample     ffmpeg4-libswscale     gnu-libiconv     libdvbcsa     libhdhomerun-libs     libva     libva-intel-driver     intel-media-driver     libvpx     libxml2     libxslt     linux-headers     mesa-va-gallium     opus     pcre2     perl     perl-datetime-format-strptime     perl-json     perl-json-xs     py3-requests     python3     uriparser     x264     x265     xmltv     zlib &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     169,
+     206
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:c7a63772e0153eb7c02cc67bbe86a1ea99f06b51eb22ac199df1ba15a355047f",
+    "diff_id": "sha256:d257e8c47274109a62d0d835aae51246a1a6db04ed601321e54570012e2d7df9",
+    "size": 2960124,
+    "uncompressed_size": 4915790,
+    "created_by": "COPY /tmp/argtable-build/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:633c7a2a4f2a3403f3b7cd9366bfbf2f199c4c1d25be0132fcf8bd939aa2a86d",
+    "diff_id": "sha256:d12643404a7c1c43f06a9dbc16c7aee20217536d908a9a01084ab36d98465816",
+    "size": 918075,
+    "uncompressed_size": 1983728,
+    "created_by": "COPY /tmp/comskip-build/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:9f7d98dd02c2f2c9ec2b71da110d603416538cd1fbd89d3324ab32eb47c30faa",
+    "diff_id": "sha256:c12218e8a3179ea7d78668a989fdc048853adbb851225f84c75e2b05dedf8f98",
+    "size": 15708259,
+    "uncompressed_size": 50297587,
+    "created_by": "COPY /tmp/tvheadend-build/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:17e13ee9e2d9280e4bb316bbcfc1ac30f961125644f4da53f98b760da8faf888",
+    "diff_id": "sha256:7af992eb576306cb07a293e46c7b0e11783e18a29d64f307f22cbfa6065a182f",
+    "size": 104065164,
+    "uncompressed_size": 109161857,
+    "created_by": "COPY /picons /picons",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 11,
+    "digest": "sha256:0f5eaa476d61a9d2e7d7fb42b12c4a5f49b111f07db97a3e3a11b177c5f83981",
+    "diff_id": "sha256:60ceb15415711ea55000c7164f22beeb0e7c6512dab0730d57d448c0decdeefe",
+    "size": 5213,
+    "uncompressed_size": 12402,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     213,
+     213
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:45e4d2c3cf9048cb35181b8bdccc6fafc25f1505aa5e45db550505888609071a",
+    "diff_id": "sha256:5c5cec941407756f4a8f2696572297beb7abd5e521c4d60925febf8e6f7d5365",
+    "size": 6988928,
+    "uncompressed_size": 18707723,
+    "created_by": "COPY /root-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:95ee7b9212581f1086fc0689c0de9ef65916d27011106c39e6795fbe13c97a0b",
+    "diff_id": "sha256:b49698431e20df982fdd02edd9d872ec748f93f8c171f2cdebca0d3ec81f43fd",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:ee918b3cecfd287bd6e8657cf5b86944661733b8c329d8c201eec665fc2059ca",
+    "diff_id": "sha256:da5b9f09a8393b84220dde6f99d4b133150b59039b92304abd21ed60fa541b76",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7e153a1c52d626d79ef34c573a6e5bff1ec5f42dbe1c7980a15291a39e26d44d",
+    "diff_id": "sha256:ba3f5a6243a0ff56b65ef30196bdd2a3195f162833d59801f565bf6e4a9fbd34",
+    "size": 6245324,
+    "uncompressed_size": 21155565,
+    "created_by": "RUN |5 BUILD_DATE=2026-07-03T13:31:37+00:00 VERSION=4266f722-ls43 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:b1d7c34caa34e9a7538d3e232a4ce9d566b2f534567eda98928fa8993bb60f98",
+    "diff_id": "sha256:d27be053991990771df55374b089ff03af1a39632c7f12594b14d05a93e4888b",
+    "size": 4969,
+    "uncompressed_size": 10348,
+    "created_by": "COPY root/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b7f37d5495ca59da411315bc9be4826568ba45229e98d74f4189904b2370a035",
+    "diff_id": "sha256:0a8c16251608cfdf90bd9037e05e9919c427c3fef39599e8356c6839d669173f",
+    "size": 149444869,
+    "uncompressed_size": 444282180,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-26T00:42:45Z VERSION=51ec612f-ls1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     bsd-compat-headers     ffmpeg     ffmpeg4-libavcodec     ffmpeg4-libavdevice     ffmpeg4-libavfilter     ffmpeg4-libavformat     ffmpeg4-libavutil     ffmpeg4-libpostproc     ffmpeg4-libswresample     ffmpeg4-libswscale     gnu-libiconv     libdvbcsa     libhdhomerun-libs     libva     libvpx     libxml2     libxslt     linux-headers     mesa-va-gallium     opus     pcre2     perl     perl-datetime-format-strptime     perl-json     perl-json-xs     py3-requests     python3     uriparser     x264     x265     xmltv     zlib &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     170,
+     205
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b2465ab7221b8ee58026cc68cc94473d2a636d115217b108919e0d0e0eb1737e",
+    "diff_id": "sha256:fa49a71818659b17f718f8ad013158bebbabddf79500be6ec189626d1a69c485",
+    "size": 2954391,
+    "uncompressed_size": 5000774,
+    "created_by": "COPY /tmp/argtable-build/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:15bb37310b78abc5978a11b012d82349213d258ea1fa0019e9b16a8cdce4141a",
+    "diff_id": "sha256:8d5ade42463f13a90785fa871e1ee567b89e99a869fddf3d0bb4cc65f32cdb81",
+    "size": 923505,
+    "uncompressed_size": 2015968,
+    "created_by": "COPY /tmp/comskip-build/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:6721611c6f93f6d680e26e965645de505ba907f2459a2923da9c0a3daab44028",
+    "diff_id": "sha256:0c02769d01e9e0363eff6c13ad4cb0bb9a465e118fb6c41010f0ac37289bc6fe",
+    "size": 15616942,
+    "uncompressed_size": 50325843,
+    "created_by": "COPY /tmp/tvheadend-build/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:72b3dde0824ce6486bea57627ce924166270530124b935489bfa67b587ff5e43",
+    "diff_id": "sha256:f99b9c59da2f693ebcc00e3d0f9149bfcf7f9957317518e75e146a089c554e5d",
+    "size": 104065164,
+    "uncompressed_size": 109161857,
+    "created_by": "COPY /picons /picons",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 11,
+    "digest": "sha256:5827c2d2440eaabbd034fbd5b5496bfadd1b8c5bac287a661b0e9500c8c54ad6",
+    "diff_id": "sha256:7c4eaa049fd22e36af544624b7c2cd682f6f380072d9e623b25c40db3b34038d",
+    "size": 5212,
+    "uncompressed_size": 12402,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     212,
+     212
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "tvheadend",
+  "tag": "51ec612f-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/tvheadend/51ec612f-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.015,
+    "listening_ports": [
+     "9981/tcp",
+     "9982/tcp",
+     "1900/udp",
+     "45594/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 34566144,
+    "pids": 13,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/tvheadend/51ec612f-ls1/amd64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.013,
+    "listening_ports": [
+     "9981/tcp",
+     "9982/tcp",
+     "1900/udp",
+     "46316/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 36651008,
+    "pids": 13,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/tvheadend/51ec612f-ls1/arm64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-tvheadend/releases/download/51ec612f-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "tvheadend",
+    "tag": "amd64-e9fa84f-40250380644",
+    "arch": "amd64",
+    "started": "2026-10-26T00:50:44Z",
+    "finished": "2026-10-26T00:51:09Z",
+    "success": true,
+    "runner": "3e8cfd8c4a95",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.015,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.015
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "321 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "321 packages: syft JSON 88873 bytes gzipped, SPDX for the image attestation 853514 bytes",
+      "seconds": 0.218
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1348 dirs, 28454 files (702799501 bytes), 1484 symlinks, 21553 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.49s, total 0.94s",
+      "seconds": 1.179
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "12 layers, 6 from base, compressed sizes from registry",
+      "seconds": 1.005
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, base units assumed",
+      "seconds": 0.08
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:9981/",
+      "seconds": 10.764
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [9981, 9982], rss 34566144 bytes",
+      "seconds": 1.793
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 34566144,
+     "pids": 13,
+     "listening_tcp": [
+      9981,
+      9982
+     ],
+     "listening_udp": [
+      1900,
+      45594
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-tvheadend"
+     ],
+     "changed_paths": 210
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "tvheadend",
+    "tag": "arm64-e9fa84f-40250380644",
+    "arch": "arm64",
+    "started": "2026-10-26T00:50:07Z",
+    "finished": "2026-10-26T00:50:27Z",
+    "success": true,
+    "runner": "10866dbe7866",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.013,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.013
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "317 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "317 packages: syft JSON 87463 bytes gzipped, SPDX for the image attestation 842045 bytes",
+      "seconds": 0.195
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1350 dirs, 28427 files (650358417 bytes), 1481 symlinks, 21553 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.23s, total 0.48s",
+      "seconds": 0.676
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "12 layers, 6 from base, compressed sizes from registry",
+      "seconds": 0.332
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "21 units, 4 from this image, base units assumed",
+      "seconds": 0.064
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:9981/",
+      "seconds": 10.698
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [9981, 9982], rss 36651008 bytes",
+      "seconds": 0.991
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 36651008,
+     "pids": 13,
+     "listening_tcp": [
+      9981,
+      9982
+     ],
+     "listening_udp": [
+      1900,
+      46316
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-tvheadend"
+     ],
+     "changed_paths": 210
+    }
+   }
+  }
+ }
+}

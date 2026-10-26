@@ -1,0 +1,469 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "unrar",
+  "repository": "linuxserver-playground/docker-unrar",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "7.2.7",
+   "upstream_clean": "7.2.7",
+   "semver": "7.2.7",
+   "ls_build": 1,
+   "tag": "7.2.7-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "7.2.7-ls1",
+    "version-7.2.7",
+    "7.2.7",
+    "amd64-latest",
+    "amd64-7.2.7-ls1",
+    "amd64-version-7.2.7",
+    "amd64-7.2.7",
+    "arm64v8-latest",
+    "arm64v8-7.2.7-ls1",
+    "arm64v8-version-7.2.7",
+    "arm64v8-7.2.7"
+   ],
+   "source": "command",
+   "source_url": "command"
+  },
+  "commit": "b3d10247a8b642a8b6222407254c1752b15ce0a0",
+  "created": "2026-10-26T00:43:42Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:49c6e3c761d74c970b6d6d7c368e143c998d759dfd6920aa19f714de01b8bdcf",
+    "size": 709293,
+    "uncompressed_size": 1465696,
+    "layers": 2,
+    "runner": "Linux-X64",
+    "build_seconds": 76
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:589c468502f89d596e8fc2281a46bb4361d4c98e5ab6d9826738e693b635bd5a",
+    "size": 694480,
+    "uncompressed_size": 1448992,
+    "layers": 2,
+    "runner": "Linux-ARM64",
+    "build_seconds": 49
+   }
+  ],
+  "index_digest": "sha256:046f99b6f85381f477776f7c42312e51422298062ee8844d400b03d6f01fc145",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 7.2.7-ls1 Build-date:- 2026-10-26T00:38:23Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "7.2.7",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T00:38:23Z",
+   "org.opencontainers.image.description": "unrar container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-unrar",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "b3d10247a8b642a8b6222407254c1752b15ce0a0",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-unrar",
+   "org.opencontainers.image.title": "Unrar",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-unrar/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "7.2.7-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nARG UNRAR_VERSION=7.2.7\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.24 AS alpine-buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG UNRAR_VERSION\n\nCOPY data.rar /data.rar\n\nRUN \\\n  echo \"**** install build dependencies ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base && \\\n  echo \"**** install unrar from source ****\" && \\\n  mkdir /tmp/unrar && \\\n  curl -o \\\n    /tmp/unrar.tar.gz -L \\\n    \"https://www.rarlab.com/rar/unrarsrc-${UNRAR_VERSION}.tar.gz\" && \\\n  tar xf \\\n    /tmp/unrar.tar.gz -C \\\n    /tmp/unrar --strip-components=1 && \\\n  cd /tmp/unrar && \\\n  sed -i '\\|LDFLAGS=| s|$| -static|' makefile && \\\n  make && \\\n  install -v -m755 unrar /usr/bin && \\\n  echo \"**** test binary ****\" && \\\n  /usr/bin/unrar v /data.rar && \\\n  /usr/bin/unrar t /data.rar && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root/.cache \\\n    /tmp/*\n\n# Storage layer consumed downstream\nFROM scratch\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# Add files from buildstage\nCOPY --from=alpine-buildstage /usr/bin/unrar /usr/bin/unrar-alpine\nCOPY --from=alpine-buildstage /usr/bin/unrar /usr/bin/unrar-ubuntu\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nARG UNRAR_VERSION=7.2.7\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.24 AS alpine-buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG UNRAR_VERSION\n\nCOPY data.rar /data.rar\n\nRUN \\\n  echo \"**** install build dependencies ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    linux-headers && \\\n  echo \"**** install unrar from source ****\" && \\\n  mkdir /tmp/unrar && \\\n  curl -o \\\n    /tmp/unrar.tar.gz -L \\\n    \"https://www.rarlab.com/rar/unrarsrc-${UNRAR_VERSION}.tar.gz\" && \\\n  tar xf \\\n    /tmp/unrar.tar.gz -C \\\n    /tmp/unrar --strip-components=1 && \\\n  cd /tmp/unrar && \\\n  sed -i '\\|LDFLAGS=| s|$| -static|' makefile && \\\n  sed -i '\\|CXXFLAGS=| s|$| -march=armv8-a+crypto+crc|' makefile && \\\n  make && \\\n  install -v -m755 unrar /usr/bin && \\\n  echo \"**** test binary ****\" && \\\n  /usr/bin/unrar v /data.rar && \\\n  /usr/bin/unrar t /data.rar && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root/.cache \\\n    /tmp/*\n\n# Storage layer consumed downstream\nFROM scratch\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# Add files from buildstage\nCOPY --from=alpine-buildstage /usr/bin/unrar /usr/bin/unrar-alpine\nCOPY --from=alpine-buildstage /usr/bin/unrar /usr/bin/unrar-ubuntu\n"
+  },
+  "packages": {
+   "amd64": {
+    "count": 0,
+    "distro": "unknown",
+    "hash": "9d327c0f"
+   },
+   "arm64": {
+    "count": 0,
+    "distro": "unknown",
+    "hash": "9d327c0f"
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/unrar/builds/7.2.7-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-unrar/commits/7.2.7-ls1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 4266,
+    "sha256": "85f1cf93c035e1ce77400acc18c225a504b5dff92f60c95d57eb0a4c0c572a5c",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 681,
+    "sha256": "5483c3c0249a1e22cb3ca0ada2b08f7ae524b13be49f4e9c49517aa7acb59332",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 189,
+    "sha256": "1e83765b522ae523525e05e5ce7fb86225f973e4bd5ba8c9c9964f118bd6b55d",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1734,
+    "sha256": "4f657d6b19635245c5f5855ad5ddad3c8f119e0496fc26d82a3308ee14cdc591",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3582,
+    "sha256": "7933a2a4b35a0081e8ef3f8612eabfd7cbe4cc566732b1dbbd973e9cb898f1a9",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 23,
+    "sha256": "b32771cd941e0b5ea5e71620200387da69cd29b39217ffd98baacd59947b886f",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 4265,
+    "sha256": "a4901f36de7641f07d4a8ddc243cf140693ddcffaf5984e3171980b0eb68dc57",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 681,
+    "sha256": "38818dcde3abe4b88e6e719d9a37831daa80a8edee51649b29ddba51e5df62af",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 188,
+    "sha256": "e6e9aeefff34e35786058a4735f137ed3db44b7b867acedb315c7ab0c6de21e3",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1734,
+    "sha256": "a25623bc34d18efb94ff81fe2cb893cf124a9229f5b1dc8359956b09adbe4466",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3575,
+    "sha256": "1f83a9134efbd3f19112927ea9b980b24a5e99278bae9298dbe83e46c63970d0",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 23,
+    "sha256": "b32771cd941e0b5ea5e71620200387da69cd29b39217ffd98baacd59947b886f",
+    "url": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40250309955,
+   "run_url": "https://github.com/linuxserver-playground/docker-unrar/actions/runs/40250309955",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "unrar",
+  "branch": "main",
+  "tag": "7.2.7-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "7.2.7",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 709293
+   },
+   "arm64": {
+    "to": 694480
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "LSIO_FIRST_PARTY",
+     "PATH"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:61acaf09412ba2092606f02406f4cc92ebb4d57dc3864289da69fbb14bb27c5b",
+    "diff_id": "sha256:b51b4e919228f7fd7c96e8cd03cb190dd5eba14e16ed7aa2460cdbb17f1689ab",
+    "size": 354647,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar /usr/bin/unrar-alpine",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:38feb0fe97149dff59f81243e27124467efc26dd06af6716b8bba13773d22b24",
+    "diff_id": "sha256:db4e634dfe5ea28914762c333a4980a24b2c9a1d5a7da15740d4bd9e29519441",
+    "size": 354646,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar /usr/bin/unrar-ubuntu",
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:cc4974852e56e88d5da410c341ac6e6759a8f9913085e965a88174e7286a3bd0",
+    "diff_id": "sha256:a43757f9bcadc6328abf14599247101ddd9208f3998f1bbd836de436d03db29e",
+    "size": 347240,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar /usr/bin/unrar-alpine",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:75c7481cc5cea2e044916546728e70eee67a5e5103ec1f8bf40cf6bf8177f6e4",
+    "diff_id": "sha256:9edb31b0ff8dcfb21377d76c4c3c60d78980195120540f308af5b978f94bba05",
+    "size": 347240,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar /usr/bin/unrar-ubuntu",
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "unrar",
+  "tag": "7.2.7-ls1",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/unrar/7.2.7-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 6,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/unrar/7.2.7-ls1/amd64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 6,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/unrar/7.2.7-ls1/arm64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-unrar/releases/download/7.2.7-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "unrar",
+    "tag": "amd64-b3d1024-40250309955",
+    "arch": "amd64",
+    "started": "2026-10-26T00:42:38Z",
+    "finished": "2026-10-26T00:42:41Z",
+    "success": true,
+    "runner": "07d3018fda47",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "0 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "0 packages: syft JSON 4266 bytes gzipped, SPDX for the image attestation 1377 bytes",
+      "seconds": 0.076
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "6 dirs, 5 files (1465696 bytes), 1 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.00s, total 0.00s",
+      "seconds": 0.139
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "2 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.877
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.002
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ],
+    "files": {
+     "html": "index.html"
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "unrar",
+    "tag": "arm64-b3d1024-40250309955",
+    "arch": "arm64",
+    "started": "2026-10-26T00:40:29Z",
+    "finished": "2026-10-26T00:40:31Z",
+    "success": true,
+    "runner": "0a175fe62532",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "0 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "0 packages: syft JSON 4265 bytes gzipped, SPDX for the image attestation 1377 bytes",
+      "seconds": 0.074
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "6 dirs, 5 files (1448992 bytes), 1 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.00s, total 0.00s",
+      "seconds": 0.109
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "2 layers, 0 from base, compressed sizes from registry",
+      "seconds": 1.019
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.001
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ],
+    "files": {
+     "html": "index.html"
+    }
+   }
+  }
+ }
+}
