@@ -187,11 +187,17 @@ export interface Page<T> {
   url: (n: number) => string;
 }
 
-export function paginate<T>(items: T[], page: number, size: number, basePath: string): Page<T> {
-  const lastPage = Math.max(1, Math.ceil(items.length / size));
+/**
+ * One page of a listing. `lead` extra items go on page 1 only (the blog index's wide lead post, so the cards
+ * under it still fill whole rows); later pages start after them.
+ */
+export function paginate<T>(items: T[], page: number, size: number, basePath: string, lead = 0): Page<T> {
+  const first = size + lead;
+  const lastPage = items.length <= first ? 1 : 1 + Math.ceil((items.length - first) / size);
   const current = Math.min(Math.max(1, page), lastPage);
+  const start = current === 1 ? 0 : first + (current - 2) * size;
   return {
-    data: items.slice((current - 1) * size, current * size),
+    data: items.slice(start, current === 1 ? first : start + size),
     currentPage: current,
     lastPage,
     total: items.length,
