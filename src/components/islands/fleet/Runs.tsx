@@ -153,8 +153,16 @@ function RunHead({ run, elapsed, stuck, runsBase, reload, detail = false }: { ru
   );
 }
 
-/** Job progress: one bar per job, filled by completed steps, coloured by state. */
-function JobBars({ jobs }: { jobs: JobView[] }) {
+/** GitHub's log page for a job; a step's log is the same page with `#step:<n>:1`. */
+const jobUrl = (j: Job) => j.html_url ?? `https://github.com/${j.repo}/actions/runs/${j.run_id}/job/${j.id}`;
+
+const linkCls = 'underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current';
+
+/**
+ * Job progress: one bar per job, filled by completed steps, coloured by state. With `onSelect` (the run page)
+ * a job's name shows its steps below; without it (the runs list) the name opens the job's log on GitHub.
+ */
+function JobBars({ jobs, selected, onSelect }: { jobs: JobView[]; selected?: number; onSelect?: (id: number) => void }) {
   if (jobs.length === 0) return <p className="mt-2 font-mono text-xs text-muted-foreground">No job has reported yet.</p>;
   return (
     <ul className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
@@ -165,11 +173,18 @@ function JobBars({ jobs }: { jobs: JobView[] }) {
         const tone = toneOf(j.status, j.conclusion);
         const bar = tone === 'ok' ? 'bg-[var(--raft-ok-dot)]' : tone === 'bad' ? 'bg-destructive' : tone === 'warn' ? 'bg-[var(--raft-amber)]' : tone === 'live' ? 'bg-primary' : 'bg-[var(--raft-hair-strong)]';
         return (
-          <li key={j.id} className="rounded-md border border-[var(--raft-hair)] px-2.5 py-2 text-xs">
+          <li key={j.id} className={`rounded-md border px-2.5 py-2 text-xs ${onSelect && selected === j.id ? 'border-primary/50' : 'border-[var(--raft-hair)]'}`}>
             <span className="flex items-baseline justify-between gap-2">
-              <span className="truncate font-mono" title={j.name}>
-                {j.name}
-              </span>
+              {onSelect ? (
+                <button type="button" onClick={() => onSelect(j.id)} aria-pressed={selected === j.id} title={`Show the steps of ${j.name}`} className={`truncate text-left font-mono ${linkCls}`}>
+                  {j.name}
+                </button>
+              ) : (
+                <a href={jobUrl(j)} target="_blank" rel="noopener" title={j.name} className={`truncate font-mono ${linkCls}`}>
+                  {j.name}
+                  <span className="sr-only"> (log on GitHub, opens in a new tab)</span>
+                </a>
+              )}
               <span className="shrink-0 font-mono text-[0.6875rem] text-muted-foreground tabular-nums">
                 {j.status === 'completed' ? (j.conclusion ?? 'done') : j.status === 'in_progress' ? `${done}/${j.steps.length || '?'} steps` : (j.status ?? 'queued')}
                 {v.stuck && ' · stuck?'}
@@ -178,9 +193,17 @@ function JobBars({ jobs }: { jobs: JobView[] }) {
             <span className="mt-1.5 block h-1.5 overflow-hidden rounded-full bg-[var(--raft-bar-track)]" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${j.name}: ${pct}%`}>
               <span className={`block h-full rounded-full ${bar} transition-[width]`} style={{ width: `${pct}%` }} />
             </span>
-            <span className="mt-1 block font-mono text-[0.6875rem] text-muted-foreground">
-              {j.labels.join(', ')}
-              {v.elapsed_seconds != null && ` · ${duration(v.elapsed_seconds)}`}
+            <span className="mt-1 flex items-baseline justify-between gap-2 font-mono text-[0.6875rem] text-muted-foreground">
+              <span>
+                {j.labels.join(', ')}
+                {v.elapsed_seconds != null && ` · ${duration(v.elapsed_seconds)}`}
+              </span>
+              {onSelect && (
+                <a href={jobUrl(j)} target="_blank" rel="noopener" className={`inline-flex shrink-0 items-center gap-0.5 ${linkCls}`}>
+                  logs <ArrowUpRight className="size-3" aria-hidden="true" />
+                  <span className="sr-only">of {j.name} on GitHub (opens in a new tab)</span>
+                </a>
+              )}
             </span>
           </li>
         );
@@ -228,7 +251,14 @@ export function RunDetail({ id, runsBase, buildsBase, known, fallback }: { id: s
         {data && (
           <div className="p-3.5">
             <RunHead run={data.run} elapsed={data.elapsed_seconds} stuck={false} runsBase={runsBase} reload={reload} detail />
-            <JobBars jobs={data.jobs} />
+            <JobBars
+              jobs={data.jobs}
+              selected={job?.job.id}
+              onSelect={(jid) => {
+                setSelected(jid);
+                document.getElementById('steps-title')?.closest('section')?.scrollIntoView({ block: 'start' });
+              }}
+            />
             {data.builds.map((b) => (
               <BuildLine key={b.run_id + (b.version_tag ?? '')} build={b} buildsBase={buildsBase} known={known} />
             ))}
@@ -237,7 +267,7 @@ export function RunDetail({ id, runsBase, buildsBase, known, fallback }: { id: s
       </section>
 
       {data && data.jobs.length > 0 && (
-        <section className="raft-panel overflow-hidden" aria-labelledby="steps-title">
+        <section className="raft-panel scroll-mt-24 overflow-hidden" aria-labelledby="steps-title">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] px-3.5 py-2">
             <h2 id="steps-title" className="font-mono text-xs">
               steps
@@ -283,9 +313,16 @@ function Steps({ job }: { job: Job }) {
             return (
               <li key={`${s.number}-${s.name}`} className="grid grid-cols-[1.5rem_minmax(0,1fr)_5rem] items-center gap-2 px-3.5 py-1.5 text-xs sm:grid-cols-[1.5rem_minmax(0,14rem)_minmax(0,1fr)_5rem]">
                 <span className="font-mono text-[0.6875rem] text-muted-foreground tabular-nums">{s.number ?? ''}</span>
-                <span className="truncate" title={s.name}>
-                  {s.name}
-                </span>
+                {s.number != null ? (
+                  <a href={`${jobUrl(job)}#step:${s.number}:1`} target="_blank" rel="noopener" title={s.name} className={`truncate ${linkCls}`}>
+                    {s.name}
+                    <span className="sr-only"> (log on GitHub, opens in a new tab)</span>
+                  </a>
+                ) : (
+                  <span className="truncate" title={s.name}>
+                    {s.name}
+                  </span>
+                )}
                 <span className="hidden h-2 rounded-full bg-[var(--raft-bar-track)] sm:block" aria-hidden="true">
                   <span className={`block h-full rounded-full ${bar}`} style={{ marginLeft: `${left}%`, width: `${width}%` }} />
                 </span>
@@ -301,12 +338,10 @@ function Steps({ job }: { job: Job }) {
         <span>{job.runner_name ?? (job.status === 'completed' ? 'no runner' : 'no runner yet')}</span>
         <span>{job.labels.join(', ')}</span>
         {start && <span>{duration((end - start) / 1000)}</span>}
-        {job.html_url && (
-          <a href={job.html_url} target="_blank" rel="noopener" className="inline-flex items-center gap-1 underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
-            logs on GitHub <ArrowUpRight className="size-3" aria-hidden="true" />
-            <span className="sr-only">(opens in a new tab)</span>
-          </a>
-        )}
+        <a href={jobUrl(job)} target="_blank" rel="noopener" className="inline-flex items-center gap-1 underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+          logs on GitHub <ArrowUpRight className="size-3" aria-hidden="true" />
+          <span className="sr-only">(opens in a new tab)</span>
+        </a>
       </p>
     </div>
   );
