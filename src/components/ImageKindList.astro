@@ -1,0 +1,64 @@
+---
+/**
+ * The base images or internal tools tab: one row per image with the facts that matter for something you build on
+ * rather than run (its branches, architectures, last build, and the images built FROM it).
+ */
+import ImageLogo from '@/components/ImageLogo.astro';
+import { withBase } from '@/lib/base';
+import { dependents } from '@/lib/fleet';
+import { formatDate, relative } from '@/lib/format';
+import { getImagesOfKind, hasRealSummary, hubDate, SNAPSHOT_DATE, type ImageKind } from '@/lib/images';
+
+interface Props {
+  kind: Exclude<ImageKind, 'app'>;
+}
+const { kind } = Astro.props;
+const rows = getImagesOfKind(kind)
+  .map((image) => {
+    const deps = dependents(image.name);
+    return { image, used: new Set(deps.flatMap((d) => d.images)).size, tags: image.releases.map((r) => r.release_tag) };
+  })
+  .sort((a, b) => Number(a.image.deprecated) - Number(b.image.deprecated) || b.used - a.used || a.image.name.localeCompare(b.image.name));
+---
+
+<ul class="raft-panel divide-y divide-[var(--raft-hair)]">
+  {
+    rows.map(({ image, used, tags }) => {
+      const built = hubDate(image.version_timestamp);
+      return (
+        <li class="flex flex-col gap-3 px-4 py-4 sm:flex-row sm:items-start">
+          <span class="grid size-10 shrink-0 place-items-center rounded-md border border-[var(--raft-hair)] bg-[var(--raft-surface)] p-1">
+            <ImageLogo image={image} size={32} class="size-8" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <a href={withBase(image.url)} class="font-medium hover:text-primary">{image.name}</a>
+              {image.deprecated && <span class="rounded-md bg-destructive/15 px-1.5 py-0.5 font-mono text-[0.6875rem] text-destructive">deprecated</span>}
+              {image.base && <span class="font-mono text-xs text-muted-foreground">on {image.base}</span>}
+            </div>
+            {hasRealSummary(image) && <p class="mt-1 line-clamp-2 text-sm text-muted-foreground">{image.summary}</p>}
+            <ul class="mt-2 flex flex-wrap gap-1.5" aria-label={`${image.name} tags`}>
+              {tags.map((t) => (
+                <li class="rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] px-1.5 py-0.5 font-mono text-xs">{t}</li>
+              ))}
+            </ul>
+          </div>
+          <dl class="grid shrink-0 grid-cols-3 gap-x-6 gap-y-1 font-mono text-sm sm:w-72 sm:text-right">
+            <div>
+              <dt class="text-[0.6875rem] text-muted-foreground">used by</dt>
+              <dd class="tabular-nums">{used > 0 ? `${used} ${used === 1 ? 'image' : 'images'}` : '–'}</dd>
+            </div>
+            <div>
+              <dt class="text-[0.6875rem] text-muted-foreground">arches</dt>
+              <dd>{image.architectures.length}</dd>
+            </div>
+            <div>
+              <dt class="text-[0.6875rem] text-muted-foreground">built</dt>
+              <dd><time datetime={built.toISOString()} title={formatDate(built)}>{relative(built, SNAPSHOT_DATE)}</time></dd>
+            </div>
+          </dl>
+        </li>
+      );
+    })
+  }
+</ul>

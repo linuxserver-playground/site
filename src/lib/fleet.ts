@@ -128,6 +128,26 @@ const FLEET = fleet as { bases: BaseUsage[]; staleness: { stale: StaleImage[]; c
 export const getBases = (): BaseUsage[] => FLEET.bases;
 export const getStaleness = () => FLEET.staleness;
 
+/**
+ * The images built FROM a base image or tool, per tag, by repository name: images build FROM either the playground's
+ * `ghcr.io/linuxserver-playground/baseimage-alpine:3.24` or the upstream `ghcr.io/linuxserver/baseimage-alpine:3.24`,
+ * which these repos mirror, so both count for tag 3.24.
+ */
+export function dependents(name: string): { tag: string; images: string[] }[] {
+  const byTag = new Map<string, Set<string>>();
+  for (const b of getBases()) {
+    const [repo, tag = 'latest'] = b.image.split('/').pop()!.split(':');
+    if (repo !== name) continue;
+    const set = byTag.get(tag) ?? new Set<string>();
+    for (const i of b.images) if (i !== name) set.add(i);
+    byTag.set(tag, set);
+  }
+  return [...byTag]
+    .map(([tag, images]) => ({ tag, images: [...images].sort() }))
+    .filter((d) => d.images.length > 0)
+    .sort((a, b) => b.images.length - a.images.length || a.tag.localeCompare(b.tag));
+}
+
 // ---------------------------------------------------------------- packages
 export const getPackageIndex = (): PackageIndexEntry[] => packages as PackageIndexEntry[];
 export function packageEcosystems(): { type: string; count: number }[] {

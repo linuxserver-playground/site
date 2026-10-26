@@ -58,6 +58,8 @@ export interface ImageLinks {
 }
 
 /** `/api/v1/catalog/{name}.json`: an image with everything the hub knows about it. */
+export type ImageKind = 'app' | 'base' | 'tool';
+
 export interface ImageDetail {
   name: string;
   initial_date?: string | null;
@@ -79,6 +81,8 @@ export interface ImageDetail {
   changelog?: { date: string; desc: string }[] | null;
   config: ImageConfig;
   title: string;
+  /** `app` for an application; `base` for a base image, `tool` for an internal tool. Older snapshots omit it. */
+  kind?: ImageKind;
   categories: string[];
   deprecation_message?: string | null;
   setup_instructions?: string | null;

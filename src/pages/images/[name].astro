@@ -16,11 +16,11 @@ import ConfigLab from '@/components/islands/ConfigLab';
 import ProxyTabs from '@/components/islands/ProxyTabs';
 import { withBase } from '@/lib/base';
 import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
-import { installOptions, modPath, modsForImage } from '@/lib/fleet';
+import { dependents, installOptions, modPath, modsForImage } from '@/lib/fleet';
 import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/format';
 import { CONTROL_URL, controlImageUrl } from '@/lib/control';
 import { hubApi, hubFilesUrl, hubHistoryUrl, HUB_URL, type Arch } from '@/lib/hub';
-import { getAllImages, hubDate, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
+import { getAllImages, hasRealSummary, hubDate, IMAGE_KINDS, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { getCollection, render } from 'astro:content';
 import { buildLabModel } from '@/lib/lab';
 import type { ProxySample } from '@/lib/proxy';
@@ -36,7 +36,20 @@ export function getStaticPaths() {
 }
 
 const { image } = Astro.props as { image: Image };
-const related = relatedImages(image, 4);
+// Base images and internal tools get the same build data but no config lab, install menu, mods or "similar images":
+// they are built on or used by other images, not run as applications.
+const app = image.kind === 'app';
+const kind = IMAGE_KINDS[image.kind];
+const usedBy = app ? [] : dependents(image.name);
+const usedByCount = new Set(usedBy.flatMap((d) => d.images)).size;
+const kindNote =
+  image.kind === 'base'
+    ? 'A base image: LinuxServer images are built FROM it. It is not meant to run on its own and is not in the stores.'
+    : image.kind === 'tool'
+      ? "An internal tool: the project's own tooling runs it, or other images copy from it. It is not an application and is not in the stores."
+      : null;
+const summary = app || hasRealSummary(image) ? image.summary : kindNote!;
+const related = app ? relatedImages(image, 4) : [];
 const posts = await toPostViews(postsForImage(image.name, await getPosts(), 3));
 const extras = getImageExtras(image.name);
 const builds = getBuilds(image.name);
@@ -105,9 +118,12 @@ const install = installOptions(image.name, { kubernetes: !!extras.kubernetes, qu
 
 const crumbs = [
   { name: 'Images', href: '/images/' },
+  ...(app ? [] : [{ name: kind.label, href: kind.href }]),
   { name: image.name, href: image.url },
 ];
-const pull = `docker pull ${image.ref}:latest`;
+// Base images and tools often publish no `latest`; pull the default branch's tag then.
+const pullTag = image.releases.some((r) => r.release_tag === 'latest') ? 'latest' : (image.releases[0]?.release_tag ?? 'latest');
+const pull = `docker pull ${image.ref}:${pullTag}`;
 const built = hubDate(image.version_timestamp);
 // The image's README, section by section (src/content/imagedocs/, from the hub's docs.json). Sections the page
 // already builds natively from structured data are skipped; everything else is shown in README order, so a section
@@ -124,7 +140,7 @@ const moreDocs = await Promise.all(
 );
 const DOC_PROSE =
   'post-body prose mt-3 max-w-none text-[0.9375rem] text-muted-foreground prose-p:my-2 prose-a:text-foreground prose-headings:text-foreground prose-h3:mt-6 prose-h3:mb-2 prose-h3:text-base prose-h4:text-sm prose-code:text-foreground dark:prose-invert';
-const description = image.summary.length > 155 ? image.summary.slice(0, 152).replace(/\s+\S*$/, '') + '…' : image.summary;
+const description = summary.length > 155 ? summary.slice(0, 152).replace(/\s+\S*$/, '') + '…' : summary;
 
 const tables = [
   {
@@ -184,7 +200,7 @@ const links = [
 const changelog = image.changelog ?? [];
 // The sidebar's "On this page": every section this page renders, in order.
 const pageNav: { id: string; label: string; sub?: boolean }[] = [
-  { id: 'quick-start', label: 'Quick start' },
+  { id: 'quick-start', label: app ? 'Quick start' : image.kind === 'base' ? 'Build on it' : 'Used by' },
   { id: 'tags', label: 'Version tags' },
   { id: 'arch', label: 'Architectures' },
   ...(latest ? [{ id: 'inside', label: 'Inside the latest image' }] : []),
@@ -194,7 +210,7 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
   // The README's other sections, indented under Parameters.
   ...moreDocs.map((d) => ({ id: d.id, label: d.title, sub: true })),
   { id: 'builds', label: 'Builds' },
-  ...(listedMods.length > 0 || mods.universal.length > 0 ? [{ id: 'mods', label: 'Mods' }] : []),
+  ...(app && (listedMods.length > 0 || mods.universal.length > 0) ? [{ id: 'mods', label: 'Mods' }] : []),
   ...(proxySample ? [{ id: 'proxy', label: 'Reverse proxy' }] : []),
   ...(changelog.length > 0 ? [{ id: 'changelog', label: 'Changelog' }] : []),
   { id: 'support', label: 'Support' },
@@ -221,12 +237,14 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
           <div class="flex flex-wrap items-center gap-3">
             <h1 class="text-4xl font-semibold tracking-tight md:text-5xl">{image.name}</h1>
             <span class="rounded-md border border-[var(--raft-hair-strong)] px-2 py-0.5 font-mono text-xs">{image.version}</span>
+            {!app && <a href={withBase(kind.href)} class="rounded-md bg-primary/10 px-2 py-0.5 font-mono text-xs text-foreground hover:bg-primary/20">{kind.singular}</a>}
             {image.deprecated && <span class="rounded-md bg-destructive/15 px-2 py-0.5 font-mono text-xs text-destructive">deprecated</span>}
             {image.archived && <span class="rounded-md border border-[var(--raft-hair-strong)] px-2 py-0.5 font-mono text-xs text-muted-foreground">archived</span>}
           </div>
-          <p class="mt-3 max-w-3xl text-lg text-muted-foreground">{image.summary}</p>
+          <p class="mt-3 max-w-3xl text-lg text-muted-foreground">{summary}</p>
+          {!app && summary !== kindNote && <p class="mt-2 max-w-3xl text-sm text-muted-foreground">{kindNote}</p>}
           {
-            image.categories.length > 0 && (
+            app && image.categories.length > 0 && (
               <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="Categories">
                 {image.categories.map((cat) => (
                   <li>
@@ -271,28 +289,76 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
         )
       }
 
-      <section aria-labelledby="quick-start">
-        <AnchorHeading id="quick-start">Quick start · configure</AnchorHeading>
-        <p class="mt-2 text-sm text-muted-foreground">
-          Pick the optional settings and mods you want, set your paths, ports and values, then copy the result.
-        </p>
-        <Panel class="mt-4">
-          <ConfigLab client:visible model={lab} sources={labSources} />
-        </Panel>
-        {
-          install.length > 0 && (
-            <div class="mt-5">
-              <h3 class="raft-eyebrow">Install on …</h3>
-              <div class="mt-3">
-                <InstallMenu client:visible image={image.name} options={install} />
+      {
+        app ? (
+        <section aria-labelledby="quick-start">
+          <AnchorHeading id="quick-start">Quick start · configure</AnchorHeading>
+          <p class="mt-2 text-sm text-muted-foreground">
+            Pick the optional settings and mods you want, set your paths, ports and values, then copy the result.
+          </p>
+          <Panel class="mt-4">
+            <ConfigLab client:visible model={lab} sources={labSources} />
+          </Panel>
+          {
+            install.length > 0 && (
+              <div class="mt-5">
+                <h3 class="raft-eyebrow">Install on …</h3>
+                <div class="mt-3">
+                  <InstallMenu client:visible image={image.name} options={install} />
+                </div>
+                <p class="mt-3 text-xs text-muted-foreground">
+                  <a href={withBase('/stores/')} class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">Adding a store to your platform</a>
+                </p>
               </div>
-              <p class="mt-3 text-xs text-muted-foreground">
-                <a href={withBase('/stores/')} class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">Adding a store to your platform</a>
-              </p>
-            </div>
-          )
-        }
-      </section>
+            )
+          }
+        </section>
+        ) : (
+          <section aria-labelledby="quick-start">
+            <AnchorHeading id="quick-start">{image.kind === 'base' ? 'Build on it' : 'Used by'}</AnchorHeading>
+            {image.kind === 'base' && (
+              <>
+                <p class="mt-2 text-sm text-muted-foreground">Start a Dockerfile from the tag of the release you want:</p>
+                <ul class="mt-4 space-y-2">
+                  {image.releases.map((r) => (
+                    <li class="flex max-w-2xl items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] bg-[var(--raft-code-bg)] py-1 pr-1 pl-4 font-mono text-sm">
+                      <span class="min-w-0 flex-1 truncate">FROM {image.ref}:{r.release_tag}</span>
+                      <CopyButton client:visible text={`FROM ${image.ref}:${r.release_tag}`} label={`Copy FROM line for ${r.release_tag}`} variant="secondary" />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+            {usedBy.length > 0 ? (
+              <>
+                <p class="mt-4 text-sm text-muted-foreground">
+                  {usedByCount} {usedByCount === 1 ? 'image is' : 'images are'} built FROM {image.name}, by the newest build of each:
+                </p>
+                <dl class="raft-panel mt-3 divide-y divide-[var(--raft-hair)]">
+                  {usedBy.map((d) => (
+                    <div class="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:gap-4">
+                      <dt class="w-32 shrink-0 font-mono text-sm">
+                        {d.tag} <span class="text-xs text-muted-foreground">· {d.images.length}</span>
+                      </dt>
+                      <dd class="min-w-0 text-sm">
+                        <ul class="flex flex-wrap gap-x-3 gap-y-1">
+                          {d.images.map((n) => (
+                            <li>
+                              <a href={withBase(`/images/${n}/`)} class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">{n}</a>
+                            </li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
+              </>
+            ) : (
+              <p class="raft-panel mt-4 px-4 py-4 text-sm text-muted-foreground">No image in the fleet is built FROM {image.name} yet.</p>
+            )}
+          </section>
+        )
+      }
 
       <section aria-labelledby="tags">
         <AnchorHeading id="tags">Version tags</AnchorHeading>
@@ -577,7 +643,7 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
       </section>
 
       {
-        (listedMods.length > 0 || mods.universal.length > 0) && (
+        app && (listedMods.length > 0 || mods.universal.length > 0) && (
           <section aria-labelledby="mods">
             <div class="flex flex-wrap items-end justify-between gap-3">
               <div>
