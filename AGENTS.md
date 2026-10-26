@@ -19,6 +19,7 @@ in the browser. Data producers: the hub (`linuxserver-playground/hub`), the cont
 | `src/data/` | Snapshots written by `scripts/refresh-data.mjs`: `catalog.json`, `images/<name>.json`, `builds/<image>/<tag>.json` (record, diff, layers, `tests`), `mods.json`, `stores.json`, `fleet.json`, `packages.json`, `categories.json`, `stats.json`, `hub.json`, `control.json` (run ids), `team.json`, `backers.json`. |
 | `src/lib/` | Data layer. `hub.ts` (API shapes and URL helpers), `control.ts` (the control plane: shapes, credentialed fetch, actions, SSE and `/api/me` hooks; browser-safe), `images.ts`, `builds.ts`, `fleet.ts`, `stats.ts`, `explorer.ts` (browser-safe helpers), `lab.ts` and `hints.ts` (the config lab: model, renderers, URL token, hints), `proxy.ts` (the SWAG proxy lab), posts, `docs.ts` and `docs-sections.ts` (the documentation), feeds, JSON-LD, formatting. |
 | `src/pages/` | Routes. `images/[name].astro`, `images/[name]/builds/[tag].astro`, `fleet/` (`index`, `runs/index`, `runs/[id]`, `queue`, `builds`, `pulls`, `issues`, `releases`, `scheduler`, `actions`), `packages.astro`, `mods/` (`index`, `[branch]` a page per mod), `stores.astro`, blog, `docs/` (landing, `[section]/index`, `[section]/[slug]`), about, support, donate, search. |
+| `src/components/build/` | `BuildParts.tsx`: the non-interactive parts of a build page as React, rendered at build time by `images/[name]/builds/[tag].astro` and in the browser by `islands/LiveBuildPage.tsx`, from one model (`src/lib/build-page.ts`). |
 | `src/components/` | Astro components (`FleetShell` for the fleet section, `AnchorHeading` for linkable sections, `DocsShell`, `DocsNav` for the documentation); `islands/` React islands (`ConfigLab`, `ProxyTabs` with `ProxyLab` for SWAG and the hub's Caddy and Traefik references, catalogue, search…); `islands/fleet/` the live fleet panels, sign-in and the shared pills, states and action buttons; `islands/explorer/` the explorer views, `CiReport` and `Vulns`; `ui/` shadcn components (do not edit). |
 | `src/content/` | Blog posts, authors, `spotlight.yaml`, and `docs/<section>/<slug>.md` (the documentation; schema in `src/content.config.ts`). `imagedocs/` and `moddocs/` are written by `npm run data` from the hub; never edit them. |
 | `src/styles/globals.css` | Design tokens and utilities (Raft). |
@@ -32,6 +33,13 @@ commits as `Refresh data snapshots`. Never hand-edit a snapshot; fix the refresh
 edit `src/components/ui/` (regenerate with shadcn). Never add a stat the hub does not provide (there are no
 pull counts), and never read from a registry or namespace outside `linuxserver-playground`, the hub and the
 control plane. Every internal link goes through `withBase()`.
+
+A build the site was built without (a release since the last site build) is still a page: Pages answers its URL
+with `404.astro`, which mounts `LiveBuildPage` for `/images/<name>/builds/<tag>/` of a known image, and that reads
+the build's documents from the hub and renders the same parts as the static page (release notes as plain text
+until the next site build renders them). So a release is on the site as soon as the hub serves it; control's
+Discord hold treats it so. Keep the two in step: a change to the build page goes into `BuildParts.tsx` or
+`build-page.ts`, never into only one of the two pages.
 
 The control plane is read live, in the browser, through `src/lib/control.ts` only: `credentials: "include"`
 on every fetch, one shared `EventSource` on `/api/stream`, `/api/me` for who is signed in (never a token in a
