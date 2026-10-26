@@ -1,0 +1,446 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "xvfb",
+  "repository": "linuxserver-playground/docker-xvfb",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "9d327c0f",
+   "upstream_clean": "9d327c0f",
+   "ls_build": 1,
+   "tag": "alpine322-9d327c0f-ls1",
+   "release_tag": "alpine322",
+   "tags": [
+    "alpine322",
+    "alpine322-9d327c0f-ls1",
+    "alpine322-version-9d327c0f",
+    "amd64-alpine322",
+    "amd64-alpine322-9d327c0f-ls1",
+    "amd64-alpine322-version-9d327c0f",
+    "arm64v8-alpine322",
+    "arm64v8-alpine322-9d327c0f-ls1",
+    "arm64v8-alpine322-version-9d327c0f"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "9fc07d111b69010c963021c897bb2479f0fecb00",
+  "created": "2026-10-26T01:02:16Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:c052f17e55a3d2a3771b357172c7b5d7ffa42df7e9acce1aaef4cdce3b965f43",
+    "size": 823422,
+    "uncompressed_size": 1609544,
+    "layers": 1,
+    "runner": "Linux-X64",
+    "build_seconds": 208
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:8bcec3522e747a145330baf0a463475d94f8de3e3d685cf85ee0c26c983da049",
+    "size": 831602,
+    "uncompressed_size": 1739944,
+    "layers": 1,
+    "runner": "Linux-ARM64",
+    "build_seconds": 148
+   }
+  ],
+  "index_digest": "sha256:d5cc1b3f18c2b909d8befde04406441e2fe7083e70bc5ecb6af55e9ce38dcea9",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 9d327c0f-ls1 Build-date:- 2026-10-26T00:42:50Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "9d327c0f",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T00:42:50Z",
+   "org.opencontainers.image.description": "xvfb container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-xvfb",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "9fc07d111b69010c963021c897bb2479f0fecb00",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-xvfb",
+   "org.opencontainers.image.title": "Xvfb",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-xvfb/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "9d327c0f-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "FROM ghcr.io/linuxserver/baseimage-alpine:3.22 AS builder\n\nENV LSIO_FIRST_PARTY=true\n\nCOPY /patches /patches\nENV PATCH_VERSION=21 \\\n    APK_BRANCH=3.22-stable \\\n    HOME=/config\n\nRUN \\\n  echo \"**** build deps ****\" && \\\n  apk add \\\n    alpine-sdk \n\nRUN \\\n  echo \"**** setup abuild ****\" && \\\n  sed '/SUDO=/d' -i /usr/bin/abuild-keygen && \\\n  abuild-keygen --install -n \n\nRUN \\\n  echo \"**** get and build apkbuild ****\" && \\\n  abuild-keygen -a -n && \\\n  git clone \\\n    --depth 1 \\\n    --branch ${APK_BRANCH} \\\n    https://gitlab.alpinelinux.org/alpine/aports.git && \\\n  cd aports/community/xorg-server/ && \\\n  cp \\\n    /patches/${PATCH_VERSION}-xvfb-dri3.patch \\\n    patch.patch && \\\n  sed -i \\\n    '/^source=\"/,/\"/ s/missing-files.patch/&\\n        patch.patch/' \\\n    APKBUILD && \\\n  sed -i \\\n    '/^sha512sums=\"/,/\"$/{ s|\\(  .*\\.tar\\.xz\\)|\\1\\n'\"$(sha512sum patch.patch)\"'|; }' \\\n    APKBUILD && \\\n  abuild -F -r || : && \\\n  tar -xf /config/packages/community/*/xvfb*.apk && \\\n  mkdir -p /build-out/usr/bin && \\\n  mv usr/bin/Xvfb /build-out/usr/bin/\n\n\n# runtime stage\nFROM scratch\n\nENV LSIO_FIRST_PARTY=true\nCOPY --from=builder /build-out /\n",
+   "arm64": "FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.22 AS builder\n\nENV LSIO_FIRST_PARTY=true\n\nCOPY /patches /patches\nENV PATCH_VERSION=21 \\\n    APK_BRANCH=3.22-stable \\\n    HOME=/config\n\nRUN \\\n  echo \"**** build deps ****\" && \\\n  apk add \\\n    alpine-sdk \n\nRUN \\\n  echo \"**** setup abuild ****\" && \\\n  sed '/SUDO=/d' -i /usr/bin/abuild-keygen && \\\n  abuild-keygen --install -n \n\nRUN \\\n  echo \"**** get and build apkbuild ****\" && \\\n  abuild-keygen -a -n && \\\n  git clone \\\n    --depth 1 \\\n    --branch ${APK_BRANCH} \\\n    https://gitlab.alpinelinux.org/alpine/aports.git && \\\n  cd aports/community/xorg-server/ && \\\n  cp \\\n    /patches/${PATCH_VERSION}-xvfb-dri3.patch \\\n    patch.patch && \\\n  sed -i \\\n    '/^source=\"/,/\"/ s/missing-files.patch/&\\n        patch.patch/' \\\n    APKBUILD && \\\n  sed -i \\\n    '/^sha512sums=\"/,/\"$/{ s|\\(  .*\\.tar\\.xz\\)|\\1\\n'\"$(sha512sum patch.patch)\"'|; }' \\\n    APKBUILD && \\\n  abuild -F -r || : && \\\n  tar -xf /config/packages/community/*/xvfb*.apk && \\\n  mkdir -p /build-out/usr/bin && \\\n  mv usr/bin/Xvfb /build-out/usr/bin/\n\n\n# runtime stage\nFROM scratch\n\nENV LSIO_FIRST_PARTY=true\nCOPY --from=builder /build-out /\n"
+  },
+  "packages": {
+   "amd64": {
+    "count": 0,
+    "distro": "unknown",
+    "hash": "9d327c0f"
+   },
+   "arm64": {
+    "count": 0,
+    "distro": "unknown",
+    "hash": "9d327c0f"
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/xvfb/builds/alpine322-9d327c0f-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-xvfb/commits/alpine322-9d327c0f-ls1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 3788,
+    "sha256": "168842a0d978d57bdcd9072903d9e8df38eace0466cb27c36225ed0682ce26a7",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 319,
+    "sha256": "81513c849b0ae80106d988c008acd28a82ba7049abfb99d8181c27943e2c33a2",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 175,
+    "sha256": "2d15a65833d9f9f7bda4b74d395e9ecbf79a334a68131fabe5ac17c7370907e2",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1733,
+    "sha256": "58c6aa1c3a6c1dd4111b0232905ebf28195524a5f0b246b465d35146a0f74518",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3575,
+    "sha256": "12ac6d77b34cc9d68aa2263b62e10f36ee9d4688687790b0abad4cc466fd1607",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 23,
+    "sha256": "b32771cd941e0b5ea5e71620200387da69cd29b39217ffd98baacd59947b886f",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 3769,
+    "sha256": "0be296159c2b73af52a51c089b3249e3ad55cf93a72d8b03f0e000cd68579747",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 319,
+    "sha256": "0e658135c30dc5e46f94466da4c6735abe3067d2dbe116ee7092296c404233c2",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 175,
+    "sha256": "8cd6239570feb810e059516ccfcfff103f63f6b4429d0e5187ba668881f530ac",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1732,
+    "sha256": "7bc6d74b20a9a6d198a24a8269bbbeb510d5101f00bef17d2c52b33f04219285",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3583,
+    "sha256": "01bf843c264e34adcd9c0b9136e43bd5031761b4979991c87a7e1033e429e79c",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 23,
+    "sha256": "b32771cd941e0b5ea5e71620200387da69cd29b39217ffd98baacd59947b886f",
+    "url": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40250412893,
+   "run_url": "https://github.com/linuxserver-playground/docker-xvfb/actions/runs/40250412893",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "xvfb",
+  "branch": "master",
+  "tag": "alpine322-9d327c0f-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "9d327c0f",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 823422
+   },
+   "arm64": {
+    "to": 831602
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "LSIO_FIRST_PARTY",
+     "PATH"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:0b2ffc6241bdfc52a16360767c999c98c8bceb9864600e10de87f26e72a7b7fa",
+    "diff_id": "sha256:d4d28bc5798a8c7b6f0b0e434c5d4fc21f5a93c946133977aa1ca9091d747d45",
+    "size": 823422,
+    "uncompressed_size": 1609544,
+    "created_by": "COPY /build-out /",
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:bb3303ffd22e4a81ce796fd88e0d5a3258c7f51f393baa673a50ebc287c6700c",
+    "diff_id": "sha256:c310f0ee19d5bf835a0f410a4b1caae5ed49b44515ed92e608c49f06003e6aad",
+    "size": 831602,
+    "uncompressed_size": 1739944,
+    "created_by": "COPY /build-out /",
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "xvfb",
+  "tag": "alpine322-9d327c0f-ls1",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/xvfb/alpine322-9d327c0f-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 6,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/xvfb/alpine322-9d327c0f-ls1/amd64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 6,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/xvfb/alpine322-9d327c0f-ls1/arm64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-xvfb/releases/download/alpine322-9d327c0f-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "xvfb",
+    "tag": "amd64-9fc07d1-40250412893",
+    "arch": "amd64",
+    "started": "2026-10-26T01:01:10Z",
+    "finished": "2026-10-26T01:01:12Z",
+    "success": true,
+    "runner": "7a860f341522",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "0 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "0 packages: syft JSON 3788 bytes gzipped, SPDX for the image attestation 1371 bytes",
+      "seconds": 0.075
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "6 dirs, 4 files (1609544 bytes), 1 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.00s, total 0.00s",
+      "seconds": 0.144
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "1 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.722
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.002
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ],
+    "files": {
+     "html": "index.html"
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "xvfb",
+    "tag": "arm64-9fc07d1-40250412893",
+    "arch": "arm64",
+    "started": "2026-10-26T00:51:36Z",
+    "finished": "2026-10-26T00:51:38Z",
+    "success": true,
+    "runner": "906df0747d94",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "0 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "0 packages: syft JSON 3769 bytes gzipped, SPDX for the image attestation 1371 bytes",
+      "seconds": 0.073
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "6 dirs, 4 files (1739944 bytes), 1 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.00s, total 0.00s",
+      "seconds": 0.12
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "1 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.783
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.001
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ],
+    "files": {
+     "html": "index.html"
+    }
+   }
+  }
+ }
+}
