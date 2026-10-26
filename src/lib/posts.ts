@@ -1,13 +1,30 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { withBase } from './base';
+import { gitDates } from './git-dates';
 
-export type Post = CollectionEntry<'posts'>;
+/** A post with its dates settled: front matter first, then git (git-dates.ts), then the build's own time. */
+export type Post = CollectionEntry<'posts'> & { data: CollectionEntry<'posts'>['data'] & { date: Date } };
 export type Author = CollectionEntry<'authors'>;
+
+let cache: Promise<Post[]> | undefined;
+
+/** Every post with its dates, before any filtering. */
+function datedPosts(): Promise<Post[]> {
+  return (cache ??= getCollection('posts').then((all) => {
+    const now = new Date();
+    return all.map((entry) => {
+      const git = gitDates(entry.filePath);
+      const date = entry.data.date ?? git.created ?? now;
+      const updated = entry.data.updated ?? (git.updated && git.updated > date ? git.updated : undefined);
+      return { ...entry, data: { ...entry.data, date, updated } };
+    });
+  }));
+}
 
 /** Published posts, newest first. Drafts and future-dated posts show in `astro dev` only. */
 export async function getPosts(): Promise<Post[]> {
   const now = new Date();
-  const posts = await getCollection('posts', ({ data }) => {
+  const posts = (await datedPosts()).filter(({ data }) => {
     if (data.draft && !import.meta.env.DEV) return false;
     if (data.date > now && !import.meta.env.DEV) return false;
     if (data.expires && data.expires <= now) return false;

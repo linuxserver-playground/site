@@ -6,6 +6,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { withBase } from './base';
 import { DOC_SECTIONS, type DocSectionId } from './docs-sections';
+import { gitDates } from './git-dates';
 import { LINKS } from './site';
 
 export type Doc = CollectionEntry<'docs'>;
@@ -26,7 +27,8 @@ const byOrder = (a: Doc, b: Doc) => a.data.order - b.data.order || a.data.title.
 
 let cache: Promise<Doc[]> | undefined;
 /**
- * Every published page, sorted by section, then order, then title. Drafts show in `astro dev` only.
+ * Every published page, sorted by section, then order, then title. Drafts show in `astro dev` only. A page
+ * without `updated` takes it from git (git-dates.ts).
  * A page whose `section` does not match its folder fails the build, with the file named.
  */
 export function getDocs(): Promise<Doc[]> {
@@ -43,6 +45,7 @@ export function getDocs(): Promise<Doc[]> {
     const order = new Map(DOC_SECTIONS.map((s, i) => [s.id, i]));
     return all
       .filter((d) => !d.data.draft || import.meta.env.DEV)
+      .map((d) => (d.data.updated ? d : { ...d, data: { ...d.data, updated: gitDates(d.filePath).updated ?? gitDates(d.filePath).created } }))
       .sort((a, b) => order.get(a.data.section)! - order.get(b.data.section)! || byOrder(a, b));
   }));
 }

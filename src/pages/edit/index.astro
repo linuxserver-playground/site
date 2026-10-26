@@ -1,0 +1,28 @@
+---
+/**
+ * The website editor (/edit/): members write docs pages and posts here, every change is a commit as them on
+ * their own branch and a pull request, and merging it publishes it. The island does the work against the
+ * control plane (control/editor.py); this page hands it the list of entries to pick from. Not indexed.
+ */
+import Layout from '@/layouts/Layout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Editor, { type EntryLink } from '@/components/islands/editor/Editor';
+import { getDocs } from '@/lib/docs';
+import { DOC_SECTIONS } from '@/lib/docs-sections';
+import { getPosts } from '@/lib/posts';
+
+const sectionTitle = new Map<string, string>(DOC_SECTIONS.map((s) => [s.id, s.title]));
+const entries: EntryLink[] = [
+  ...(await getDocs()).map((d) => ({ path: `src/content/docs/${d.id}.md`, title: d.data.title, kind: 'doc' as const, group: sectionTitle.get(d.data.section) ?? d.data.section })),
+  ...(await getPosts()).map((p) => ({ path: `src/content/posts/${p.id}/index.md`, title: p.data.title, kind: 'post' as const, group: String(p.data.date.getUTCFullYear()) })),
+];
+const crumbs = [{ name: 'Editor', href: '/edit/' }];
+---
+
+<Layout section="none" title="Editor" description="Write and edit the LinuxServer.io documentation and blog. Every change is a pull request; merging it publishes it." breadcrumbs={crumbs} noindex>
+  <PageHeader eyebrow="Editor" title="Docs and blog editor" lede="Markdown on the left, the page on the right. Saves are commits on your own branch; a pull request publishes them." crumbs={crumbs} />
+  <div class="mx-auto w-full max-w-[110rem] px-4 pt-8 pb-16 md:px-6">
+    <Editor client:load entries={entries} />
+    <noscript><p class="text-sm text-muted-foreground">The editor needs JavaScript.</p></noscript>
+  </div>
+</Layout>
