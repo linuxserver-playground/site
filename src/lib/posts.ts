@@ -1,6 +1,7 @@
 import { getCollection, type CollectionEntry } from 'astro:content';
 import { withBase } from './base';
 import { gitDates } from './git-dates';
+import { excerptOf, initials, readingTimeOf, slugify, tagSlug } from './post-text';
 
 /** A post with its dates settled: front matter first, then git (git-dates.ts), then the build's own time. */
 export type Post = CollectionEntry<'posts'> & { data: CollectionEntry<'posts'>['data'] & { date: Date } };
@@ -40,14 +41,7 @@ export async function getLatestPosts(n: number): Promise<Post[]> {
   return [...featured, ...posts.filter((p) => !p.data.featured)].slice(0, n);
 }
 
-export function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-}
-export const tagSlug = slugify;
+export { slugify, tagSlug, initials, plainText } from './post-text';
 
 export interface TagInfo {
   slug: string;
@@ -121,11 +115,6 @@ export async function byline(post: Post): Promise<Byline | undefined> {
   };
 }
 
-export function initials(name: string): string {
-  const parts = name.replace(/[^A-Za-z0-9 ]/g, ' ').trim().split(/\s+/);
-  return (parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : name.slice(0, 2)).toUpperCase();
-}
-
 export async function postsByAuthor(posts: Post[], id: string): Promise<Post[]> {
   const index = await authorsByKey();
   return posts.filter((p) => p.data.author && index.get(slugify(p.data.author))?.id === id);
@@ -166,39 +155,9 @@ export async function getAuthors(posts: Post[]): Promise<AuthorView[]> {
 
 // ---------------------------------------------------------------- text helpers
 
-/** Markdown -> rough plain text, good enough for excerpts and word counts. */
-export function plainText(markdown: string): string {
-  return markdown
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/<video[\s\S]*?<\/video>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
-    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/^\s{0,3}#{1,6}\s+.*$/gm, ' ')
-    .replace(/^\s*>\s?\[!\w+\]\s*$/gm, ' ')
-    .replace(/^\s*>\s?/gm, '')
-    .replace(/`([^`]*)`/g, '$1')
-    .replace(/(\*\*|__)(.*?)\1/g, '$2')
-    .replace(/(\*|_)(.*?)\1/g, '$2')
-    .replace(/^\s*[-*+]\s+/gm, '')
-    .replace(/^\s*\d+\.\s+/gm, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
+export const excerpt = (post: Post, max = 180): string => excerptOf(post.data.description, post.body ?? '', max);
 
-export function excerpt(post: Post, max = 180): string {
-  if (post.data.description) return post.data.description;
-  const text = plainText(post.body ?? '');
-  if (text.length <= max) return text;
-  const cut = text.slice(0, max);
-  const at = cut.lastIndexOf(' ');
-  return cut.slice(0, at > 100 ? at : max).replace(/[,;:.]$/, '') + '…';
-}
-
-export function readingTime(post: Post): number {
-  const words = plainText(post.body ?? '').split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 230));
-}
+export const readingTime = (post: Post): number => readingTimeOf(post.body ?? '');
 
 /** Posts that share the most tags with this one, then newest. */
 export function relatedPosts(post: Post, posts: Post[], n = 3): Post[] {
@@ -241,4 +200,4 @@ export function paginate<T>(items: T[], page: number, size: number, basePath: st
 }
 
 export const postUrl = (post: Post | string) => withBase(`/blog/${typeof post === 'string' ? post : post.id}/`);
-export const tagUrl = (slug: string) => withBase(`/blog/tags/${slug}/`);
+export { tagUrl } from './post-text';

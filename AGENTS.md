@@ -20,7 +20,7 @@ in the browser. Data producers: the hub (`linuxserver-playground/hub`), the cont
 | `src/lib/` | Data layer. `hub.ts` (API shapes and URL helpers), `control.ts` (the control plane: shapes, credentialed fetch, actions, SSE and `/api/me` hooks; browser-safe), `editor.ts` (the website editor's calls to control, content paths, templates, front matter checks; browser-safe), `markdown/preview.ts` (the editor's in-browser preview: marked and DOMPurify, matching the site's callouts and images), `git-dates.ts` (post and page dates from first-parent git history; build time), `images.ts`, `builds.ts`, `fleet.ts`, `stats.ts`, `explorer.ts` (browser-safe helpers), `lab.ts` and `hints.ts` (the config lab: model, renderers, URL token, hints), `proxy.ts` (the SWAG proxy lab), posts, `docs.ts` and `docs-sections.ts` (the documentation), feeds, JSON-LD, formatting. |
 | `src/pages/` | Routes. `images/[name].astro`, `images/[name]/builds/[tag].astro`, `fleet/` (`index`, `runs/index`, `runs/[id]`, `queue`, `builds`, `pulls`, `issues`, `releases`, `scheduler`, `actions`), `packages.astro`, `mods/` (`index`, `[branch]` a page per mod), `stores.astro`, blog, `docs/` (landing, `[section]/index`, `[section]/[slug]`), `edit/` (the website editor, members only, not indexed), about, support, donate, search. |
 | `src/components/build/` | `BuildParts.tsx`: the non-interactive parts of a build page as React, rendered at build time by `images/[name]/builds/[tag].astro` and in the browser by `islands/LiveBuildPage.tsx`, from one model (`src/lib/build-page.ts`). |
-| `src/components/` | Astro components (`FleetShell` for the fleet section, `AnchorHeading` for linkable sections, `DocsShell`, `DocsNav` for the documentation); `islands/` React islands (`ConfigLab`, `ProxyTabs` with `ProxyLab` for SWAG and the hub's Caddy and Traefik references, catalogue, search…); `islands/fleet/` the live fleet panels, sign-in and the shared pills, states and action buttons; `islands/editor/` the website editor (`Editor` the gate, home and new-entry form, `Workspace` the split pane, `CodeEditor` CodeMirror, `EditLink` the members' edit and new links on docs, posts and their indexes); `islands/explorer/` the explorer views, `CiReport` and `Vulns`; `ui/` shadcn components (do not edit). |
+| `src/components/` | Astro components (`FleetShell` for the fleet section, `AnchorHeading` for linkable sections, `DocsShell` for the documentation, a thin wrapper of `article/DocsLayout`); `article/` the post and docs layouts as React (`PostArticle`, `DocsLayout`, `Crumbs`), rendered at build time by `blog/[slug].astro` and `DocsShell` and in the browser by the editor's Preview, so a change to either layout goes there; `islands/` React islands (`ConfigLab`, `ProxyTabs` with `ProxyLab` for SWAG and the hub's Caddy and Traefik references, catalogue, search…); `islands/fleet/` the live fleet panels, sign-in and the shared pills, states and action buttons; `islands/editor/` the website editor (`Editor` the gate and new-entry form, `Workspace` the details form, split pane, Insert menu and Preview, `CodeEditor` CodeMirror; on the pages, for people who can edit, `EntryBar` (Edit, Delete, a page's open edits), `NewBar` (New post, New page, what is not published yet) and `EditLink`; `hooks.ts` reads the editor status and open edits once per page); `islands/explorer/` the explorer views, `CiReport` and `Vulns`; `ui/` shadcn components (do not edit). |
 | `src/content/` | Blog posts, authors, `spotlight.yaml`, and `docs/<section>/<slug>.md` (the documentation; schema in `src/content.config.ts`). `imagedocs/` and `moddocs/` are written by `npm run data` from the hub; never edit them. |
 | `src/styles/globals.css` | Design tokens and utilities (Raft). |
 | `scripts/` | `refresh-data.mjs`, `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `fleet-check.mjs`, `editor-check.mjs`, `new-post.mjs`, `new-doc.mjs`. |
@@ -49,14 +49,20 @@ snapshotted except the run ids in `control.json`; every live island must server-
 a designed loading state, and an honest offline state with a retry and the control plane's own page linked.
 Section ids on image and build pages (README, "Anchors") are a public contract: never rename one.
 
-The website editor (`/edit/`) is the control plane's too ("The website editor" in its README): members
-write docs pages and posts there, each save is a commit as them on `edit/<login>/…` and a pull request
-publishes it. It only reads and writes through `src/lib/editor.ts`; the preview (`markdown/preview.ts`) is
-marked, not satteri, because satteri's browser build needs cross-origin isolation that Pages cannot give, so
-keep the preview's callout and image handling in step with `astro.config.mjs`'s Markdown plugins. Never let
-the preview show unsanitised HTML. Dates come from git when the front matter leaves them out
-(`git-dates.ts`, first-parent so a post is dated by its merge), which is why both workflows check out with
-`fetch-depth: 0`.
+The website editor is the control plane's too ("The website editor" in its README). The pages are its
+interface: people who can edit the site (`can_edit`) see Edit and Delete on every post and docs page, New post
+on the blog, New page on each docs section and under each sub-heading, and the open edits (anyone's) where they
+belong: an edit of a page on that page, a new post or page on the blog or its section. There is no overview
+page; `/edit/` is only what those buttons open. Each change is one branch, `edit/<login>/…`, and one pull
+request; opening someone's edit joins it (saves go onto their branch). Deleting removes the entry and its files
+in a pull request, with no redirect. New sections and layout changes are made in git, not here. Everything goes
+through `src/lib/editor.ts`. The preview (`markdown/preview.ts`) is marked, not satteri, because satteri's
+browser build needs cross-origin isolation that Pages cannot give, so keep its callouts, images, galleries,
+videos and YouTube allowlist in step with `astro.config.mjs`'s Markdown plugins and `globals.css`; Preview lays
+the page out with the same `article/` components as the build. Never let the preview show unsanitised HTML.
+Videos are committed as uploaded to `public/media/…` (never transcoded). Dates come from git when the front
+matter leaves them out (`git-dates.ts`, first-parent so a post is dated by its merge), which is why both
+workflows check out with `fetch-depth: 0`.
 
 Documentation pages are hand-written Markdown under `src/content/docs/`; image pages are not documentation
 and must never be copied there (the hub renders them from `image.yml`). A new section is an entry in
@@ -75,7 +81,7 @@ node scripts/a11y.mjs http://localhost:4321/site          # axe, light and dark,
 node scripts/test-search.mjs http://localhost:4321/site
 node scripts/overflow.mjs http://localhost:4321/site/<page>/   # 390px, scroll width must be 390
 node scripts/fleet-check.mjs http://localhost:4321/site      # fleet islands against the live control plane (replays its answers with CORS)
-node scripts/editor-check.mjs http://localhost:4321/site     # the editor against a fake control plane: every state, save, conflict, PR, discard, axe, 390px
+node scripts/editor-check.mjs http://localhost:4321/site     # the editor and the pages' editing bars against a fake control plane: axe, 390px
 ```
 
 CI runs `check`, `build`, `a11y.mjs` and `test-search.mjs` on every pull request (`check.yml`). The build
@@ -93,7 +99,7 @@ a hub change that renames or removes a field is a change here too. The control p
 and `control/model.py` in `linuxserver-playground/control`: `FleetPage`, `RunsPage`, `RunPage`, `QueuePage`,
 `PullsPage`, `IssuesPage`, `ReleasesPage`, `BuildPage`, `ImagePage`, `SchedulerPage`, `SkipsPage`,
 `ActionsPage`, `/api/me`, the actions and the stream) is typed in `src/lib/control.ts`, and the editor's
-(`control/editor.py`: `Status`, `EntryPage`, `SaveResult`, `PublishResult`) in `src/lib/editor.ts`. Produces no schema.
+(`control/editor.py`: `Status`, `Pending`, `EntryPage`, `Removal`, `Uploaded`, `SaveResult`, `PublishResult`) in `src/lib/editor.ts`. Produces no schema.
 See `CONVENTIONS.md` in the builder repository, in particular §6 (the bundle) and §10 (who renders what: the
 site renders the hub's data and the control plane's JSON; `{SITE_URL}/images/{image}/builds/{tag}/` is the CI
 results page the release notes and Discord embeds link to).

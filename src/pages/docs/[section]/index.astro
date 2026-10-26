@@ -2,6 +2,9 @@
 import { render } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 import DocsShell from '@/components/DocsShell.astro';
+import EditLink from '@/components/islands/editor/EditLink';
+import NewBar from '@/components/islands/editor/NewBar';
+import { withBase } from '@/lib/base';
 import { docPath, docUrl, getSections, type SectionView } from '@/lib/docs';
 import { docJsonLd, itemListJsonLd } from '@/lib/jsonld';
 
@@ -41,13 +44,21 @@ const jsonLd = [
       )
     }
     <Fragment slot="after">
+      <div class="max-w-[46rem]">
+        <NewBar client:idle kind="doc" section={section.id} sectionTitle={section.title} />
+      </div>
       {
         section.pages.length > 0 && (
           <section aria-labelledby="section-pages" class="mt-12 max-w-[46rem]">
             <h2 id="section-pages" class="raft-eyebrow">Pages in this section</h2>
             {section.groups.map((g) => (
               <div class="mt-5">
-                {g.name && <h3 class="mb-2 font-mono text-xs tracking-wide text-muted-foreground uppercase">{g.name}</h3>}
+                {g.name && (
+                  <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 class="font-mono text-xs tracking-wide text-muted-foreground uppercase">{g.name}</h3>
+                    <EditLink client:idle href={withBase(`/edit/?new=doc&section=${section.id}&group=${encodeURIComponent(g.name)}`)} label={`New page in ${g.name}`} kind="new" className="text-xs" />
+                  </div>
+                )}
                 <ol class="raft-panel divide-y divide-[var(--raft-hair)]">
                   {g.pages.map((p) => (
                     <li>

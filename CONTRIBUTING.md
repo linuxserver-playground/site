@@ -6,17 +6,23 @@ GitHub web editor, and every pull request gets a preview link.
 
 ## On the site (team members)
 
-Sign in on the site, then use **New post** on the blog page, or **Edit on the site** at the bottom of any post.
-The editor at `/edit/` shows the Markdown on the left and the post on the right. Paste or drop images
-into the text and they're saved beside the post.
+Sign in on the site. If you can edit the site, the blog and the docs grow a small editing bar: **New post** on the
+blog, **Edit** and **Delete** on every post. The editor shows a form for the details (title, description,
+author, tags, hero image) and the Markdown beside a quick preview; **Preview** shows the post exactly as the
+site lays it out. **Advanced editor** shows the whole file, front matter included. **Insert** adds images, a
+gallery, a video (mp4 or webm, up to 50 MB, already playable in browsers: nothing is converted) or a YouTube
+video; you can also paste or drop images and videos into the text.
 
-- **Save** commits to your own branch, `edit/<you>/posts/<slug>`, as you. Nothing is live yet.
-- **Open pull request** proposes the post. The site's checks build it, and merging it publishes it. That
-  makes the pull request the draft, so there's no `draft: true` to remember.
+- **Save** commits to the post's branch, `edit/<you>/posts/<slug>`, as you. Nothing is live yet.
+- **Open pull request** proposes it. The site's checks build it, and a reviewer merges it, which publishes it.
+  The pull request is the draft, so there's no `draft: true` to remember.
 - **Discard** closes the pull request and deletes the branch.
+- **Delete** (on the post) proposes removing the post and all its files in a pull request. Once merged it's gone.
 
-The first time you use the editor, GitHub asks you to authorise the LinuxServer CI app, so that commits
-are yours. Leave `date` out and the post is dated when its pull request merges.
+Work in progress shows where it belongs, to anyone who can edit: a post's open edits on the post, posts that
+aren't published yet on the blog. Opening someone's edit joins it: your saves go into the same pull request.
+The first time, GitHub asks you to authorise the LinuxServer CI app, so that commits are yours. Leave `date` out
+and the post is dated when its pull request merges.
 
 ## The quick way
 
@@ -102,9 +108,9 @@ our containers, the Selkies platform, policies and the FAQ.
 
 ### On the site (team members)
 
-Sign in on the site, then use **New docs page** on the docs page, or **Edit on the site** at the bottom of
-any page. It works the same way as posts (see [On the site](#on-the-site-team-members)): Save commits to
-your branch, a pull request publishes it, and merging it makes it live.
+Each docs section has **New page** (and **New page in …** under each sidebar sub-heading); every page has **Edit**
+and **Delete**. It works the same way as posts (see [On the site](#on-the-site-team-members)). Deleting a page
+also removes the images and videos only it uses. New sections and changes to the docs' layout are made in git.
 
 ### The quick way
 

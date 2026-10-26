@@ -1,18 +1,16 @@
 ---
 /**
- * The frame every documentation page shares: breadcrumbs, the section sidebar (left), the article with its
- * title, body, updated date and edit links (on the site for members, on GitHub for everyone), the previous/next pair, and the table of contents (right rail).
- * The body is the default slot; `after` renders between the article footer and previous/next.
+ * The frame every documentation page shares, rendered by `article/DocsLayout` (the same component the editor's
+ * preview uses): breadcrumbs, the section sidebar, the article with its editing bar and edit link, the
+ * previous/next pair and the table of contents. The body is the default slot; `after` renders between the
+ * article and previous/next.
  */
 import type { MarkdownHeading } from 'astro';
-import { ArrowLeft, ArrowRight, Pencil } from 'lucide-react';
-import Breadcrumbs from '@/components/Breadcrumbs.astro';
-import DocsNav from '@/components/DocsNav.astro';
+import { Pencil } from 'lucide-react';
+import DocsLayout from '@/components/article/DocsLayout';
+import EntryBar from '@/components/islands/editor/EntryBar';
 import PostBody from '@/components/PostBody.astro';
-import EditLink from '@/components/islands/editor/EditLink';
-import { withBase } from '@/lib/base';
-import { docEditUrl, docUrl, type Doc, type SectionView } from '@/lib/docs';
-import { formatDate, isoDate } from '@/lib/format';
+import { docEditUrl, docNav, docUrl, sectionNav, type Doc, type SectionView } from '@/lib/docs';
 import type { Crumb } from '@/lib/seo';
 
 interface Props {
@@ -27,113 +25,42 @@ interface Props {
   next?: Doc;
 }
 const { section, doc, title, description, headings = [], crumbs, prev, next } = Astro.props;
-const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
-const updated = doc?.data.updated;
+const sections = await sectionNav();
+const currentId = doc?.id;
+const onIndex = !currentId || currentId === section.intro?.id;
+const hasAfter = Astro.slots.has('after');
 ---
 
-<div class="raft-container pt-8 lg:pt-10">
-  <Breadcrumbs crumbs={crumbs} />
-  <div class="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_13rem] xl:gap-14">
-    <details class="raft-panel group p-2 lg:hidden">
-      <summary class="cursor-pointer list-none rounded-md px-2.5 py-1.5 text-sm font-medium marker:content-none [&::-webkit-details-marker]:hidden">
-        <span class="inline-flex items-center gap-2">
-          <ArrowRight className="size-3.5 transition-transform group-open:rotate-90" aria-hidden="true" />
-          In this section: {section.title}
-        </span>
-      </summary>
-      <div class="mt-2 border-t border-[var(--raft-hair)] pt-3">
-        <DocsNav section={section} currentId={doc?.id} idSuffix="m" />
+<DocsLayout
+  sections={sections}
+  section={docNav(section)}
+  currentId={currentId}
+  onIndex={onIndex}
+  title={title}
+  description={description}
+  crumbs={crumbs}
+  toc={headings.map((h) => ({ depth: h.depth, slug: h.slug, text: h.text }))}
+  updated={doc?.data.updated?.toISOString()}
+  hasDoc={!!doc}
+  prev={prev && { id: prev.id, title: prev.data.title, url: docUrl(prev) }}
+  next={next && { id: next.id, title: next.data.title, url: docUrl(next) }}
+>
+  {doc && <EntryBar slot="bar" client:idle path={`src/content/docs/${doc.id}.md`} kind="doc" title={doc.data.title} />}
+  <PostBody>
+    <slot />
+  </PostBody>
+  {
+    doc && (
+      <a slot="footer" href={docEditUrl(doc)} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 hover:text-foreground">
+        <Pencil className="size-3.5" aria-hidden="true" /> Edit this page on GitHub<span class="sr-only"> (opens in a new tab)</span>
+      </a>
+    )
+  }
+  {
+    hasAfter && (
+      <div slot="after">
+        <slot name="after" />
       </div>
-    </details>
-    <aside aria-label="Section navigation" class="hidden lg:block lg:sticky lg:top-20 lg:max-h-[calc(100dvh-6rem)] lg:self-start lg:overflow-y-auto lg:pr-2">
-      <DocsNav section={section} currentId={doc?.id} idSuffix="d" />
-    </aside>
-
-    <div class="min-w-0">
-      <article class="w-full max-w-[46rem] min-w-0">
-        <header>
-          <p class="raft-eyebrow"><span class="text-primary" aria-hidden="true">//</span> {section.title}</p>
-          <h1 class="mt-3 text-4xl leading-[1.1] font-semibold tracking-[-0.03em] md:text-[2.75rem]">{title}</h1>
-          <p class="mt-4 text-lg text-muted-foreground">{description}</p>
-        </header>
-        <div class="mt-8 border-t border-[var(--raft-hair)] pt-8">
-          <PostBody>
-            <slot />
-          </PostBody>
-        </div>
-        {
-          doc && (
-            <div class="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--raft-hair)] pt-6 text-sm text-muted-foreground">
-              <p class="font-mono text-xs">
-                {updated ? (
-                  <>
-                    Last updated <time datetime={isoDate(updated)}>{formatDate(updated)}</time>
-                  </>
-                ) : (
-                  <>Documentation · {section.title}</>
-                )}
-              </p>
-              <span class="inline-flex flex-wrap items-center gap-x-4 gap-y-2">
-                <EditLink client:idle href={withBase(`/edit/?doc=${doc.id}`)} label="Edit on the site" />
-                <a href={docEditUrl(doc)} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 hover:text-foreground">
-                  <Pencil className="size-3.5" aria-hidden="true" /> Edit this page on GitHub<span class="sr-only"> (opens in a new tab)</span>
-                </a>
-              </span>
-            </div>
-          )
-        }
-      </article>
-
-      <slot name="after" />
-
-      {
-        (prev || next) && (
-          <nav aria-label="Previous and next page" class="mt-12 max-w-[46rem]">
-            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {prev ? (
-                <a href={docUrl(prev)} rel="prev" class="raft-panel group flex flex-col gap-1 p-4 hover:bg-muted/40">
-                  <span class="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
-                    <ArrowLeft className="size-3.5" aria-hidden="true" /> Previous
-                  </span>
-                  <span class="font-medium group-hover:text-primary">{prev.data.title}</span>
-                </a>
-              ) : (
-                <span />
-              )}
-              {next && (
-                <a href={docUrl(next)} rel="next" class="raft-panel group flex flex-col items-end gap-1 p-4 text-right hover:bg-muted/40">
-                  <span class="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
-                    Next <ArrowRight className="size-3.5" aria-hidden="true" />
-                  </span>
-                  <span class="font-medium group-hover:text-primary">{next.data.title}</span>
-                </a>
-              )}
-            </div>
-          </nav>
-        )
-      }
-    </div>
-
-    <aside aria-label="On this page" class="hidden xl:block xl:sticky xl:top-20 xl:max-h-[calc(100dvh-6rem)] xl:self-start xl:overflow-y-auto">
-      {
-        toc.length > 1 && (
-          <nav aria-labelledby="toc-title">
-            <h2 id="toc-title" class="raft-eyebrow">On this page</h2>
-            <ol class="mt-3 space-y-1.5 border-l border-[var(--raft-hair)] text-sm">
-              {toc.map((h) => (
-                <li>
-                  <a
-                    href={`#${h.slug}`}
-                    class:list={['-ml-px block border-l border-transparent py-0.5 text-muted-foreground hover:border-primary hover:text-foreground', h.depth === 3 ? 'pl-6' : 'pl-3']}
-                  >
-                    {h.text}
-                  </a>
-                </li>
-              ))}
-            </ol>
-          </nav>
-        )
-      }
-    </aside>
-  </div>
-</div>
+    )
+  }
+</DocsLayout>

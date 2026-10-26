@@ -8,6 +8,7 @@ import { withBase } from './base';
 import { DOC_SECTIONS, type DocSectionId } from './docs-sections';
 import { gitDates } from './git-dates';
 import { LINKS } from './site';
+import type { NavGroup, NavSection } from '@/components/article/DocsLayout';
 
 export type Doc = CollectionEntry<'docs'>;
 
@@ -93,6 +94,21 @@ export async function getSections(): Promise<SectionView[]> {
     const pages = mine.filter((d) => !isSectionIndex(d)).sort(byOrder);
     return [{ ...s, path: sectionPath(s.id), url: sectionUrl(s.id), intro, pages, groups: groupPages(pages), sequence: intro ? [intro, ...pages] : pages }];
   });
+}
+
+/** The sidebar's view of one section, for `article/DocsLayout` (plain data, so the editor's preview has it too). */
+export function docNav(section: SectionView): NavSection & { groups: NavGroup[] } {
+  return {
+    id: section.id,
+    title: section.title,
+    url: section.url,
+    groups: section.groups.map((g) => ({ name: g.name, pages: g.pages.map((p) => ({ id: p.id, title: p.data.title, url: docUrl(p) })) })),
+  };
+}
+
+/** Every section, for the sidebar's list. */
+export async function sectionNav(): Promise<NavSection[]> {
+  return (await getSections()).map((s) => ({ id: s.id, title: s.title, url: s.url }));
 }
 
 export async function getSection(id: string): Promise<SectionView | undefined> {
