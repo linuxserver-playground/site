@@ -7,6 +7,7 @@ updated: 2026-10-24
 aliases:
   - /general/containers-101/
 ---
+![dosbox logo](./dosbox-logo.png)
 A container bundles all the libraries required by an application to run, you no longer need to know which version of Java, Apache or whatever – the person who built the container for you took care of that. Containers don’t usually ship with configuration files baked in though. This is because the contents of a container are ‘stateless’ or ‘immutable’. In English, this means the state or filesystem of the container itself cannot be modified after it is created.
 
 ## What do I need to know?
