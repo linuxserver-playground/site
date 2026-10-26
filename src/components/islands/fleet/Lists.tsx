@@ -403,7 +403,7 @@ export function Releases({ fallback, runsBase, buildsBase, known = {} }: Common)
                         <span className="text-xs text-muted-foreground">no build event</span>
                       )}
                     </TD>
-                    <TD mono>{b?.upstream ?? '–'}</TD>
+                    <TD mono wrap>{b?.upstream ?? '–'}</TD>
                     <TD mono>
                       <Rel iso={r.published_at ?? r.created_at} />
                     </TD>

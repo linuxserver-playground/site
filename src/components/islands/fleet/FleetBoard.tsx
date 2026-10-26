@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import { repoShort, useControl, type FleetPage, type FleetRow, type HelperRepo } from '@/lib/control';
-import { ActionButton, BranchActions, DriftPill, Empty, ExtLink, MemberOnly, Offline, PanelBar, Pill, Rel, Select, Skeleton, SkipControls, StatePill, Table, TD, TH, Toggle } from './shared';
+import { ActionButton, BranchActions, DriftPill, Empty, ExtLink, MemberOnly, Offline, Pager, PanelBar, Pill, Rel, Select, Skeleton, SkipControls, StatePill, Table, TD, TH, Toggle } from './shared';
 
 interface Props {
   /** `withBase('/images/')`: image names link to their pages when the site has one. */
@@ -21,6 +21,8 @@ interface Props {
   fallback: string;
 }
 
+const PAGE_SIZE = 50;
+
 const severity = (r: FleetRow) => (r.result === 'failure' ? 0 : r.result === 'cancelled' ? 1 : r.result === null ? 2 : r.drift === 'ahead' ? 3 : 4);
 
 export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fallback }: Props) {
@@ -30,6 +32,8 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fall
   const [image, setImage] = React.useState('all');
   const [q, setQ] = React.useState('');
   const [ready, setReady] = React.useState(false);
+  const [page, setPage] = React.useState(0);
+  const top = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     // ?image= filters the board to one image (image pages link here).
     setImage(new URL(location.href).searchParams.get('image') || 'all');
@@ -49,6 +53,16 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fall
     return list;
   }, [data, image, drift, q, redFirst]);
 
+  // A filter change starts again at page one; a page that no longer exists falls back to the last one.
+  React.useEffect(() => setPage(0), [image, drift, q, redFirst]);
+  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
+  const shown = Math.min(page, pages - 1);
+  const visible = rows.slice(shown * PAGE_SIZE, (shown + 1) * PAGE_SIZE);
+  const turn = (p: number) => {
+    setPage(p);
+    top.current?.scrollIntoView({ block: 'start' });
+  };
+
   const images = React.useMemo(() => [...new Set((data?.rows ?? []).map((r) => r.image))].sort(), [data]);
   const failing = data ? data.rows.filter((r) => r.result === 'failure').length : 0;
   const ahead = data ? data.rows.filter((r) => r.drift === 'ahead').length : 0;
@@ -63,7 +77,7 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fall
   }, [image, ready]);
 
   return (
-    <div>
+    <div ref={top} className="scroll-mt-24">
       <PanelBar title="fleet board" note={data ? `${data.rows.length} branches · ${data.images} images · ${failing} failing · ${ahead} behind upstream` : undefined} at={at}>
         <input
           type="search"
@@ -114,12 +128,13 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fall
                 </tr>
               </thead>
               <tbody className="divide-y divide-[var(--raft-hair)]">
-                {rows.map((r) => (
+                {visible.map((r) => (
                   <Row key={`${r.repo}/${r.branch}`} r={r} imagesBase={imagesBase} known={known} runsBase={runsBase} reload={reload} />
                 ))}
               </tbody>
             </Table>
           )}
+          <Pager page={shown} size={PAGE_SIZE} total={rows.length} onPage={turn} label="Fleet board pages" />
           {(data.helpers ?? []).filter((h) => !h.archived).length > 0 && <Helpers helpers={(data.helpers ?? []).filter((h) => !h.archived)} modsBase={modsBase} />}
         </>
       )}
@@ -208,7 +223,7 @@ function Row({ r, imagesBase, known, runsBase, reload }: { r: FleetRow; imagesBa
           )}
         </span>
       </TD>
-      <TD mono title={r.released_at ? `Released ${r.released_at}` : undefined}>
+      <TD mono wrap title={r.released_at ? `Released ${r.released_at}` : undefined}>
         {r.released ?? <span className="text-muted-foreground">nothing yet</span>}
         {r.released_at && (
           <span className="block text-[0.6875rem] text-muted-foreground">
@@ -216,7 +231,7 @@ function Row({ r, imagesBase, known, runsBase, reload }: { r: FleetRow; imagesBa
           </span>
         )}
       </TD>
-      <TD mono>
+      <TD mono wrap>
         {r.upstream ?? <span className="text-muted-foreground">–</span>}
         {r.source && <span className="block text-[0.6875rem] text-muted-foreground">{r.source}</span>}
       </TD>
