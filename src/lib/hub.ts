@@ -391,7 +391,6 @@ export interface TestSummary {
   warnings: number;
   rss_bytes?: number | null;
   pids?: number | null;
-  report_page?: string | null;
   tarball?: string | null;
 }
 
@@ -445,7 +444,7 @@ export const hubStoreUrl = (path: string) => `${HUB_URL}/stores/${path.replace(/
 export const hubTestsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/tests.json`);
 /** `vulns.json`: the scanner's findings, when the hub serves them. */
 export const hubVulnsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/vulns.json`);
-/** A file the hub unpacked from `test.<arch>.tar.gz`: `index.html`, `screenshot.png`, `container.log`, `browser.log`, `sysinfo.txt`, `package_diff.txt`. */
+/** A file the hub unpacked from `test.<arch>.tar.gz`: `screenshot.png`, `container.log`, `browser.log`, `sysinfo.txt`, `package_diff.txt`. */
 export const hubReportFileUrl = (image: string, tag: string, arch: Arch | string, file: string) => `${HUB_URL}/builds/${image}/${tag}/${arch}/${file}`;
 
 /** The control plane: live status, the scheduler and member actions. The fleet pages read its JSON API (lib/control.ts). */

@@ -145,9 +145,8 @@ without JavaScript. A build the snapshot has no report for fetches `tests.json` 
 the hub unpacks from `test.<arch>.tar.gz` under `${HUB_URL}/builds/<name>/<tag>/<arch>/` are loaded on demand:
 `screenshot.png` inline with a lightbox, `container.log`, `browser.log`, `sysinfo.txt` and `package_diff.txt`
 (the diff against the previous release, open by default) as collapsibles that fetch when opened, monospace,
-with copy and raw links; `index.html` (the harness's own report) and the run on the control plane and on
-GitHub are linked. A "Vulnerabilities" collapsible (`#vulns`) renders `vulns.json` from the same directory
-when the hub serves it (`{summary: {critical, high, medium, low, negligible, fixed, unfixed}, matches:
+with copy and raw links; the hub's report index and the run on the control plane and on GitHub are linked.
+A "Vulnerabilities" collapsible (`#vulns`) renders `vulns.json` from the same directory when the hub serves it (`{summary: {critical, high, medium, low, negligible, fixed, unfixed}, matches:
 [{package, version, id, severity, fix_state, fixed_in, urls}], db_date}`): fixable findings grouped by
 package, then the ones without a fix behind a caveat; nothing is rendered when the endpoint answers 404.
 

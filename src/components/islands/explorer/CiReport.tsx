@@ -24,7 +24,7 @@ interface Props {
   testEnabled: boolean;
 }
 
-const FILES = ['screenshot.png', 'container.log', 'browser.log', 'sysinfo.txt', 'package_diff.txt', 'index.html'] as const;
+const FILES = ['screenshot.png', 'container.log', 'browser.log', 'sysinfo.txt', 'package_diff.txt'] as const;
 
 export default function CiReport(props: Props) {
   const [tests, setTests] = React.useState<TestsData | null>(props.tests);
@@ -179,7 +179,6 @@ export default function CiReport(props: Props) {
             <Screenshot url={file('screenshot.png')} arch={current!} image={props.image} />
             <ul className="p-2 text-sm">
               {[
-                { label: `Harness report (${current})`, href: file('index.html') },
                 { label: 'Report index', href: props.reportDir },
                 ...(props.controlUrl ? [{ label: 'Run status', href: props.controlUrl }] : []),
                 ...(props.runUrl ? [{ label: 'Run on GitHub', href: props.runUrl }] : []),
