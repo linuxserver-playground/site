@@ -6,12 +6,13 @@ import { getCollection } from 'astro:content';
 import type { ImageMetadata } from 'astro';
 import snapshot from '@/data/catalog.json';
 import categoriesSnapshot from '@/data/categories.json';
-import type { Category as HubCategory, ImageDetail } from './hub';
+import type { Category as HubCategory, ImageDetail, ImageKind } from './hub';
 import { isoWeek } from './format';
 
-export type { ImageConfig, ImageDetail, ReleaseInfo } from './hub';
+export type { ImageConfig, ImageDetail, ImageKind, ReleaseInfo } from './hub';
 
 export interface Image extends ImageDetail {
+  kind: ImageKind;
   /** Description with Markdown links reduced to their text. */
   summary: string;
   arm64: boolean;
@@ -42,6 +43,7 @@ export function plainDescription(s: string): string {
 const all: Image[] = (snapshot.images as unknown as ImageDetail[])
   .map((i) => ({
     ...i,
+    kind: i.kind ?? 'app',
     categories: i.categories?.length ? i.categories : (i.category ?? '').split(',').map((c) => c.trim()).filter(Boolean),
     summary: plainDescription(i.description ?? ''),
     arm64: i.architectures.some((a) => a.arch === 'arm64'),
@@ -59,6 +61,20 @@ export const hubDate = (s: string) => new Date(s.replace(' ', 'T'));
 
 export const getAllImages = () => all;
 export const getImages = () => all.filter((i) => !i.deprecated);
+/** Current applications: what the catalogue, the home page and "similar images" show. */
+export const getApps = () => getImages().filter((i) => i.kind === 'app');
+/** Every image of one kind, deprecated ones included, by name. */
+export const getImagesOfKind = (kind: ImageKind) => all.filter((i) => i.kind === kind);
+
+/** The three tabs of the images section. Base images and internal tools build like any image but are not apps. */
+export const IMAGE_KINDS: Record<ImageKind, { label: string; singular: string; href: string }> = {
+  app: { label: 'Applications', singular: 'application', href: '/images/' },
+  base: { label: 'Base images', singular: 'base image', href: '/images/base/' },
+  tool: { label: 'Internal tools', singular: 'internal tool', href: '/images/tools/' },
+};
+
+/** `builder migrate` writes "<name> container image." when a legacy repo had no blurb; it says nothing. */
+export const hasRealSummary = (i: Image) => i.summary !== `${i.name} container image.`;
 export const getImage = (name: string) => all.find((i) => i.name === name);
 
 export interface Category {
@@ -73,20 +89,20 @@ export function getCategories(): Category[] {
   return [...(categoriesSnapshot as HubCategory[])].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
 }
 
-export const mostStarred = (n = 8) => [...getImages()].sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name)).slice(0, n);
+export const mostStarred = (n = 8) => [...getApps()].sort((a, b) => b.stars - a.stars || a.name.localeCompare(b.name)).slice(0, n);
 export const recentlyUpdated = (n = 8) =>
-  [...getImages()].sort((a, b) => b.version_timestamp.localeCompare(a.version_timestamp)).slice(0, n);
+  [...getApps()].sort((a, b) => b.version_timestamp.localeCompare(a.version_timestamp)).slice(0, n);
 
 /** Newest additions to the fleet, by first build date. */
 export const newest = (n = 8) =>
-  getImages()
+  getApps()
     .filter((i) => i.initial_date)
     .sort((a, b) => b.initial_date!.localeCompare(a.initial_date!))
     .slice(0, n);
 
 export function relatedImages(image: Image, n = 4): Image[] {
   const cats = new Set(image.categories);
-  return getImages()
+  return getApps()
     .filter((i) => i.name !== image.name)
     .map((i) => ({ i, score: i.categories.filter((c) => cats.has(c)).length }))
     .filter((x) => x.score > 0)
