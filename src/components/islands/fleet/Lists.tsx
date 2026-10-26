@@ -69,15 +69,16 @@ export function Queue({ fallback, runsBase }: Common) {
               </ul>
             )}
           </div>
-          <JobsTable title="In progress" jobs={data.in_progress} runsBase={runsBase} />
-          <JobsTable title="Queued" jobs={data.queued} runsBase={runsBase} />
+          <JobsTable title="In progress" jobs={data.in_progress} runsBase={runsBase} reload={reload} />
+          <JobsTable title="Queued" jobs={data.queued} runsBase={runsBase} reload={reload} />
         </>
       )}
     </Shell>
   );
 }
 
-function JobsTable({ title, jobs, runsBase }: { title: string; jobs: JobView[]; runsBase: string }) {
+/** Members can cancel from here; GitHub cancels runs, not jobs, so the button cancels the job's whole run. */
+function JobsTable({ title, jobs, runsBase, reload }: { title: string; jobs: JobView[]; runsBase: string; reload: () => void }) {
   return (
     <div>
       <h3 className="px-3.5 pt-3 pb-1 font-mono text-[0.6875rem] text-muted-foreground uppercase">
@@ -94,6 +95,7 @@ function JobsTable({ title, jobs, runsBase }: { title: string; jobs: JobView[]; 
               <TH>Runner</TH>
               <TH>State</TH>
               <TH right>Elapsed</TH>
+              <MemberOnly>{() => <TH>Actions</TH>}</MemberOnly>
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--raft-hair)] border-t border-[var(--raft-hair)]">
@@ -127,6 +129,13 @@ function JobsTable({ title, jobs, runsBase }: { title: string; jobs: JobView[]; 
                   {duration(v.elapsed_seconds)}
                   {v.threshold_seconds != null && <span className="block text-[0.6875rem] text-muted-foreground">p95 {duration(v.threshold_seconds)}</span>}
                 </TD>
+                <MemberOnly>
+                  {(me) => (
+                    <TD right>
+                      <ActionButton action="cancel" body={{ run_id: v.job.run_id }} csrf={me.csrf} label="cancel run" tone="danger" confirm={`Cancel run #${v.job.run_id} of ${repoShort(v.job.repo)}? Every job in that run stops, not only ${v.job.name}.`} onDone={reload} />
+                    </TD>
+                  )}
+                </MemberOnly>
               </tr>
             ))}
           </tbody>
