@@ -83,7 +83,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
                   <tr key={r.branch} className={r.result === 'failure' ? 'bg-destructive/[0.04]' : undefined}>
                     <th scope="row" className="px-3 py-2.5 align-top font-mono text-xs font-normal">
                       {r.branch}
-                      {r.version_tag && <span className="block text-[0.6875rem] text-muted-foreground">{r.version_tag}</span>}
+                      {r.version_tag && <span className="block min-w-[14ch] text-[0.6875rem] text-muted-foreground [overflow-wrap:anywhere]">{r.version_tag}</span>}
                     </th>
                     <TD>
                       <span className="flex flex-wrap items-center gap-1.5">
@@ -99,7 +99,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
                         )}
                       </span>
                     </TD>
-                    <TD mono>
+                    <TD mono wrap>
                       {r.released ? (
                         page ? (
                           <a href={page} className="underline-offset-4 hover:text-primary hover:underline">
@@ -117,7 +117,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
                         </span>
                       )}
                     </TD>
-                    <TD mono>
+                    <TD mono wrap>
                       {r.upstream ?? '–'}
                       {r.source && <span className="block text-[0.6875rem] text-muted-foreground">{r.source}</span>}
                     </TD>
@@ -173,7 +173,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
                         <Rel iso={s.created} className="font-mono text-xs text-muted-foreground" />
                       </span>
                     </TD>
-                    <TD mono>
+                    <TD mono wrap>
                       {s.tag ? (
                         page ? (
                           <a href={page} className="underline-offset-4 hover:text-primary hover:underline">
@@ -186,7 +186,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
                         <span className="text-muted-foreground">nothing yet</span>
                       )}
                     </TD>
-                    <TD mono>{s.upstream ?? '–'}</TD>
+                    <TD mono wrap>{s.upstream ?? '–'}</TD>
                     <TD>
                       <DriftPill drift="unknown" />
                     </TD>

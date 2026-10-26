@@ -172,11 +172,37 @@ export const TH = ({ children, className, right }: { children?: React.ReactNode;
     {children}
   </th>
 );
-export const TD = ({ children, className, right, mono, title }: { children?: React.ReactNode; className?: string; right?: boolean; mono?: boolean; title?: string }) => (
+/** `wrap` is for version strings: they break anywhere (a 40-character commit hash has no break point) but keep a 14ch floor. */
+export const TD = ({ children, className, right, mono, wrap, title }: { children?: React.ReactNode; className?: string; right?: boolean; mono?: boolean; wrap?: boolean; title?: string }) => (
   <td title={title} className={cn('px-3 py-2.5 align-top', right && 'text-right', mono && 'font-mono text-xs tabular-nums', className)}>
-    {children}
+    {wrap ? <div className="min-w-[14ch] [overflow-wrap:anywhere]">{children}</div> : children}
   </td>
 );
+
+/** Prev and next for a long table, with where the reader is. Renders nothing for a single page. */
+export function Pager({ page, size, total, onPage, label }: { page: number; size: number; total: number; onPage: (p: number) => void; label: string }) {
+  const pages = Math.ceil(total / size);
+  if (pages <= 1) return null;
+  const btn = 'h-8 rounded-md border border-[var(--raft-hair-strong)] px-2.5 font-mono text-xs hover:text-primary disabled:pointer-events-none disabled:opacity-40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none';
+  return (
+    <nav aria-label={label} className="flex flex-wrap items-center justify-between gap-2 border-t border-[var(--raft-hair)] px-3.5 py-2">
+      <span className="font-mono text-[0.6875rem] text-muted-foreground" aria-live="polite">
+        {page * size + 1}–{Math.min(total, (page + 1) * size)} of {total}
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <button type="button" className={btn} disabled={page === 0} onClick={() => onPage(page - 1)}>
+          ← prev
+        </button>
+        <span className="px-1 font-mono text-xs text-muted-foreground">
+          page {page + 1} of {pages}
+        </span>
+        <button type="button" className={btn} disabled={page >= pages - 1} onClick={() => onPage(page + 1)}>
+          next →
+        </button>
+      </span>
+    </nav>
+  );
+}
 
 export const ExtLink = ({ href, children, className }: { href: string; children: React.ReactNode; className?: string }) => (
   <a href={href} target="_blank" rel="noopener" className={cn('underline-offset-4 hover:text-primary hover:underline', className)}>
