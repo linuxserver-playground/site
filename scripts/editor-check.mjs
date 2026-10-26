@@ -286,6 +286,7 @@ const pick = async (page, button, files) => {
   await page.getByRole('button', { name: 'Insert' }).click();
   await pick(page, () => page.getByRole('button', { name: 'Image', exact: true }).click(), { name: 'Hero Shot.PNG', mimeType: 'image/png', buffer: PNG });
   await must(quick.locator('img[src^="blob:"]'), 'preview: the new image does not show');
+  await must(quick.locator('a[target="_blank"] > img[src^="blob:"]'), 'preview: a ?link image does not open full size');
   await page.getByRole('button', { name: 'Insert' }).click();
   await pick(page, () => page.getByRole('button', { name: /^Video/ }).click(), { name: 'demo.mp4', mimeType: 'video/mp4', buffer: Buffer.from('fake video') });
   await must(quick.locator('video[src^="blob:"]'), 'preview: the new video does not show');

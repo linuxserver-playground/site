@@ -129,6 +129,17 @@ export function renderPreview(body: string, images: PreviewImages): Rendered {
       if (value) el.setAttribute(attr, resolve(value, images));
     }
   }
+  // `?link` images open full size in a new tab, as PostBody.astro wraps them on the built page.
+  for (const img of fragment.querySelectorAll<HTMLImageElement>('img[data-link]')) {
+    if (img.closest('a')) continue;
+    const a = document.createElement('a');
+    a.href = img.getAttribute('src') ?? '';
+    a.target = '_blank';
+    a.rel = 'noopener';
+    a.title = img.title || 'Open full size (new tab)';
+    img.replaceWith(a);
+    a.append(img);
+  }
   const slug = slugger();
   const toc: Rendered['toc'] = [];
   for (const h of fragment.querySelectorAll<HTMLElement>('h1, h2, h3, h4, h5, h6')) {
