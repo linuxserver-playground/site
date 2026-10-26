@@ -4,6 +4,20 @@ The blog and the documentation are Markdown files in this repository. The first 
 blog posts, the second about [docs pages](#writing-docs). Posts are Markdown files. You don't need to run anything locally: you can write a post entirely in the
 GitHub web editor, and every pull request gets a preview link.
 
+## On the site (team members)
+
+Sign in on the site, then use **New post** on the blog page, or **Edit on the site** at the bottom of any post.
+The editor at `/edit/` shows the Markdown on the left and the post on the right. Paste or drop images
+into the text and they're saved beside the post.
+
+- **Save** commits to your own branch, `edit/<you>/posts/<slug>`, as you. Nothing is live yet.
+- **Open pull request** proposes the post. The site's checks build it, and merging it publishes it. That
+  makes the pull request the draft, so there's no `draft: true` to remember.
+- **Discard** closes the pull request and deletes the branch.
+
+The first time you use the editor, GitHub asks you to authorise the LinuxServer CI app, so that commits
+are yours. Leave `date` out and the post is dated when its pull request merges.
+
 ## The quick way
 
 ```bash
@@ -45,7 +59,7 @@ draft: true
 | Field | | What it does |
 | --- | --- | --- |
 | `title` | required | Quote it if it contains a colon. |
-| `date` | required | Publish date. A future date keeps the post hidden until then. |
+| `date` | optional | Publish date. Leave it out and the post is dated when its pull request merges (from git). A future date keeps the post hidden until then. |
 | `author` | recommended | Your GitHub handle. Links to your author page if you're in `src/content/authors/`. |
 | `tags` | recommended | 3–8 tags. Reuse existing ones (see `/blog/tags/`). Product names keep their casing. |
 | `description` | recommended | Shown on cards and in search results. Without it the first paragraph is used. |
@@ -54,7 +68,7 @@ draft: true
 | `images` | optional | Image names the post is about. The post then appears on those image pages, and they appear under the post. |
 | `featured` | optional | `true` pins the post to the top of the blog and the home page. |
 | `draft` | optional | `true` while you work on it. Remove it to publish. |
-| `updated` | optional | Set when you materially revise a post. |
+| `updated` | optional | When you last revised the post. Leave it out and git supplies it from the last merged change. |
 
 The build checks all of this, so a typo in the front matter fails the pull request with a message
 that names the file and field. You'll know before anything goes live.
@@ -85,6 +99,12 @@ The documentation lives next to the blog, at `src/content/docs/<section>/<slug>.
 `/docs/<section>/<slug>/`. The image pages are **not** here: they are generated from each image's `image.yml`
 by the hub, so to fix one, change the manifest. The docs are the hand-written pages around them: how to run
 our containers, the Selkies platform, policies and the FAQ.
+
+### On the site (team members)
+
+Sign in on the site, then use **New docs page** on the docs page, or **Edit on the site** at the bottom of
+any page. It works the same way as posts (see [On the site](#on-the-site-team-members)): Save commits to
+your branch, a pull request publishes it, and merging it makes it live.
 
 ### The quick way
 
@@ -128,7 +148,7 @@ draft: true
 | `section` | required | Must be the folder the file is in. The sections are declared in `src/lib/docs-sections.ts`; a new one needs an entry there and a folder. |
 | `order` | recommended | Position in the sidebar, lowest first. Pages without one go last. |
 | `group` | optional | A sub-heading in the sidebar (e.g. `Other platforms`, `User guide`). Pages with the same group sit together; give them consecutive `order`s. |
-| `updated` | optional | Set when you materially revise a page. Shown at the bottom and sent to search engines. |
+| `updated` | optional | When the page last changed. Shown at the bottom and sent to search engines. Leave it out and git supplies it from the last merged change. |
 | `tags` | optional | Extra words the ⌘K palette matches. |
 | `draft` | optional | `true` while you work on it. Remove it to publish. |
 | `aliases` | optional | Old URLs of this page (`/general/old-name/`), for redirects when a page moves. |

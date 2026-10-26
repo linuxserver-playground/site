@@ -17,7 +17,9 @@ const posts = defineCollection({
   schema: ({ image }) =>
     z.object({
       title: z.string(),
-      date: z.coerce.date(),
+      /** Leave it out and the post is dated when it lands on main (its pull request's merge; src/lib/git-dates.ts). */
+      date: z.coerce.date().optional(),
+      /** Leave it out and git says when the post last changed. */
       updated: z.coerce.date().optional(),
       /** Handle or name. Matched against src/content/authors/ (file name or aliases); unknown names still display. */
       author: z.string().optional(),
@@ -88,6 +90,7 @@ const docs = defineCollection({
     order: z.number().int().default(100),
     /** Optional sub-heading in the sidebar, e.g. "Other platforms". Pages with the same group sit together. */
     group: z.string().optional(),
+    /** Leave it out and git says when the page last changed (src/lib/git-dates.ts). */
     updated: z.coerce.date().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),

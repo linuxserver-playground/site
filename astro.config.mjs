@@ -36,7 +36,7 @@ export default defineConfig({
   build: { format: 'directory' },
   prefetch: { prefetchAll: false, defaultStrategy: 'hover' },
   image: { responsiveStyles: true },
-  integrations: [react(), sitemap({ filter: (page) => !page.includes('/search/') })],
+  integrations: [react(), sitemap({ filter: (page) => !page.includes('/search/') && !page.includes('/edit/') })],
   vite: {
     plugins: [tailwindcss()],
     resolve: {
