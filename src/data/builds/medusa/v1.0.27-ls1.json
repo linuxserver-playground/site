@@ -1,0 +1,907 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "medusa",
+  "repository": "linuxserver-playground/docker-medusa",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v1.0.27",
+   "upstream_clean": "v1.0.27",
+   "semver": "1.0.27",
+   "ls_build": 1,
+   "tag": "v1.0.27-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v1.0.27-ls1",
+    "version-v1.0.27",
+    "1.0.27",
+    "amd64-latest",
+    "amd64-v1.0.27-ls1",
+    "amd64-version-v1.0.27",
+    "amd64-1.0.27",
+    "arm64v8-latest",
+    "arm64v8-v1.0.27-ls1",
+    "arm64v8-version-v1.0.27",
+    "arm64v8-1.0.27"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/pymedusa/Medusa/releases/tag/v1.0.27"
+  },
+  "commit": "80912cce4feeb6ce130a72982d823bbad73cc776",
+  "created": "2026-10-25T23:42:51Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/baseimage-alpine:3.23",
+   "digest": "sha256:8b8bec70e3d1c2d5e94701290856866bb99a67f9ca45eaf27a9e86c6ac3197df"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:6bb91a6657507390edcee5fe52f40374a7303169c7bed1206ec72b17e70fce72",
+    "size": 141171653,
+    "uncompressed_size": 380636019,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 72
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:47422224f120f7528f5ca7e2644ff5df24f38e88116d742ca6b1ffcaddfacac0",
+    "size": 138950122,
+    "uncompressed_size": 370924166,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 65
+   }
+  ],
+  "index_digest": "sha256:4352483032db96adf662d4cbda4b4a3c760289a6baa7086df70baa1685a86dc5",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v1.0.27-ls1 Build-date:- 2026-10-25T23:34:30Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine:3.23@sha256:8b8bec70e3d1c2d5e94701290856866bb99a67f9ca45eaf27a9e86c6ac3197df",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v1.0.27",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T23:34:30Z",
+   "org.opencontainers.image.description": "Medusa is an automatic Video Library Manager for TV Shows.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-medusa",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "480171a2727995385645d901779db7a1401fc266",
+   "org.opencontainers.image.revision": "80912cce4feeb6ce130a72982d823bbad73cc776",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-medusa",
+   "org.opencontainers.image.title": "Medusa",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-medusa/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v1.0.27-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "LANG=en_US.UTF-8"
+   ],
+   "exposed_ports": [
+    "8081/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.23\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MEDUSA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\nENV LANG='en_US.UTF-8'\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    build-base && \\\n  echo \"**** install packages ****\" && \\\n  apk add -U --update --no-cache \\\n    ffmpeg \\\n    mediainfo \\\n    python3 \\\n    python3-gdbm && \\\n  echo \"**** install app ****\" && \\\n  if [ -z ${MEDUSA_RELEASE+x} ]; then \\\n    MEDUSA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pymedusa/Medusa/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p \\\n    /app/medusa && \\\n  curl -o \\\n    /tmp/medusa.tar.gz -L \\\n    \"https://github.com/pymedusa/Medusa/archive/${MEDUSA_RELEASE}.tar.gz\" && \\\n  tar xf /tmp/medusa.tar.gz -C \\\n    /app/medusa --strip-components=1 && \\\n  cd /app/medusa && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ -r requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 8081\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:arm64v8-latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.23\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MEDUSA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\nENV LANG='en_US.UTF-8'\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    build-base && \\\n  echo \"**** install packages ****\" && \\\n  apk add -U --update --no-cache \\\n    ffmpeg \\\n    mediainfo \\\n    python3 \\\n    python3-gdbm && \\\n  echo \"**** install app ****\" && \\\n  if [ -z ${MEDUSA_RELEASE+x} ]; then \\\n    MEDUSA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pymedusa/Medusa/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p \\\n    /app/medusa && \\\n  curl -o \\\n    /tmp/medusa.tar.gz -L \\\n    \"https://github.com/pymedusa/Medusa/archive/${MEDUSA_RELEASE}.tar.gz\" && \\\n  tar xf /tmp/medusa.tar.gz -C \\\n    /app/medusa --strip-components=1 && \\\n  cd /app/medusa && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ -r requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 8081\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"medusa:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-medusa-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-config -> init-medusa-config\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-medusa\n  svc-medusa -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.23\"\n}\n\"medusa:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-medusa-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-medusa-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ ! -L \"/app/medusa/Session.cfg\" ]]; then\n    ln -s /config/Session.cfg /app/medusa/Session.cfg\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-medusa",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexport MEDUSA_COMMIT_BRANCH=master\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8081\" \\\n    s6-setuidgid abc python3 /app/medusa/start.py \\\n    --nolaunch --datadir /config\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 386,
+    "distro": "Alpine Linux v3.23",
+    "hash": "e82406be",
+    "by_type": {
+     "python": 101,
+     "binary": 18,
+     "npm": 5,
+     "apk": 164,
+     "rust-crate": 97,
+     "UnknownPackage": 1
+    }
+   },
+   "arm64": {
+    "count": 385,
+    "distro": "Alpine Linux v3.23",
+    "hash": "4a29b91b",
+    "by_type": {
+     "python": 101,
+     "binary": 18,
+     "npm": 5,
+     "apk": 163,
+     "rust-crate": 97,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/medusa/builds/v1.0.27-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-medusa/commits/v1.0.27-ls1",
+   "upstream": "Special thanks to @DavidHunterJS, @XxUnkn0wnxX, @Mika3578 and @fffe for the great contributions to this release!\r\n\r\nPython 3.10 or newer is now required. Node.js 20 is no longer supported for frontend builds. ([12293](https://github.com/pymedusa/Medusa/pull/12293), [12292](https://github.com/pymedusa/Medusa/pull/12292))\r\n\r\n#### New Features\r\n\r\n- Add Unix domain socket support, including socket-only web access ([12223](https://github.com/pymedusa/Medusa/pull/12223))\r\n- Add support for Python 3.14 ([12292](https://github.com/pymedusa/Medusa/pull/12292))\r\n\r\n#### Improvements\r\n\r\n- Use consistent update and rescan terminology throughout the web interface ([12284](https://github.com/pymedusa/Medusa/pull/12284))\r\n- Update Tornado to 6.5.8 and urllib3 to 2.7.0 ([12293](https://github.com/pymedusa/Medusa/pull/12293))\r\n- Update Axios to 1.20.0, Lodash to 4.18.1, and Sass to 1.103.1 ([12294](https://github.com/pymedusa/Medusa/pull/12294))\r\n- Update GuessIt to 4.1.0 and Rebulk to 6.0.1 ([12239](https://github.com/pymedusa/Medusa/pull/12239))\r\n- Update frontend and build dependencies ([12312](https://github.com/pymedusa/Medusa/pull/12312))\r\n- Keep the show-loading indicator visible above tables and while scrolling ([12295](https://github.com/pymedusa/Medusa/pull/12295), [12297](https://github.com/pymedusa/Medusa/pull/12297))\r\n- Remove the discontinued SDBits provider ([12327](https://github.com/pymedusa/Medusa/pull/12327))\r\n\r\n#### Fixes\r\n\r\n- Recover stale IDs when changing indexers and preserve the existing show if the replacement cannot load ([12291](https://github.com/pymedusa/Medusa/pull/12291))\r\n- Preserve status-colored table rows on hover ([12286](https://github.com/pymedusa/Medusa/pull/12286))\r\n- Parse alternative season and episode names such as S2-01 ([12307](https://github.com/pymedusa/Medusa/pull/12307))\r\n- Throttle expired-cache eviction sweeps to avoid repeated full-cache scans ([12319](https://github.com/pymedusa/Medusa/pull/12319))\r\n- Stop obsolete IMDb episode-page scraping for synopsis and thumbnails ([12315](https://github.com/pymedusa/Medusa/pull/12315))\r\n- Fix related-episode WebSocket JSON serialization ([12304](https://github.com/pymedusa/Medusa/pull/12304))\r\n- Process single-file torrents while preserving validation, exclusions, download history, and failure scope ([12302](https://github.com/pymedusa/Medusa/pull/12302), [12324](https://github.com/pymedusa/Medusa/pull/12324))\r\n- Use UTC dates for relative provider timestamps near midnight ([12298](https://github.com/pymedusa/Medusa/pull/12298))\r\n- Ignore unused home-page request parameters ([12325](https://github.com/pymedusa/Medusa/pull/12325))\r\n- Safely clean up shared fanart backgrounds without spurious /destroy requests ([12326](https://github.com/pymedusa/Medusa/pull/12326))\r\n- Handle malformed IMDb IDs without blocking show addition ([12327](https://github.com/pymedusa/Medusa/pull/12327))",
+   "upstream_url": "https://github.com/pymedusa/Medusa/releases/tag/v1.0.27"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 92346,
+    "sha256": "2bd63674c519a7af3fd8a2d5d179027955b2a952d65c0e60fa6d7ff4e10f2fa4",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5662,
+    "sha256": "3609f929f4a64aea897bab15e449124d01d0a4d271ba7bc18d023eb5ac67b670",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 134324,
+    "sha256": "8d6178d2c0736770fd007a46fe29127a595bc4c3f1b836e00f3270e7da5fe52a",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2231,
+    "sha256": "8a37f8dde7160fedfcde44b584e9ad8a5b55b795ee017039d91b9197cf2cab43",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 61688,
+    "sha256": "a8dc5c57e06a18461b9e0f75f2fd6b75aada6ed7b1931be3c19f8a3f9708de3f",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 28728,
+    "sha256": "82f02630f4d17e8aefc27ca7f3af690c8d99d2c46993922dbb30074a9bc3f287",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 92220,
+    "sha256": "9cfbce421b8f758b69613bc3767c4f011a197c271937eee9ec674d1534784a1f",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5662,
+    "sha256": "d27a685152f3d75c262a459a5de29e93abe3b1b5ef4a38aa7984f30ffe12db48",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 133759,
+    "sha256": "d4bba80fd1997ae8731e9bde3a84ea011ec223542e7e678027d79ea596376412",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2231,
+    "sha256": "0a3627296403874b4c2c37c23a075e0e1fc65989e6d7853ae68aa1a70482ec87",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 61485,
+    "sha256": "ef296bea001230bee0cd85779a0d062fea02cfcb5c56b710f250bed9cbb585d0",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 28652,
+    "sha256": "c43b43836ac20e62da6c646b56227a5174f5a5fcd0d56e6392c2be81103b8dc8",
+    "url": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40245357244,
+   "run_url": "https://github.com/linuxserver-playground/docker-medusa/actions/runs/40245357244",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "medusa",
+  "branch": "master",
+  "tag": "v1.0.27-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "v1.0.27",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.23",
+    "digest": "sha256:8b8bec70e3d1c2d5e94701290856866bb99a67f9ca45eaf27a9e86c6ac3197df"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 141171653
+   },
+   "arm64": {
+    "to": 138950122
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LANG",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "8081/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:80733b6d59210f508944de9d1783919375a54f86c2b168c4ae3fc2487f1ed935",
+    "diff_id": "sha256:a4b4728c0547345db5004fd3eeb42c9bc2abd15970bf6b841e637a03a899ffab",
+    "size": 6262378,
+    "uncompressed_size": 13710791,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2a33ffb08eb4d17e0e8d5db1ab0fbcfc5c8cff192321e78c3c61d116ba8e2fa1",
+    "diff_id": "sha256:6cff8d631745e2d345e367495c82de8b947a0a1517582c3657c42ba2eda48438",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:d96c8df8fbbab6348546e2441e5ca46942821ea3f49cccc3a2fdd18e8fabe22f",
+    "diff_id": "sha256:0ce6d81fbb7d735e6459a6e824bc8d8d2d67d9ab8f9acb5194b9f17457c6216f",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:e1b36c6ba86e478c5d1520f380af446d032afb1b9178e4d4fdb5f8d1b8b603a5",
+    "diff_id": "sha256:4ee42144065a89e8a83bca08125b982b307fcc57674785c03f64cb3ac82c2027",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:b032b2a0975969e32fe6ccd9c68b02ae273bb04a7bb835b7a15b5d3d3ef09a81",
+    "diff_id": "sha256:1ed94c5c8ba19ee8a5dea376ce0cc2cdeafd0007471ba5561926c228e87446e7",
+    "size": 6031683,
+    "uncompressed_size": 14293147,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:26+00:00 VERSION=24a5d742-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:2ddcdba5334bcc69102552567e200d85717176494357234e68a979663caa5b53",
+    "diff_id": "sha256:dd711538276221ba4b3924dab597944792e02e00b850d333e68205bfdfa3c9cd",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:980b4616140848f22847b260432bfd61644d7131e1f68b2985fd9bb067f43ff8",
+    "diff_id": "sha256:3ce80bfd75ace389bd9ebedb6796d1430aad78c0b0eaa00712a1348c4dbb944c",
+    "size": 128508769,
+    "uncompressed_size": 351852498,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T23:34:30Z VERSION=v1.0.27-ls1 MEDUSA_RELEASE=v1.0.27 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     build-base &&   echo \"**** install packages ****\" &&   apk add -U --update --no-cache     ffmpeg     mediainfo     python3     python3-gdbm &&   echo \"**** install app ****\" &&   if [ -z ${MEDUSA_RELEASE+x} ]; then     MEDUSA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pymedusa/Medusa/releases/latest\"     | jq -r '.tag_name');   fi &&   mkdir -p     /app/medusa &&   curl -o     /tmp/medusa.tar.gz -L     \"https://github.com/pymedusa/Medusa/archive/${MEDUSA_RELEASE}.tar.gz\" &&   tar xf /tmp/medusa.tar.gz -C     /app/medusa --strip-components=1 &&   cd /app/medusa &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ -r requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     20,
+     55
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:626ec8f9d6dd53c3ffe045270eee728aabc316b42116951841fb046d7875cc12",
+    "diff_id": "sha256:9a05461e11ab526a08058663d7d360e877b862a97eb6b07f8398bfbccdf0ad4c",
+    "size": 825,
+    "uncompressed_size": 519,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     58,
+     58
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:06357a0da489916236ba44af76339ecef8bf75de67150ea38d12f43f2fe61146",
+    "diff_id": "sha256:a2c0494c0748841a2cb612e9f5193f4e733df7e9e65293eebd1c5ed2f60fc262",
+    "size": 354641,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:dad9395888582260396894a8cbd013db906e59eabeec89dc66ef8fd8b3e7efce",
+    "diff_id": "sha256:c94342ad354e9a82b2997165369391dfd900b5b39f037681f1c6442e1dfba359",
+    "size": 7081100,
+    "uncompressed_size": 18550372,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:b352f1b6cab5e2381767676325b10fbf9e6a04a69a7be9499524c5e21198de26",
+    "diff_id": "sha256:e6ab0e6cece673d3d1f779dfff0bf07a013fd7fe13304790250d41770d6c352d",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:f58a36e0548acfc0a8f4675c586ef12c2d41b94e093de92dab0201217a850eb8",
+    "diff_id": "sha256:a5a0208af3d320b02297e89d2a1e689311ca7e7197fe29b4585fc7729e28332b",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:a1f67a1d7afd2f7b8ec7937b3b866f8ebeee19d54867f6a0fbd72df34cdd6399",
+    "diff_id": "sha256:080a329c3afaf8536b33c0dce6d5df651df4b452adf7980e1d8ee491293a030a",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:b1fc61b1e89f9e155bf43f3f5b91449c973a59cfd0799b6311b823e1c0e121c6",
+    "diff_id": "sha256:a25be8ef0e611752f3ae11c386ad11a76324a0a6ecd2a86ce215ff04c0be7936",
+    "size": 6270241,
+    "uncompressed_size": 21436160,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:26+00:00 VERSION=24a5d742-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:1dcda4a7f11c2f570e4e36bbc6589d813e3e0058be8b5488a1588bd7025f541a",
+    "diff_id": "sha256:87b1fe0aaaa79a63b460ab3d93a88eb41bc2dd4353b616519a4243e34d7afe37",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:8b31d1f021d6a9711e072502157b795b50265705fa80fa0dda9d6eb660d03746",
+    "diff_id": "sha256:92bcc423140b560763171b2ec90c2e9d25d7d46a0742e261bdb76b8a53fb9f2e",
+    "size": 125237351,
+    "uncompressed_size": 330166403,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T23:34:30Z VERSION=v1.0.27-ls1 MEDUSA_RELEASE=v1.0.27 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     build-base &&   echo \"**** install packages ****\" &&   apk add -U --update --no-cache     ffmpeg     mediainfo     python3     python3-gdbm &&   echo \"**** install app ****\" &&   if [ -z ${MEDUSA_RELEASE+x} ]; then     MEDUSA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pymedusa/Medusa/releases/latest\"     | jq -r '.tag_name');   fi &&   mkdir -p     /app/medusa &&   curl -o     /tmp/medusa.tar.gz -L     \"https://github.com/pymedusa/Medusa/archive/${MEDUSA_RELEASE}.tar.gz\" &&   tar xf /tmp/medusa.tar.gz -C     /app/medusa --strip-components=1 &&   cd /app/medusa &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ -r requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     20,
+     55
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:626ec8f9d6dd53c3ffe045270eee728aabc316b42116951841fb046d7875cc12",
+    "diff_id": "sha256:9a05461e11ab526a08058663d7d360e877b862a97eb6b07f8398bfbccdf0ad4c",
+    "size": 825,
+    "uncompressed_size": 519,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     58,
+     58
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:c44104c6bd312b9155c2647866ec8bc346c38f6c1cfd552f04281f81c4970b43",
+    "diff_id": "sha256:a8cbbc069e283c81294232bad0216948aa591cb0400bd0dab8aa169c5a3c47eb",
+    "size": 347245,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "medusa",
+  "tag": "v1.0.27-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/medusa/v1.0.27-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 7.045,
+    "listening_ports": [
+     "8081/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 117174272,
+    "pids": 13,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/medusa/v1.0.27-ls1/amd64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 5.028,
+    "listening_ports": [
+     "8081/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 117833728,
+    "pids": 13,
+    "report_page": "https://linuxserver-playground.github.io/hub/builds/medusa/v1.0.27-ls1/arm64/index.html",
+    "tarball": "https://github.com/linuxserver-playground/docker-medusa/releases/download/v1.0.27-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "medusa",
+    "tag": "amd64-80912cc-40245357244",
+    "arch": "amd64",
+    "started": "2026-10-25T23:38:31Z",
+    "finished": "2026-10-25T23:38:54Z",
+    "success": true,
+    "runner": "f07cd7562a8d",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 7.045,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 7.0s",
+      "seconds": 7.045
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "386 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "386 packages: syft JSON 92346 bytes gzipped, SPDX for the image attestation 1033404 bytes",
+      "seconds": 0.245
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1598 dirs, 15161 files (380322246 bytes), 1394 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.20s, total 0.36s",
+      "seconds": 0.533
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 1.019
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.074
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8081/",
+      "seconds": 11.103
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8081], rss 117174272 bytes",
+      "seconds": 0.886
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 117174272,
+     "pids": 13,
+     "listening_tcp": [
+      8081
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-medusa"
+     ],
+     "changed_paths": 210
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "medusa",
+    "tag": "arm64-80912cc-40245357244",
+    "arch": "arm64",
+    "started": "2026-10-25T23:36:39Z",
+    "finished": "2026-10-25T23:36:58Z",
+    "success": true,
+    "runner": "4bed55ea4b8b",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 5.028,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 5.0s",
+      "seconds": 5.028
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "385 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "385 packages: syft JSON 92220 bytes gzipped, SPDX for the image attestation 1031398 bytes",
+      "seconds": 0.205
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1598 dirs, 15159 files (370610439 bytes), 1393 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.10s, total 0.18s",
+      "seconds": 0.319
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.669
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.054
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8081/",
+      "seconds": 10.982
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8081], rss 117833728 bytes",
+      "seconds": 0.486
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 117833728,
+     "pids": 13,
+     "listening_tcp": [
+      8081
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-medusa"
+     ],
+     "changed_paths": 210
+    }
+   }
+  }
+ }
+}
