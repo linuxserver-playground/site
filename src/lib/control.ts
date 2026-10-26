@@ -110,6 +110,8 @@ export interface Build {
   release_url: string | null;
   artifact_url: string | null;
   index_digest: string | null;
+  /** A released build: `pending` until the hub serves it, then `live` (the site renders it from then on). */
+  publish_state?: 'pending' | 'live' | 'overdue' | 'expired' | null;
   platforms: { arch: string; result?: string | null }[];
   received_at: string;
   created_at: string;

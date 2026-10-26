@@ -178,7 +178,8 @@ export function BuildsTable({ builds, runsBase, buildsBase, known, compact = fal
       </thead>
       <tbody className="divide-y divide-[var(--raft-hair)]">
         {builds.map((b) => {
-          const page = b.version_tag && known[b.image]?.includes(b.version_tag) ? `${buildsBase}${b.image}/builds/${b.version_tag}/` : null;
+          // A page the site was built with, or one it renders from the hub (control has seen the release go live).
+          const page = b.version_tag && (known[b.image]?.includes(b.version_tag) || b.publish_state === 'live') ? `${buildsBase}${b.image}/builds/${b.version_tag}/` : null;
           return (
             <tr key={`${b.repo}/${b.run_id}`}>
               <th scope="row" className="px-3 py-2.5 align-top font-normal">
@@ -381,7 +382,7 @@ export function Releases({ fallback, runsBase, buildsBase, known = {} }: Common)
             <tbody className="divide-y divide-[var(--raft-hair)]">
               {data.releases.map(({ release: r, build: b }) => {
                 const image = b?.image ?? repoImage(r.repo);
-                const page = known[image]?.includes(r.tag) ? `${buildsBase}${image}/builds/${r.tag}/` : null;
+                const page = known[image]?.includes(r.tag) || b?.publish_state === 'live' ? `${buildsBase}${image}/builds/${r.tag}/` : null;
                 return (
                   <tr key={`${r.repo}@${r.tag}`}>
                     <th scope="row" className="px-3 py-2.5 align-top font-normal">
