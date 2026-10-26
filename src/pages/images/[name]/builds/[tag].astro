@@ -18,7 +18,7 @@ import { bytes, formatDate, isoDate, relative, shortDigest, shortSha } from '@/l
 import { controlBuildUrl } from '@/lib/control';
 import { hubApi, hubFilesUrl, hubHistoryUrl, hubPackagesUrl, hubReportUrl, hubTestsUrl, hubVulnsUrl, type Arch } from '@/lib/hub';
 import { getImage, SNAPSHOT_DATE, type Image } from '@/lib/images';
-import { blockMarkdown } from '@/lib/markdown/inline';
+import { githubRepo, renderNotes } from '@/lib/markdown/notes';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
 
 export function getStaticPaths() {
@@ -29,6 +29,17 @@ export function getStaticPaths() {
 
 const { image, record } = Astro.props as { image: Image; record: BuildRecord };
 const b = record.build;
+// Release notes as GitHub would show them: the LinuxServer section is generated from this image's repository; the
+// upstream section links GitHub references only when its source is a GitHub repository.
+const upstreamRepo = githubRepo(b.notes?.upstream_url);
+const notesHtml = {
+  linuxserver: b.notes?.linuxserver ? renderNotes(b.notes.linuxserver, { github: true, repo: githubRepo(image.github_url) }) : '',
+  upstream: b.notes?.upstream ? renderNotes(b.notes.upstream, { github: !!upstreamRepo, repo: upstreamRepo }) : '',
+};
+// .post-body sets article-sized text; notes stay at the panel's size, with headings as small bold labels.
+const NOTES_PROSE =
+  'post-body prose max-w-none break-words text-sm! text-muted-foreground prose-p:my-1.5 prose-headings:mt-4 prose-headings:mb-1.5 prose-headings:text-sm prose-headings:font-semibold prose-img:my-2 prose-img:rounded-md [&_table]:block [&_table]:overflow-x-auto dark:prose-invert';
+const upstreamSource = /^https?:\/\//.test(b.notes?.upstream_url ?? '') ? b.notes!.upstream_url! : null;
 const tag = b.version.tag;
 const summary = getBuildSummary(image.name, tag);
 const builds = getBuilds(image.name);
@@ -360,7 +371,7 @@ const controlBuild = controlBuildUrl(b.repository, b.workflow.run_id);
           b.notes?.linuxserver && (
             <div class="mt-3">
               <h3 class="text-sm font-semibold">LinuxServer changes</h3>
-              <div class="post-body prose mt-1 max-w-none text-sm text-muted-foreground prose-p:my-1.5 dark:prose-invert" set:html={blockMarkdown(b.notes.linuxserver)} />
+              <div class:list={[NOTES_PROSE, 'mt-1']} set:html={notesHtml.linuxserver} />
             </div>
           )
         }
@@ -370,10 +381,10 @@ const controlBuild = controlBuildUrl(b.repository, b.workflow.run_id);
               <summary class="cursor-pointer text-sm font-semibold hover:text-primary">
                 Upstream changes{b.version.upstream && ` for ${b.version.upstream}`}
               </summary>
-              <div class="post-body prose mt-2 max-w-none text-sm text-muted-foreground prose-p:my-1.5 dark:prose-invert" set:html={blockMarkdown(b.notes.upstream)} />
-              {b.notes.upstream_url && (
+              <div class:list={[NOTES_PROSE, 'mt-2']} set:html={notesHtml.upstream} />
+              {upstreamSource && (
                 <p class="mt-2 text-xs">
-                  <a href={b.notes.upstream_url} target="_blank" rel="noopener" class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+                  <a href={upstreamSource} target="_blank" rel="noopener" class="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
                     Source<span class="sr-only"> (opens in a new tab)</span>
                   </a>
                 </p>
