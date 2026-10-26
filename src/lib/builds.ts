@@ -2,7 +2,10 @@
  * Builds, from the per-image and per-build snapshots (src/data/images/<name>.json and
  * src/data/builds/<image>/<tag>.json), written by `npm run data` from the hub's builds endpoints.
  */
-import type { Arch, Bundle, BuildSummary, BuildsData, Classification, Diff, HistoryEntry, Layer, ProxyData, TestsData } from './hub';
+import type { Arch, Bundle, BuildSummary, BuildsData, Diff, HistoryEntry, Layer, ProxyData, TestsData } from './hub';
+import { buildUrl } from './build-helpers';
+
+export { buildResult, buildUrl, CLASSIFICATION, classify, reasonLabel, REASONS } from './build-helpers';
 
 export interface ImageExtras {
   builds: BuildsData;
@@ -53,8 +56,6 @@ export interface BuildRef {
   url: string;
 }
 
-export const buildUrl = (image: string, tag: string) => `/images/${image}/builds/${tag}/`;
-
 /** Every retained build across the fleet, newest first. */
 export function allBuilds(): BuildRef[] {
   const list: BuildRef[] = [];
@@ -81,35 +82,4 @@ export function previousBuild(name: string, summary: BuildSummary): BuildSummary
 /** Whether a build is the newest of its branch; only then does the hub keep its files.<arch>.json.gz. */
 export function isNewestOfBranch(name: string, summary: BuildSummary): boolean {
   return getBuilds(name).find((b) => b.branch === summary.branch)?.tag === summary.tag;
-}
-
-export const CLASSIFICATION: Record<Classification, { label: string; desc: string }> = {
-  upstream: { label: 'upstream', desc: 'The upstream version changed.' },
-  packages: { label: 'packages', desc: 'Only packages changed.' },
-  linuxserver: { label: 'linuxserver', desc: 'The Dockerfile or the image repository changed with the same upstream version.' },
-  base: { label: 'base', desc: 'The base image digest changed.' },
-  mixed: { label: 'mixed', desc: 'More than one kind of change.' },
-  none: { label: 'identical', desc: 'An identical rebuild.' },
-  initial: { label: 'initial', desc: 'The first build of this branch the hub has seen.' },
-};
-
-export const classify = (c?: Classification | null) => (c ? CLASSIFICATION[c] : undefined);
-
-/** Human reason for a build: "rebuild", "upstream", "push"… as the workflow reported it. */
-export const REASONS: Record<string, string> = {
-  rebuild: 'scheduled rebuild',
-  upstream: 'new upstream version',
-  push: 'commit to the branch',
-  manual: 'manual trigger',
-  base: 'base image update',
-  dispatch: 'scheduler dispatch',
-};
-export const reasonLabel = (r: string) => REASONS[r] ?? r;
-
-/** Result over all platforms: success when every one succeeded. */
-export function buildResult(summary: Pick<BuildSummary, 'platforms' | 'test_success'>): 'success' | 'failure' | 'partial' {
-  const ok = summary.platforms.filter((p) => p.result === 'success').length;
-  if (ok === summary.platforms.length && summary.test_success !== false) return 'success';
-  if (ok === 0) return 'failure';
-  return summary.test_success === false ? 'failure' : 'partial';
 }

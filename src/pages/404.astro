@@ -3,17 +3,24 @@ import Layout from '@/layouts/Layout.astro';
 import ImageRow from '@/components/ImageRow.astro';
 import Otter from '@/components/Otter.astro';
 import CommandSearch from '@/components/islands/CommandSearch';
+import LiveBuildPage, { type LiveImage } from '@/components/islands/LiveBuildPage';
 import { BASE, withBase } from '@/lib/base';
 import { docRedirects, getDocs } from '@/lib/docs';
 import { relative } from '@/lib/format';
-import { recentlyUpdated, SNAPSHOT_DATE } from '@/lib/images';
+import { getAllImages, recentlyUpdated, SNAPSHOT_DATE } from '@/lib/images';
 
 const popular = recentlyUpdated(6);
 // Old documentation URLs (/general/<slug>/, /selkies/..., /FAQ/) -> their page here, from the docs' `aliases`.
 const redirects = docRedirects(await getDocs());
+// A build newer than this site is rendered from the hub in the browser (LiveBuildPage); these are the images it can
+// render a build of, with what the page header needs.
+const liveImages: Record<string, LiveImage> = Object.fromEntries(
+  getAllImages().map((i) => [i.name, { name: i.name, url: i.url, ref: i.ref, github_url: i.github_url, logo: i.logo?.src ?? null }]),
+);
+const liveNames = Object.keys(liveImages);
 ---
 
-<script is:inline define:vars={{ redirects, base: BASE }}>
+<script is:inline define:vars={{ redirects, base: BASE, liveNames }}>
   // A URL from the retired docs site (with or without this site's base path) goes straight to the page it became.
   var path = location.pathname.replace(/\/?$/, '/');
   if (base && path.indexOf(base + '/') === 0) path = path.slice(base.length);
@@ -22,8 +29,19 @@ const redirects = docRedirects(await getDocs());
   // A run page the site has not pre-rendered yet: the runs page renders it live from the control plane.
   var run = path.match(/^\/fleet\/runs\/(\d+)\/$/);
   if (run) location.replace(base + '/fleet/runs/?run=' + run[1]);
+  // A build of a known image that this site predates: LiveBuildPage renders it from the hub, so the not-found
+  // content is hidden before it paints.
+  var build = path.match(/^\/images\/([^/]+)\/builds\/[^/]+\/$/);
+  if (build && liveNames.indexOf(decodeURIComponent(build[1])) !== -1) document.documentElement.setAttribute('data-live-build', '');
 </script>
+<style is:global>
+  html[data-live-build] #not-found {
+    display: none;
+  }
+</style>
 <Layout section="none" title="Page not found" description="This page drifted off. Search for an image or head back to the fleet." noindex>
+  <LiveBuildPage client:only="react" images={liveImages} notFoundId="not-found" />
+  <div id="not-found">
   <section class="relative overflow-hidden border-b border-[var(--raft-hair)]">
     <div class="raft-aurora pointer-events-none absolute inset-0" aria-hidden="true"></div>
     <div class="raft-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
@@ -53,4 +71,5 @@ const redirects = docRedirects(await getDocs());
       {popular.map((i) => <li><ImageRow image={i} metric={relative(i.version_timestamp.replace(' ', 'T'), SNAPSHOT_DATE)} metricLabel="built" /></li>)}
     </ul>
   </section>
+  </div>
 </Layout>
