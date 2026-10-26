@@ -175,8 +175,10 @@ const tagRows = image.tags.map((t) => {
   return { ...t, release, build };
 });
 
-const facts: { label: string; value: string; title?: string; href?: string }[] = [
-  ...(image.upstream_version ? [{ label: 'Upstream version', value: image.upstream_version }] : []),
+// The upstream release the latest build packages, when its notes came from a page we can link (not a command).
+const upstreamUrl = /^https?:\/\//.test(latestRecord?.build.notes?.upstream_url ?? '') ? latestRecord!.build.notes!.upstream_url! : undefined;
+const facts: { label: string; value: string; title?: string; href?: string; external?: string }[] = [
+  ...(image.upstream_version ? [{ label: 'Upstream version', value: image.upstream_version, external: upstreamUrl }] : []),
   { label: 'GitHub stars', value: grouped(image.stars) },
   { label: 'Last build', value: relative(built, SNAPSHOT_DATE), title: formatDate(built) },
   ...(image.initial_date ? [{ label: 'First build', value: formatDate(image.initial_date) }] : []),
@@ -785,7 +787,15 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
               <div class="flex items-baseline justify-between gap-4">
                 <dt class="text-muted-foreground">{f.label}</dt>
                 <dd class="min-w-0 truncate font-mono text-foreground tabular-nums" title={f.title ?? f.value}>
-                  {f.href ? <a href={withBase(f.href)} class="underline-offset-4 hover:text-primary hover:underline">{f.value}</a> : f.value}
+                  {f.external ? (
+                    <a href={f.external} target="_blank" rel="noopener" class="underline decoration-[var(--raft-hair-strong)] underline-offset-4 hover:text-primary hover:decoration-current">
+                      {f.value}<span class="sr-only"> (upstream release, opens in a new tab)</span>
+                    </a>
+                  ) : f.href ? (
+                    <a href={withBase(f.href)} class="underline-offset-4 hover:text-primary hover:underline">{f.value}</a>
+                  ) : (
+                    f.value
+                  )}
                 </dd>
               </div>
             ))
