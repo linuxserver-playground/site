@@ -16,20 +16,23 @@ in the browser. Data producers: the hub (`linuxserver-playground/hub`), the cont
 
 | Path | What |
 | --- | --- |
-| `src/data/` | Snapshots written by `scripts/refresh-data.mjs`: `catalog.json`, `images/<name>.json`, `builds/<image>/<tag>.json` (record, diff, layers, `tests`), `mods.json`, `proot-apps.json` (with each app's icon as a 128px PNG in `src/assets/proot-apps/`), `stores.json`, `fleet.json`, `packages.json`, `categories.json`, `stats.json`, `hub.json`, `control.json` (run ids), `team.json`, `backers.json`. |
+| `src/data/` | Snapshots written by `scripts/refresh-data.mjs`, kept on the `data` branch (`npm run snapshot` restores them): `catalog.json`, `images/<name>.json`, `builds/<image>/<tag>.json` (record, diff, layers, `tests`), `mods.json`, `proot-apps.json` (with each app's icon as a 128px PNG in `src/assets/proot-apps/`), `stores.json`, `fleet.json`, `packages.json`, `categories.json`, `stats.json`, `hub.json`, `control.json` (run ids), `team.json`, `backers.json`. |
 | `src/lib/` | Data layer. `hub.ts` (API shapes and URL helpers), `control.ts` (the control plane: shapes, credentialed fetch, actions, SSE and `/api/me` hooks; browser-safe), `editor.ts` (the website editor's calls to control, content paths, templates, front matter checks; browser-safe), `markdown/preview.ts` (the editor's in-browser preview: marked and DOMPurify, matching the site's callouts and images), `git-dates.ts` (post and page dates from first-parent git history; build time), `images.ts`, `builds.ts`, `fleet.ts`, `stats.ts`, `explorer.ts` (browser-safe helpers), `lab.ts` and `hints.ts` (the config lab: model, renderers, URL token, hints), `proxy.ts` (the SWAG proxy lab), posts, `docs.ts` and `docs-sections.ts` (the documentation), feeds, JSON-LD, formatting. |
 | `src/pages/` | Routes. `images/[name].astro`, `images/[name]/builds/[tag].astro`, `fleet/` (`index`, `runs/index`, `runs/[id]`, `queue`, `builds`, `pulls`, `issues`, `releases`, `scheduler`, `actions`), `packages.astro`, `mods/` (`index`, `[branch]` a page per mod), `proot-apps.astro` (the PRoot Apps catalogue: how to install the CLI, then every enabled app; Selkies image pages link to it, `supportsProotApps` in `lib/proot-apps.ts`), `stores.astro`, blog, `docs/` (landing, `[section]/index`, `[section]/[slug]`), `edit/` (the website editor, members only, not indexed), about, support, donate, search. |
 | `src/components/build/` | `BuildParts.tsx`: the non-interactive parts of a build page as React, rendered at build time by `images/[name]/builds/[tag].astro` and in the browser by `islands/LiveBuildPage.tsx`, from one model (`src/lib/build-page.ts`). |
 | `src/components/` | Astro components (`FleetShell` for the fleet section, `AnchorHeading` for linkable sections, `DocsShell` for the documentation, a thin wrapper of `article/DocsLayout`); `article/` the post and docs layouts as React (`PostArticle`, `DocsLayout`, `Crumbs`), rendered at build time by `blog/[slug].astro` and `DocsShell` and in the browser by the editor's Preview, so a change to either layout goes there; `islands/` React islands (`ConfigLab`, `ProxyTabs` with `ProxyLab` for SWAG and the hub's Caddy and Traefik references, catalogue, search…); `islands/fleet/` the live fleet panels, sign-in and the shared pills, states and action buttons; `islands/editor/` the website editor (`Editor` the gate and new-entry form, `Workspace` the details form, split pane, Insert menu and Preview, `CodeEditor` CodeMirror; on the pages, for people who can edit, `EntryBar` (Edit, Delete, a page's open edits), `NewBar` (New post, New page, what is not published yet) and `EditLink`; `hooks.ts` reads the editor status and open edits once per page); `islands/explorer/` the explorer views, `CiReport` and `Vulns`; `ui/` shadcn components (do not edit). |
 | `src/content/` | Blog posts, authors, `spotlight.yaml`, and `docs/<section>/<slug>.md` (the documentation; schema in `src/content.config.ts`). `imagedocs/` and `moddocs/` are written by `npm run data` from the hub; never edit them. |
 | `src/styles/globals.css` | Design tokens and utilities (Raft). |
-| `scripts/` | `refresh-data.mjs`, `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `fleet-check.mjs`, `editor-check.mjs`, `new-post.mjs`, `new-doc.mjs`. |
+| `scripts/` | `refresh-data.mjs`, `snapshot.sh` (restore and publish the snapshots), `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `fleet-check.mjs`, `editor-check.mjs`, `new-post.mjs`, `new-doc.mjs`. |
 | `.github/workflows/` | `deploy.yml` (push, daily, `repository_dispatch: hub-updated`, manual), `check.yml` (pull requests). |
 
 ## What you may edit
 
-Everything except `src/data/`, `src/assets/logos/`, `src/assets/proot-apps/` and `src/assets/team/`, which `npm run data` writes and CI
-commits as `Refresh data snapshots`. Never hand-edit a snapshot; fix the refresh script or the hub. Do not
+Everything except the data snapshots: `src/data/`, `src/assets/logos/`, `src/assets/proot-apps/`,
+`src/assets/team/`, `src/content/imagedocs/` (but its `README.md`) and `src/content/moddocs/`. `npm run data` writes
+them, and the Deploy publishes them as the one commit of the `data` branch (`scripts/snapshot.sh`); they are ignored
+on main, so they can never land in a commit or an editor pull request. Never hand-edit a snapshot or push to `data`;
+fix the refresh script or the hub. Do not
 edit `src/components/ui/` (regenerate with shadcn). Never add a stat the hub does not provide (there are no
 pull counts), and never read from a registry or namespace outside `linuxserver-playground`, the hub and the
 control plane. Every internal link goes through `withBase()`.
@@ -73,8 +76,8 @@ when you move it. Follow CONTRIBUTING.md, "Writing docs".
 
 ```bash
 npm ci
-# The build reads the committed src/data/ snapshot: a site change needs no refresh. For a hub change, refresh
-# from a local hub build instead (needs ../hub built):
+npm run snapshot                   # the data snapshots from the data branch: a site change needs no refresh
+# For a hub change, refresh from a local hub build instead (needs ../hub built):
 npm run data:local
 npm run check                      # astro check: must report 0 errors
 npm run build                      # dist/ and the Pagefind index
@@ -92,8 +95,10 @@ validates every post's and every docs page's front matter, and `a11y.mjs` covers
 Don't refresh from the live hub to test (`npm run data`), and never run `REFRESH_ALL=1` locally. GitHub Pages
 rate-limits by IP: two full refreshes from one machine got 429 for every hub URL, `catalog.json` included, for
 over half an hour, and the same limit is what failed the site's Deploys. `npm run data` is for the Deploy
-workflow. It fetches only the builds `src/data/builds/` lacks, refetches all of them only on the daily scheduled
-run, keeps at most 8 requests in flight and backs off on 429. Never commit a refreshed `src/data/` by hand.
+workflow, which restores the snapshots first (`scripts/snapshot.sh restore`), because the refresh fetches only
+the builds `src/data/builds/` lacks. It refetches all of them only on the daily scheduled run, keeps at most 8
+requests in flight and backs off on 429. `npm run snapshot` reads the `data` branch from git, not Pages, so it is
+safe to run as often as you like.
 
 ## Contracts
 

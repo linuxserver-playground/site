@@ -2,8 +2,9 @@
 # has new data (repository_dispatch type `hub-updated`, relayed by the control plane after each successful hub
 # Deploy), and on demand.
 #
-# Every run first refreshes src/data/ from the hub (HUB_URL), GitHub and Open Collective and commits the
-# snapshots, so the build is reproducible from the repository alone.
+# Every run restores the data snapshots from the `data` branch, refreshes them from the hub (HUB_URL), GitHub and
+# Open Collective, and publishes them back as that branch's one commit (scripts/snapshot.sh), so the build is
+# reproducible from the repository alone and main's history holds only what people write.
 #
 # One job: the Pages deploy is a step, not a job of its own, because every job waits separately for one of the
 # organisation's 20 runner slots, and during a burst of image builds that second wait was up to 12 minutes for
@@ -44,6 +45,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # posts and docs are dated from git history (src/lib/git-dates.ts)
+          filter: blob:none # which needs commits and paths only: old files (post images, mostly) stay on GitHub
 
       - uses: actions/setup-node@v7
         with:
@@ -52,6 +54,10 @@ jobs:
 
       - run: npm ci
 
+      - name: Restore the data snapshots
+        # The refresh is incremental: it fetches only the builds the snapshot lacks.
+        run: scripts/snapshot.sh restore
+
       - name: Refresh data snapshots from the hub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -59,16 +65,13 @@ jobs:
           REFRESH_ALL: ${{ github.event_name == 'schedule' && '1' || '' }}
         run: npm run data
 
-      - name: Commit refreshed snapshots
-        if: github.event_name != 'push'
+      - name: Publish the refreshed snapshots
+        env:
+          ALLOW_SHRINK: ${{ vars.DATA_ALLOW_SHRINK }} # lets one intended big drop in files through
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/data src/assets/logos src/assets/team
-          if ! git diff --cached --quiet; then
-            git commit -m "Refresh data snapshots [skip ci]"
-            git push
-          fi
+          scripts/snapshot.sh publish
 
       - name: Cache optimised images
         uses: actions/cache@v6

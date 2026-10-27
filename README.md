@@ -18,7 +18,8 @@ api.linuxserver.io, Docker Hub and Scarf.
 
 ```bash
 npm install
-npm run data              # refresh src/data/ from the hub (HUB_URL), GitHub and Open Collective
+npm run snapshot          # the data snapshots (src/data/ and the rest) from the data branch
+npm run data              # refresh them from the hub (HUB_URL), GitHub and Open Collective (CI's job: see below)
 npm run data:local        # the same from a hub checkout at ../hub (its dist/ and out/)
 npm run dev               # http://localhost:4321/site/
 npm run build             # dist/ plus the Pagefind search index. This is what CI deploys
@@ -32,7 +33,7 @@ Writing a blog post or a docs page? See [CONTRIBUTING.md](CONTRIBUTING.md), or j
 
 ```
 src/
-  data/            snapshots of the hub API, GitHub and Open Collective (npm run data). Never hand-edited
+  data/            snapshots of the hub API, GitHub and Open Collective (npm run data), on the data branch. Never hand-edited
     catalog.json     every image in full (ImageDetail)
     images/<name>.json   builds and history, proxy conf, kubernetes manifest, quadlet
     builds/<image>/<tag>.json   the bundle record, its diff, its layer tables and its tests.json
@@ -65,8 +66,14 @@ scripts/           data refresh, new-post, new-doc, brand assets, screenshots, a
 ### Data
 
 The build only reads the JSON snapshots in `src/data/`, so it is fast, deterministic, and keeps working
-when the hub is down. `npm run data` refreshes them; the deploy workflow runs it on every build and commits
-the result. `HUB_URL` (default `https://linuxserver-playground.github.io/hub`) is both the data source and
+when the hub is down. `npm run data` refreshes them; the deploy workflow runs it on every build and publishes
+the result. The snapshots (`src/data/`, `src/assets/logos/`, `team/` and `proot-apps/`, `src/content/imagedocs/`
+and `moddocs/`) are not on main: they are the one commit of the `data` branch, which every publish replaces with a
+new root commit (`scripts/snapshot.sh`), so their history never grows and main's history holds only what people
+write. `npm run snapshot` lays that commit over a checkout. The first publish of each UTC day is also kept as
+`refs/data-history/<date>` for a week, and a publish that would drop more than a tenth of the files is refused
+(repository variable `DATA_ALLOW_SHRINK=1` for a run where that is intended). To roll back:
+`git push --force origin refs/data-history/<date>:refs/heads/data`. `HUB_URL` (default `https://linuxserver-playground.github.io/hub`) is both the data source and
 the base of every hub link; `--local <hub checkout>` reads `dist/` and `out/` from disk instead, for
 development against an unpublished hub. Set `GITHUB_TOKEN` to avoid rate limits and `GITHUB_ORG` to change
 whose public members are the team (default `linuxserver-playground`).
