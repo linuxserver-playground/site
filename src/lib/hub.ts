@@ -314,6 +314,9 @@ export interface Mod {
   /** The images the mod is for: its target, then the images its `mod.yml` lists under `images`. */
   applies_to: string[];
   docs?: string | null;
+  /** Where the tool version the mod pins comes from (`mod.yml` `upstream`). The control plane checks it hourly and
+   * builds the mod when a new version has no `<branch>-<version>` tag yet. Absent from snapshots made before. */
+  upstream?: { url?: string | null; type: string; source: string } | null;
   /** A `mod.yml` branch of linuxserver-playground/docker-mods. */
   source: 'playground';
 }
