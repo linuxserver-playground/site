@@ -317,8 +317,25 @@ export interface Mod {
   /** Where the tool version the mod pins comes from (`mod.yml` `upstream`). The control plane checks it hourly and
    * builds the mod when a new version has no `<branch>-<version>` tag yet. Absent from snapshots made before. */
   upstream?: { url?: string | null; type: string; source: string } | null;
+  /** What `ghcr.io/linuxserver-playground/mods` holds for the mod, one entry per version line, the default line
+   * first; empty until it is published. Read hourly from the registry. Absent from snapshots made before. */
+  builds?: ModBuild[];
   /** A `mod.yml` branch of linuxserver-playground/docker-mods. */
   source: 'playground';
+}
+
+export interface ModBuild {
+  /** The version line (`mod.yml` `upstream.lines` name); null for the default line, which `:<branch>` follows. */
+  line?: string | null;
+  /** The upstream version built; null for a mod without one. */
+  version?: string | null;
+  built_at?: string | null;
+  /** The exact tag of that build: `<branch>-<version>`, or `<branch>-<sha7>` for a mod without a version. */
+  pin?: string | null;
+  /** The floating tags that follow the line: `:<branch>` for the default line, then the line's major and minor tags. */
+  tags: string[];
+  digest?: string | null;
+  revision?: string | null;
 }
 
 export interface ProxyData {
