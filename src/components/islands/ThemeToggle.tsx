@@ -22,7 +22,7 @@ declare global {
 
 /** Light / dark / system switch. */
 export default function ThemeToggle() {
-  const [pref, setPref] = React.useState<Pref>('dark');
+  const [pref, setPref] = React.useState<Pref>('system');
 
   React.useEffect(() => {
     setPref(document.documentElement.dataset.themePref as Pref);
