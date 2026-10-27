@@ -10,6 +10,7 @@
  *   control.json          the run ids the control plane knows, so /fleet/runs/<id>/ pages exist for them
  *   categories.json       categories with their images
  *   mods.json             the mods index
+ *   proot-apps.json       the PRoot Apps index (the PRoot Apps page), with each app's icon in src/assets/proot-apps/
  *   stores.json           every store URL with its one-line how-to
  *   fleet.json            base images and staleness
  *   packages.json         the package index (name, slug, types, image count)
@@ -38,6 +39,8 @@
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -236,6 +239,36 @@ for (const m of modsIndex.mods) {
   modDocCount++;
 }
 console.log(`  wrote src/content/moddocs/ (${modDocCount} mods)`);
+// The PRoot Apps index for /proot-apps/, and each app's icon, copied locally like the image logos. A hub that does
+// not serve the index yet keeps the previous snapshot (or none: the page then says so). Icons are stored as 128px
+// PNGs: the repository's SVGs run to 700 kB, and Astro will not rasterise SVG itself.
+const prootApps = (await optional(hubJSON('api/v1/proot-apps.json')))?.data;
+if (prootApps) {
+  write('proot-apps.json', prootApps);
+  const icons = out('../assets/proot-apps/');
+  mkdirSync(icons, { recursive: true });
+  const withIcon = prootApps.apps.filter((a) => a.icon);
+  const wanted = new Set(withIcon.map((a) => `${a.name}.png`));
+  for (const f of readdirSync(icons)) if (!wanted.has(f)) rmSync(new URL(f, icons));
+  await pool(withIcon, 8, async (a) => {
+    const target = new URL(`${a.name}.png`, icons);
+    try {
+      const res = await fetch(a.icon, { headers: UA });
+      if (!res.ok) throw new Error(String(res.status));
+      const input = Buffer.from(await res.arrayBuffer());
+      // An SVG is rendered at the density that makes its longer side 256px, so small viewBoxes stay sharp.
+      const { width = 256, height = 256, format } = await sharp(input).metadata();
+      const density = format === 'svg' ? Math.min(2400, Math.max(72, (72 * 256) / Math.max(width, height))) : undefined;
+      await sharp(input, density ? { density } : {})
+        .resize(128, 128, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+        .png()
+        .toFile(fileURLToPath(target));
+    } catch (e) {
+      if (!existsSync(target)) console.warn(`  ! icon ${a.name}: ${e.message}`);
+    }
+  });
+  console.log(`  wrote src/assets/proot-apps/ (${wanted.size} icons)`);
+}
 write('stores.json', (await hubJSON('api/v1/stores/index.json')).data.stores);
 write('packages.json', (await hubJSON('api/v1/packages.json')).data.packages);
 const [bases, staleness] = await Promise.all([hubJSON('api/v1/fleet/bases.json'), hubJSON('api/v1/fleet/staleness.json')]);

@@ -1,0 +1,192 @@
+---
+import { getImage } from 'astro:assets';
+import { ArrowUpRight } from 'lucide-react';
+import AnchorHeading from '@/components/AnchorHeading.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Panel from '@/components/Panel.astro';
+import CopyButton from '@/components/islands/CopyButton';
+import ProotAppsBrowser, { type ProotAppCard } from '@/components/islands/ProotAppsBrowser';
+import Layout from '@/layouts/Layout.astro';
+import { withBase } from '@/lib/base';
+import { hubApi } from '@/lib/hub';
+import { PROOT_APPS_REPO, PROOT_DOCS, PROOT_INSTALL, PROOT_SHELL, PROOT_UNINSTALL, getProotApps, prootCategories, prootCli, prootIcon } from '@/lib/proot-apps';
+
+const raw = getProotApps();
+const categories = prootCategories(raw);
+const cli = prootCli();
+const arm64 = raw.filter((a) => a.platforms.includes('arm64')).length;
+// Icons go to the island as URLs of WebP copies, 2x the 32px they are shown at.
+const apps: ProotAppCard[] = await Promise.all(
+  raw.map(async (a) => {
+    const icon = prootIcon(a.name);
+    return icon ? { ...a, iconSrc: (await getImage({ src: icon, width: 64, height: 64, format: 'webp', fit: 'contain' })).src } : a;
+  }),
+);
+const example = raw.some((a) => a.name === 'firefox') ? 'firefox' : (raw[0]?.name ?? 'firefox');
+const link = 'underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current';
+const crumbs = [{ name: 'PRoot Apps', href: '/proot-apps/' }];
+const usage = [
+  { label: 'Install', command: `proot-apps install ${example}` },
+  { label: 'Update', command: `proot-apps update ${example}` },
+  { label: 'Remove', command: `proot-apps remove ${example}` },
+];
+---
+
+<Layout
+  section="proot-apps"
+  title="PRoot Apps"
+  description={`${raw.length || 'Over 100'} desktop applications you can install without root on almost any Linux system with PRoot Apps: all it needs is bash and curl.`}
+  breadcrumbs={crumbs}
+>
+  <PageHeader
+    eyebrow="PRoot Apps"
+    title="Desktop apps, no root required"
+    lede="PRoot Apps installs, updates and runs complete desktop applications on almost any Linux system, even the most locked down: all it needs is bash and curl. Every app brings its whole toolchain and lives in its own folder in your home directory."
+    crumbs={crumbs}
+  >
+    {
+      raw.length > 0 && (
+        <dl class="mt-8 flex flex-wrap gap-x-8 gap-y-3 font-mono text-sm">
+          <div class="flex items-baseline gap-2">
+            <dt class="sr-only">Apps</dt>
+            <dd class="text-foreground">{raw.length}</dd>
+            <dd class="text-muted-foreground" aria-hidden="true">apps</dd>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <dt class="sr-only">Categories</dt>
+            <dd class="text-foreground">{categories.length}</dd>
+            <dd class="text-muted-foreground" aria-hidden="true">categories</dd>
+          </div>
+          <div class="flex items-baseline gap-2">
+            <dt class="sr-only">Apps for arm64</dt>
+            <dd class="text-foreground">{arm64}</dd>
+            <dd class="text-muted-foreground" aria-hidden="true">on arm64</dd>
+          </div>
+          {
+            cli && (
+              <div class="flex items-baseline gap-2">
+                <dt class="text-muted-foreground">proot-apps</dt>
+                <dd>
+                  <a href={cli.url} target="_blank" rel="noopener" class={link}>
+                    {cli.version}
+                    <span class="sr-only"> release notes (opens in a new tab)</span>
+                  </a>
+                </dd>
+              </div>
+            )
+          }
+        </dl>
+      )
+    }
+  </PageHeader>
+
+  <div class="raft-container pt-10">
+    <section aria-labelledby="get-started">
+      <AnchorHeading id="get-started">Get started</AnchorHeading>
+      <div class="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <div class="min-w-0">
+          <h3 class="raft-eyebrow"><span class="text-primary">1</span> · Install proot-apps</h3>
+          <p class="mt-2 text-sm text-muted-foreground">
+            As your own user, no sudo: this puts <code class="font-mono text-foreground">proot-apps</code> and the tools it bundles in <code class="font-mono text-foreground">~/.local/bin</code>. Run it again to update. amd64 and arm64 only.
+          </p>
+          <Panel title="install proot-apps" class="mt-3">
+            <CopyButton slot="actions" client:visible text={PROOT_INSTALL} label="Copy the proot-apps install commands" className="size-7" />
+            <pre class="overflow-x-auto bg-[var(--raft-code-bg)] p-4 font-mono text-xs leading-6" tabindex="0" aria-label="Commands that install proot-apps"><code>{PROOT_INSTALL}</code></pre>
+          </Panel>
+          <details class="mt-3 text-sm">
+            <summary class="cursor-pointer text-muted-foreground hover:text-foreground">Keep it on your PATH, with bash completion</summary>
+            <Panel class="mt-2">
+              <div class="flex items-start">
+                <pre class="min-w-0 flex-1 overflow-x-auto bg-[var(--raft-code-bg)] p-4 font-mono text-xs leading-6" tabindex="0" aria-label="Commands that add proot-apps to your shell"><code>{PROOT_SHELL}</code></pre>
+                <CopyButton client:visible text={PROOT_SHELL} label="Copy the shell setup commands" className="m-1" />
+              </div>
+            </Panel>
+          </details>
+          <details class="mt-2 text-sm">
+            <summary class="cursor-pointer text-muted-foreground hover:text-foreground">Uninstall proot-apps and every app</summary>
+            <Panel class="mt-2">
+              <div class="flex items-start">
+                <pre class="min-w-0 flex-1 overflow-x-auto bg-[var(--raft-code-bg)] p-4 font-mono text-xs leading-6" tabindex="0" aria-label="Commands that remove proot-apps"><code>{PROOT_UNINSTALL}</code></pre>
+                <CopyButton client:visible text={PROOT_UNINSTALL} label="Copy the uninstall commands" className="m-1" />
+              </div>
+            </Panel>
+          </details>
+        </div>
+
+        <div class="min-w-0">
+          <h3 class="raft-eyebrow"><span class="text-primary">2</span> · Install an app</h3>
+          <p class="mt-2 text-sm text-muted-foreground">
+            Pick one from the <a href="#apps" class={link}>catalogue below</a>; each card has its command. The app lands in <code class="font-mono text-foreground">~/proot-apps/</code> with desktop and menu shortcuts that do not clash with system packages.
+          </p>
+          <ul class="mt-3 space-y-2">
+            {
+              usage.map((u) => (
+                <li class="flex items-center gap-3">
+                  <span class="w-14 shrink-0 text-xs text-muted-foreground">{u.label}</span>
+                  <div class="flex min-w-0 flex-1 items-center gap-1 rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] py-0.5 pr-0.5 pl-2.5 font-mono text-xs">
+                    <span class="min-w-0 flex-1 truncate">
+                      <span class="text-primary" aria-hidden="true">$ </span>
+                      {u.command}
+                    </span>
+                    <CopyButton client:visible text={u.command} label={`Copy: ${u.command}`} />
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+          <p class="mt-4 text-sm text-muted-foreground">
+            Any app image works, not only the catalogue's short names: <code class="font-mono break-all text-foreground">proot-apps install ghcr.io/linuxserver-playground/proot-apps:{example}</code>.
+          </p>
+          <div class="raft-panel mt-4 p-4 text-sm">
+            <h4 class="font-medium">Already in our desktop images</h4>
+            <p class="mt-1 text-muted-foreground">
+              Webtop and every image built on the Selkies base ship proot-apps. Apps install into <code class="font-mono text-foreground">/config</code>, so they survive image updates, and show in the session's Apps sidebar. See <a href={withBase('/docs/selkies/installing-apps/')} class={link}>Installing Applications</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-8 grid grid-cols-1 gap-3 text-sm md:grid-cols-3">
+        <div class="raft-panel p-4">
+          <h3 class="font-medium">How it works</h3>
+          <p class="mt-1 text-muted-foreground">
+            Apps are container images on GHCR, unpacked into your home directory and run under <a href="https://github.com/selkies-project/proot-next" target="_blank" rel="noopener" class={link}>proot-next<span class="sr-only"> (opens in a new tab)</span></a>, which gives each one its own root filesystem without privileges, namespaces or a daemon.
+          </p>
+        </div>
+        <div class="raft-panel p-4">
+          <h3 class="font-medium">What it is not</h3>
+          <p class="mt-1 text-muted-foreground">A sandbox. PRoot runs in user space and an app can leave it; it exists to make installing easy, not to isolate. Every app is a full copy of its distribution, so it trades disk space for working anywhere.</p>
+        </div>
+        <div class="raft-panel p-4">
+          <h3 class="font-medium">Learn more</h3>
+          <p class="mt-1 text-muted-foreground">
+            The <a href={PROOT_DOCS} target="_blank" rel="noopener" class={link}>proot-next documentation<span class="sr-only"> (opens in a new tab)</span></a> explains the internals, and the <a href={PROOT_APPS_REPO} target="_blank" rel="noopener" class={link}>proot-apps repository<span class="sr-only"> (opens in a new tab)</span></a> covers building your own apps and local catalogues.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-14" aria-labelledby="apps">
+      <AnchorHeading id="apps">Apps</AnchorHeading>
+      {
+        apps.length > 0 ? (
+          <div class="mt-5">
+            <ProotAppsBrowser client:load apps={apps} categories={categories} />
+          </div>
+        ) : (
+          <div class="raft-panel mt-5 grid place-items-center gap-2 px-6 py-16 text-center">
+            <p class="text-lg font-medium">The catalogue is on its way.</p>
+            <p class="max-w-md text-sm text-muted-foreground">
+              This build of the site predates the hub's app index. Until the next one, the list is in the <a href={PROOT_APPS_REPO} target="_blank" rel="noopener" class={link}>proot-apps README<span class="sr-only"> (opens in a new tab)</span></a>.
+            </p>
+          </div>
+        )
+      }
+    </section>
+
+    <p class="mt-8 text-xs text-muted-foreground">
+      Source: <a href={hubApi('proot-apps.json')} class:list={['font-mono', link]}>api/v1/proot-apps.json</a>, from <a href={`${PROOT_APPS_REPO}/blob/master/metadata/metadata.yml`} target="_blank" rel="noopener" class:list={['font-mono', link]}>metadata.yml<span class="sr-only"> (opens in a new tab)</span></a>.
+      <a href={PROOT_APPS_REPO} target="_blank" rel="noopener" class="ml-1 inline-flex items-center gap-0.5 hover:text-foreground">Contribute an app <ArrowUpRight className="size-3" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span></a>
+    </p>
+  </div>
+</Layout>

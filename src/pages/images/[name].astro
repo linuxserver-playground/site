@@ -24,13 +24,14 @@ import { hubApi, hubFilesUrl, hubHistoryUrl, HUB_URL, type Arch } from '@/lib/hu
 import { getAllImages, hasRealSummary, hubDate, IMAGE_KINDS, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { getCollection, render } from 'astro:content';
 import { buildLabModel } from '@/lib/lab';
+import { getProotApps, supportsProotApps } from '@/lib/proot-apps';
 import type { ProxySample } from '@/lib/proxy';
 import { imageJsonLd } from '@/lib/jsonld';
 import { blockMarkdown, inlineMarkdown } from '@/lib/markdown/inline';
 import { getPosts, postsForImage } from '@/lib/posts';
 import { LINKS, SUPPORT_CHANNELS } from '@/lib/site';
 import { toPostViews } from '@/lib/views';
-import { AlertTriangle, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
+import { AlertTriangle, AppWindow, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
 
 export function getStaticPaths() {
   return getAllImages().map((image) => ({ params: { name: image.name }, props: { image } }));
@@ -816,6 +817,19 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
           }
         </ul>
       </div>
+      {
+        supportsProotApps(image) && (
+          <a href={withBase('/proot-apps/')} class="raft-panel group flex items-start gap-3 p-4 text-sm hover:bg-muted/40">
+            <AppWindow className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+            <span class="min-w-0">
+              <span class="block font-medium text-foreground group-hover:text-primary">This image supports PRoot Apps</span>
+              <span class="mt-1 block text-muted-foreground">
+                Install {getProotApps().length > 0 ? `any of ${getProotApps().length}` : 'more'} desktop apps from its terminal, kept in /config across updates.
+              </span>
+            </span>
+          </a>
+        )
+      }
       {
         builds.length > 0 && (
           <nav class="raft-panel p-2" aria-label="Latest builds">

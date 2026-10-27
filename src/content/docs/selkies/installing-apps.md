@@ -4,7 +4,7 @@ description: Adding software inside an immutable container with proot-apps or Do
 section: selkies
 order: 8
 group: User guide
-updated: 2026-10-20
+updated: 2026-10-27
 aliases:
   - /selkies/user-guide/installing-apps/
 ---
@@ -29,7 +29,7 @@ proot-apps update filezilla
 proot-apps remove filezilla
 ```
 
-The list of supported applications is maintained in the [proot-apps README](https://github.com/linuxserver/proot-apps?tab=readme-ov-file#supported-apps).
+Every supported application, with its install command, is on the [PRoot Apps](/proot-apps/) page.
 
 Three things to know:
 

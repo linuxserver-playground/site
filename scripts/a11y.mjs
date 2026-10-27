@@ -35,6 +35,7 @@ const list = paths.length
       '/fleet/actions/',
       '/packages/',
       '/mods/',
+      '/proot-apps/',
       '/mods/radarr-striptracks/',
       '/mods/universal-calibre/',
       '/mods/swag-auto-reload/',

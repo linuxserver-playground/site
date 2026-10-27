@@ -28,6 +28,7 @@ export const NAV: NavItem[] = [
   { label: 'Docs', href: '/docs/', description: 'How to run our containers, Selkies, policies and the FAQ' },
   { label: 'Fleet', href: '/fleet/', description: 'Live board, runs, queue, builds, scheduler and the base images' },
   { label: 'Mods', href: '/mods/', description: 'Docker mods for every image' },
+  { label: 'PRoot Apps', href: '/proot-apps/', description: 'Desktop applications installed without root, with only bash and curl' },
   { label: 'Stores', href: '/stores/', description: 'Unraid, Portainer, CasaOS, Umbrel and more' },
   { label: 'Blog', href: '/blog/', description: 'News, guides and release notes' },
   { label: 'Support', href: '/support/', description: 'Discord, forum and GitHub' },

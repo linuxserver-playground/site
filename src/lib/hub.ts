@@ -324,6 +324,30 @@ export interface Mod {
   source: 'playground';
 }
 
+/** `/api/v1/proot-apps.json`: the desktop apps the `proot-apps` CLI installs, from proot-apps' `metadata/metadata.yml`
+ * without the disabled ones, by title. */
+export interface ProotApp {
+  /** What `proot-apps install` takes. */
+  name: string;
+  title: string;
+  category: string;
+  description: string;
+  platforms: string[];
+  /** The app's icon in the proot-apps repository; the site copies it to `src/assets/proot-apps/`. */
+  icon?: string | null;
+  /** `ghcr.io/linuxserver-playground/proot-apps:<name>` */
+  image: string;
+  /** The app's folder in the proot-apps repository. */
+  url: string;
+}
+
+export interface ProotAppsData {
+  source: string;
+  /** The CLI release the install command downloads; absent until the repository has one. */
+  cli?: { version: string; url: string; published_at?: string | null } | null;
+  apps: ProotApp[];
+}
+
 export interface ModBuild {
   /** The version line (`mod.yml` `upstream.lines` name); null for the default line, which `:<branch>` follows. */
   line?: string | null;
