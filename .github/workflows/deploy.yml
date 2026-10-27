@@ -1,8 +1,13 @@
 # Builds the site and publishes it to GitHub Pages: on every push to main, daily, when the hub tells us it
-# has new data (repository_dispatch type `hub-updated`, sent by the hub's deploy workflow), and on demand.
+# has new data (repository_dispatch type `hub-updated`, relayed by the control plane after each successful hub
+# Deploy), and on demand.
 #
 # Every run first refreshes src/data/ from the hub (HUB_URL), GitHub and Open Collective and commits the
 # snapshots, so the build is reproducible from the repository alone.
+#
+# One job: the Pages deploy is a step, not a job of its own, because every job waits separately for one of the
+# organisation's 20 runner slots, and during a burst of image builds that second wait was up to 12 minutes for
+# 20 seconds of work.
 name: Deploy
 
 on:
@@ -30,8 +35,11 @@ env:
   GITHUB_ORG: linuxserver-playground
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -76,12 +84,5 @@ jobs:
         with:
           path: dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - id: deployment
         uses: actions/deploy-pages@v5
