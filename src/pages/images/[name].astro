@@ -10,6 +10,8 @@ import SectionHead from '@/components/SectionHead.astro';
 import ImageLogo from '@/components/ImageLogo.astro';
 import AnchorHeading from '@/components/AnchorHeading.astro';
 import CopyButton from '@/components/islands/CopyButton';
+import HeroScreenshot from '@/components/islands/HeroScreenshot';
+import ContributeCallout from '@/components/ContributeCallout.astro';
 import NewerBuilds from '@/components/islands/NewerBuilds';
 import ImageFleet, { type SnapshotBranch } from '@/components/islands/fleet/ImageFleet';
 import InstallMenu from '@/components/islands/InstallMenu';
@@ -20,7 +22,7 @@ import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageE
 import { dependents, installOptions, modPath, modsForImage } from '@/lib/fleet';
 import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/format';
 import { CONTROL_URL, controlImageUrl } from '@/lib/control';
-import { hubApi, hubFilesUrl, hubHistoryUrl, HUB_URL, type Arch } from '@/lib/hub';
+import { hubApi, hubFilesUrl, hubHistoryUrl, hubReportFileUrl, HUB_URL, type Arch } from '@/lib/hub';
 import { getAllImages, hasRealSummary, hubDate, IMAGE_KINDS, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { getCollection, render } from 'astro:content';
 import { buildLabModel } from '@/lib/lab';
@@ -30,6 +32,7 @@ import { imageJsonLd } from '@/lib/jsonld';
 import { blockMarkdown, inlineMarkdown } from '@/lib/markdown/inline';
 import { getPosts, postsForImage } from '@/lib/posts';
 import { LINKS, SUPPORT_CHANNELS } from '@/lib/site';
+import { imagePrompts } from '@/lib/contribute';
 import { toPostViews } from '@/lib/views';
 import { AlertTriangle, AppWindow, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
 
@@ -91,6 +94,17 @@ for (const a of latestArches) {
 }
 const latestHasFiles = latestArches.some((a) => (latestFiles[a]?.length ?? 0) > 0) && !!latestRecord;
 const latestResult = latest ? buildResult(latest) : null;
+// The CI screenshot of the latest build, x86-64 first, shown in the header so readers see the app before reading about it.
+const shotArch = (['amd64', 'arm64'] as Arch[]).find((a) => latestRecord?.tests?.reports?.[a]?.files?.screenshot);
+const heroShot =
+  latest && shotArch
+    ? {
+        url: hubReportFileUrl(image.name, latest.tag, shotArch, latestRecord!.tests!.reports![shotArch]!.files!.screenshot!),
+        alt: `Screenshot of ${image.name} ${latest.tag}, taken by the test harness on ${shotArch}`,
+        caption: `${latest.tag} · ${shotArch} · CI screenshot`,
+        buildUrl: withBase(`${buildUrl(image.name, latest.tag)}#ci`),
+      }
+    : null;
 const latestFacts: { label: string; value: string; mono?: boolean; title?: string }[] = latest
   ? [
       { label: 'Base image', value: latest.base.image.replace('ghcr.io/linuxserver/', ''), mono: true, title: latest.base.image },
@@ -218,6 +232,7 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
   ...(proxySample ? [{ id: 'proxy', label: 'Reverse proxy' }] : []),
   ...(changelog.length > 0 ? [{ id: 'changelog', label: 'Changelog' }] : []),
   { id: 'support', label: 'Support' },
+  ...(image.deprecated || image.archived ? [] : [{ id: 'contribute', label: 'Improve this image' }]),
 ];
 ---
 
@@ -231,7 +246,8 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
   <header class="relative overflow-hidden border-b border-[var(--raft-hair)]" data-pagefind-body>
     <div class="raft-aurora pointer-events-none absolute inset-0 opacity-60" aria-hidden="true"></div>
     <div class="raft-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
-    <div class="raft-container relative py-10 md:py-14">
+    <div class:list={['raft-container relative py-10 md:py-14', heroShot && 'grid grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:items-center']}>
+      <div class="min-w-0">
       <Breadcrumbs crumbs={crumbs} />
       <div class="mt-8 flex flex-col gap-6 md:flex-row md:items-center">
         <span class="grid size-20 shrink-0 place-items-center rounded-xl border border-[var(--raft-hair-strong)] bg-card p-3 shadow-[var(--raft-shadow)]">
@@ -269,6 +285,8 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
         <span class="min-w-0 flex-1 truncate"><span class="text-primary" aria-hidden="true">$ </span>{pull}</span>
         <CopyButton client:visible text={pull} label="Copy docker pull command" variant="secondary" />
       </div>
+      </div>
+      {heroShot && <HeroScreenshot client:load {...heroShot} className="max-w-xl lg:max-w-none" />}
     </div>
   </header>
 
@@ -780,6 +798,18 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
           }
         </ul>
       </section>
+
+      {
+        !image.deprecated && !image.archived && (
+          <ContributeCallout
+            id="contribute"
+            title={`Improve ${image.name}`}
+            body={`This image is kept up by volunteers, and you can be one of them. You don't need to know how the pipeline works: point an AI agent at the harness and describe what you want. It reproduces the problem in your Docker, tests the change and drafts the pull request for you to check.`}
+            prompts={imagePrompts(image.name, app)}
+            guide={{ label: 'Contributing an image', href: '/docs/contribute/contributing-an-image/' }}
+          />
+        )
+      }
     </div>
 
     <aside class="space-y-4" aria-label={`About ${image.name}`}>

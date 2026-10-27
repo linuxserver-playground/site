@@ -23,6 +23,7 @@ export async function GET() {
     pages: [
       { t: 'Home', u: withBase('/') },
       ...[...NAV, ...NAV_SECONDARY].map((n) => ({ t: n.label, u: n.external ? n.href : withBase(n.href), k: n.description })),
+      { t: 'Contribute', u: withBase('/contribute/'), k: 'get involved help volunteer pull request ai agent harness mod propose image labs' },
       { t: 'Donate', u: withBase('/donate/'), k: 'Open Collective sponsor support us' },
       { t: 'Blog tags', u: withBase('/blog/tags/'), k: 'topics authors' },
       { t: 'FAQ', u: withBase('/docs/faq/'), k: 'docs frequently asked questions' },

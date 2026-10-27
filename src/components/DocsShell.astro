@@ -10,6 +10,7 @@ import { Pencil } from 'lucide-react';
 import DocsLayout from '@/components/article/DocsLayout';
 import EntryBar from '@/components/islands/editor/EntryBar';
 import PostBody from '@/components/PostBody.astro';
+import ContributeCallout from '@/components/ContributeCallout.astro';
 import { docEditUrl, docNav, docUrl, sectionNav, type Doc, type SectionView } from '@/lib/docs';
 import type { Crumb } from '@/lib/seo';
 
@@ -29,6 +30,8 @@ const sections = await sectionNav();
 const currentId = doc?.id;
 const onIndex = !currentId || currentId === section.intro?.id;
 const hasAfter = Astro.slots.has('after');
+// Every docs page outside the Contribute section says who writes the docs and how to fix one.
+const invite = !!doc && section.id !== 'contribute';
 ---
 
 <DocsLayout
@@ -57,9 +60,18 @@ const hasAfter = Astro.slots.has('after');
     )
   }
   {
-    hasAfter && (
+    (hasAfter || invite) && (
       <div slot="after">
-        <slot name="after" />
+        {hasAfter && <slot name="after" />}
+        {invite && (
+          <ContributeCallout
+            compact
+            class="mt-10"
+            title="Something wrong or missing here?"
+            body="These docs are written by the community, and the person a page confused is the right one to fix it. An AI agent in our harness can make the change and draft the pull request with you."
+            guide={{ label: 'Improve the docs', href: '/docs/contribute/#improve-the-docs' }}
+          />
+        )}
       </div>
     )
   }

@@ -15,7 +15,7 @@ all generated from that manifest. The contract is
 
 | Repository | Role |
 | --- | --- |
-| [`docker-<name>`](https://github.com/linuxserver-playground?q=docker-) | One image: `Dockerfile`, `Dockerfile.aarch64`, `root/`, `image.yml`. See [Contributing an image](/docs/general/contributing-an-image/). |
+| [`docker-<name>`](https://github.com/linuxserver-playground?q=docker-) | One image: `Dockerfile`, `Dockerfile.aarch64`, `root/`, `image.yml`. See [Contributing an image](/docs/contribute/contributing-an-image/). |
 | [`builder`](https://github.com/linuxserver-playground/builder) | The contract, the JSON Schemas and the `builder` tool that validates `image.yml` and renders the generated files. |
 | [`workflows`](https://github.com/linuxserver-playground/workflows) | The shared build workflow every image calls. |
 | [`ci`](https://github.com/linuxserver-playground/ci) | The test harness. |

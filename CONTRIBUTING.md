@@ -104,7 +104,7 @@ that names the file and field. You'll know before anything goes live.
 The documentation lives next to the blog, at `src/content/docs/<section>/<slug>.md`, and is published at
 `/docs/<section>/<slug>/`. The image pages are **not** here: they are generated from each image's `image.yml`
 by the hub, so to fix one, change the manifest. The docs are the hand-written pages around them: how to run
-our containers, the Selkies platform, policies and the FAQ.
+our containers, how to contribute, the Selkies platform, policies and the FAQ.
 
 ### On the site (team members)
 
@@ -124,7 +124,7 @@ npm run dev             # http://localhost:4321/site/docs/<section>/<slug>/ (dra
 
 ### The no-install way (GitHub web editor)
 
-1. On GitHub, open `src/content/docs/` and the section folder (`general`, `selkies`, `misc` or `faq`), then
+1. On GitHub, open `src/content/docs/` and the section folder (`general`, `contribute`, `selkies`, `misc` or `faq`), then
    **Add file → Create new file**.
 2. Name it `your-page-title.md`. The file name is the URL: `/docs/general/your-page-title/`. Lower-case,
    hyphens. To edit an existing page, open it on the site and use **Edit this page on GitHub** at the bottom.

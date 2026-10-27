@@ -11,6 +11,15 @@ const icons = import.meta.glob<{ default: ImageMetadata }>('/src/assets/proot-ap
 
 export const PROOT_APPS_REPO = 'https://github.com/linuxserver-playground/proot-apps';
 export const PROOT_DOCS = 'https://proot.selkies.io/docs/how-it-works/';
+/** proot-next, the Rust PRoot every app runs under: a Selkies project, part of LinuxServer.io. */
+export const PROOT_NEXT = {
+  repo: 'https://github.com/selkies-project/proot-next',
+  site: 'https://proot.selkies.io/',
+  issues: 'https://github.com/selkies-project/proot-next/issues',
+  discord: 'https://discord.gg/wDNGDeSW5F',
+  /** A copy of the project's assets/logo.svg. */
+  logo: '/brands/proot-next.svg',
+};
 
 /** The enabled apps, by title; empty when the snapshot has no index yet. */
 export const getProotApps = (): ProotApp[] => data?.apps ?? [];

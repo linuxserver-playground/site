@@ -1,0 +1,231 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import PageHeader from '@/components/PageHeader.astro';
+import Panel from '@/components/Panel.astro';
+import SectionHead from '@/components/SectionHead.astro';
+import Otter from '@/components/Otter.astro';
+import CopyButton from '@/components/islands/CopyButton';
+import { withBase } from '@/lib/base';
+import { CONTRIBUTE_PATHS, HARNESS_REPO, HARNESS_START, PROPOSALS_URL } from '@/lib/contribute';
+import { hasTeam, stat } from '@/lib/stats';
+import { ArrowRight, ArrowUpRight, Bot, CircleCheck, FlaskConical, GitPullRequest, Heart, Search, ShieldCheck, UserCheck } from 'lucide-react';
+
+const crumbs = [{ name: 'Contribute', href: '/contribute/' }];
+const description =
+  'LinuxServer.io is a community project that needs people more than money. Fix an image, make a mod, bring an app or improve the docs, with an AI agent that knows the whole system.';
+
+const agentDoes = [
+  { icon: Search, text: 'Reads the whole org for you: every repo, the conventions, live builds, issues and pull requests.' },
+  { icon: Bot, text: 'Works out whether you are on the team or contributing from outside, and follows the right path.' },
+  { icon: CircleCheck, text: 'Builds and runs the image in your own Docker before anyone calls a change done.' },
+  { icon: GitPullRequest, text: 'Drafts the issue, pull request or review. You read every word before it is filed.' },
+];
+
+const now = [
+  { title: 'Open issues', body: 'Bugs and requests across every repository, live from the control plane.', href: '/fleet/issues/' },
+  { title: 'Pull requests', body: 'Changes waiting for a build, a review or a second opinion.', href: '/fleet/pulls/' },
+  { title: 'The fleet board', body: 'Every live branch and its last build. A red one is a good first fix.', href: '/fleet/' },
+  { title: 'Image proposals', body: 'Apps people want us to ship. Add your evidence, or a scaffold that runs.', href: `${HARNESS_REPO}/issues?q=is%3Aissue+is%3Aopen+Proposal`, external: true },
+];
+
+const steps = [
+  { title: 'A maintainer approves the run', body: 'GitHub holds builds from outside accounts until someone on the team clicks "Approve and run". Waiting here is normal.' },
+  { title: 'Both architectures build and test', body: 'With no secrets and a read-only token. One comment on your pull request reports the tests, screenshots and package changes.' },
+  { title: 'Someone reviews it', body: 'Often with an agent of their own, building your change locally. Questions come to you, so answer in your own words.' },
+  { title: 'It ships', body: 'Merging releases the image. Its build page appears on this site within minutes, and your change is in the release notes.' },
+];
+
+const rules = [
+  { icon: Bot, title: 'AI is welcome', body: 'Say which tool you used and for what, in the pull request description. Undisclosed AI-generated pull requests are closed.' },
+  { icon: UserCheck, title: 'A person is accountable', body: 'You open the pull request, you have read every line and run the result, and you can answer questions about it. Agents draft; people file.' },
+  { icon: ShieldCheck, title: 'Small and finished', body: 'One focused change per pull request, tested before you open it. Every push rebuilds both architectures.' },
+];
+---
+
+<Layout section="contribute" title="Contribute" description={description} breadcrumbs={crumbs}>
+  <PageHeader eyebrow="Contribute" title="We need people more than money" crumbs={crumbs}>
+    <p class="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+      LinuxServer.io has been run by volunteers since the start, and today
+      {hasTeam ? ` ${stat.team.value} people look after ${stat.images.value} images` : ` a handful of people look after ${stat.images.value} images`},
+      their mods and everything that builds them. What keeps it going is not donations. It is people in chairs: fixing the image they run, writing the
+      mod they need, bringing the app they want.
+    </p>
+    <p class="mt-4 max-w-3xl text-lg leading-relaxed text-muted-foreground">
+      You do not need to understand how a decade of infrastructure fits together first. Bring an AI coding agent; we give it everything it needs to
+      know.
+    </p>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href="#start" class="inline-flex h-11 items-center gap-2 rounded-md bg-primary px-5 font-medium text-primary-foreground hover:brightness-110">
+        Start in three commands <ArrowRight className="size-4" aria-hidden="true" />
+      </a>
+      <a href="#ways" class="inline-flex h-11 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] bg-background/60 px-5 font-medium backdrop-blur hover:bg-muted">
+        Pick a way in
+      </a>
+    </div>
+  </PageHeader>
+
+  <section class="raft-container pt-16" aria-labelledby="start">
+    <div class="grid grid-cols-1 items-start gap-10 lg:grid-cols-[1fr_1.1fr]">
+      <div>
+        <SectionHead eyebrow="The harness" title="An agent that already knows the org" id="start" />
+        <p class="mt-4 text-muted-foreground">
+          The <a href={HARNESS_REPO} target="_blank" rel="noopener" class="font-medium text-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:decoration-current">harness<span class="sr-only"> (opens in a new tab)</span></a>{' '}
+          is a repository you clone and start your agent in. It holds a map of the whole system, a playbook for every kind of request, our rules and the
+          tools to test locally. Then you ask in plain words.
+        </p>
+        <ul class="mt-6 space-y-3">
+          {
+            agentDoes.map(({ icon: IconC, text }) => (
+              <li class="flex gap-3">
+                <IconC className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+                <span>{text}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="mt-6 text-sm text-muted-foreground">
+          You need git, the GitHub CLI signed in, jq, curl and Docker, plus an agent that reads <code class="font-mono text-foreground">AGENTS.md</code> (Claude
+          Code, or any other). <a href={withBase('/docs/contribute/ai-agents/')} class="font-medium text-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:decoration-current">The full guide</a> covers the rest.
+        </p>
+      </div>
+      <div class="relative">
+        <div class="pointer-events-none absolute -top-[3.35rem] right-8 z-10 w-24" aria-hidden="true">
+          <Otter pose="peek" class="w-full" />
+        </div>
+        <Panel title="~/harness" class="relative">
+          <CopyButton slot="actions" client:visible text={HARNESS_START} label="Copy the commands" className="size-7" />
+          <pre class="overflow-x-auto bg-[var(--raft-code-bg)] p-5 font-mono text-[0.8125rem] leading-6" tabindex="0" aria-label="Commands to start the harness"><code>{HARNESS_START.split('\n').map((l) => <span class="block"><span class="text-primary" aria-hidden="true">$ </span>{l}</span>)}</code></pre>
+          <div class="border-t border-[var(--raft-hair)] bg-[var(--raft-surface)] px-5 py-4 font-mono text-[0.8125rem] leading-6">
+            <p class="text-muted-foreground"><span class="text-primary" aria-hidden="true">› </span>What can I ask you?</p>
+            <p class="text-muted-foreground"><span class="text-primary" aria-hidden="true">› </span>What needs attention in the fleet today?</p>
+            <p class="text-foreground"><span class="text-primary" aria-hidden="true">› </span>Make a mod that installs yt-dlp into any image.</p>
+          </div>
+        </Panel>
+      </div>
+    </div>
+  </section>
+
+  <section class="raft-container pt-24" aria-labelledby="ways">
+    <SectionHead
+      eyebrow="Ways in"
+      title="Start with what you already use"
+      id="ways"
+      description="The best first contribution scratches your own itch. Every one of these works with an agent, or by hand with the guide."
+    />
+    <ul class="mt-10 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+      {
+        CONTRIBUTE_PATHS.map((p) => (
+          <li class="raft-panel flex flex-col p-6" id={`way-${p.id}`}>
+            <h3 class="text-lg font-semibold tracking-tight">{p.title}</h3>
+            <p class="mt-2 text-sm text-muted-foreground">{p.body}</p>
+            <div class="mt-4 flex items-start gap-1 rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] py-1 pr-1 pl-3 font-mono text-xs leading-5">
+              <span class="min-w-0 flex-1 py-1 break-words">
+                <span class="text-primary" aria-hidden="true">› </span>
+                {p.prompt}
+              </span>
+              <CopyButton client:visible text={p.prompt} label={`Copy prompt: ${p.title}`} />
+            </div>
+            <a href={withBase(p.href)} class="mt-auto inline-flex items-center gap-1 pt-5 text-sm font-medium hover:text-primary">
+              Read the guide <ArrowRight className="size-3.5" aria-hidden="true" />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="raft-container pt-24" aria-labelledby="now">
+    <SectionHead eyebrow="Right now" title="Where help is needed" id="now" description="All of it is public. Ask your agent to rank it, or just look." />
+    <ul class="mt-10 grid grid-cols-1 gap-px overflow-hidden rounded-[var(--radius)] border border-[var(--raft-hair)] bg-[var(--raft-hair)] sm:grid-cols-2 lg:grid-cols-4">
+      {
+        now.map((n) => (
+          <li class="bg-card">
+            <a
+              href={n.external ? n.href : withBase(n.href)}
+              {...(n.external ? { target: '_blank', rel: 'noopener' } : {})}
+              class="group flex h-full flex-col p-5 hover:bg-muted/40"
+            >
+              <span class="inline-flex items-center gap-1 font-semibold group-hover:text-primary">
+                {n.title}
+                {n.external ? <ArrowUpRight className="size-3.5" aria-hidden="true" /> : <ArrowRight className="size-3.5" aria-hidden="true" />}
+              </span>
+              <span class="mt-2 text-sm text-muted-foreground">{n.body}</span>
+              {n.external && <span class="sr-only">(opens in a new tab)</span>}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <div class="raft-container grid grid-cols-1 gap-10 pt-24 lg:grid-cols-2">
+    <section aria-labelledby="next">
+      <SectionHead eyebrow="After you open it" title="What happens to your pull request" id="next" />
+      <ol class="mt-8 space-y-5">
+        {
+          steps.map((s, i) => (
+            <li class="flex gap-4">
+              <span class="grid size-8 shrink-0 place-items-center rounded-full border border-[var(--raft-hair-strong)] font-mono text-xs">{i + 1}</span>
+              <span>
+                <span class="block font-semibold">{s.title}</span>
+                <span class="mt-1 block text-sm text-muted-foreground">{s.body}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </section>
+    <section aria-labelledby="rules">
+      <SectionHead eyebrow="Ground rules" title="Agents draft, people decide" id="rules" />
+      <ul class="mt-8 space-y-3">
+        {
+          rules.map(({ icon: IconC, title, body }) => (
+            <li class="raft-panel flex gap-4 p-5">
+              <IconC className="mt-0.5 size-5 shrink-0 text-primary" aria-hidden="true" />
+              <span>
+                <span class="block font-semibold">{title}</span>
+                <span class="mt-1 block text-sm text-muted-foreground">{body}</span>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="mt-4 text-sm text-muted-foreground">
+        The full rules are in <a href={withBase('/docs/contribute/contributing-an-image/#pull-request-rules')} class="font-medium text-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:decoration-current">Contributing an image</a>.
+      </p>
+    </section>
+  </div>
+
+  <section class="raft-container pt-24" aria-labelledby="labs-title">
+    <div class="raft-panel relative overflow-hidden p-8 md:p-10">
+      <div class="raft-aurora pointer-events-none absolute inset-0 opacity-60" aria-hidden="true"></div>
+      <div class="relative grid grid-cols-1 items-center gap-8 md:grid-cols-[auto_1fr_auto]">
+        <span class="grid size-12 place-items-center rounded-lg border border-[var(--raft-hair)] bg-[var(--raft-surface)] text-primary">
+          <FlaskConical className="size-6" aria-hidden="true" />
+        </span>
+        <div>
+          <p class="raft-eyebrow">Coming: Labs</p>
+          <h2 id="labs-title" class="mt-2 text-2xl font-semibold tracking-tight">A place for the software you want to see</h2>
+          <p class="mt-2 max-w-2xl text-muted-foreground">
+            We are building Labs: a home outside the main fleet where new images and experiments can grow before they join the fleet. Until it opens, a proposal is an issue on the harness, and the agent writes it with you.
+          </p>
+        </div>
+        <a href={PROPOSALS_URL} target="_blank" rel="noopener" class="inline-flex h-11 shrink-0 items-center gap-2 rounded-md bg-foreground px-5 font-medium text-background hover:opacity-90">
+          Propose an image <ArrowUpRight className="size-4" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="raft-container pt-16" aria-labelledby="money-title">
+    <div class="flex flex-col gap-3 border-t border-[var(--raft-hair)] pt-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <p>
+        <span id="money-title" class="font-medium text-foreground">Rather give money?</span> Thank you. It pays for hosting, and every expense is public on Open
+        Collective. Time is still what we are shortest of.
+      </p>
+      <a href={withBase('/donate/')} class="inline-flex shrink-0 items-center gap-1.5 font-medium text-foreground hover:text-primary">
+        <Heart className="size-4" aria-hidden="true" /> Donate
+      </a>
+    </div>
+  </section>
+</Layout>

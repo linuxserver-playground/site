@@ -1,0 +1,91 @@
+---
+/**
+ * "You can help with this": a panel on the pages people already read (an image, a mod, the fleet, a docs page)
+ * that says this is a community project, gives a prompt or two to hand an AI agent, and links the way in.
+ * `compact` is one line of text and the links, for places where a full panel would crowd the page.
+ */
+import CopyButton from '@/components/islands/CopyButton';
+import { withBase } from '@/lib/base';
+import { HARNESS_REPO } from '@/lib/contribute';
+import { ArrowRight, ArrowUpRight, Sparkles } from 'lucide-react';
+
+interface Props {
+  title: string;
+  body: string;
+  /** Things to ask an agent; angle brackets are for the reader to fill in. */
+  prompts?: string[];
+  /** The docs page for this kind of change; defaults to the Contribute page. */
+  guide?: { label: string; href: string };
+  compact?: boolean;
+  /** Heading level inside the page's outline. */
+  as?: 'h2' | 'h3';
+  id?: string;
+  class?: string;
+}
+const { title, body, prompts = [], guide, compact = false, as: H = 'h2', id, class: className } = Astro.props;
+const guideHref = guide?.href ?? '/contribute/';
+const guideExternal = guideHref.startsWith('http');
+const guideAttrs = guideExternal ? { href: guideHref, target: '_blank', rel: 'noopener' } : { href: withBase(guideHref) };
+const linkClass = 'inline-flex items-center gap-1 font-medium text-foreground underline-offset-4 hover:text-primary hover:underline';
+---
+
+{
+  compact ? (
+    <aside class:list={['raft-panel flex flex-col gap-3 p-4 text-sm sm:flex-row sm:items-center sm:justify-between', className]} aria-label={title}>
+      <p class="flex items-start gap-2.5 text-muted-foreground">
+        <Sparkles className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+        <span>
+          <span class="font-medium text-foreground">{title}</span> {body}
+        </span>
+      </p>
+      <a {...guideAttrs} class:list={[linkClass, 'shrink-0']}>
+        {guide?.label ?? 'How to contribute'} <ArrowRight className="size-3.5" aria-hidden="true" />
+        {guideExternal && <span class="sr-only">(opens in a new tab)</span>}
+      </a>
+    </aside>
+  ) : (
+    <section class:list={['raft-panel raft-glow-edge relative overflow-hidden p-5 md:p-6', className]} aria-labelledby={id}>
+      <div class="raft-aurora pointer-events-none absolute inset-0 opacity-40" aria-hidden="true"></div>
+      <div class="relative">
+        <p class="raft-eyebrow flex items-center gap-2">
+          <Sparkles className="size-3.5 text-primary" aria-hidden="true" /> Community project
+        </p>
+        <H id={id} class="mt-2 text-xl font-semibold tracking-tight">
+          {title}
+        </H>
+        <p class="mt-2 max-w-2xl text-sm text-muted-foreground">{body}</p>
+        {prompts.length > 0 && (
+          <>
+            <p class="mt-4 font-mono text-[0.6875rem] tracking-wide text-muted-foreground uppercase">Ask your agent</p>
+            <ul class="mt-2 space-y-2">
+              {prompts.map((p) => (
+                <li class="flex items-start gap-1 rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] py-1 pr-1 pl-3 font-mono text-xs leading-5">
+                  <span class="min-w-0 flex-1 py-1 break-words">
+                    <span class="text-primary" aria-hidden="true">› </span>
+                    {p}
+                  </span>
+                  <CopyButton client:visible text={p} label="Copy prompt" />
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+        <p class="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+          <a {...guideAttrs} class={linkClass}>
+            {guide?.label ?? 'How to contribute'} <ArrowRight className="size-3.5" aria-hidden="true" />
+            {guideExternal && <span class="sr-only">(opens in a new tab)</span>}
+          </a>
+          {guide && (
+            <a href={withBase('/contribute/')} class={linkClass}>
+              Every way to help <ArrowRight className="size-3.5" aria-hidden="true" />
+            </a>
+          )}
+          <a href={HARNESS_REPO} target="_blank" rel="noopener" class={linkClass}>
+            Get the harness <ArrowUpRight className="size-3.5" aria-hidden="true" />
+            <span class="sr-only">(opens in a new tab)</span>
+          </a>
+        </p>
+      </div>
+    </section>
+  )
+}

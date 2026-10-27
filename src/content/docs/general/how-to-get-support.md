@@ -42,6 +42,6 @@ Include the image tag you are running (`docker inspect -f '{{ index .Config.Labe
 
 ## Bugs in an image
 
-If the application itself fails to start, a dependency is missing, or the documentation is wrong, open an issue on the image repository, `https://github.com/linuxserver-playground/docker-<name>/issues`, using the issue template. Please read [Contributing an image](/docs/general/contributing-an-image/) before opening a pull request: most requests belong upstream, in a Docker Mod, or in a custom script rather than in the image.
+If the application itself fails to start, a dependency is missing, or the documentation is wrong, open an issue on the image repository, `https://github.com/linuxserver-playground/docker-<name>/issues`, using the issue template. Please read [Contributing an image](/docs/contribute/contributing-an-image/) before opening a pull request: most requests belong upstream, in a Docker Mod, or in a custom script rather than in the image.
 
 Problems with the build system itself (a build that fails for every image, the hub serving stale data, a broken template in a store) belong on the infrastructure repository concerned: [`workflows`](https://github.com/linuxserver-playground/workflows), [`ci`](https://github.com/linuxserver-playground/ci), [`hub`](https://github.com/linuxserver-playground/hub), [`control`](https://github.com/linuxserver-playground/control) or, for these pages, [`site`](https://github.com/linuxserver-playground/site).

@@ -1,15 +1,16 @@
 ---
 import { getImage } from 'astro:assets';
-import { ArrowUpRight } from 'lucide-react';
 import AnchorHeading from '@/components/AnchorHeading.astro';
+import Icon from '@/components/Icon.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import Panel from '@/components/Panel.astro';
 import CopyButton from '@/components/islands/CopyButton';
+import ContributeCallout from '@/components/ContributeCallout.astro';
 import ProotAppsBrowser, { type ProotAppCard } from '@/components/islands/ProotAppsBrowser';
 import Layout from '@/layouts/Layout.astro';
 import { withBase } from '@/lib/base';
 import { hubApi } from '@/lib/hub';
-import { PROOT_APPS_REPO, PROOT_DOCS, PROOT_INSTALL, PROOT_SHELL, PROOT_UNINSTALL, getProotApps, prootCategories, prootCli, prootIcon } from '@/lib/proot-apps';
+import { PROOT_APPS_REPO, PROOT_DOCS, PROOT_NEXT, PROOT_INSTALL, PROOT_SHELL, PROOT_UNINSTALL, getProotApps, prootCategories, prootCli, prootIcon } from '@/lib/proot-apps';
 
 const raw = getProotApps();
 const categories = prootCategories(raw);
@@ -78,6 +79,16 @@ const usage = [
         </dl>
       )
     }
+    <a
+      href={PROOT_NEXT.repo}
+      target="_blank"
+      rel="noopener"
+      class="mt-6 inline-flex items-center gap-2.5 rounded-full border border-[var(--raft-hair-strong)] bg-background/60 py-1 pr-3.5 pl-1 text-sm backdrop-blur hover:border-primary"
+    >
+      <img src={withBase(PROOT_NEXT.logo)} alt="" width="28" height="28" class="size-7" />
+      <span class="text-muted-foreground">Powered by <span class="font-medium text-foreground">proot-next</span>, PRoot rebuilt in Rust</span>
+      <span class="sr-only">(opens in a new tab)</span>
+    </a>
   </PageHeader>
 
   <div class="raft-container pt-10">
@@ -166,6 +177,43 @@ const usage = [
       </div>
     </section>
 
+    <section class="raft-panel raft-glow-edge relative mt-14 overflow-hidden p-6 md:p-8" aria-labelledby="proot-next">
+      <div class="raft-aurora pointer-events-none absolute inset-0 opacity-50" aria-hidden="true"></div>
+      <div class="relative grid grid-cols-1 gap-8 md:grid-cols-[auto_1fr]">
+        <a href={PROOT_NEXT.repo} target="_blank" rel="noopener" class="block size-24 shrink-0 md:size-32" tabindex="-1" aria-hidden="true">
+          <img src={withBase(PROOT_NEXT.logo)} alt="" width="128" height="128" class="size-full" />
+        </a>
+        <div class="min-w-0">
+          <p class="raft-eyebrow">The engine</p>
+          <h2 id="proot-next" class="mt-2 text-2xl font-semibold tracking-tight md:text-3xl">Powered by proot-next</h2>
+          <p class="mt-3 max-w-3xl text-muted-foreground">
+            Every app here runs under <a href={PROOT_NEXT.repo} target="_blank" rel="noopener" class={link}>proot-next<span class="sr-only"> (opens in a new tab)</span></a>, our reimplementation of PRoot in Rust:{' '}
+            <code class="font-mono text-foreground">chroot</code>, <code class="font-mono text-foreground">mount --bind</code> and a bubblewrap front end with no privileges, for systems where user
+            namespaces and FUSE are off the table. Instead of stopping every system call twice with ptrace, it handles path lookups through seccomp user
+            notification, so most of an app runs at native speed. It is also what runs Steam, Proton and Wine in containers without user namespaces.
+          </p>
+          <p class="mt-3 max-w-3xl text-muted-foreground">
+            It is a young project and a good one to join: Rust and Linux system calls, with every PRoot Apps user depending on it. Bring an AI agent, ask it to explain how
+            path translation works, and start from there.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a href={PROOT_NEXT.repo} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90">
+              <Icon name="github" class="size-4" /> proot-next on GitHub<span class="sr-only"> (opens in a new tab)</span>
+            </a>
+            <a href={PROOT_NEXT.site} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] bg-background/60 px-4 text-sm font-medium hover:bg-muted">
+              Documentation<span class="sr-only"> (opens in a new tab)</span>
+            </a>
+            <a href={PROOT_NEXT.issues} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] bg-background/60 px-4 text-sm font-medium hover:bg-muted">
+              Open issues<span class="sr-only"> (opens in a new tab)</span>
+            </a>
+            <a href={PROOT_NEXT.discord} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] bg-background/60 px-4 text-sm font-medium hover:bg-muted">
+              <Icon name="discord" class="size-4" /> Discord<span class="sr-only"> (opens in a new tab)</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="mt-14" aria-labelledby="apps">
       <AnchorHeading id="apps">Apps</AnchorHeading>
       {
@@ -184,9 +232,17 @@ const usage = [
       }
     </section>
 
+    <ContributeCallout
+      id="add-an-app"
+      class="mt-10"
+      title="Missing an app? Package it."
+      body="Every app here is a small build recipe in the proot-apps repository, and most were added by someone who wanted them on their desktop. An AI agent in our harness can read how the others are made, write yours and test it in a Selkies container."
+      prompts={['Package <app> as a PRoot app, following how the existing apps are built, and test it in webtop.']}
+      guide={{ label: 'The proot-apps repository', href: PROOT_APPS_REPO }}
+    />
+
     <p class="mt-8 text-xs text-muted-foreground">
       Source: <a href={hubApi('proot-apps.json')} class:list={['font-mono', link]}>api/v1/proot-apps.json</a>, from <a href={`${PROOT_APPS_REPO}/blob/master/metadata/metadata.yml`} target="_blank" rel="noopener" class:list={['font-mono', link]}>metadata.yml<span class="sr-only"> (opens in a new tab)</span></a>.
-      <a href={PROOT_APPS_REPO} target="_blank" rel="noopener" class="ml-1 inline-flex items-center gap-0.5 hover:text-foreground">Contribute an app <ArrowUpRight className="size-3" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span></a>
     </p>
   </div>
 </Layout>

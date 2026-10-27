@@ -1,14 +1,14 @@
 ---
 title: Contributing an image
 description: "What belongs in an image, the repository layout, the image.yml manifest, and how to open a pull request against a docker-<name> repository."
-section: general
-order: 17
-group: Project
-updated: 2026-10-24
+section: contribute
+order: 3
+updated: 2026-10-27
 aliases:
   - /general/contributing-an-image/
+  - /docs/general/contributing-an-image/
 ---
-This page is for anyone opening a pull request against a `docker-<name>` repository in `linuxserver-playground`. It summarises the [org `CONTRIBUTING.md`](https://github.com/linuxserver-playground/.github/blob/main/CONTRIBUTING.md) and [`CONVENTIONS.md`](https://github.com/linuxserver-playground/builder/blob/main/CONVENTIONS.md) §2 and §8, which are the authoritative texts. If you are used to the `linuxserver` repositories: there is no Jenkinsfile, no `jenkins-vars.yml`, no `readme-vars.yml`, no per-repo trigger workflows and no templates repository to update. There is `image.yml`, and a tool that checks it.
+This page is for anyone opening a pull request against a `docker-<name>` repository in `linuxserver-playground`, by hand or with an AI agent. With [the harness](/docs/contribute/ai-agents/), the agent follows all of this for you; read it anyway, because you are the one who answers for the pull request. It summarises the [org `CONTRIBUTING.md`](https://github.com/linuxserver-playground/.github/blob/main/CONTRIBUTING.md) and [`CONVENTIONS.md`](https://github.com/linuxserver-playground/builder/blob/main/CONVENTIONS.md) §2 and §8, which are the authoritative texts. If you are used to the `linuxserver` repositories: there is no Jenkinsfile, no `jenkins-vars.yml`, no `readme-vars.yml`, no per-repo trigger workflows and no templates repository to update. There is `image.yml`, and a tool that checks it.
 
 ## Decide where the change belongs
 
