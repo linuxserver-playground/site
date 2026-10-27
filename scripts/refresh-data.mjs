@@ -29,6 +29,10 @@
  *   GITHUB_ORG    org whose public members are the team (default linuxserver-playground).
  *   GITHUB_TOKEN  avoids GitHub rate limits.
  *   --skip-github keep the existing team.json and avatars.
+ *   REFRESH_ALL=1 refetch every retained build. Otherwise a build already in builds/ is kept as it is: a
+ *                 released build's documents do not change, and refetching thousands of them on every run hit
+ *                 GitHub Pages' rate limit (429). The daily scheduled deploy sets it, so anything the hub
+ *                 re-derives is picked up within a day.
  *   PUBLIC_CONTROL_URL  the control plane (default https://ci.thelamer.duckdns.org:8443); only its run ids are
  *                 snapshotted, everything else on the fleet pages is fetched live in the browser.
  */
@@ -61,15 +65,32 @@ const write = (name, data) => {
 // ---------------------------------------------------------------- hub reader
 class NotFound extends Error {}
 
-async function fetchRaw(url, { retries = 4, headers = {} } = {}) {
+// GitHub Pages answers bursts with 429, so at most MAX_IN_FLIGHT requests are open at once however the pools
+// below nest, and a 429 or 5xx is retried with backoff for up to about four minutes before the run fails.
+const MAX_IN_FLIGHT = 8;
+let inFlight = 0;
+const waiting = [];
+async function limited(fn) {
+  if (inFlight >= MAX_IN_FLIGHT) await new Promise((r) => waiting.push(r));
+  inFlight++;
+  try {
+    return await fn();
+  } finally {
+    inFlight--;
+    waiting.shift()?.();
+  }
+}
+
+async function fetchRaw(url, { retries = 8, headers = {} } = {}) {
   for (let attempt = 0; ; attempt++) {
-    const res = await fetch(url, { headers: { ...UA, ...headers } });
+    const res = await limited(() => fetch(url, { headers: { ...UA, ...headers } }));
     if (res.ok) return res;
     if (res.status === 404) throw new NotFound(`404 for ${url}`);
     if (attempt >= retries || (res.status !== 429 && res.status < 500)) {
       throw new Error(`${res.status} ${res.statusText} for ${url}`);
     }
-    const wait = Number(res.headers.get('retry-after')) * 1000 || 1500 * 2 ** attempt;
+    const wait = Number(res.headers.get('retry-after')) * 1000 || Math.min(60_000, 2000 * 2 ** attempt);
+    console.warn(`  ${res.status} for ${url}, retrying in ${Math.round(wait / 1000)}s`);
     await new Promise((r) => setTimeout(r, wait));
   }
 }
@@ -116,10 +137,15 @@ const lastUpdated = catalog.last_updated;
 write('catalog.json', { last_updated: lastUpdated, images });
 write('categories.json', (await hubJSON('api/v1/categories.json')).data.categories);
 
-// Per image: builds, proxy, kubernetes, quadlet. Start clean so rotated-out builds disappear.
-for (const dir of ['images', 'builds']) rmSync(out(dir), { recursive: true, force: true });
+// Per image: builds, proxy, kubernetes, quadlet. images/ starts clean. builds/ keeps the builds it has (REFRESH_ALL
+// overwrites them in place, so a run that fails halfway leaves a whole snapshot) and loses every build the hub no
+// longer retains (below).
+const refreshAll = ['1', 'true'].includes(process.env.REFRESH_ALL ?? '');
+rmSync(out('images'), { recursive: true, force: true });
+const retained = new Set();
 
 let buildCount = 0;
+let buildsFetched = 0;
 await pool(images, 6, async (img) => {
   const base = `api/v1/catalog/${img.name}`;
   const [builds, proxy, kubernetes, quadlet] = await Promise.all([
@@ -132,6 +158,10 @@ await pool(images, 6, async (img) => {
   write(`images/${img.name}.json`, { builds: data, proxy: proxy?.data ?? null, kubernetes, quadlet });
 
   await pool(data.builds, 4, async (b) => {
+    const file = `builds/${img.name}/${b.tag}.json`;
+    retained.add(file);
+    buildCount++;
+    if (!refreshAll && existsSync(out(file))) return;
     const tagBase = `${base}/builds/${b.tag}`;
     const [record, diff, tests, ...layers] = await Promise.all([
       hubJSON(`${tagBase}.json`),
@@ -143,10 +173,21 @@ await pool(images, 6, async (img) => {
     b.platforms.forEach((p, i) => {
       if (layers[i]) layerTables[p.arch] = layers[i].data.layers;
     });
-    write(`builds/${img.name}/${b.tag}.json`, { build: record.data.build, diff: diff?.data.diff ?? null, layers: layerTables, tests: tests?.data ?? null });
-    buildCount++;
+    write(file, { build: record.data.build, diff: diff?.data.diff ?? null, layers: layerTables, tests: tests?.data ?? null });
+    buildsFetched++;
   });
 });
+
+// Drop the builds the hub has rotated out, and the directories of images that are gone.
+if (existsSync(out('builds'))) {
+  for (const dir of readdirSync(out('builds'), { withFileTypes: true })) {
+    if (!dir.isDirectory()) continue;
+    for (const f of readdirSync(out(`builds/${dir.name}`))) {
+      if (!retained.has(`builds/${dir.name}/${f}`)) rmSync(out(`builds/${dir.name}/${f}`));
+    }
+    if (readdirSync(out(`builds/${dir.name}`)).length === 0) rmSync(out(`builds/${dir.name}`), { recursive: true });
+  }
+}
 
 // ---------------------------------------------------------------- image documentation
 // Each image's README, section by section (api/v1/catalog/<name>/docs.json), as one Markdown file per section in
@@ -295,4 +336,4 @@ const stats = {
 };
 write('stats.json', stats);
 console.log(stats);
-console.log(`${images.length} images, ${buildCount} builds, ${readdirSync(out('images')).length} image files`);
+console.log(`${images.length} images, ${buildCount} builds (${buildsFetched} fetched${refreshAll ? ', full refresh' : ''}), ${readdirSync(out('images')).length} image files`);

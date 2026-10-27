@@ -73,7 +73,9 @@ when you move it. Follow CONTRIBUTING.md, "Writing docs".
 
 ```bash
 npm ci
-npm run data:local                 # or: HUB_URL=… npm run data
+# The build reads the committed src/data/ snapshot: a site change needs no refresh. For a hub change, refresh
+# from a local hub build instead (needs ../hub built):
+npm run data:local
 npm run check                      # astro check: must report 0 errors
 npm run build                      # dist/ and the Pagefind index
 npx astro preview --port 4321 &
@@ -86,6 +88,12 @@ node scripts/editor-check.mjs http://localhost:4321/site     # the editor and th
 
 CI runs `check`, `build`, `a11y.mjs` and `test-search.mjs` on every pull request (`check.yml`). The build
 validates every post's and every docs page's front matter, and `a11y.mjs` covers docs pages in its default list.
+
+Don't refresh from the live hub to test (`npm run data`), and never run `REFRESH_ALL=1` locally. GitHub Pages
+rate-limits by IP: two full refreshes from one machine got 429 for every hub URL, `catalog.json` included, for
+over half an hour, and the same limit is what failed the site's Deploys. `npm run data` is for the Deploy
+workflow. It fetches only the builds `src/data/builds/` lacks, refetches all of them only on the daily scheduled
+run, keeps at most 8 requests in flight and backs off on 429. Never commit a refreshed `src/data/` by hand.
 
 ## Contracts
 
