@@ -6,7 +6,7 @@
 import * as React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { duration, repoShort, toneOf, useControl, type Build, type Job, type JobView, type Run, type RunPage, type RunsPage, type Step } from '@/lib/control';
-import { ActionButton, Empty, ExtLink, MemberOnly, Offline, PanelBar, Pill, Rel, Skeleton, StatePill, Table, TD, TH, useNow } from './shared';
+import { ActionButton, Empty, ExtLink, MemberOnly, Offline, Pager, PanelBar, Pill, Rel, Skeleton, StatePill, Table, TD, TH, useNow, usePaged } from './shared';
 
 const TABLES = ['runs', 'jobs', 'builds'];
 
@@ -14,9 +14,12 @@ const TABLES = ['runs', 'jobs', 'builds'];
 
 export default function RunsLive({ runsBase, buildsBase, known, fallback }: { runsBase: string; buildsBase: string; known: Record<string, string[]>; fallback: string }) {
   const { data, error, loading, at, reload } = useControl<RunsPage>('runs.json', TABLES);
+  // A live run is a tall card (its job bars), so that list pages sooner.
+  const active = usePaged(data?.active ?? [], 10);
+  const recent = usePaged(data?.recent ?? []);
   return (
     <div className="space-y-6">
-      <section className="raft-panel overflow-hidden" aria-labelledby="runs-live-title">
+      <section ref={active.top} className="raft-panel scroll-mt-24 overflow-hidden" aria-labelledby="runs-live-title">
         <PanelBar title="live" note={data ? `${data.active.length} active` : undefined} at={at}>
           <h2 id="runs-live-title" className="sr-only">
             Live runs
@@ -26,19 +29,22 @@ export default function RunsLive({ runsBase, buildsBase, known, fallback }: { ru
         {!data && !loading && error && <Offline error={error} retry={reload} fallback={{ label: 'Open the runs page on the control plane', href: fallback }} />}
         {data && data.active.length === 0 && <Empty>Nothing is running.</Empty>}
         {data && data.active.length > 0 && (
-          <ul className="divide-y divide-[var(--raft-hair)]">
-            {data.active.map((v) => (
-              <li key={v.run.id} className="p-3.5">
-                <RunHead run={v.run} elapsed={v.elapsed_seconds} stuck={v.stuck} runsBase={runsBase} reload={reload} />
-                <JobBars jobs={v.jobs} />
-                {v.build && <BuildLine build={v.build} buildsBase={buildsBase} known={known} />}
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="divide-y divide-[var(--raft-hair)]">
+              {active.visible.map((v) => (
+                <li key={v.run.id} className="p-3.5">
+                  <RunHead run={v.run} elapsed={v.elapsed_seconds} stuck={v.stuck} runsBase={runsBase} reload={reload} />
+                  <JobBars jobs={v.jobs} />
+                  {v.build && <BuildLine build={v.build} buildsBase={buildsBase} known={known} />}
+                </li>
+              ))}
+            </ul>
+            <Pager {...active.pager} label="Live run pages" />
+          </>
         )}
       </section>
 
-      <section className="raft-panel overflow-hidden" aria-labelledby="runs-recent-title">
+      <section ref={recent.top} className="raft-panel scroll-mt-24 overflow-hidden" aria-labelledby="runs-recent-title">
         <PanelBar title="recent" note={data ? `last ${data.recent.length} finished` : undefined} at={at}>
           <h2 id="runs-recent-title" className="sr-only">
             Recent runs
@@ -59,7 +65,7 @@ export default function RunsLive({ runsBase, buildsBase, known, fallback }: { ru
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--raft-hair)]">
-              {data.recent.map((r) => (
+              {recent.visible.map((r) => (
                 <tr key={r.id}>
                   <th scope="row" className="px-3 py-2.5 align-top font-normal">
                     <a href={`${runsBase}${r.id}/`} className="font-medium text-foreground underline-offset-4 hover:text-primary hover:underline">
@@ -91,6 +97,7 @@ export default function RunsLive({ runsBase, buildsBase, known, fallback }: { ru
             </tbody>
           </Table>
         )}
+        <Pager {...recent.pager} label="Recent run pages" />
       </section>
     </div>
   );

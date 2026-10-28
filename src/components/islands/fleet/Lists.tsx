@@ -6,7 +6,7 @@
 import * as React from 'react';
 import { ArrowUpRight } from 'lucide-react';
 import { duration, repoImage, repoShort, toneOf, useControl, type ActionsPage, type Build, type IssuesPage, type JobView, type PullsPage, type QueuePage, type ReleasesPage, type SchedulerPage, type SkipsPage } from '@/lib/control';
-import { ActionButton, Empty, ExtLink, MemberOnly, Offline, PanelBar, Pill, Rel, Select, Skeleton, StatePill, Table, TD, TH } from './shared';
+import { ActionButton, Empty, ExtLink, MemberOnly, Offline, Pager, PanelBar, Pill, Rel, Select, Skeleton, StatePill, Table, TD, TH, usePaged } from './shared';
 
 interface Common {
   fallback: string;
@@ -16,8 +16,8 @@ interface Common {
   known?: Record<string, string[]>;
 }
 
-const Shell = ({ title, note, at, loading, error, data, reload, fallback, fallbackLabel, children, rows = 5 }: { title: string; note?: React.ReactNode; at: Date | null; loading: boolean; error: string | null; data: unknown; reload: () => void; fallback: string; fallbackLabel: string; children: React.ReactNode; rows?: number }) => (
-  <section className="raft-panel overflow-hidden" aria-label={title}>
+const Shell = ({ title, note, at, loading, error, data, reload, fallback, fallbackLabel, children, rows = 5, top }: { title: string; note?: React.ReactNode; at: Date | null; loading: boolean; error: string | null; data: unknown; reload: () => void; fallback: string; fallbackLabel: string; children: React.ReactNode; rows?: number; top?: React.Ref<HTMLElement> }) => (
+  <section ref={top} className="raft-panel scroll-mt-24 overflow-hidden" aria-label={title}>
     <PanelBar title={title} note={note} at={at} />
     {!data && loading && <Skeleton rows={rows} />}
     {!data && !loading && error && <Offline error={error} retry={reload} fallback={{ label: fallbackLabel, href: fallback }} />}
@@ -79,8 +79,9 @@ export function Queue({ fallback, runsBase }: Common) {
 
 /** Members can cancel from here; GitHub cancels runs, not jobs, so the button cancels the job's whole run. */
 function JobsTable({ title, jobs, runsBase, reload }: { title: string; jobs: JobView[]; runsBase: string; reload: () => void }) {
+  const { top, visible, pager } = usePaged<JobView, HTMLDivElement>(jobs);
   return (
-    <div>
+    <div ref={top} className="scroll-mt-24">
       <h3 className="px-3.5 pt-3 pb-1 font-mono text-[0.6875rem] text-muted-foreground uppercase">
         {title} · {jobs.length}
       </h3>
@@ -99,7 +100,7 @@ function JobsTable({ title, jobs, runsBase, reload }: { title: string; jobs: Job
             </tr>
           </thead>
           <tbody className="divide-y divide-[var(--raft-hair)] border-t border-[var(--raft-hair)]">
-            {jobs.map((v) => (
+            {visible.map((v) => (
               <tr key={v.job.id}>
                 <th scope="row" className="px-3 py-2 align-top font-mono text-xs font-normal">
                   <a href={`${runsBase}${v.job.run_id}/`} className="underline-offset-4 hover:text-primary hover:underline">
@@ -141,6 +142,7 @@ function JobsTable({ title, jobs, runsBase, reload }: { title: string; jobs: Job
           </tbody>
         </Table>
       )}
+      <Pager {...pager} label={`${title} pages`} />
     </div>
   );
 }
@@ -152,12 +154,16 @@ export function Builds({ fallback, runsBase, buildsBase, known = {} }: Common) {
   // carries every live build that produced a Release, which is what the site has pages for.
   const { data, error, loading, at, reload } = useControl<ReleasesPage>('releases.json', ['builds', 'releases']);
   const builds = data?.releases.map((r) => r.build).filter((b): b is Build => !!b) ?? [];
+  const { top, visible, pager } = usePaged(builds);
   return (
-    <Shell title="recent builds" note={data ? `${builds.length} with a release` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the releases on the control plane" rows={6}>
+    <Shell title="recent builds" note={data ? `${builds.length} with a release` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the releases on the control plane" rows={6} top={top}>
       {builds.length === 0 ? (
         <Empty>No builds yet.</Empty>
       ) : (
-        <BuildsTable builds={builds} runsBase={runsBase} buildsBase={buildsBase} known={known} />
+        <>
+          <BuildsTable builds={visible} runsBase={runsBase} buildsBase={buildsBase} known={known} />
+          <Pager {...pager} label="Build pages" />
+        </>
       )}
     </Shell>
   );
@@ -244,58 +250,62 @@ export function BuildsTable({ builds, runsBase, buildsBase, known, compact = fal
 
 export function Pulls({ fallback, runsBase }: Common) {
   const { data, error, loading, at, reload } = useControl<PullsPage>('pulls.json', ['pull_requests', 'runs']);
+  const { top, visible, pager } = usePaged(data?.pulls ?? []);
   return (
-    <Shell title="open pull requests" note={data ? `${data.pulls.length} open` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the pull requests on the control plane">
+    <Shell title="open pull requests" note={data ? `${data.pulls.length} open` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the pull requests on the control plane" top={top}>
       {data && data.pulls.length === 0 ? (
         <Empty>No open pull requests.</Empty>
       ) : (
         data && (
-          <Table label="Open pull requests">
-            <thead className="border-b border-[var(--raft-hair)]">
-              <tr>
-                <TH>Pull request</TH>
-                <TH>Repository</TH>
-                <TH>Build</TH>
-                <TH>Review</TH>
-                <TH>Opened</TH>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--raft-hair)]">
-              {data.pulls.map(({ pull, run, quarantine_tag }) => (
-                <tr key={`${pull.repo}#${pull.number}`}>
-                  <th scope="row" className="px-3 py-2.5 align-top font-normal">
-                    {pull.html_url ? (
-                      <ExtLink href={pull.html_url} className="font-medium text-foreground">
-                        {pull.title}
-                      </ExtLink>
-                    ) : (
-                      <span className="font-medium">{pull.title}</span>
-                    )}
-                    <span className="block font-mono text-[0.6875rem] text-muted-foreground">
-                      #{pull.number} · {pull.author ?? 'unknown'}
-                      {pull.draft && ' · draft'}
-                      {pull.head_fork && ' · from a fork'}
-                    </span>
-                  </th>
-                  <TD mono>{repoShort(pull.repo)}</TD>
-                  <TD>
-                    {run ? (
-                      <a href={`${runsBase}${run.id}/`} className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline">
-                        <StatePill status={run.status} conclusion={run.conclusion} />
-                      </a>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">no run</span>
-                    )}
-                    {quarantine_tag && <span className="block font-mono text-[0.6875rem] text-muted-foreground">{quarantine_tag}</span>}
-                  </TD>
-                  <TD mono>{pull.review_state ?? '–'}</TD>
-                  <TD mono>
-                    <Rel iso={pull.created_at} />
-                  </TD>
+          <>
+            <Table label="Open pull requests">
+              <thead className="border-b border-[var(--raft-hair)]">
+                <tr>
+                  <TH>Pull request</TH>
+                  <TH>Repository</TH>
+                  <TH>Build</TH>
+                  <TH>Review</TH>
+                  <TH>Opened</TH>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody className="divide-y divide-[var(--raft-hair)]">
+                {visible.map(({ pull, run, quarantine_tag }) => (
+                  <tr key={`${pull.repo}#${pull.number}`}>
+                    <th scope="row" className="px-3 py-2.5 align-top font-normal">
+                      {pull.html_url ? (
+                        <ExtLink href={pull.html_url} className="font-medium text-foreground">
+                          {pull.title}
+                        </ExtLink>
+                      ) : (
+                        <span className="font-medium">{pull.title}</span>
+                      )}
+                      <span className="block font-mono text-[0.6875rem] text-muted-foreground">
+                        #{pull.number} · {pull.author ?? 'unknown'}
+                        {pull.draft && ' · draft'}
+                        {pull.head_fork && ' · from a fork'}
+                      </span>
+                    </th>
+                    <TD mono>{repoShort(pull.repo)}</TD>
+                    <TD>
+                      {run ? (
+                        <a href={`${runsBase}${run.id}/`} className="inline-flex items-center gap-1.5 underline-offset-4 hover:underline">
+                          <StatePill status={run.status} conclusion={run.conclusion} />
+                        </a>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">no run</span>
+                      )}
+                      {quarantine_tag && <span className="block font-mono text-[0.6875rem] text-muted-foreground">{quarantine_tag}</span>}
+                    </TD>
+                    <TD mono>{pull.review_state ?? '–'}</TD>
+                    <TD mono>
+                      <Rel iso={pull.created_at} />
+                    </TD>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <Pager {...pager} label="Pull request pages" />
+          </>
         )
       )}
     </Shell>
@@ -306,53 +316,57 @@ export function Pulls({ fallback, runsBase }: Common) {
 
 export function Issues({ fallback }: Common) {
   const { data, error, loading, at, reload } = useControl<IssuesPage>('issues.json', ['issues']);
+  const { top, visible, pager } = usePaged(data?.issues ?? []);
   return (
-    <Shell title="open issues" note={data ? `${data.issues.length} open` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the issues on the control plane">
+    <Shell title="open issues" note={data ? `${data.issues.length} open` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the issues on the control plane" top={top}>
       {data && data.issues.length === 0 ? (
         <Empty>No open issues.</Empty>
       ) : (
         data && (
-          <Table label="Open issues">
-            <thead className="border-b border-[var(--raft-hair)]">
-              <tr>
-                <TH>Issue</TH>
-                <TH>Repository</TH>
-                <TH>Labels</TH>
-                <TH>Opened</TH>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--raft-hair)]">
-              {data.issues.map((i) => (
-                <tr key={`${i.repo}#${i.number}`}>
-                  <th scope="row" className="px-3 py-2.5 align-top font-normal">
-                    {i.html_url ? (
-                      <ExtLink href={i.html_url} className="font-medium text-foreground">
-                        {i.title}
-                      </ExtLink>
-                    ) : (
-                      <span className="font-medium">{i.title}</span>
-                    )}
-                    <span className="block font-mono text-[0.6875rem] text-muted-foreground">
-                      #{i.number} · {i.author ?? 'unknown'}
-                    </span>
-                  </th>
-                  <TD mono>{repoShort(i.repo)}</TD>
-                  <TD>
-                    <span className="flex flex-wrap gap-1">
-                      {i.labels.map((l) => (
-                        <Pill key={l} tone="muted" dot={false}>
-                          {l}
-                        </Pill>
-                      ))}
-                    </span>
-                  </TD>
-                  <TD mono>
-                    <Rel iso={i.created_at} />
-                  </TD>
+          <>
+            <Table label="Open issues">
+              <thead className="border-b border-[var(--raft-hair)]">
+                <tr>
+                  <TH>Issue</TH>
+                  <TH>Repository</TH>
+                  <TH>Labels</TH>
+                  <TH>Opened</TH>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody className="divide-y divide-[var(--raft-hair)]">
+                {visible.map((i) => (
+                  <tr key={`${i.repo}#${i.number}`}>
+                    <th scope="row" className="px-3 py-2.5 align-top font-normal">
+                      {i.html_url ? (
+                        <ExtLink href={i.html_url} className="font-medium text-foreground">
+                          {i.title}
+                        </ExtLink>
+                      ) : (
+                        <span className="font-medium">{i.title}</span>
+                      )}
+                      <span className="block font-mono text-[0.6875rem] text-muted-foreground">
+                        #{i.number} · {i.author ?? 'unknown'}
+                      </span>
+                    </th>
+                    <TD mono>{repoShort(i.repo)}</TD>
+                    <TD>
+                      <span className="flex flex-wrap gap-1">
+                        {i.labels.map((l) => (
+                          <Pill key={l} tone="muted" dot={false}>
+                            {l}
+                          </Pill>
+                        ))}
+                      </span>
+                    </TD>
+                    <TD mono>
+                      <Rel iso={i.created_at} />
+                    </TD>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <Pager {...pager} label="Issue pages" />
+          </>
         )
       )}
     </Shell>
@@ -363,80 +377,84 @@ export function Issues({ fallback }: Common) {
 
 export function Releases({ fallback, runsBase, buildsBase, known = {} }: Common) {
   const { data, error, loading, at, reload } = useControl<ReleasesPage>('releases.json', ['releases', 'builds']);
+  const { top, visible, pager } = usePaged(data?.releases ?? []);
   return (
-    <Shell title="releases" note={data ? `${data.releases.length} newest first` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the releases on the control plane" rows={6}>
+    <Shell title="releases" note={data ? `${data.releases.length} newest first` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the releases on the control plane" rows={6} top={top}>
       {data && data.releases.length === 0 ? (
         <Empty>No releases yet.</Empty>
       ) : (
         data && (
-          <Table label="Releases">
-            <thead className="border-b border-[var(--raft-hair)]">
-              <tr>
-                <TH>Release</TH>
-                <TH>Build</TH>
-                <TH>Upstream</TH>
-                <TH>Published</TH>
-                <TH>Links</TH>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--raft-hair)]">
-              {data.releases.map(({ release: r, build: b }) => {
-                const image = b?.image ?? repoImage(r.repo);
-                const page = known[image]?.includes(r.tag) || b?.publish_state === 'live' ? `${buildsBase}${image}/builds/${r.tag}/` : null;
-                return (
-                  <tr key={`${r.repo}@${r.tag}`}>
-                    <th scope="row" className="px-3 py-2.5 align-top font-normal">
-                      <span className="font-medium">{image} </span>
-                      {page ? (
-                        <a href={page} className="font-mono text-xs text-foreground underline-offset-4 hover:text-primary hover:underline">
-                          {r.tag}
-                        </a>
-                      ) : (
-                        <span className="font-mono text-xs">{r.tag}</span>
-                      )}
-                      <span className="block font-mono text-[0.6875rem] text-muted-foreground">
-                        {repoShort(r.repo)}
-                        {r.prerelease && ' · pre-release'}
-                      </span>
-                    </th>
-                    <TD>
-                      {b ? (
-                        <span className="flex flex-wrap gap-1">
-                          <StatePill status="completed" conclusion={b.result} />
-                          {b.reason && (
-                            <Pill tone="muted" dot={false}>
-                              {b.reason}
-                            </Pill>
+          <>
+            <Table label="Releases">
+              <thead className="border-b border-[var(--raft-hair)]">
+                <tr>
+                  <TH>Release</TH>
+                  <TH>Build</TH>
+                  <TH>Upstream</TH>
+                  <TH>Published</TH>
+                  <TH>Links</TH>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--raft-hair)]">
+                {visible.map(({ release: r, build: b }) => {
+                  const image = b?.image ?? repoImage(r.repo);
+                  const page = known[image]?.includes(r.tag) || b?.publish_state === 'live' ? `${buildsBase}${image}/builds/${r.tag}/` : null;
+                  return (
+                    <tr key={`${r.repo}@${r.tag}`}>
+                      <th scope="row" className="px-3 py-2.5 align-top font-normal">
+                        <span className="font-medium">{image} </span>
+                        {page ? (
+                          <a href={page} className="font-mono text-xs text-foreground underline-offset-4 hover:text-primary hover:underline">
+                            {r.tag}
+                          </a>
+                        ) : (
+                          <span className="font-mono text-xs">{r.tag}</span>
+                        )}
+                        <span className="block font-mono text-[0.6875rem] text-muted-foreground">
+                          {repoShort(r.repo)}
+                          {r.prerelease && ' · pre-release'}
+                        </span>
+                      </th>
+                      <TD>
+                        {b ? (
+                          <span className="flex flex-wrap gap-1">
+                            <StatePill status="completed" conclusion={b.result} />
+                            {b.reason && (
+                              <Pill tone="muted" dot={false}>
+                                {b.reason}
+                              </Pill>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">no build event</span>
+                        )}
+                      </TD>
+                      <TD mono wrap>{b?.upstream ?? '–'}</TD>
+                      <TD mono>
+                        <Rel iso={r.published_at ?? r.created_at} />
+                      </TD>
+                      <TD mono>
+                        <span className="flex flex-wrap gap-x-2 gap-y-0.5">
+                          {r.html_url && <ExtLink href={r.html_url}>GitHub</ExtLink>}
+                          {b && (
+                            <a href={`${runsBase}${b.run_id}/`} className="underline-offset-4 hover:text-primary hover:underline">
+                              run
+                            </a>
+                          )}
+                          {page && (
+                            <a href={page} className="underline-offset-4 hover:text-primary hover:underline">
+                              CI results
+                            </a>
                           )}
                         </span>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">no build event</span>
-                      )}
-                    </TD>
-                    <TD mono wrap>{b?.upstream ?? '–'}</TD>
-                    <TD mono>
-                      <Rel iso={r.published_at ?? r.created_at} />
-                    </TD>
-                    <TD mono>
-                      <span className="flex flex-wrap gap-x-2 gap-y-0.5">
-                        {r.html_url && <ExtLink href={r.html_url}>GitHub</ExtLink>}
-                        {b && (
-                          <a href={`${runsBase}${b.run_id}/`} className="underline-offset-4 hover:text-primary hover:underline">
-                            run
-                          </a>
-                        )}
-                        {page && (
-                          <a href={page} className="underline-offset-4 hover:text-primary hover:underline">
-                            CI results
-                          </a>
-                        )}
-                      </span>
-                    </TD>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
+                      </TD>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+            <Pager {...pager} label="Release pages" />
+          </>
         )
       )}
     </Shell>
@@ -465,6 +483,10 @@ export function Scheduler({ fallback, runsBase }: Common) {
   const path = ready ? `scheduler.json${qs.size ? `?${qs}` : ''}` : null;
   const { data, error, loading, at, reload } = useControl<SchedulerPage>(path, ['scheduler_decisions', 'manifests', 'skips', 'runs']);
   const skips = useControl<SkipsPage>('skips.json', ['skips']);
+  const decisions = usePaged(data?.decisions ?? [], undefined, [image, kind, outcome]);
+  // The two side panels sit below the log in a narrow column, so they page sooner.
+  const upcoming = usePaged(data?.upcoming ?? [], 10);
+  const flags = usePaged(skips.data?.skips ?? [], 10);
 
   React.useEffect(() => {
     if (!ready) return;
@@ -483,7 +505,7 @@ export function Scheduler({ fallback, runsBase }: Common) {
   const opt = (list: string[] | undefined, all: string) => [{ value: '', label: all }, ...(list ?? []).map((x) => ({ value: x, label: x }))];
   return (
     <div className="space-y-6">
-      <section className="raft-panel overflow-hidden" aria-label="Decision log">
+      <section ref={decisions.top} className="raft-panel scroll-mt-24 overflow-hidden" aria-label="Decision log">
         <PanelBar title="decision log" note={data ? `${data.decisions.length} shown · ${data.live_branches} live branches · scheduler ${data.enabled ? 'on' : 'off'}` : undefined} at={at}>
           <Select label="image" value={image} onChange={setImage} options={opt(data?.images, 'all')} />
           <Select label="kind" value={kind} onChange={setKind} options={opt(data?.kinds, 'all')} />
@@ -494,85 +516,94 @@ export function Scheduler({ fallback, runsBase }: Common) {
         {!data && !loading && ready && error && <Offline error={error} retry={reload} fallback={{ label: 'Open the scheduler on the control plane', href: fallback }} />}
         {data && data.decisions.length === 0 && <Empty>No decision matches these filters.</Empty>}
         {data && data.decisions.length > 0 && (
-          <Table label="Scheduler decisions">
-            <thead className="border-b border-[var(--raft-hair)]">
-              <tr>
-                <TH>When</TH>
-                <TH>Branch</TH>
-                <TH>Kind</TH>
-                <TH>Outcome</TH>
-                <TH>Detail</TH>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--raft-hair)]">
-              {data.decisions.map(({ decision: d, info, run }) => (
-                <tr key={d.id}>
-                  <TD mono>
-                    <Rel iso={d.at} />
-                  </TD>
-                  <TD mono>
-                    {d.image} <span className="text-muted-foreground">{d.branch}</span>
-                  </TD>
-                  <TD mono>{d.kind}</TD>
-                  <TD>
-                    <Pill tone={d.outcome === 'dispatch' ? 'live' : d.outcome === 'unchanged' ? 'ok' : d.outcome === 'error' ? 'bad' : 'muted'} dot={false}>
-                      {d.outcome}
-                    </Pill>
-                    {run && (
-                      <a href={`${runsBase}${run.id}/`} className="mt-0.5 block font-mono text-[0.6875rem] underline-offset-4 hover:text-primary hover:underline">
-                        run #{run.run_number ?? run.id}
-                      </a>
-                    )}
-                  </TD>
-                  <TD className="text-xs text-muted-foreground">
-                    <Detail info={info} />
-                  </TD>
+          <>
+            <Table label="Scheduler decisions">
+              <thead className="border-b border-[var(--raft-hair)]">
+                <tr>
+                  <TH>When</TH>
+                  <TH>Branch</TH>
+                  <TH>Kind</TH>
+                  <TH>Outcome</TH>
+                  <TH>Detail</TH>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody className="divide-y divide-[var(--raft-hair)]">
+                {decisions.visible.map(({ decision: d, info, run }) => (
+                  <tr key={d.id}>
+                    <TD mono>
+                      <Rel iso={d.at} />
+                    </TD>
+                    <TD mono>
+                      {d.image} <span className="text-muted-foreground">{d.branch}</span>
+                    </TD>
+                    <TD mono>{d.kind}</TD>
+                    <TD>
+                      <Pill tone={d.outcome === 'dispatch' ? 'live' : d.outcome === 'unchanged' ? 'ok' : d.outcome === 'error' ? 'bad' : 'muted'} dot={false}>
+                        {d.outcome}
+                      </Pill>
+                      {run && (
+                        <a href={`${runsBase}${run.id}/`} className="mt-0.5 block font-mono text-[0.6875rem] underline-offset-4 hover:text-primary hover:underline">
+                          run #{run.run_number ?? run.id}
+                        </a>
+                      )}
+                    </TD>
+                    <TD className="text-xs text-muted-foreground">
+                      <Detail info={info} />
+                    </TD>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <Pager {...decisions.pager} label="Decision log pages" />
+          </>
         )}
       </section>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <section className="raft-panel overflow-hidden" aria-label="Upcoming checks">
+        <section ref={upcoming.top} className="raft-panel scroll-mt-24 overflow-hidden" aria-label="Upcoming checks">
           <PanelBar title="next 24 hours" note={data ? `${data.upcoming.length} checks` : undefined} at={at} />
           {!data && (loading || !ready) && <Skeleton rows={5} />}
           {data && data.upcoming.length === 0 && <Empty>Nothing scheduled.</Empty>}
           {data && data.upcoming.length > 0 && (
-            <ol className="divide-y divide-[var(--raft-hair)]">
-              {data.upcoming.map((u) => (
-                <li key={`${u.image}/${u.branch}/${u.kind}/${u.at}`} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-3.5 py-2 font-mono text-xs">
-                  <span>
-                    {u.image} <span className="text-muted-foreground">{u.branch}</span>
-                  </span>
-                  <span className="text-muted-foreground">
-                    {u.kind} · <Rel iso={u.at} mode="until" /> <span className="text-[0.6875rem]">({new Date(u.at).toISOString().slice(11, 16)} UTC)</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
+            <>
+              <ol className="divide-y divide-[var(--raft-hair)]">
+                {upcoming.visible.map((u) => (
+                  <li key={`${u.image}/${u.branch}/${u.kind}/${u.at}`} className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 px-3.5 py-2 font-mono text-xs">
+                    <span>
+                      {u.image} <span className="text-muted-foreground">{u.branch}</span>
+                    </span>
+                    <span className="text-muted-foreground">
+                      {u.kind} · <Rel iso={u.at} mode="until" /> <span className="text-[0.6875rem]">({new Date(u.at).toISOString().slice(11, 16)} UTC)</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <Pager {...upcoming.pager} label="Upcoming check pages" />
+            </>
           )}
         </section>
 
-        <section className="raft-panel overflow-hidden" aria-label="Skip flags">
+        <section ref={flags.top} className="raft-panel scroll-mt-24 overflow-hidden" aria-label="Skip flags">
           <PanelBar title="skip flags" note={skips.data ? `${skips.data.skips.length} active` : undefined} at={skips.at} />
           {!skips.data && skips.loading && <Skeleton rows={3} />}
           {skips.data && skips.data.skips.length === 0 && <Empty>No skip flags set.</Empty>}
           {skips.data && skips.data.skips.length > 0 && (
-            <ul className="divide-y divide-[var(--raft-hair)]">
-              {skips.data.skips.map((s) => (
-                <li key={s.scope} className="flex flex-wrap items-start justify-between gap-2 px-3.5 py-2 text-xs">
-                  <span>
-                    <span className="font-mono">{s.scope}</span>
-                    <span className="block text-muted-foreground">
-                      {s.reason ?? 'no reason given'} · {s.set_by} · <Rel iso={s.set_at} />
+            <>
+              <ul className="divide-y divide-[var(--raft-hair)]">
+                {flags.visible.map((s) => (
+                  <li key={s.scope} className="flex flex-wrap items-start justify-between gap-2 px-3.5 py-2 text-xs">
+                    <span>
+                      <span className="font-mono">{s.scope}</span>
+                      <span className="block text-muted-foreground">
+                        {s.reason ?? 'no reason given'} · {s.set_by} · <Rel iso={s.set_at} />
+                      </span>
                     </span>
-                  </span>
-                  <MemberOnly>{(me) => <ActionButton action="unskip" body={{ scope: s.scope }} csrf={me.csrf} label="unskip" size="xs" confirm={`Clear the skip flag on ${s.scope}?`} fields={[{ name: 'reason', label: 'reason', placeholder: 'why' }]} onDone={() => skips.reload()} />}</MemberOnly>
-                </li>
-              ))}
-            </ul>
+                    <MemberOnly>{(me) => <ActionButton action="unskip" body={{ scope: s.scope }} csrf={me.csrf} label="unskip" size="xs" confirm={`Clear the skip flag on ${s.scope}?`} fields={[{ name: 'reason', label: 'reason', placeholder: 'why' }]} onDone={() => skips.reload()} />}</MemberOnly>
+                  </li>
+                ))}
+              </ul>
+              <Pager {...flags.pager} label="Skip flag pages" />
+            </>
           )}
         </section>
       </div>
@@ -607,41 +638,45 @@ function Detail({ info }: { info: Record<string, unknown> }) {
 
 export function Actions({ fallback }: Common) {
   const { data, error, loading, at, reload } = useControl<ActionsPage>('actions.json', ['actions']);
+  const { top, visible, pager } = usePaged(data?.actions ?? []);
   return (
-    <Shell title="member actions" note={data ? `last ${data.actions.length}` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the management page on the control plane">
+    <Shell title="member actions" note={data ? `last ${data.actions.length}` : undefined} at={at} loading={loading} error={error} data={data} reload={reload} fallback={fallback} fallbackLabel="Open the management page on the control plane" top={top}>
       {data && data.actions.length === 0 ? (
         <Empty>No actions yet.</Empty>
       ) : (
         data && (
-          <Table label="Member actions">
-            <thead className="border-b border-[var(--raft-hair)]">
-              <tr>
-                <TH>When</TH>
-                <TH>Who</TH>
-                <TH>Action</TH>
-                <TH>Target</TH>
-                <TH>Result</TH>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[var(--raft-hair)]">
-              {data.actions.map((a) => (
-                <tr key={a.id}>
-                  <TD mono>
-                    <Rel iso={a.at} />
-                  </TD>
-                  <TD mono>{a.actor}</TD>
-                  <TD mono>{a.action}</TD>
-                  <TD mono>{a.target ?? '–'}</TD>
-                  <TD>
-                    <Pill tone={a.result === 'ok' ? 'ok' : 'bad'} dot={false}>
-                      {a.result}
-                    </Pill>
-                    {a.detail && <span className="block max-w-xs truncate text-[0.6875rem] text-muted-foreground" title={a.detail}>{a.detail}</span>}
-                  </TD>
+          <>
+            <Table label="Member actions">
+              <thead className="border-b border-[var(--raft-hair)]">
+                <tr>
+                  <TH>When</TH>
+                  <TH>Who</TH>
+                  <TH>Action</TH>
+                  <TH>Target</TH>
+                  <TH>Result</TH>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody className="divide-y divide-[var(--raft-hair)]">
+                {visible.map((a) => (
+                  <tr key={a.id}>
+                    <TD mono>
+                      <Rel iso={a.at} />
+                    </TD>
+                    <TD mono>{a.actor}</TD>
+                    <TD mono>{a.action}</TD>
+                    <TD mono>{a.target ?? '–'}</TD>
+                    <TD>
+                      <Pill tone={a.result === 'ok' ? 'ok' : 'bad'} dot={false}>
+                        {a.result}
+                      </Pill>
+                      {a.detail && <span className="block max-w-xs truncate text-[0.6875rem] text-muted-foreground" title={a.detail}>{a.detail}</span>}
+                    </TD>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+            <Pager {...pager} label="Action pages" />
+          </>
         )
       )}
     </Shell>

@@ -7,7 +7,7 @@
  */
 import * as React from 'react';
 import { repoShort, useControl, type FleetPage, type FleetRow, type HelperRepo } from '@/lib/control';
-import { ActionButton, BranchActions, DriftPill, Empty, ExtLink, MemberOnly, Offline, Pager, PanelBar, Pill, Rel, Select, Skeleton, SkipControls, StatePill, Table, TD, TH, Toggle } from './shared';
+import { ActionButton, BranchActions, DriftPill, Empty, ExtLink, MemberOnly, Offline, Pager, PanelBar, Pill, Rel, Select, Skeleton, SkipControls, StatePill, Table, TD, TH, Toggle, usePaged } from './shared';
 
 interface Props {
   /** `withBase('/images/')`: image names link to their pages when the site has one. */
@@ -21,7 +21,8 @@ interface Props {
   fallback: string;
 }
 
-const PAGE_SIZE = 50;
+// The board is the fleet's index, so it shows twice the other lists' page.
+const BOARD_PAGE = 50;
 
 const severity = (r: FleetRow) => (r.result === 'failure' ? 0 : r.result === 'cancelled' ? 1 : r.result === null ? 2 : r.drift === 'ahead' ? 3 : 4);
 
@@ -32,8 +33,6 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fall
   const [image, setImage] = React.useState('all');
   const [q, setQ] = React.useState('');
   const [ready, setReady] = React.useState(false);
-  const [page, setPage] = React.useState(0);
-  const top = React.useRef<HTMLDivElement>(null);
   React.useEffect(() => {
     // ?image= filters the board to one image (image pages link here).
     setImage(new URL(location.href).searchParams.get('image') || 'all');
@@ -53,15 +52,7 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fall
     return list;
   }, [data, image, drift, q, redFirst]);
 
-  // A filter change starts again at page one; a page that no longer exists falls back to the last one.
-  React.useEffect(() => setPage(0), [image, drift, q, redFirst]);
-  const pages = Math.max(1, Math.ceil(rows.length / PAGE_SIZE));
-  const shown = Math.min(page, pages - 1);
-  const visible = rows.slice(shown * PAGE_SIZE, (shown + 1) * PAGE_SIZE);
-  const turn = (p: number) => {
-    setPage(p);
-    top.current?.scrollIntoView({ block: 'start' });
-  };
+  const { top, visible, pager } = usePaged<FleetRow, HTMLDivElement>(rows, BOARD_PAGE, [image, drift, q, redFirst]);
 
   const images = React.useMemo(() => [...new Set((data?.rows ?? []).map((r) => r.image))].sort(), [data]);
   const failing = data ? data.rows.filter((r) => r.result === 'failure').length : 0;
@@ -134,7 +125,7 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, fall
               </tbody>
             </Table>
           )}
-          <Pager page={shown} size={PAGE_SIZE} total={rows.length} onPage={turn} label="Fleet board pages" />
+          <Pager {...pager} label="Fleet board pages" />
           {(data.helpers ?? []).filter((h) => !h.archived).length > 0 && <Helpers helpers={(data.helpers ?? []).filter((h) => !h.archived)} modsBase={modsBase} />}
         </>
       )}

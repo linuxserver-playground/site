@@ -179,6 +179,26 @@ export const TD = ({ children, className, right, mono, wrap, title }: { children
   </td>
 );
 
+/** Rows a fleet list shows per page. Every live list pages, so the panels below a long one stay in reach. */
+export const PAGE_SIZE = 25;
+
+/**
+ * One page of a live list, for `<Pager {...pager} />`. A change in `reset` (the filters) starts again at page
+ * one, a refresh that shortens the list falls back to its last page, and turning a page brings `top` into view.
+ */
+export function usePaged<T, E extends HTMLElement = HTMLElement>(rows: T[], size = PAGE_SIZE, reset: readonly unknown[] = []) {
+  const [page, setPage] = React.useState(0);
+  const top = React.useRef<E>(null);
+  React.useEffect(() => setPage(0), reset);
+  const pages = Math.max(1, Math.ceil(rows.length / size));
+  const shown = Math.min(page, pages - 1);
+  const onPage = (p: number) => {
+    setPage(p);
+    top.current?.scrollIntoView({ block: 'start' });
+  };
+  return { top, visible: rows.slice(shown * size, (shown + 1) * size), pager: { page: shown, size, total: rows.length, onPage } };
+}
+
 /** Prev and next for a long table, with where the reader is. Renders nothing for a single page. */
 export function Pager({ page, size, total, onPage, label }: { page: number; size: number; total: number; onPage: (p: number) => void; label: string }) {
   const pages = Math.ceil(total / size);
