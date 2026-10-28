@@ -166,7 +166,8 @@ export function buildPage(image: BuildPageImage, record: BuildRecord, builds: Bu
     pull: `docker pull ${image.ref}:${tag}`,
     description,
     facts,
-    tagList: b.version.tags ?? [],
+    // The tags the build pushed, from its build.json (never a registry listing); `version.tags` before contracts 1.10.
+    tagList: b.published?.tags ?? summary?.tags ?? b.version.tags ?? [],
     testsPassed,
     testsTotal,
     testsFailedNames,

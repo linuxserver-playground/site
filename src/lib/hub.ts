@@ -163,6 +163,8 @@ export interface BuildSummary {
   test_success?: boolean | null;
   base: BuildBase;
   platforms: PlatformBuild[];
+  /** Every tag the build published (build.json `published.tags`, or `version.tags` before that field). */
+  tags?: string[] | null;
   classification?: Classification | null;
   /** Counts of the build's own scan, made when it was built; the findings are `links.vulns`. */
   vulnerabilities?: VulnSummary | null;
@@ -221,6 +223,8 @@ export interface Bundle {
   base: BuildBase;
   platforms: PlatformBuild[];
   index_digest?: string | null;
+  /** What the publish job pushed: the image and every tag it created (contracts 1.10; absent before). */
+  published?: { image: string; tags: string[] } | null;
   labels: Record<string, string>;
   config: {
     env?: string[] | null;
