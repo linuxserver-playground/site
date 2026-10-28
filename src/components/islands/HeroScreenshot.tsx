@@ -19,12 +19,16 @@ export default function HeroScreenshot({ url, alt, caption, buildUrl, className 
         className="group relative block w-full overflow-hidden rounded-lg border border-[var(--raft-hair-strong)] bg-[var(--raft-code-bg)] shadow-[var(--raft-shadow)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
         aria-label="Enlarge the screenshot"
       >
+        {/* The whole screenshot at its own shape: ci takes them at 1920x993 (the size hint reserves the space
+            before it loads), and a fixed box with object-cover cut the sides off. */}
         <img
           src={url}
           alt={alt}
+          width={1920}
+          height={993}
           decoding="async"
           onError={() => setMissing(true)}
-          className="block aspect-[16/10] w-full object-cover object-top transition-transform duration-300 group-hover:scale-[1.02]"
+          className="block h-auto w-full"
         />
         <span className="absolute right-2 bottom-2 grid size-8 place-items-center rounded-md border border-[var(--raft-hair)] bg-background/80 text-muted-foreground opacity-0 backdrop-blur transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100" aria-hidden="true">
           <Maximize2 className="size-4" />
