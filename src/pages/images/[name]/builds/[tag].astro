@@ -19,7 +19,7 @@ import InitGraph from '@/components/islands/explorer/InitGraph';
 import { withBase } from '@/lib/base';
 import { buildPage } from '@/lib/build-page';
 import { allBuildRecords, buildUrl, getBuilds, type BuildRecord } from '@/lib/builds';
-import { hubReportUrl, hubTestsUrl, hubVulnsUrl } from '@/lib/hub';
+import { hubTestsUrl, hubVulnsUrl } from '@/lib/hub';
 import { getImage, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { githubRepo, renderNotes } from '@/lib/markdown/notes';
 
@@ -31,7 +31,7 @@ export function getStaticPaths() {
 
 const { image, record } = Astro.props as { image: Image; record: BuildRecord };
 const page = buildPage({ name: image.name, url: image.url, ref: image.ref, github_url: image.github_url }, record, getBuilds(image.name));
-const { b, tag, prev, arches, filesUrls, packagesUrls, packagesFallback, packagesSummary, layersUrls } = page;
+const { b, tag, prev, arches, filesUrls, packagesUrls, sbomUrls, packagesSummary, layersUrls } = page;
 // Release notes as GitHub would show them: the LinuxServer section is generated from this image's repository; the
 // upstream section links GitHub references only when its source is a GitHub repository.
 const upstreamRepo = githubRepo(b.notes?.upstream_url);
@@ -58,7 +58,7 @@ const controlBuild = page.controlBuild;
     <section aria-labelledby="ci" id="ci-section">
       <CiHeading page={page} />
       <Panel class="mt-4">
-        <CiReport client:load image={image.name} tag={tag} tests={tests} testEnabled={b.test.enabled} reportDir={hubReportUrl(image.name, tag)} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={controlBuild} />
+        <CiReport client:load image={image.name} tag={tag} tests={tests} testEnabled={b.test.enabled} reportDir={page.reportDir} runJson={page.runJson} logsZip={page.logsZip} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={controlBuild} />
       </Panel>
     </section>
 
@@ -78,7 +78,7 @@ const controlBuild = page.controlBuild;
           arches={arches}
           filesUrls={filesUrls}
           packagesUrls={packagesUrls}
-          packagesFallback={packagesFallback}
+          sbomUrls={sbomUrls}
           packagesSummary={packagesSummary}
           layers={record.layers}
           config={b.config}

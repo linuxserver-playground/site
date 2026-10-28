@@ -22,7 +22,7 @@ import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageE
 import { dependents, installOptions, modPath, modsForImage } from '@/lib/fleet';
 import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/format';
 import { CONTROL_URL, controlImageUrl } from '@/lib/control';
-import { hubApi, hubFilesUrl, hubHistoryUrl, hubReportFileUrl, HUB_URL, type Arch } from '@/lib/hub';
+import { hubApi, HUB_URL, reportFileUrl, type Arch } from '@/lib/hub';
 import { getAllImages, hasRealSummary, hubDate, IMAGE_KINDS, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { getCollection, render } from 'astro:content';
 import { buildLabModel } from '@/lib/lab';
@@ -88,18 +88,17 @@ const latest = (latestTag && builds.find((b) => b.tag === latestTag)) || builds[
 const latestRecord = latest ? getBuildRecord(image.name, latest.tag) : undefined;
 const latestArches = latest ? (latest.platforms.filter((p) => p.result === 'success').map((p) => p.arch) as Arch[]) : [];
 const latestFiles: Partial<Record<Arch, string[]>> = {};
-for (const a of latestArches) {
-  const urls = [latest!.links.files[a], latest!.links.files_release?.[a], hubFilesUrl(image.name, latest!.tag, a)].filter((u): u is string => !!u);
-  if (urls.length) latestFiles[a] = [...new Set(urls)];
-}
+// On the image repository's Pages, which the hub links; Release assets are never fetched (no CORS headers).
+for (const a of latestArches) if (latest!.links.files[a]) latestFiles[a] = [latest!.links.files[a]!];
 const latestHasFiles = latestArches.some((a) => (latestFiles[a]?.length ?? 0) > 0) && !!latestRecord;
 const latestResult = latest ? buildResult(latest) : null;
 // The CI screenshot of the latest build, x86-64 first, shown in the header so readers see the app before reading about it.
 const shotArch = (['amd64', 'arm64'] as Arch[]).find((a) => latestRecord?.tests?.reports?.[a]?.files?.screenshot);
+const shotUrl = latest && shotArch ? reportFileUrl(latest.links.pages, shotArch, 'screenshot.png') : null;
 const heroShot =
-  latest && shotArch
+  latest && shotArch && shotUrl
     ? {
-        url: hubReportFileUrl(image.name, latest.tag, shotArch, latestRecord!.tests!.reports![shotArch]!.files!.screenshot!),
+        url: shotUrl,
         alt: `Screenshot of ${image.name} ${latest.tag}, taken by the test harness on ${shotArch}`,
         caption: `${latest.tag} · ${shotArch} · CI screenshot`,
         buildUrl: withBase(`${buildUrl(image.name, latest.tag)}#ci`),
@@ -129,6 +128,13 @@ const fleetSnapshot: SnapshotBranch[] = image.releases.map((r) => ({
   test_success: r.test_success ?? null,
 }));
 const knownTags = builds.map((b) => b.tag);
+// Releases the hub no longer holds have no page here (nor files on the repository's Pages): they are listed with
+// their Release, control's run record and the run on GitHub instead.
+const held = new Set(knownTags);
+const olderReleases = Object.entries(history)
+  .flatMap(([branch, entries]) => entries.filter((h) => !held.has(h.tag)).map((h) => ({ ...h, branch })))
+  .sort((a, b) => b.created.localeCompare(a.created));
+const OLDER_SHOWN = 50;
 
 const install = installOptions(image.name, { kubernetes: !!extras.kubernetes, quadlet: !!extras.quadlet, proxy: !!extras.proxy?.subdomain });
 
@@ -592,16 +598,9 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
           <div>
             <AnchorHeading id="builds">Builds</AnchorHeading>
             <p class="mt-2 text-sm text-muted-foreground">
-              The newest ten builds per branch{historyCount > builds.length && `; ${historyCount - builds.length} older ${historyCount - builds.length === 1 ? 'release is' : 'releases are'} on GitHub`}.
+              The newest five builds per branch, each with its CI report{olderReleases.length > 0 && `; ${olderReleases.length} older ${olderReleases.length === 1 ? 'release is' : 'releases are'} on GitHub, listed below`}.
             </p>
           </div>
-          {
-            builds.length > 0 && (
-              <a href={hubHistoryUrl(image.name)} target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground">
-                CI history <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
-              </a>
-            )
-          }
         </div>
         <!-- client:idle: the island renders nothing on the server, so client:visible would never hydrate it. -->
         <NewerBuilds client:idle image={image.name} known={knownTags} buildsBase={withBase(`/images/${image.name}/builds/`)} />
@@ -662,6 +661,73 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
                 </tbody>
               </table>
             </div>
+          )
+        }
+        {
+          olderReleases.length > 0 && (
+            <details class="raft-panel group mt-4" id="older-releases">
+              <summary class="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm hover:bg-muted/50">
+                <span>
+                  <span class="font-medium">Older releases</span>
+                  <span class="ml-2 font-mono text-xs text-muted-foreground">{olderReleases.length}</span>
+                </span>
+                <span class="font-mono text-[0.6875rem] text-muted-foreground">Release, run record and run on GitHub</span>
+              </summary>
+              <div class="relative overflow-x-auto border-t border-[var(--raft-hair)]">
+                <table class="w-full text-left text-sm">
+                  <caption class="sr-only">Older releases of {image.name}, without a page on this site</caption>
+                  <thead class="border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] font-mono text-[0.6875rem] text-muted-foreground uppercase">
+                    <tr>
+                      <th scope="col" class="px-4 py-2.5 font-normal">Tag</th>
+                      <th scope="col" class="px-4 py-2.5 font-normal">Built</th>
+                      <th scope="col" class="px-4 py-2.5 font-normal">Links</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-[var(--raft-hair)]">
+                    {olderReleases.slice(0, OLDER_SHOWN).map((h) => (
+                      <tr class="align-top">
+                        <th scope="row" class="px-4 py-2.5 font-normal">
+                          <span class="font-mono text-[0.8125rem] [overflow-wrap:anywhere]">{h.tag}</span>
+                          <span class="mt-0.5 block font-mono text-[0.6875rem] text-muted-foreground">{h.branch}</span>
+                        </th>
+                        <td class="px-4 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
+                          <time datetime={h.created} title={h.created}>
+                            {formatDate(h.created)}
+                          </time>
+                        </td>
+                        <td class="px-4 py-2.5 font-mono text-xs">
+                          <span class="flex flex-wrap gap-x-4">
+                            {h.release_url && (
+                              <a href={h.release_url} target="_blank" rel="noopener" class="inline-flex min-h-6 items-center underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+                                Release<span class="sr-only"> {h.tag} on GitHub (opens in a new tab)</span>
+                              </a>
+                            )}
+                            {h.run_json && (
+                              <a href={h.run_json} class="inline-flex min-h-6 items-center underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" title="Release asset: the control plane's record of the run (absent for releases made before it was attached)">
+                                run.json<span class="sr-only"> of {h.tag}</span>
+                              </a>
+                            )}
+                            {h.run_url && (
+                              <a href={h.run_url} target="_blank" rel="noopener" class="inline-flex min-h-6 items-center underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+                                Run<span class="sr-only"> that built {h.tag}, on GitHub (opens in a new tab)</span>
+                              </a>
+                            )}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {olderReleases.length > OLDER_SHOWN && (
+                <p class="border-t border-[var(--raft-hair)] px-4 py-2.5 text-xs text-muted-foreground">
+                  The newest {OLDER_SHOWN} are listed.{' '}
+                  <a href={`${image.github_url}/releases`} target="_blank" rel="noopener" class="underline underline-offset-4 hover:text-foreground">
+                    Every release on GitHub<span class="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </p>
+              )}
+            </details>
           )
         }
       </section>

@@ -101,10 +101,13 @@ statistics, so the tiles that used to show Docker Hub and Scarf numbers are gone
 ### How the explorer loads data
 
 Everything on a build page is static from the snapshot except two heavy tables, which the islands fetch
-from the hub in the browser, only when their tab is opened, with a loading state and a retry:
+in the browser, only when their tab is opened, with a loading state and a retry. The heavy files of a build are
+on its image repository's own GitHub Pages (`https://<owner>.github.io/<repo>/builds/<tag>/`, the newest five
+builds per branch, deployed by the image's build), whose URLs the hub gives in `links` (`pages`, `files`, `sbom`);
+the site never derives them, and never fetches a GitHub Release asset, which sends no CORS headers: Release assets
+(`test.<arch>.tar.gz`, `run.json`, `logs.zip`, `package_versions.*`) are only ever download links.
 
-- **Files** (the treemap): `files.<arch>.json.gz`, from `{HUB_URL}/builds/<image>/<tag>/` for the newest
-  build of each branch (the hub copies it there) and from the GitHub Release asset otherwise. GitHub Pages
+- **Files** (the treemap): `files.<arch>.json.gz` from `links.files`, on the repository's Pages. GitHub Pages
   serves it as `application/gzip` without `Content-Encoding`, so the island inflates it with
   `DecompressionStream`. Current builds hold dumper's nested tree (`lsio-files/1`); older releases hold the
   flat syft-derived table, which `lib/explorer.ts` `legacyTree` turns into the same tree. The treemap sums
@@ -118,11 +121,12 @@ from the hub in the browser, only when their tab is opened, with a loading state
   Escape zooms out), hover or focus shows a tooltip, and the "Largest here" list beside the map is the
   text alternative. Depth is a per-level lightness shift plus a cushion gradient; the hue stays the package.
 - **Packages**: `/api/v1/catalog/<image>/builds/<tag>/packages.<arch>.json`, which the hub serves for the
-  newest build of each branch; older builds link to the syft document on their Release.
+  newest build of each branch; older builds link to their syft document on the repository's Pages (`links.sbom`).
 - The fleet-wide **package search** keeps only the index in the snapshot and fetches
   `/api/v1/packages/<slug>.json` when a package is selected.
 
-The hub sends `Access-Control-Allow-Origin: *`, so these cross-origin fetches need nothing on our side.
+The hub and the image repositories' Pages send `Access-Control-Allow-Origin: *`, so these cross-origin fetches need
+nothing on our side, from any origin the site is served on.
 
 Two more views are static from the snapshot:
 
@@ -149,10 +153,11 @@ The build page is the canonical CI results page: release notes and the Discord e
 the harness's `test.<arch>.json` per arch plus a summary) so the per-arch result pills, the test table
 (name, status, message, seconds), startup seconds, listening ports, warnings, memory and PIDs are in the HTML
 without JavaScript. A build the snapshot has no report for fetches `tests.json` in the browser. The files
-the hub unpacks from `test.<arch>.tar.gz` under `${HUB_URL}/builds/<name>/<tag>/<arch>/` are loaded on demand:
+of `test.<arch>.tar.gz`, unpacked on the repository's Pages under `<links.pages><arch>/`, are loaded on demand:
 `screenshot.png` inline with a lightbox, `container.log`, `browser.log`, `sysinfo.txt` and `package_diff.txt`
 (the diff against the previous release, open by default) as collapsibles that fetch when opened, monospace,
-with copy and raw links; the hub's report index and the run on the control plane and on GitHub are linked.
+with copy and raw links; the run on the control plane and on GitHub, and its `run.json` and `logs.zip` on the
+Release (downloads; older releases have neither), are linked.
 A "Vulnerabilities" collapsible (`#vulns`) renders `vulns.json` from the same directory when the hub serves it (`{summary: {critical, high, medium, low, negligible, fixed, unfixed}, matches:
 [{package, version, id, severity, fix_state, fixed_in, urls}], db_date}`): fixable findings grouped by
 package, then the ones without a fix behind a caveat; nothing is rendered when the endpoint answers 404.
@@ -273,7 +278,7 @@ that publishes `latest`, else the newest of all): base image, upstream version, 
 count per architecture, package count per architecture from the build record, test result, when and why
 it was built, an "Explore this build" button to the build page, and a compact treemap of its files
 (`CompactTreemap`, the explorer's `Treemap` with `compact`), which fetches `files.<arch>.json.gz` the same
-way the build page does, hub copy first, only once the panel scrolls into view. Without a file table or a
+way the build page does, from the repository's Pages, only once the panel scrolls into view. Without a file table or a
 build record the panel shows the facts and the button only.
 
 ### Pages
@@ -282,7 +287,7 @@ build record the panel shows the facts and the button only.
 | --- | --- |
 | `/` | home: stats, latest builds, weekly spotlight, rankings, blog |
 | `/images/` | searchable, filterable catalogue (state in the query string, e.g. `?category=Games&sort=stars`) |
-| `/images/<name>/` | every image, deprecated ones included: the config lab (compose, docker run, Kubernetes, quadlet built from your choices), "Install on…", inside the latest image (facts and a compact treemap), in the fleet (live), setup, parameters, version tags with their latest build, builds, mods, the SWAG proxy lab, changelog, support |
+| `/images/<name>/` | every image, deprecated ones included: the config lab (compose, docker run, Kubernetes, quadlet built from your choices), "Install on…", inside the latest image (facts and a compact treemap), in the fleet (live), setup, parameters, version tags with their latest build, builds (the newest five per branch with a page each, older releases listed with their Release, `run.json` and run), mods, the SWAG proxy lab, changelog, support |
 | `/images/<name>/builds/<tag>/` | one retained build, the canonical CI results page: record, platforms, the CI report (tests, screenshot, logs, package diff), vulnerabilities, file treemap, packages, config and labels, diff to the previous build, annotated Dockerfile with per-instruction layer sizes, init graph by stage, release notes |
 | `/fleet/` | the live fleet board; the hub's base images, staleness and health under the "Bases" tab |
 | `/fleet/runs/`, `/fleet/runs/<id>/`, `/fleet/queue/`, `/fleet/builds/`, `/fleet/pulls/`, `/fleet/issues/`, `/fleet/releases/`, `/fleet/scheduler/`, `/fleet/actions/` | the fleet section, live from the control plane (above) |

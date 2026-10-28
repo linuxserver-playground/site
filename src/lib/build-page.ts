@@ -8,7 +8,7 @@ import { buildResult, buildUrl, reasonLabel } from './build-helpers';
 import type { BuildRecord } from './builds';
 import { controlBuildUrl } from './control';
 import { bytes, formatDate, shortDigest, shortSha } from './format';
-import { hubApi, hubFilesUrl, hubHistoryUrl, hubPackagesUrl, hubReportUrl, hubTestsUrl, type Arch, type Bundle, type BuildSummary } from './hub';
+import { hubApi, hubPackagesUrl, hubTestsUrl, type Arch, type Bundle, type BuildSummary } from './hub';
 
 /** The few image fields a build page needs. */
 export interface BuildPageImage {
@@ -38,9 +38,16 @@ export interface BuildPage {
   newest: boolean;
   arches: Arch[];
   result: 'success' | 'failure' | 'partial';
+  /** `files.<arch>.json.gz` on the repository's Pages (the hub's `links.files`). */
   filesUrls: Partial<Record<Arch, string[]>>;
   packagesUrls: Partial<Record<Arch, string>>;
-  packagesFallback: Partial<Record<Arch, string>>;
+  /** The syft document on the repository's Pages (`links.sbom`), linked when the hub has no package table. */
+  sbomUrls: Partial<Record<Arch, string>>;
+  /** The build's folder on the repository's Pages (`links.pages`): the CI report's files, per architecture. */
+  reportDir: string | null;
+  /** Download links on the Release: control's run record and the run's masked logs (404 for older releases). */
+  runJson: string;
+  logsZip: string;
   layersUrls: Partial<Record<Arch, string>>;
   packagesSummary: Partial<Record<Arch, { count: number; distro: string; by_type?: Record<string, number> | null }>>;
   crumbs: { name: string; href: string }[];
@@ -71,16 +78,20 @@ export function buildPage(image: BuildPageImage, record: BuildRecord, builds: Bu
   const arches = b.platforms.filter((p) => p.result === 'success').map((p) => p.arch) as Arch[];
   const result = buildResult({ platforms: b.platforms, test_success: b.test.enabled ? b.test.success : null });
 
+  // The heavy files are on the image repository's Pages, which keeps the builds the hub holds; the hub says where
+  // (`links`). Release assets are never fetched: they send no CORS headers, so they are only ever download links.
+  const links = summary?.links;
   const filesUrls: Partial<Record<Arch, string[]>> = {};
   const packagesUrls: Partial<Record<Arch, string>> = {};
-  const packagesFallback: Partial<Record<Arch, string>> = {};
+  const sbomUrls: Partial<Record<Arch, string>> = {};
   for (const a of arches) {
-    const release = summary?.links.files[a] ?? b.assets.find((x) => x.name === `files.${a}.json.gz`)?.url;
-    filesUrls[a] = newest ? [hubFilesUrl(image.name, tag, a), ...(release ? [release] : [])] : release ? [release, hubFilesUrl(image.name, tag, a)] : [hubFilesUrl(image.name, tag, a)];
-    if (newest) packagesUrls[a] = summary?.links.packages[a] ?? hubPackagesUrl(image.name, tag, a);
-    const syft = b.assets.find((x) => x.name === `packages.${a}.json.gz`)?.url;
-    if (syft) packagesFallback[a] = syft;
+    if (links?.files[a]) filesUrls[a] = [links.files[a]!];
+    if (newest) packagesUrls[a] = links?.packages[a] ?? hubPackagesUrl(image.name, tag, a);
+    if (links?.sbom?.[a]) sbomUrls[a] = links.sbom[a]!;
   }
+  const releaseDownload = (name: string) => `https://github.com/${b.repository}/releases/download/${tag}/${name}`;
+  const runJson = links?.run_json ?? releaseDownload('run.json');
+  const logsZip = links?.logs_zip ?? releaseDownload('logs.zip');
   const layersUrls = Object.fromEntries(arches.map((a) => [a, summary?.links.layers[a] ?? hubApi(`catalog/${image.name}/builds/${tag}/layers.${a}.json`)])) as Partial<Record<Arch, string>>;
   const packagesSummary = Object.fromEntries(Object.entries(b.packages ?? {}).map(([a, s]) => [a, { count: s.count, distro: s.distro, by_type: s.by_type }])) as BuildPage['packagesSummary'];
 
@@ -118,11 +129,12 @@ export function buildPage(image: BuildPageImage, record: BuildRecord, builds: Bu
     { label: 'build.json', href: summary?.links.build ?? hubApi(`catalog/${image.name}/builds/${tag}.json`) },
     { label: 'diff.json', href: summary?.links.diff ?? hubApi(`catalog/${image.name}/builds/${tag}/diff.json`) },
     ...(record.tests ? [{ label: 'tests.json', href: hubTestsUrl(image.name, tag) }] : []),
-    { label: 'CI report', href: hubReportUrl(image.name, tag) },
     ...arches.map((a) => ({ label: `layers.${a}.json`, href: layersUrls[a]! })),
-    ...arches.map((a) => ({ label: `files.${a}.json.gz`, href: filesUrls[a]![0] })),
+    ...arches.filter((a) => filesUrls[a]).map((a) => ({ label: `files.${a}.json.gz`, href: filesUrls[a]![0] })),
+    ...arches.filter((a) => sbomUrls[a]).map((a) => ({ label: `packages.${a}.json.gz`, href: sbomUrls[a]! })),
     ...b.assets.filter((x) => x.url && /^package_versions\./.test(x.name)).map((x) => ({ label: x.name, href: x.url! })),
-    { label: 'Build history', href: hubHistoryUrl(image.name) },
+    { label: 'run.json', href: runJson },
+    { label: 'logs.zip', href: logsZip },
   ];
 
   return {
@@ -138,7 +150,10 @@ export function buildPage(image: BuildPageImage, record: BuildRecord, builds: Bu
     result,
     filesUrls,
     packagesUrls,
-    packagesFallback,
+    sbomUrls,
+    reportDir: links?.pages ?? null,
+    runJson,
+    logsZip,
     layersUrls,
     packagesSummary,
     crumbs,

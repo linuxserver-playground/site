@@ -122,10 +122,22 @@ export interface BuildLinks {
   layers: Partial<Record<Arch, string>>;
   packages: Partial<Record<Arch, string>>;
   release?: string | null;
-  /** `files.<arch>.json.gz`: the hub's copy for the newest build of each branch, else the Release asset. */
+  /**
+   * The build's folder on its image repository's GitHub Pages, with a trailing slash: the heavy files of the newest
+   * five builds per branch (the builds the hub holds), served with `access-control-allow-origin: *`. Holds
+   * `files.<arch>.json.gz`, `packages.<arch>.json.gz` and each architecture's unpacked test report under `<arch>/`
+   * (`REPORT_FILES`). Absent in snapshots taken before the hub linked it.
+   */
+  pages?: string | null;
+  /** `files.<arch>.json.gz` on the repository's Pages (gzip served as application/gzip). */
   files: Partial<Record<Arch, string>>;
-  /** The Release asset, always. */
-  files_release?: Partial<Record<Arch, string>> | null;
+  /** `packages.<arch>.json.gz`, the build's syft document, on the repository's Pages. */
+  sbom?: Partial<Record<Arch, string>> | null;
+  /** `run.json` on the Release: a download link only (Release assets send no CORS headers). 404 for older releases. */
+  run_json?: string | null;
+  /** `logs.zip` on the Release, the run's masked logs: a download link only. 404 for older releases. */
+  logs_zip?: string | null;
+  /** The hub's plain report page; the site's build page is the report, so the site does not link it. */
   test_report?: string | null;
 }
 
@@ -149,7 +161,17 @@ export interface BuildSummary {
   links: BuildLinks;
 }
 
-export interface HistoryEntry { tag: string; created: string; release_url?: string | null }
+/** A release of a branch, held by the hub or not. Only held ones (in `builds`) have a site page. */
+export interface HistoryEntry {
+  tag: string;
+  created: string;
+  release_url?: string | null;
+  /** The workflow run that built it; absent for releases rotated out before the hub recorded it. */
+  run_url?: string | null;
+  /** `run.json` and `logs.zip` on the Release: download links, 404 for releases made before control attached them. */
+  run_json?: string | null;
+  logs_zip?: string | null;
+}
 
 export interface BuildsData {
   image: string;
@@ -435,7 +457,10 @@ export interface TestSummary {
   warnings: number;
   rss_bytes?: number | null;
   pids?: number | null;
+  /** `test.<arch>.tar.gz` on the Release: a download link only. */
   tarball?: string | null;
+  /** The report's files on the repository's Pages, by kind (`screenshot`, `container_log`, ...). */
+  files?: Record<string, string> | null;
 }
 
 /** `/api/v1/catalog/{name}/builds/{tag}/tests.json` `data`. */
@@ -475,11 +500,6 @@ export const HUB_URL: string = (hub as { url: string }).url.replace(/\/+$/, '');
 export const HUB_META = hub as { url: string; source: 'local' | 'remote'; fetched: string; last_updated: string; status: HubStatus | null };
 
 export const hubApi = (path: string) => `${HUB_URL}/api/v1/${path.replace(/^\/+/, '')}`;
-/** The hub's rendered CI report page for one build. */
-export const hubReportUrl = (image: string, tag: string) => `${HUB_URL}/builds/${image}/${tag}/`;
-export const hubHistoryUrl = (image: string) => `${HUB_URL}/builds/${image}/`;
-/** The hub's copy of `files.<arch>.json.gz`, kept for the newest build of each branch. */
-export const hubFilesUrl = (image: string, tag: string, arch: Arch) => `${HUB_URL}/builds/${image}/${tag}/files.${arch}.json.gz`;
 export const hubPackagesUrl = (image: string, tag: string, arch: Arch) => hubApi(`catalog/${image}/builds/${tag}/packages.${arch}.json`);
 export const hubPackageUrl = (slug: string) => hubApi(`packages/${slug}.json`);
 export const hubStoreUrl = (path: string) => `${HUB_URL}/stores/${path.replace(/^\/+/, '')}`;
@@ -488,8 +508,15 @@ export const hubStoreUrl = (path: string) => `${HUB_URL}/stores/${path.replace(/
 export const hubTestsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/tests.json`);
 /** `vulns.json`: the scanner's findings, when the hub serves them. */
 export const hubVulnsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/vulns.json`);
-/** A file the hub unpacked from `test.<arch>.tar.gz`: `screenshot.png`, `container.log`, `browser.log`, `sysinfo.txt`, `package_diff.txt`. */
-export const hubReportFileUrl = (image: string, tag: string, arch: Arch | string, file: string) => `${HUB_URL}/builds/${image}/${tag}/${arch}/${file}`;
+
+/**
+ * The files of `test.<arch>.tar.gz` as each build's repository Pages serves them under `<links.pages><arch>/`. The
+ * hub links that folder (`BuildLinks.pages`); the site never derives it, so the domain can change in one place.
+ */
+export const REPORT_FILES = ['screenshot.png', 'container.log', 'browser.log', 'sysinfo.txt', 'package_diff.txt'] as const;
+export type ReportFile = (typeof REPORT_FILES)[number];
+/** A report file of one build and architecture on the repository's Pages, or null when the hub gave no folder. */
+export const reportFileUrl = (pages: string | null | undefined, arch: Arch | string, file: ReportFile): string | null => (pages ? `${pages}${arch}/${file}` : null);
 
 /** The control plane: live status, the scheduler and member actions. The fleet pages read its JSON API (lib/control.ts). */
 export { CONTROL_URL, controlImageUrl } from './control';

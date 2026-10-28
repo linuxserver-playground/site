@@ -34,8 +34,10 @@ them, and the Deploy publishes them as the one commit of the `data` branch (`scr
 on main, so they can never land in a commit or an editor pull request. Never hand-edit a snapshot or push to `data`;
 fix the refresh script or the hub. Do not
 edit `src/components/ui/` (regenerate with shadcn). Never add a stat the hub does not provide (there are no
-pull counts), and never read from a registry or namespace outside `linuxserver-playground`, the hub and the
-control plane. Every internal link goes through `withBase()`.
+pull counts), and never read from a registry or namespace outside `linuxserver-playground`, the hub, the image
+repositories' own Pages (the heavy files of their newest builds, at the URLs the hub's `links` give; never derive
+them) and the control plane. Never fetch a GitHub Release asset from the browser: they send no CORS headers, so
+they are download links only. Every internal link goes through `withBase()`.
 
 A build the site was built without (a release since the last site build) is still a page: Pages answers its URL
 with `404.astro`, which mounts `LiveBuildPage` for `/images/<name>/builds/<tag>/` of a known image, and that reads

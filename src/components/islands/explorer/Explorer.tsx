@@ -10,7 +10,8 @@ interface Props {
   arches: Arch[];
   filesUrls: Partial<Record<Arch, string[]>>;
   packagesUrls: Partial<Record<Arch, string>>;
-  packagesFallback: Partial<Record<Arch, string>>;
+  /** The syft document on the repository's Pages, linked when the hub has no package table for the build. */
+  sbomUrls: Partial<Record<Arch, string>>;
   packagesSummary: Partial<Record<Arch, { count: number; distro: string; by_type?: Record<string, number> | null }>>;
   layers: Partial<Record<Arch, Layer[]>>;
   config: Bundle['config'];
@@ -20,7 +21,7 @@ interface Props {
 
 /**
  * The explorer tabs at the bottom of a build page. The heavy views (file treemap, package table) fetch
- * their data from the hub only when their tab is first opened; the config tab is static. Every tab
+ * their data (the repository's Pages, the hub) only when their tab is first opened; the config tab is static. Every tab
  * server-renders a useful summary so the page reads without JavaScript.
  */
 export default function Explorer(props: Props) {
@@ -81,7 +82,7 @@ export default function Explorer(props: Props) {
             arches={props.arches}
             urls={props.packagesUrls}
             summary={props.packagesSummary}
-            fallback={props.packagesFallback}
+            sbom={props.sbomUrls}
             packagesBase={props.packagesBase}
           />
         ) : (

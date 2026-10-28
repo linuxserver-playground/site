@@ -13,8 +13,8 @@ interface Props {
   urls: Partial<Record<Arch, string>>;
   /** Package counts from the bundle, shown before (and without) the full table. */
   summary: Partial<Record<Arch, { count: number; distro: string; by_type?: Record<string, number> | null }>>;
-  /** Where the package table lives when the hub no longer serves it (older builds): the Release asset. */
-  fallback?: Partial<Record<Arch, string>>;
+  /** The build's syft document on the repository's Pages, linked when the hub has no table (older builds). */
+  sbom?: Partial<Record<Arch, string>>;
   /** Base URL for the fleet-wide package pages, with trailing slash. */
   packagesBase: string;
   initialArch?: Arch;
@@ -27,7 +27,7 @@ const PAGE = 100;
  * The summary counts are server-rendered from the bundle; the table itself is fetched from the hub when
  * the island is opened.
  */
-export default function PackageBrowser({ image, tag, arches, urls, summary, fallback, packagesBase, initialArch }: Props) {
+export default function PackageBrowser({ image, tag, arches, urls, summary, sbom, packagesBase, initialArch }: Props) {
   const [arch, setArch] = React.useState<Arch>(initialArch ?? arches[0]);
   const [state, setState] = React.useState<{ status: 'idle' | 'loading' | 'ready' | 'error'; data?: PackagesData; error?: string }>({ status: 'idle' });
   const [q, setQ] = React.useState('');
@@ -97,10 +97,10 @@ export default function PackageBrowser({ image, tag, arches, urls, summary, fall
       {state.status === 'idle' && (
         <div className="px-4 py-8 text-center text-sm text-muted-foreground">
           <p>The package table is available for the newest build of each branch.</p>
-          {fallback?.[arch] && (
+          {sbom?.[arch] && (
             <p className="mt-2">
-              <a href={fallback[arch]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
-                SBOM for this build<span className="sr-only"> (opens in a new tab)</span>
+              <a href={sbom[arch]} className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current" target="_blank" rel="noopener">
+                SBOM for this build (syft JSON, gzipped)<span className="sr-only"> (opens in a new tab)</span>
               </a>
             </p>
           )}

@@ -1,21 +1,25 @@
 /**
  * The CI report of one build, rendered from the hub's `tests.json` (server-rendered from the snapshot,
- * so the summary and the test table are in the HTML) plus the unpacked report files fetched on demand:
- * the screenshot (lightbox on click), the container and browser logs (loaded when opened, copyable), the
- * package diff against the previous release, and links to the harness's own HTML and the run.
+ * so the summary and the test table are in the HTML) plus the report files fetched on demand from the image
+ * repository's Pages (cross-origin, `access-control-allow-origin: *`): the screenshot (lightbox on click), the
+ * container and browser logs (loaded when opened, copyable), the package diff against the previous release, and
+ * links to the run, its record and its logs (Release downloads, never fetched: they send no CORS headers).
  */
 import * as React from 'react';
 import { ArrowUpRight, Check, Copy, Download, Minus, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import type { Arch, TestsData } from '@/lib/hub';
+import { reportFileUrl, type Arch, type ReportFile, type TestsData } from '@/lib/hub';
 import { cn } from '@/lib/utils';
 
 interface Props {
   image: string;
   tag: string;
   tests: TestsData | null;
-  /** `${HUB_URL}/builds/<image>/<tag>/` */
-  reportDir: string;
+  /** The build's folder on the repository's Pages (`links.pages`), or null when the hub gave none. */
+  reportDir: string | null;
+  /** `run.json` and `logs.zip` on the Release: download links (404 for releases made before control attached them). */
+  runJson?: string | null;
+  logsZip?: string | null;
   /** The hub's `tests.json`, fetched when the snapshot has none (a build ingested after the last refresh). */
   testsUrl: string;
   /** The run on the control plane and on GitHub. */
@@ -23,8 +27,6 @@ interface Props {
   controlUrl?: string | null;
   testEnabled: boolean;
 }
-
-const FILES = ['screenshot.png', 'container.log', 'browser.log', 'sysinfo.txt', 'package_diff.txt'] as const;
 
 export default function CiReport(props: Props) {
   const [tests, setTests] = React.useState<TestsData | null>(props.tests);
@@ -72,7 +74,14 @@ export default function CiReport(props: Props) {
 
   const report = current ? tests.reports?.[current] : undefined;
   const summary = current ? tests.summary?.[current] : undefined;
-  const file = (name: (typeof FILES)[number]) => `${props.reportDir}${current}/${name}`;
+  const file = (name: ReportFile) => (current ? reportFileUrl(props.reportDir, current, name) : null);
+  const logs = [
+    { title: 'Container log', url: file('container.log') },
+    { title: 'Browser log', url: file('browser.log') },
+    { title: 'Package diff versus the previous release', url: file('package_diff.txt'), openByDefault: true, emptyText: 'No package changes found.' },
+    { title: 'System info', url: file('sysinfo.txt') },
+  ];
+  const shot = file('screenshot.png');
 
   return (
     <div>
@@ -168,20 +177,22 @@ export default function CiReport(props: Props) {
 
             {/* Logs and diff */}
             <div className="divide-y divide-[var(--raft-hair)] border-t border-[var(--raft-hair)]">
-              <LogDetails title="Container log" url={file('container.log')} />
-              <LogDetails title="Browser log" url={file('browser.log')} />
-              <LogDetails title="Package diff versus the previous release" url={file('package_diff.txt')} openByDefault emptyText="No package changes found." />
-              <LogDetails title="System info" url={file('sysinfo.txt')} />
+              {props.reportDir ? (
+                logs.map((l) => <LogDetails key={l.title} title={l.title} url={l.url!} openByDefault={l.openByDefault} emptyText={l.emptyText} />)
+              ) : (
+                <p className="px-4 py-3 text-xs text-muted-foreground">The logs and screenshot of this build are not linked yet. The test report tarball and the run's logs are on GitHub.</p>
+              )}
             </div>
           </div>
 
           <aside className="border-t border-[var(--raft-hair)] lg:border-t-0 lg:border-l" aria-label="Screenshot and report files">
-            <Screenshot url={file('screenshot.png')} arch={current!} image={props.image} />
+            {shot && <Screenshot key={shot} url={shot} arch={current!} image={props.image} />}
             <ul className="p-2 text-sm">
               {[
-                { label: 'Report index', href: props.reportDir },
                 ...(props.controlUrl ? [{ label: 'Run status', href: props.controlUrl }] : []),
                 ...(props.runUrl ? [{ label: 'Run on GitHub', href: props.runUrl }] : []),
+                ...(props.runJson ? [{ label: 'run.json', href: props.runJson }] : []),
+                ...(props.logsZip ? [{ label: 'logs.zip', href: props.logsZip }] : []),
                 ...(summary?.tarball ? [{ label: `test.${current}.tar.gz`, href: summary.tarball }] : []),
                 { label: 'tests.json', href: props.testsUrl },
               ].map((l) => (
@@ -334,7 +345,7 @@ function LogDetails({ title, url, openByDefault = false, emptyText }: { title: s
   );
 }
 
-/** The harness's screenshot, inline, with a lightbox; hidden entirely when the hub has none. */
+/** The harness's screenshot, inline, with a lightbox; hidden entirely when the repository's Pages has none. */
 function Screenshot({ url, arch, image }: { url: string; arch: string; image: string }) {
   const [state, setState] = React.useState<'loading' | 'ok' | 'missing'>('loading');
   const [open, setOpen] = React.useState(false);

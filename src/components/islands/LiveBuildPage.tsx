@@ -11,7 +11,7 @@ import { withBase, BASE } from '@/lib/base';
 import { buildUrl } from '@/lib/build-helpers';
 import { buildPage, type BuildPageImage } from '@/lib/build-page';
 import type { BuildRecord } from '@/lib/builds';
-import { hubApi, hubReportUrl, hubTestsUrl, hubVulnsUrl, type Bundle, type BuildsData, type Diff, type Layer, type TestsData } from '@/lib/hub';
+import { hubApi, hubTestsUrl, hubVulnsUrl, type Bundle, type BuildsData, type Diff, type HistoryEntry, type Layer, type TestsData } from '@/lib/hub';
 import { AnchorHeading, BuildHeader, BuildRecordSection, CiHeading, NotesAndData } from '@/components/build/BuildParts';
 import CopyButton from '@/components/islands/CopyButton';
 import CiReport from '@/components/islands/explorer/CiReport';
@@ -30,6 +30,8 @@ type State =
   | { kind: 'idle' }
   | { kind: 'loading'; name: string; tag: string }
   | { kind: 'missing'; name: string; tag: string }
+  /** A release the hub no longer holds (older than the newest five of its branch): it has no page, only its Release. */
+  | { kind: 'rotated'; name: string; tag: string; entry: HistoryEntry }
   | { kind: 'error'; name: string; tag: string }
   | { kind: 'ready'; image: LiveImage; record: BuildRecord; builds: BuildsData };
 
@@ -81,7 +83,12 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
         hubJSON<{ diff: Diff }>(`${base}/diff.json`, ctrl.signal).catch(() => null),
         hubJSON<TestsData>(`${base}/tests.json`, ctrl.signal).catch(() => null),
       ]);
-      if (!build) return setState({ kind: 'missing', ...where });
+      if (!build) {
+        const entry = Object.values(builds?.history ?? {})
+          .flat()
+          .find((h) => h.tag === where.tag);
+        return setState(entry ? { kind: 'rotated', ...where, entry } : { kind: 'missing', ...where });
+      }
       const b = build.build;
       const arches = b.platforms.filter((p) => p.result === 'success').map((p) => p.arch);
       const layers = await Promise.all(arches.map((a) => hubJSON<{ layers: Layer[] }>(`${base}/layers.${a}.json`, ctrl.signal).catch(() => null)));
@@ -121,6 +128,43 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             .
           </p>
         )}
+        {state.kind === 'rotated' && (
+          <div className="mt-6 max-w-xl space-y-3 text-sm text-muted-foreground">
+            <p>
+              This release is older than the newest five builds of its branch, which are the ones with a page here. Its record stays on GitHub:
+            </p>
+            <ul className="space-y-1 font-mono text-xs">
+              {state.entry.release_url && (
+                <li>
+                  <a href={state.entry.release_url} className="underline underline-offset-4 hover:text-foreground">
+                    The release on GitHub
+                  </a>
+                </li>
+              )}
+              {state.entry.run_json && (
+                <li>
+                  <a href={state.entry.run_json} className="underline underline-offset-4 hover:text-foreground">
+                    run.json
+                  </a>{' '}
+                  (the run's record, for releases since it was attached)
+                </li>
+              )}
+              {state.entry.run_url && (
+                <li>
+                  <a href={state.entry.run_url} className="underline underline-offset-4 hover:text-foreground">
+                    The run on GitHub
+                  </a>
+                </li>
+              )}
+            </ul>
+            <p>
+              <a href={withBase(`${images[state.name].url}#builds`)} className="underline underline-offset-4 hover:text-foreground">
+                The image&apos;s builds
+              </a>{' '}
+              lists the newer ones.
+            </p>
+          </div>
+        )}
         {state.kind === 'error' && (
           <p className="mt-6 text-sm text-muted-foreground">
             The hub could not be reached.{' '}
@@ -129,7 +173,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             </button>
           </p>
         )}
-        {state.kind !== 'loading' && (
+        {state.kind !== 'loading' && state.kind !== 'rotated' && (
           <p className="mt-4 text-sm">
             <button type="button" onClick={() => setAttempt((n) => n + 1)} className="font-medium underline underline-offset-4 hover:text-primary">
               Check again
@@ -152,7 +196,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
         <section aria-labelledby="ci" id="ci-section">
           <CiHeading page={page} />
           <div className="raft-panel mt-4 overflow-hidden">
-            <CiReport image={image.name} tag={tag} tests={record.tests ?? null} testEnabled={b.test.enabled} reportDir={hubReportUrl(image.name, tag)} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={page.controlBuild} />
+            <CiReport image={image.name} tag={tag} tests={record.tests ?? null} testEnabled={b.test.enabled} reportDir={page.reportDir} runJson={page.runJson} logsZip={page.logsZip} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={page.controlBuild} />
           </div>
         </section>
         <Vulns url={hubVulnsUrl(image.name, tag)} image={image.name} tag={tag} />
@@ -166,7 +210,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
               arches={arches}
               filesUrls={page.filesUrls}
               packagesUrls={page.packagesUrls}
-              packagesFallback={page.packagesFallback}
+              sbomUrls={page.sbomUrls}
               packagesSummary={page.packagesSummary}
               layers={record.layers}
               config={b.config}
