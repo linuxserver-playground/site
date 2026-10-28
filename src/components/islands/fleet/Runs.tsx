@@ -241,8 +241,14 @@ function BuildLine({ build, buildsBase, known }: { build: Build; buildsBase: str
 export function RunDetail({ id, runsBase, buildsBase, known, fallback }: { id: string; runsBase: string; buildsBase: string; known: Record<string, string[]>; fallback: string }) {
   const { data, error, loading, at, reload } = useControl<RunPage>(`runs/${id}.json`, TABLES);
   const [selected, setSelected] = React.useState<number | null>(null);
-  // Default to what is happening now, else the first job that has steps (skipped jobs have none).
-  const job = data?.jobs.find((j) => j.job.id === selected) ?? data?.jobs.find((j) => j.job.status === 'in_progress') ?? data?.jobs.find((j) => j.job.steps.length > 0) ?? data?.jobs[0];
+  // Default to what is happening now, else the first job that failed, else the first job that has steps (skipped
+  // jobs have none): a failed run opens on the failure, not on the green Prepare before it.
+  const job =
+    data?.jobs.find((j) => j.job.id === selected) ??
+    data?.jobs.find((j) => j.job.status === 'in_progress') ??
+    data?.jobs.find((j) => toneOf(j.job.status, j.job.conclusion) === 'bad') ??
+    data?.jobs.find((j) => j.job.steps.length > 0) ??
+    data?.jobs[0];
   return (
     <div className="space-y-6">
       <section className="raft-panel overflow-hidden" aria-label="Run">

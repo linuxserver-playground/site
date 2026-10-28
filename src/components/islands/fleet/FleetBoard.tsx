@@ -185,6 +185,22 @@ function Helpers({ helpers, modsBase }: { helpers: HelperRepo[]; modsBase: strin
   );
 }
 
+/** The last build's result, age, reason and run number: one link to the run when there is one. */
+function LastBuild({ r }: { r: FleetRow }) {
+  return (
+    <>
+      <span className="flex flex-wrap items-center gap-1.5">
+        <StatePill status={r.result === null ? null : 'completed'} conclusion={r.result} />
+        <Rel iso={r.built_at} className="font-mono text-xs text-muted-foreground group-hover:text-foreground" />
+      </span>
+      <span className="mt-0.5 block font-mono text-[0.6875rem] text-muted-foreground underline-offset-4 group-hover:text-foreground group-hover:underline">
+        {r.reason && <>{r.reason} · </>}
+        {r.run_id && <>run #{r.run_id}</>}
+      </span>
+    </>
+  );
+}
+
 function Row({ r, imagesBase, known, runsBase, reload }: { r: FleetRow; imagesBase: string; known: string[]; runsBase: string; reload: () => void }) {
   const scope = `${r.image}/${r.branch}`;
   return (
@@ -210,21 +226,26 @@ function Row({ r, imagesBase, known, runsBase, reload }: { r: FleetRow; imagesBa
         </span>
       </th>
       <TD>
-        <span className="flex flex-wrap items-center gap-1.5">
-          <StatePill status={r.result === null ? null : 'completed'} conclusion={r.result} />
-          <Rel iso={r.built_at} className="font-mono text-xs text-muted-foreground" />
-        </span>
-        <span className="mt-0.5 block font-mono text-[0.6875rem] text-muted-foreground">
-          {r.reason && <>{r.reason} · </>}
-          {r.run_id && (
-            <a href={`${runsBase}${r.run_id}/`} className="underline-offset-4 hover:text-foreground hover:underline">
-              run #{r.run_id}
-            </a>
-          )}
-        </span>
+        {r.run_id ? (
+          <a href={`${runsBase}${r.run_id}/`} className="group block rounded-sm">
+            <LastBuild r={r} />
+          </a>
+        ) : (
+          <LastBuild r={r} />
+        )}
       </TD>
       <TD mono wrap title={r.released_at ? `Released ${r.released_at}` : undefined}>
-        {r.released ?? <span className="text-muted-foreground">nothing yet</span>}
+        {r.released ? (
+          known.includes(r.image) ? (
+            <a href={`${imagesBase}${r.image}/builds/${encodeURIComponent(r.released)}/`} className="underline-offset-4 hover:text-primary hover:underline">
+              {r.released}
+            </a>
+          ) : (
+            r.released
+          )
+        ) : (
+          <span className="text-muted-foreground">nothing yet</span>
+        )}
         {r.released_at && (
           <span className="block text-[0.6875rem] text-muted-foreground">
             <Rel iso={r.released_at} />
@@ -232,7 +253,13 @@ function Row({ r, imagesBase, known, runsBase, reload }: { r: FleetRow; imagesBa
         )}
       </TD>
       <TD mono wrap>
-        {r.upstream ?? <span className="text-muted-foreground">–</span>}
+        {r.upstream && r.upstream_url ? (
+          <ExtLink href={r.upstream_url} className="hover:text-primary">
+            {r.upstream}
+          </ExtLink>
+        ) : (
+          (r.upstream ?? <span className="text-muted-foreground">–</span>)
+        )}
         {r.source && <span className="block text-[0.6875rem] text-muted-foreground">{r.source}</span>}
       </TD>
       <TD>

@@ -42,6 +42,8 @@ export interface FleetRow {
   last_check: string | null;
   last_outcome: string | null;
   source: string | null;
+  /** The upstream release, commit or package page for `upstream`, else the project's releases page or website. */
+  upstream_url?: string | null;
   package_check: boolean;
   /** Matching skip scopes (`image`, `image/branch`, `image/branch/version`). */
   skip: string[];
