@@ -8,7 +8,7 @@ import { buildResult, buildUrl, reasonLabel } from './build-helpers';
 import type { BuildRecord } from './builds';
 import { controlBuildUrl } from './control';
 import { bytes, formatDate, shortDigest, shortSha } from './format';
-import { hubApi, hubPackagesUrl, hubTestsUrl, type Arch, type Bundle, type BuildSummary } from './hub';
+import { hubApi, hubPackagesUrl, hubTestsUrl, type Arch, type Bundle, type BuildSummary, type VulnSummary } from './hub';
 
 /** The few image fields a build page needs. */
 export interface BuildPageImage {
@@ -45,6 +45,9 @@ export interface BuildPage {
   sbomUrls: Partial<Record<Arch, string>>;
   /** The build's folder on the repository's Pages (`links.pages`): the CI report's files, per architecture. */
   reportDir: string | null;
+  /** The build's own scan, `vulns.json` on the repository's Pages (`links.vulns`), and its counts; null without one. */
+  vulnsUrl: string | null;
+  vulnsSummary: VulnSummary | null;
   /** Download links on the Release: control's run record and the run's masked logs (404 for older releases). */
   runJson: string;
   logsZip: string;
@@ -132,6 +135,7 @@ export function buildPage(image: BuildPageImage, record: BuildRecord, builds: Bu
     ...arches.map((a) => ({ label: `layers.${a}.json`, href: layersUrls[a]! })),
     ...arches.filter((a) => filesUrls[a]).map((a) => ({ label: `files.${a}.json.gz`, href: filesUrls[a]![0] })),
     ...arches.filter((a) => sbomUrls[a]).map((a) => ({ label: `packages.${a}.json.gz`, href: sbomUrls[a]! })),
+    ...(links?.vulns ? [{ label: 'vulns.json', href: links.vulns }] : []),
     ...b.assets.filter((x) => x.url && /^package_versions\./.test(x.name)).map((x) => ({ label: x.name, href: x.url! })),
     { label: 'run.json', href: runJson },
     { label: 'logs.zip', href: logsZip },
@@ -152,6 +156,8 @@ export function buildPage(image: BuildPageImage, record: BuildRecord, builds: Bu
     packagesUrls,
     sbomUrls,
     reportDir: links?.pages ?? null,
+    vulnsUrl: links?.vulns ?? null,
+    vulnsSummary: summary?.vulnerabilities ?? null,
     runJson,
     logsZip,
     layersUrls,

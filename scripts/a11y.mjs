@@ -7,21 +7,38 @@
  * e.g. node scripts/a11y.mjs http://localhost:4321/site / /images/ /images/sonarr/ /blog/
  * Exits non-zero when violations are found.
  */
+import { existsSync, readFileSync } from 'node:fs';
 import { chromium } from 'playwright';
 import { AxeBuilder } from '@axe-core/playwright';
+
+/**
+ * A build page that exists in this build: sonarr's newest retained build with a snapshot (the static page), read at
+ * run time, so the list never names a build that has rotated out.
+ */
+function newestBuild(image) {
+  const data = new URL('../src/data/', import.meta.url);
+  const file = new URL(`images/${image}.json`, data);
+  if (!existsSync(file)) return null;
+  const builds = JSON.parse(readFileSync(file, 'utf8')).builds?.builds ?? [];
+  const tag = builds.map((b) => b.tag).find((t) => existsSync(new URL(`builds/${image}/${t}.json`, data)));
+  return tag ? `/images/${image}/builds/${tag}/` : null;
+}
 
 const [base, ...paths] = process.argv.slice(2);
 if (!base) {
   console.error('usage: node scripts/a11y.mjs <baseUrl> [path ...]');
   process.exit(1);
 }
+const sonarrBuild = paths.length ? null : newestBuild('sonarr');
+if (!paths.length && !sonarrBuild) console.warn('! no sonarr build in src/data/: the build page is not checked (npm run snapshot)');
+const buildPages = sonarrBuild ? [sonarrBuild] : [];
 const list = paths.length
   ? paths
   : [
       '/',
       '/images/',
       '/images/sonarr/',
-      '/images/sonarr/builds/4.0.20.3014-ls1/',
+      ...buildPages,
       '/fleet/',
       '/fleet/?tab=bases',
       '/fleet/runs/',

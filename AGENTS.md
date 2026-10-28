@@ -35,8 +35,9 @@ on main, so they can never land in a commit or an editor pull request. Never han
 fix the refresh script or the hub. Do not
 edit `src/components/ui/` (regenerate with shadcn). Never add a stat the hub does not provide (there are no
 pull counts), and never read from a registry or namespace outside `linuxserver-playground`, the hub, the image
-repositories' own Pages (the heavy files of their newest builds, at the URLs the hub's `links` give; never derive
-them) and the control plane. Never fetch a GitHub Release asset from the browser: they send no CORS headers, so
+repositories' own Pages (the heavy files of their newest builds and their `vulns.json`, at the URLs the hub's `links`
+give; never derive them, and fetch them only in the browser, never in `refresh-data.mjs`: Pages rate-limits by IP
+across github.io) and the control plane. Never fetch a GitHub Release asset from the browser: they send no CORS headers, so
 they are download links only. Every internal link goes through `withBase()`.
 
 A build the site was built without (a release since the last site build) is still a page: Pages answers its URL
@@ -109,7 +110,7 @@ Consumes the hub's API as described by its pydantic models (`lsio_hub/models.py`
 including `$defs/layer`, and `$defs/file_tree` for `files.<arch>.json.gz` with the legacy `$defs/file_entry`
 still read for older releases), `Diff`, `PackagesData`,
 `ModsData`, `ProxyData`, `PackageIndexData`, `PackageData`, `BasesData`, `StalenessData`, `StoresData`,
-`Stats`, `Status`, `TestsData` (`tests.json`) and `VulnsData` (`vulns.json`). Types live in `src/lib/hub.ts`;
+`Stats`, `Status`, `TestsData` (`tests.json`), and `VulnsData`, each build's `vulns.json` on its repository's Pages (CONVENTIONS §6, `builder.derive.vulns.document`). Types live in `src/lib/hub.ts`;
 a hub change that renames or removes a field is a change here too. The control plane's JSON (`control/views.py`
 and `control/model.py` in `linuxserver-playground/control`: `FleetPage`, `RunsPage`, `RunPage`, `QueuePage`,
 `PullsPage`, `IssuesPage`, `ReleasesPage`, `BuildPage`, `ImagePage`, `SchedulerPage`, `SkipsPage`,

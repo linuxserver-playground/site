@@ -158,9 +158,13 @@ of `test.<arch>.tar.gz`, unpacked on the repository's Pages under `<links.pages>
 (the diff against the previous release, open by default) as collapsibles that fetch when opened, monospace,
 with copy and raw links; the run on the control plane and on GitHub, and its `run.json` and `logs.zip` on the
 Release (downloads; older releases have neither), are linked.
-A "Vulnerabilities" collapsible (`#vulns`) renders `vulns.json` from the same directory when the hub serves it (`{summary: {critical, high, medium, low, negligible, fixed, unfixed}, matches:
-[{package, version, id, severity, fix_state, fixed_in, urls}], db_date}`): fixable findings grouped by
-package, then the ones without a fix behind a caveat; nothing is rendered when the endpoint answers 404.
+The "Vulnerabilities" section (`#vulns`), below the CI report and closed, is the scan the build made of itself when
+it was released (grype, with that day's database), never updated: informal data for readers who look for it, never a
+headline. Its counts come with the page (the hub's `vulnerabilities`); the findings are the build's `vulns.json` on
+the repository's Pages (`links.vulns`; CONVENTIONS §6, "Repo Pages"), fetched in the browser the first time the
+section is opened, with a loading state and a retry, never at site build time. It says "Scanned when the image was
+built" with the database's date, groups the fixable findings by package, then the ones without a fix, and shows the
+document's `caveats`. A build without a scan has no section.
 
 ### The fleet section
 
@@ -217,7 +221,7 @@ article headings).
 | --- | --- |
 | `#quick-start` the config lab and "Install on …" | `#record` the build record |
 | `#inside` inside the latest image | `#ci` the CI report (`#tests` the test table) |
-| `#fleet` live branches, drift, next check, member controls | `#vulns` vulnerabilities, when served |
+| `#fleet` live branches, drift, next check, member controls | `#vulns` vulnerabilities as scanned at build time, when the build has a scan |
 | `#setup` application setup | `#explorer` files, packages, config and labels |
 | `#parameters`, `#ports`, `#env`, `#volumes`, `#devices`, `#misc` | `#diff` changes since the previous build |
 | `#tags` version tags, `#arch` architectures | `#dockerfile` annotated Dockerfile |

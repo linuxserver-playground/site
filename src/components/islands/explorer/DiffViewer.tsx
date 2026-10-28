@@ -26,7 +26,7 @@ function DockerfileDiff({ text }: { text: string }) {
     <pre className="overflow-x-auto bg-[var(--raft-code-bg)] p-3 font-mono text-xs leading-5" tabIndex={0} aria-label="Dockerfile unified diff">
       <code>
         {text.split('\n').map((l, i) => {
-          const cls = l.startsWith('+') && !l.startsWith('+++') ? 'bg-[var(--raft-ok)]/10 text-[var(--raft-ok)]' : l.startsWith('-') && !l.startsWith('---') ? 'bg-[var(--raft-danger)]/10 text-[var(--raft-danger)]' : l.startsWith('@@') ? 'text-[var(--raft-violet)]' : 'text-muted-foreground';
+          const cls = l.startsWith('+') && !l.startsWith('+++') ? 'bg-[var(--raft-ok)]/10 text-foreground' : l.startsWith('-') && !l.startsWith('---') ? 'bg-[var(--raft-danger)]/10 text-foreground' : l.startsWith('@@') ? 'text-[var(--raft-violet)]' : 'text-muted-foreground';
           return (
             <span key={i} className={`block ${cls}`}>
               {l || ' '}

@@ -11,7 +11,7 @@ import { withBase, BASE } from '@/lib/base';
 import { buildUrl } from '@/lib/build-helpers';
 import { buildPage, type BuildPageImage } from '@/lib/build-page';
 import type { BuildRecord } from '@/lib/builds';
-import { hubApi, hubTestsUrl, hubVulnsUrl, type Bundle, type BuildsData, type Diff, type HistoryEntry, type Layer, type TestsData } from '@/lib/hub';
+import { hubApi, hubTestsUrl, type Bundle, type BuildsData, type Diff, type HistoryEntry, type Layer, type TestsData } from '@/lib/hub';
 import { AnchorHeading, BuildHeader, BuildRecordSection, CiHeading, NotesAndData } from '@/components/build/BuildParts';
 import CopyButton from '@/components/islands/CopyButton';
 import CiReport from '@/components/islands/explorer/CiReport';
@@ -199,7 +199,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             <CiReport image={image.name} tag={tag} tests={record.tests ?? null} testEnabled={b.test.enabled} reportDir={page.reportDir} runJson={page.runJson} logsZip={page.logsZip} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={page.controlBuild} />
           </div>
         </section>
-        <Vulns url={hubVulnsUrl(image.name, tag)} image={image.name} tag={tag} />
+        <Vulns url={page.vulnsUrl} summary={page.vulnsSummary} image={image.name} tag={tag} />
         <section aria-labelledby="explorer">
           <AnchorHeading id="explorer">Explore the image</AnchorHeading>
           <p className="mt-2 text-sm text-muted-foreground">Every file and package in the image.</p>

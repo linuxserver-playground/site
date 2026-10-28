@@ -125,8 +125,8 @@ export interface BuildLinks {
   /**
    * The build's folder on its image repository's GitHub Pages, with a trailing slash: the heavy files of the newest
    * five builds per branch (the builds the hub holds), served with `access-control-allow-origin: *`. Holds
-   * `files.<arch>.json.gz`, `packages.<arch>.json.gz` and each architecture's unpacked test report under `<arch>/`
-   * (`REPORT_FILES`). Absent in snapshots taken before the hub linked it.
+   * `files.<arch>.json.gz`, `packages.<arch>.json.gz`, `vulns.json` and each architecture's unpacked test report
+   * under `<arch>/` (`REPORT_FILES`). Absent in snapshots taken before the hub linked it.
    */
   pages?: string | null;
   /** `files.<arch>.json.gz` on the repository's Pages (gzip served as application/gzip). */
@@ -137,8 +137,14 @@ export interface BuildLinks {
   run_json?: string | null;
   /** `logs.zip` on the Release, the run's masked logs: a download link only. 404 for older releases. */
   logs_zip?: string | null;
-  /** The hub's plain report page; the site's build page is the report, so the site does not link it. */
+  /** The build's page on this site (the hub's retired report pages redirect here); the site does not link it. */
   test_report?: string | null;
+  /**
+   * `vulns.json`, the scan the build made of itself when it was released (`VulnsData`), on the repository's Pages:
+   * fetched in the browser only, never at site build time. Absent for builds without a scan. Older snapshots point at
+   * the hub's API copy, which the hub no longer serves.
+   */
+  vulns?: string | null;
 }
 
 export type Classification = 'upstream' | 'packages' | 'linuxserver' | 'base' | 'mixed' | 'none' | 'initial';
@@ -158,6 +164,8 @@ export interface BuildSummary {
   base: BuildBase;
   platforms: PlatformBuild[];
   classification?: Classification | null;
+  /** Counts of the build's own scan, made when it was built; the findings are `links.vulns`. */
+  vulnerabilities?: VulnSummary | null;
   links: BuildLinks;
 }
 
@@ -475,13 +483,46 @@ export interface TestsData {
 }
 
 export type VulnSeverity = 'critical' | 'high' | 'medium' | 'low' | 'negligible' | 'unknown' | string;
-export interface VulnMatch { package: string; version?: string | null; id: string; severity: VulnSeverity; fix_state?: string | null; fixed_in?: string | null; urls?: string[] | null; type?: string | null; arch?: string | null }
-/** `/api/v1/catalog/{name}/builds/{tag}/vulns.json` `data`, when the hub serves it. */
+export interface VulnMatch {
+  package: string;
+  version?: string | null;
+  id: string;
+  severity: VulnSeverity;
+  fix_state?: string | null;
+  fixed_in?: string[] | string | null;
+  urls?: string[] | null;
+  type?: string | null;
+  cvss?: number | null;
+  /** The architectures the finding was made on. */
+  arches?: string[] | null;
+}
+/** Counts over distinct findings (one per vulnerability id and package across the architectures). */
+export interface VulnSummary {
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  negligible: number;
+  unknown?: number;
+  fixed: number;
+  unfixed: number;
+  wont_fix?: number;
+}
+/**
+ * A build's `vulns.json` on its repository's Pages (CONVENTIONS §6, "Repo Pages"; `builder.derive.vulns.document`):
+ * the scan it made of itself when it was released, never updated.
+ */
 export interface VulnsData {
-  summary: { critical: number; high: number; medium: number; low: number; negligible: number; fixed: number; unfixed: number; unknown?: number };
+  image?: string;
+  tag?: string;
+  summary: VulnSummary;
+  by_arch?: Record<string, VulnSummary>;
   matches: VulnMatch[];
   db_date?: string | null;
-  scanner?: string | null;
+  grype_version?: string | null;
+  scanned_at?: string | null;
+  /** How to read the counts; show them with the findings. */
+  caveats?: string[];
 }
 
 export interface HubStatus {
@@ -506,8 +547,6 @@ export const hubStoreUrl = (path: string) => `${HUB_URL}/stores/${path.replace(/
 
 /** `tests.json`: the harness's per-arch reports with a summary, for builds that have a report. */
 export const hubTestsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/tests.json`);
-/** `vulns.json`: the scanner's findings, when the hub serves them. */
-export const hubVulnsUrl = (image: string, tag: string) => hubApi(`catalog/${image}/builds/${tag}/vulns.json`);
 
 /**
  * The files of `test.<arch>.tar.gz` as each build's repository Pages serves them under `<links.pages><arch>/`. The
