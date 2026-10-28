@@ -53,6 +53,9 @@ URL or in storage; the CSRF token lives in memory), and `POST /api/actions/{acti
 member actions, each confirmed in place and never with `confirm()`. Nothing from the control plane is
 snapshotted except the run ids in `control.json`; every live island must server-render a useful shell, show
 a designed loading state, and an honest offline state with a retry and the control plane's own page linked.
+Every list a fleet island shows pages, however short it is today: `usePaged` and `Pager` in
+`islands/fleet/shared.tsx`, `PAGE_SIZE` (25) rows by default, fewer for tall cards and narrow side panels, so the
+panels below a long list stay in reach. Pass the list's filters as `reset`.
 Section ids on image and build pages (README, "Anchors") are a public contract: never rename one.
 
 The website editor is the control plane's too ("The website editor" in its README). The pages are its
