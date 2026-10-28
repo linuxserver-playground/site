@@ -81,7 +81,7 @@ export interface ImageDetail {
   changelog?: { date: string; desc: string }[] | null;
   config: ImageConfig;
   title: string;
-  /** `app` for an application; `base` for a base image, `tool` for an internal tool. Older snapshots omit it. */
+  /** `app` for an application; `base` for a base image, `tool` for a run-once or helper image. Older snapshots omit it. */
   kind?: ImageKind;
   categories: string[];
   deprecation_message?: string | null;

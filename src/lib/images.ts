@@ -66,11 +66,11 @@ export const getApps = () => getImages().filter((i) => i.kind === 'app');
 /** Every image of one kind, deprecated ones included, by name. */
 export const getImagesOfKind = (kind: ImageKind) => all.filter((i) => i.kind === kind);
 
-/** The three tabs of the images section. Base images and internal tools build like any image but are not apps. */
+/** The three tabs of the images section. Base images and tools build like any image but are not long-running apps. */
 export const IMAGE_KINDS: Record<ImageKind, { label: string; singular: string; href: string }> = {
   app: { label: 'Applications', singular: 'application', href: '/images/' },
   base: { label: 'Base images', singular: 'base image', href: '/images/base/' },
-  tool: { label: 'Internal tools', singular: 'internal tool', href: '/images/tools/' },
+  tool: { label: 'Tools', singular: 'tool', href: '/images/tools/' },
 };
 
 /** `builder migrate` writes "<name> container image." when a legacy repo had no blurb; it says nothing. */

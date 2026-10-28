@@ -41,8 +41,8 @@ export function getStaticPaths() {
 }
 
 const { image } = Astro.props as { image: Image };
-// Base images and internal tools get the same build data but no config lab, install menu, mods or "similar images":
-// they are built on or used by other images, not run as applications.
+// Base images and tools get the same build data but no config lab, install menu, mods or "similar images":
+// they are built on, run once or used by other images, not deployed as long-running applications.
 const app = image.kind === 'app';
 const kind = IMAGE_KINDS[image.kind];
 const usedBy = app ? [] : dependents(image.name);
@@ -51,7 +51,7 @@ const kindNote =
   image.kind === 'base'
     ? 'A base image: LinuxServer images are built FROM it. It is not meant to run on its own and is not in the stores.'
     : image.kind === 'tool'
-      ? "An internal tool: the project's own tooling runs it, or other images copy from it. It is not an application and is not in the stores."
+      ? "A tool: you run it once as a command, or the project's tooling or other images use it. It is not a long-running application and is not in the stores."
       : null;
 const summary = app || hasRealSummary(image) ? image.summary : kindNote!;
 const related = app ? relatedImages(image, 4) : [];
@@ -156,6 +156,9 @@ const docSection = async (entry: (typeof docEntries)[number]) => ({ id: entry.da
 const setupDoc = docEntries.find((e) => e.data.section === 'application-setup');
 const supportDoc = docEntries.find((e) => e.data.section === 'support-info');
 const SetupContent = setupDoc ? (await docSection(setupDoc)).Content : null;
+// A tool's README usage says how to run it; an app's usage is the config lab instead.
+const usageDoc = image.kind === 'tool' ? docEntries.find((e) => e.data.section === 'usage') : undefined;
+const UsageContent = usageDoc ? (await docSection(usageDoc)).Content : null;
 const SupportContent = supportDoc ? (await docSection(supportDoc)).Content : null;
 const moreDocs = await Promise.all(
   docEntries.filter((e) => !NATIVE_DOC_SECTIONS.has(e.data.section) && e !== setupDoc && e !== supportDoc).map(docSection),
@@ -224,7 +227,7 @@ const links = [
 const changelog = image.changelog ?? [];
 // The sidebar's "On this page": every section this page renders, in order.
 const pageNav: { id: string; label: string; sub?: boolean }[] = [
-  { id: 'quick-start', label: app ? 'Quick start' : image.kind === 'base' ? 'Build on it' : 'Used by' },
+  { id: 'quick-start', label: app ? 'Quick start' : image.kind === 'base' ? 'Build on it' : UsageContent ? 'Usage' : 'Used by' },
   { id: 'tags', label: 'Version tags' },
   { id: 'arch', label: 'Architectures' },
   ...(latest ? [{ id: 'inside', label: 'Inside the latest image' }] : []),
@@ -343,7 +346,12 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
         </section>
         ) : (
           <section aria-labelledby="quick-start">
-            <AnchorHeading id="quick-start">{image.kind === 'base' ? 'Build on it' : 'Used by'}</AnchorHeading>
+            <AnchorHeading id="quick-start">{image.kind === 'base' ? 'Build on it' : UsageContent ? 'Usage' : 'Used by'}</AnchorHeading>
+            {UsageContent && (
+              <div class={DOC_PROSE}>
+                <UsageContent />
+              </div>
+            )}
             {image.kind === 'base' && (
               <>
                 <p class="mt-2 text-sm text-muted-foreground">Start a Dockerfile from the tag of the release you want:</p>
@@ -382,7 +390,7 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
                 </dl>
               </>
             ) : (
-              <p class="raft-panel mt-4 px-4 py-4 text-sm text-muted-foreground">No image in the fleet is built FROM {image.name} yet.</p>
+              !UsageContent && <p class="raft-panel mt-4 px-4 py-4 text-sm text-muted-foreground">No image in the fleet is built FROM {image.name} yet.</p>
             )}
           </section>
         )

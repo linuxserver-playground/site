@@ -47,7 +47,7 @@ const stats = {
     raw: STATS.images,
     label: 'maintained images',
     long: `${STATS.images} actively maintained images`,
-    source: `${HUB} Excludes deprecated images, base images and internal tools.`,
+    source: `${HUB} Excludes deprecated images, base images and tools.`,
   },
   builds: {
     id: 'builds',
