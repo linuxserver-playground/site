@@ -46,7 +46,7 @@ The manifest is validated against [`image.schema.json`](https://github.com/linux
 
 | Section | What it drives |
 | --- | --- |
-| `name`, `summary`, `upstream` | The title and blurb everywhere; where the version and release notes come from (`upstream.version` is typed: `github_release`, `json` + `jq`, `alpine_apk`, `pip`, `npm`, `command`, ...); `sponsor` links. |
+| `name`, `summary`, `upstream` | The title and blurb everywhere; where the version and release notes come from (`upstream.version` is typed: `github_release`, `json` + `jq`, `deb_packages`, `alpine_apk`, `arch_package`, `regex`, `pip`, `npm`, `static`, and `command` for what none of those can say, ...); `sponsor` links. |
 | `release` | `branch`, the `tag` it publishes, `channel`, and the list of `tags` with their descriptions for the Version Tags table. |
 | `build` | `base`, `version_arg` (the Dockerfile `ARG` the resolved version is passed as), `platforms`. |
 | `test` | `web.port` and `path` for the CI browser probe, `startup_timeout`, `enabled`. |
