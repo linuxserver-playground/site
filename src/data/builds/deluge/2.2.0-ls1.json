@@ -1,0 +1,990 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "deluge",
+  "repository": "linuxserver-playground/docker-deluge",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "2.2.0",
+   "upstream_clean": "2.2.0",
+   "semver": "2.2.0",
+   "ls_build": 1,
+   "tag": "2.2.0-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "2.2.0-ls1",
+    "version-2.2.0",
+    "2.2.0",
+    "amd64-latest",
+    "amd64-2.2.0-ls1",
+    "amd64-version-2.2.0",
+    "amd64-2.2.0",
+    "arm64v8-latest",
+    "arm64v8-2.2.0-ls1",
+    "arm64v8-version-2.2.0",
+    "arm64v8-2.2.0"
+   ],
+   "source": "pip",
+   "source_url": "https://pypi.org/project/deluge/"
+  },
+  "commit": "edcd358cbff3aed992cb1c15f8a885153d2d1d1c",
+  "created": "2026-10-25T19:35:36Z",
+  "reason": "manual",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/unrar:latest",
+   "digest": "sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:4ed1c13667eedac2dd6a524c0c3a4adc824e345a834af0eca4ad54dabdbe08d0",
+    "size": 79499461,
+    "uncompressed_size": 217370233,
+    "layers": 12,
+    "runner": "Linux-X64",
+    "build_seconds": 40
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:61e68cf33d06b309c04d9851d829856d921c3eb1f07631fb06eb6eed56218ef3",
+    "size": 78628887,
+    "uncompressed_size": 236093937,
+    "layers": 12,
+    "runner": "Linux-ARM64",
+    "build_seconds": 37
+   }
+  ],
+  "index_digest": "sha256:901005088fc3059578e29ac4c1fece7bdede26e83cc8d154ea88c3e7018a6471",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 2.2.0-ls1 Build-date:- 2026-10-25T19:27:45Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/unrar:latest@sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "2.2.0",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T19:27:45Z",
+   "org.opencontainers.image.description": "Deluge is a lightweight, Free Software, cross-platform BitTorrent client.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-deluge",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "480171a2727995385645d901779db7a1401fc266",
+   "org.opencontainers.image.revision": "edcd358cbff3aed992cb1c15f8a885153d2d1d1c",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-deluge",
+   "org.opencontainers.image.title": "Deluge",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-deluge/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "2.2.0-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "PYTHON_EGG_CACHE=/config/plugins/.python-eggs",
+    "TMPDIR=/run/deluged-temp"
+   ],
+   "exposed_ports": [
+    "58846/tcp",
+    "58946/tcp",
+    "58946/udp",
+    "8112/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/by275/libtorrent:2.0.13-alpine3.23 AS libtorrent\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.23\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG DELUGE_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment variables\nENV PYTHON_EGG_CACHE=\"/config/plugins/.python-eggs\" \\\n  TMPDIR=/run/deluged-temp\n\n# install software\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    build-base \\\n    python3-dev && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    boost1.84-python3 \\\n    geoip \\\n    python3 \\\n    p7zip && \\\n  if [ -z ${DELUGE_VERSION+x} ]; then \\\n    DELUGE_VERSION=$(curl -sL  https://pypi.python.org/pypi/deluge/json |jq -r '. | .info.version');\\\n  fi && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    'setuptools==81' && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ \\\n    pyopenssl==26.2.0 \\\n    rencode==1.0.6 && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ \\\n    deluge[all]==${DELUGE_VERSION} \\\n    pygeoip && \\\n  echo \"**** grab GeoIP database ****\" && \\\n  curl -L --retry 10 --retry-max-time 60 --retry-all-errors \\\n    \"https://geoip.linuxserver.io/GeoIP.dat.gz\" \\\n    | gunzip > /usr/share/GeoIP/GeoIP.dat && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n  COPY --from=libtorrent /libtorrent-build/usr/lib/libtorrent-rasterbar.* /usr/lib/\n\n  COPY --from=libtorrent /libtorrent-build/usr/lib/python3.12 /lsiopy/lib/python3.12\n\n# add local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 8112 58846 58946 58946/udp\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:arm64v8-latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/by275/libtorrent:2.0.13-alpine3.23 AS libtorrent\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.23\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG DELUGE_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment variables\nENV PYTHON_EGG_CACHE=\"/config/plugins/.python-eggs\" \\\n  TMPDIR=/run/deluged-temp\n\n# install software\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    build-base \\\n    python3-dev && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    boost1.84-python3 \\\n    geoip \\\n    python3 \\\n    p7zip && \\\n  if [ -z ${DELUGE_VERSION+x} ]; then \\\n    DELUGE_VERSION=$(curl -sL  https://pypi.python.org/pypi/deluge/json |jq -r '. | .info.version');\\\n  fi && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    'setuptools==81' && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ \\\n    pyopenssl==26.2.0 \\\n    rencode==1.0.6 && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ \\\n    deluge[all]==${DELUGE_VERSION} \\\n    pygeoip && \\\n  echo \"**** grab GeoIP database ****\" && \\\n  curl -L --retry 10 --retry-max-time 60 --retry-all-errors \\\n    \"https://geoip.linuxserver.io/GeoIP.dat.gz\" \\\n    | gunzip > /usr/share/GeoIP/GeoIP.dat && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n  COPY --from=libtorrent /libtorrent-build/usr/lib/libtorrent-rasterbar.* /usr/lib/\n\n  COPY --from=libtorrent /libtorrent-build/usr/lib/python3.12 /lsiopy/lib/python3.12\n\n# add local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 8112 58846 58946 58946/udp\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"deluge:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-deluge-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-config -> init-deluge-config\n  init-crontab-config -> init-deluge-config\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-deluge-web\n  svc-deluged -> svc-deluge-web\n  svc-deluge-web -> legacy-services\n  init-services -> svc-deluged\n  svc-deluged -> legacy-services\n}\nBase Images: {\n  \"unrar:latest\"\n}\n\"deluge:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-deluge-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-deluge-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ ! -f /config/core.conf ]]; then\n    cp /defaults/core.conf /config/core.conf\nfi\n\nmkdir -p /run/deluged-temp\n\n# create torrents directory if it does not exist\nif [[ ! -d /config/torrents ]]; then\n    mkdir -p /config/torrents\nfi\n\nif ! crontab -l 2>/dev/null | grep -q \"geoip-update.sh\" && [[ -z ${LSIO_READ_ONLY_FS} ]] && [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # Pick a random day and hour to update the GeoIP DB\n    X=$(shuf -i 0-23 -n 1)\n    Y=$(shuf -i 0-6 -n 1)\n    (crontab -l 2>/dev/null; echo \"0 ${X} * * ${Y} /app/geoip-update.sh 2>&1\") | crontab -\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # permissions\n    lsiown -R abc:abc \\\n        /run/deluged-temp \\\n        /config\n\n    # chown download directory if currently not set to abc\n    if [[ -d /downloads ]]; then\n        if [[ \"$(stat -c '%U' /downloads)\" != \"abc\" ]]; then\n            lsiown -R abc:abc /downloads\n        fi\n    fi\nfi\n"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-deluge-web",
+     "type": "longrun",
+     "depends_on": [
+      "init-services",
+      "svc-deluged"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nDELUGE_LOGLEVEL=${DELUGE_LOGLEVEL:-warning}\n\nif [[ -f /config/web.conf ]]; then\n    DELUGE_WEB_PORT=$(grep 'port\"' /config/web.conf | tr -cd \"[:digit:]\")\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z 127.0.0.1 ${DELUGE_WEB_PORT:-8112}\" \\\n            s6-setuidgid abc /lsiopy/bin/deluge-web -d -c /config --loglevel=\"${DELUGE_LOGLEVEL}\"\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z 127.0.0.1 ${DELUGE_WEB_PORT:-8112}\" \\\n            /lsiopy/bin/deluge-web -d -c /config --loglevel=\"${DELUGE_LOGLEVEL}\"\nfi\n"
+    },
+    {
+     "name": "svc-deluged",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nDELUGE_LOGLEVEL=${DELUGE_LOGLEVEL:-info}\n\nif [[ -f /config/core.conf ]]; then\n    DELUGED_PORT=$(grep '\"daemon_port\"' /config/core.conf | tr -cd \"[:digit:]\")\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z 127.0.0.1 ${DELUGED_PORT:-58846}\" \\\n            s6-setuidgid abc /lsiopy/bin/deluged -c /config -d --loglevel=\"${DELUGE_LOGLEVEL}\"\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z 127.0.0.1 ${DELUGED_PORT:-58846}\" \\\n            /lsiopy/bin/deluged -c /config -d --loglevel=\"${DELUGE_LOGLEVEL}\"\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 174,
+    "distro": "Alpine Linux v3.23",
+    "hash": "32912a45",
+    "by_type": {
+     "apk": 73,
+     "python": 73,
+     "UnknownPackage": 14,
+     "binary": 14
+    }
+   },
+   "arm64": {
+    "count": 174,
+    "distro": "Alpine Linux v3.23",
+    "hash": "32912a45",
+    "by_type": {
+     "apk": 73,
+     "python": 73,
+     "UnknownPackage": 14,
+     "binary": 14
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/deluge/builds/2.2.0-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-deluge/commits/2.2.0-ls1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 48536,
+    "sha256": "ad8e192c7efd90a705ecde33b1063bb1cbf21a92c4c6967bc19b419637c175ab",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 6231,
+    "sha256": "4e0523b3faa3086ba26c6b7e5031d5e8b5e931b5702ad16a77aeed0d020aee6f",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 78542,
+    "sha256": "5acef0af0a9fc4797c960b4e20120a497d106d316c7628655a09c46d5a3b5d5e",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2360,
+    "sha256": "f2f5f2b3ada08fca54fb4d48bee7de4453b6424a344c897959985ed45777cb33",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 50950,
+    "sha256": "cfcc85f80bfc772efaa72070b419e8f3a6fe93ed8b6c7add750bbc1bac735249",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 12782,
+    "sha256": "465c3c0d0b93ce46a621c17e7804963f29df4a4fbdc3739b44430440120f3f6a",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 48606,
+    "sha256": "d05f2ef3bd2fb827a13cfbdedb59ddbef47c1d63031dc15dbdab69b8ffdd1508",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 6231,
+    "sha256": "e2f002cd052214118dd4c0bfb419a5af3f951771d437102b712eae28a488a9da",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 78255,
+    "sha256": "db7c28a72e1f624772e6150313fdab302ccd458807c14911e909efd9764e8d3f",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2360,
+    "sha256": "f84fa3c92d1350a16461049d4d4af7200b65ff453c66162e9aed2d1f2c91695f",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 53113,
+    "sha256": "8d039342c4c8797ccdb05388257d575f558f203019d028bd6c1470f794c3e429",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 12782,
+    "sha256": "465c3c0d0b93ce46a621c17e7804963f29df4a4fbdc3739b44430440120f3f6a",
+    "url": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40225987274,
+   "run_url": "https://github.com/linuxserver-playground/docker-deluge/actions/runs/40225987274",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "deluge",
+  "branch": "master",
+  "tag": "2.2.0-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "2.2.0",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/unrar:latest",
+    "digest": "sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 79499461
+   },
+   "arm64": {
+    "to": 78628887
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "PYTHON_EGG_CACHE",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "TMPDIR",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "58846/tcp",
+     "58946/tcp",
+     "58946/udp",
+     "8112/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:80733b6d59210f508944de9d1783919375a54f86c2b168c4ae3fc2487f1ed935",
+    "diff_id": "sha256:a4b4728c0547345db5004fd3eeb42c9bc2abd15970bf6b841e637a03a899ffab",
+    "size": 6262378,
+    "uncompressed_size": 13710791,
+    "created_by": "COPY /root-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2a33ffb08eb4d17e0e8d5db1ab0fbcfc5c8cff192321e78c3c61d116ba8e2fa1",
+    "diff_id": "sha256:6cff8d631745e2d345e367495c82de8b947a0a1517582c3657c42ba2eda48438",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:d96c8df8fbbab6348546e2441e5ca46942821ea3f49cccc3a2fdd18e8fabe22f",
+    "diff_id": "sha256:0ce6d81fbb7d735e6459a6e824bc8d8d2d67d9ab8f9acb5194b9f17457c6216f",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:e1b36c6ba86e478c5d1520f380af446d032afb1b9178e4d4fdb5f8d1b8b603a5",
+    "diff_id": "sha256:4ee42144065a89e8a83bca08125b982b307fcc57674785c03f64cb3ac82c2027",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:b032b2a0975969e32fe6ccd9c68b02ae273bb04a7bb835b7a15b5d3d3ef09a81",
+    "diff_id": "sha256:1ed94c5c8ba19ee8a5dea376ce0cc2cdeafd0007471ba5561926c228e87446e7",
+    "size": 6031683,
+    "uncompressed_size": 14293147,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:26+00:00 VERSION=24a5d742-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:2ddcdba5334bcc69102552567e200d85717176494357234e68a979663caa5b53",
+    "diff_id": "sha256:dd711538276221ba4b3924dab597944792e02e00b850d333e68205bfdfa3c9cd",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:24c7b3a3e7794cc1391ca6da9422a358f53273b5a7054be658775f42b7d80c88",
+    "diff_id": "sha256:eb16151e92cb3070e1fe38bcc30ce24a0405fb7e0088b1162ef7544c225e270e",
+    "size": 56841540,
+    "uncompressed_size": 156339086,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:27:45Z VERSION=2.2.0-ls1 DELUGE_VERSION=2.2.0 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     build-base     python3-dev &&   echo \"**** install packages ****\" &&   apk add --no-cache --upgrade     boost1.84-python3     geoip     python3     p7zip &&   if [ -z ${DELUGE_VERSION+x} ]; then     DELUGE_VERSION=$(curl -sL  https://pypi.python.org/pypi/deluge/json |jq -r '. | .info.version');  fi &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     'setuptools==81' &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/     pyopenssl==26.2.0     rencode==1.0.6 &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/     deluge[all]==${DELUGE_VERSION}     pygeoip &&   echo \"**** grab GeoIP database ****\" &&   curl -L --retry 10 --retry-max-time 60 --retry-all-errors     \"https://geoip.linuxserver.io/GeoIP.dat.gz\"     | gunzip > /usr/share/GeoIP/GeoIP.dat &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     27,
+     61
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:7ca474d613f4675e279ff2a098997e33b30c70b471ab8f422f850af25070e516",
+    "diff_id": "sha256:5a593c62fd4987d7d04ae53770e21c9a1ca4ca9ea32adef44a673539c2a49a6f",
+    "size": 8703266,
+    "uncompressed_size": 24418560,
+    "created_by": "COPY /libtorrent-build/usr/lib/libtorrent-rasterbar.* /usr/lib/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:d67b1997dfdc2697665afe105d47b7c8a3f12da45076352b4cef114cf0867057",
+    "diff_id": "sha256:988c9f659c33d7a5bf2f61232ec81d81e96af280a6cb03d2ab9f9e2b64475190",
+    "size": 1289834,
+    "uncompressed_size": 7823680,
+    "created_by": "COPY /libtorrent-build/usr/lib/python3.12 /lsiopy/lib/python3.12",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:783a5434a4ef67c869dd808bd15cb60e4f152ceb379f50fd56d6e80d967e04e6",
+    "diff_id": "sha256:37c56a505bfa3835da299fa96cec9a8b9b45661673e869792ab7edfa67eb04f2",
+    "size": 2754,
+    "uncompressed_size": 5905,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     68,
+     68
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 11,
+    "digest": "sha256:d7d2f83e96d954ecba15edff83b06f0f06116a6212a54de44728b1d4182d6720",
+    "diff_id": "sha256:0f4cdd271987c156a83a04190e4101a07d6d647855d17daa490962481bf7c5ce",
+    "size": 354649,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:dad9395888582260396894a8cbd013db906e59eabeec89dc66ef8fd8b3e7efce",
+    "diff_id": "sha256:c94342ad354e9a82b2997165369391dfd900b5b39f037681f1c6442e1dfba359",
+    "size": 7081100,
+    "uncompressed_size": 18550372,
+    "created_by": "COPY /root-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:b352f1b6cab5e2381767676325b10fbf9e6a04a69a7be9499524c5e21198de26",
+    "diff_id": "sha256:e6ab0e6cece673d3d1f779dfff0bf07a013fd7fe13304790250d41770d6c352d",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:f58a36e0548acfc0a8f4675c586ef12c2d41b94e093de92dab0201217a850eb8",
+    "diff_id": "sha256:a5a0208af3d320b02297e89d2a1e689311ca7e7197fe29b4585fc7729e28332b",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:a1f67a1d7afd2f7b8ec7937b3b866f8ebeee19d54867f6a0fbd72df34cdd6399",
+    "diff_id": "sha256:080a329c3afaf8536b33c0dce6d5df651df4b452adf7980e1d8ee491293a030a",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:b1fc61b1e89f9e155bf43f3f5b91449c973a59cfd0799b6311b823e1c0e121c6",
+    "diff_id": "sha256:a25be8ef0e611752f3ae11c386ad11a76324a0a6ecd2a86ce215ff04c0be7936",
+    "size": 6270241,
+    "uncompressed_size": 21436160,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:26+00:00 VERSION=24a5d742-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:1dcda4a7f11c2f570e4e36bbc6589d813e3e0058be8b5488a1588bd7025f541a",
+    "diff_id": "sha256:87b1fe0aaaa79a63b460ab3d93a88eb41bc2dd4353b616519a4243e34d7afe37",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:60c90e22091f5fb29253e8291c49f845fe4bb9b0cc651545f7a147c68707ed98",
+    "diff_id": "sha256:544fe252fbee0c10423ca8f91edc649584ce1b2fce595f4956c7cc60f140f606",
+    "size": 56135480,
+    "uncompressed_size": 160075172,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:27:45Z VERSION=2.2.0-ls1 DELUGE_VERSION=2.2.0 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     build-base     python3-dev &&   echo \"**** install packages ****\" &&   apk add --no-cache --upgrade     boost1.84-python3     geoip     python3     p7zip &&   if [ -z ${DELUGE_VERSION+x} ]; then     DELUGE_VERSION=$(curl -sL  https://pypi.python.org/pypi/deluge/json |jq -r '. | .info.version');  fi &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     'setuptools==81' &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/     pyopenssl==26.2.0     rencode==1.0.6 &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/     deluge[all]==${DELUGE_VERSION}     pygeoip &&   echo \"**** grab GeoIP database ****\" &&   curl -L --retry 10 --retry-max-time 60 --retry-all-errors     \"https://geoip.linuxserver.io/GeoIP.dat.gz\"     | gunzip > /usr/share/GeoIP/GeoIP.dat &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     27,
+     61
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:cb32133d45c7b626b0c09febfa43bc1ff1fbf7c673898883c0ed62b1cfd29a19",
+    "diff_id": "sha256:6c1e41defc8febd791082766a84d305abc02c52c0a85deb1d6053ee55e5a2dfb",
+    "size": 7479845,
+    "uncompressed_size": 26864904,
+    "created_by": "COPY /libtorrent-build/usr/lib/libtorrent-rasterbar.* /usr/lib/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:9c3fc5c5fe0949b4f689788093bc48c5139e026eac1066d8ee62fa083081f17a",
+    "diff_id": "sha256:8375baa9ce1e04257abc93a2174f49f8ef84e3f30f6548fdba73317eae6cc45e",
+    "size": 1298862,
+    "uncompressed_size": 8390712,
+    "created_by": "COPY /libtorrent-build/usr/lib/python3.12 /lsiopy/lib/python3.12",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:5248c1c1182cb46d2589a588d5d3d8aa13795311b06c0fcde798e11b8a9fc9f3",
+    "diff_id": "sha256:61b679dcb0eb02238259839b8a29baf9e7dac3984dcb0ed358807f91d4fbce8a",
+    "size": 2755,
+    "uncompressed_size": 5905,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     68,
+     68
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 11,
+    "digest": "sha256:69a01ae5c13559e37073033aaa4e15821b39262d5f5f83d8c1e834e9272034da",
+    "diff_id": "sha256:86d9b85f7688ba4888cd22e01f13be443fcd250bf3a171f804db581a8e52daa0",
+    "size": 347244,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "deluge",
+  "tag": "2.2.0-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/deluge/2.2.0-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 3.014,
+    "listening_ports": [
+     "8112/tcp",
+     "51765/tcp",
+     "58846/tcp",
+     "1900/udp",
+     "6771/udp",
+     "36755/udp",
+     "49722/udp",
+     "51765/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 143294464,
+    "pids": 15,
+    "tarball": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 3.014,
+    "listening_ports": [
+     "8112/tcp",
+     "51765/tcp",
+     "58846/tcp",
+     "1900/udp",
+     "6771/udp",
+     "33065/udp",
+     "39253/udp",
+     "51765/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 144777216,
+    "pids": 15,
+    "tarball": "https://github.com/linuxserver-playground/docker-deluge/releases/download/2.2.0-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "deluge",
+    "tag": "amd64-edcd358-40225987274",
+    "arch": "amd64",
+    "started": "2026-10-25T19:32:06Z",
+    "finished": "2026-10-25T19:32:22Z",
+    "success": true,
+    "runner": "33a9b8ea001a",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.014,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.014
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "174 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "174 packages: syft JSON 48536 bytes gzipped, SPDX for the image attestation 512994 bytes",
+      "seconds": 0.093
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1186 dirs, 8429 files (217056460 bytes), 1219 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.14s, total 0.19s",
+      "seconds": 0.313
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "12 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.682
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, base units assumed",
+      "seconds": 0.048
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8112/",
+      "seconds": 10.618
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "15 pids, tcp [8112, 51765, 58846], rss 143294464 bytes",
+      "seconds": 0.54
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 143294464,
+     "pids": 15,
+     "listening_tcp": [
+      8112,
+      51765,
+      58846
+     ],
+     "listening_udp": [
+      1900,
+      6771,
+      36755,
+      49722,
+      51765
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-deluge-web",
+      "svc-deluged"
+     ],
+     "changed_paths": 223
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "deluge",
+    "tag": "arm64-edcd358-40225987274",
+    "arch": "arm64",
+    "started": "2026-10-25T19:34:09Z",
+    "finished": "2026-10-25T19:34:25Z",
+    "success": true,
+    "runner": "397abc6f14dd",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.014,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.014
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "174 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "174 packages: syft JSON 48606 bytes gzipped, SPDX for the image attestation 513101 bytes",
+      "seconds": 0.141
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1186 dirs, 8428 files (235780210 bytes), 1219 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.11s",
+      "seconds": 0.234
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "12 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.596
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, base units assumed",
+      "seconds": 0.06
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8112/",
+      "seconds": 10.821
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "15 pids, tcp [8112, 51765, 58846], rss 144777216 bytes",
+      "seconds": 0.345
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 144777216,
+     "pids": 15,
+     "listening_tcp": [
+      8112,
+      51765,
+      58846
+     ],
+     "listening_udp": [
+      1900,
+      6771,
+      33065,
+      39253,
+      51765
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-deluge-web",
+      "svc-deluged"
+     ],
+     "changed_paths": 223
+    }
+   }
+  }
+ }
+}

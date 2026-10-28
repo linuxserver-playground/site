@@ -1,0 +1,886 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "ubooquity",
+  "repository": "linuxserver-playground/docker-ubooquity",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "3.1.0",
+   "upstream_clean": "3.1.0",
+   "semver": "3.1.0",
+   "ls_build": 2,
+   "tag": "3.1.0-ls2",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "3.1.0-ls2",
+    "version-3.1.0",
+    "3.1.0",
+    "amd64-latest",
+    "amd64-3.1.0-ls2",
+    "amd64-version-3.1.0",
+    "amd64-3.1.0",
+    "arm64v8-latest",
+    "arm64v8-3.1.0-ls2",
+    "arm64v8-version-3.1.0",
+    "arm64v8-3.1.0"
+   ],
+   "source": "command",
+   "source_url": "command"
+  },
+  "commit": "ee3f26af83766482bfb2d3e6eb6bdee84f1bde79",
+  "created": "2026-10-26T02:51:51Z",
+  "reason": "push",
+  "previous": {
+   "tag": "3.1.0-ls1",
+   "release_url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/tag/3.1.0-ls1"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+   "digest": "sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:543c1f3c05af8ed1a04abf1e215024b1f07274dbf174c9d85a8d9c873ebc1bcc",
+    "size": 110920983,
+    "uncompressed_size": 252468059,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 26
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:44aa2700eba095322bbc3117884a0503b80a0d4748a09092dc49a1cfba138baf",
+    "size": 111152267,
+    "uncompressed_size": 265728559,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 19
+   }
+  ],
+  "index_digest": "sha256:921a84f605a78060f1906bba5df1be975075d5f3b7ec53477e4c493edc9afcbf",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 3.1.0-ls2 Build-date:- 2026-10-26T02:21:40Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22@sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "3.1.0",
+   "maintainer": "sparklyballs",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T02:21:40Z",
+   "org.opencontainers.image.description": "Ubooquity is a free, lightweight and easy-to-use home server for your comics and ebooks.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-ubooquity",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "ee3f26af83766482bfb2d3e6eb6bdee84f1bde79",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-ubooquity",
+   "org.opencontainers.image.title": "Ubooquity",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-ubooquity/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "3.1.0-ls2"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "2202/tcp",
+    "2203/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG UBOOQUITY_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"sparklyballs\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    unzip && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    openjdk17-jre && \\\n  echo \"**** install ubooquity ****\" && \\\n  if [ -z ${UBOOQUITY_VERSION+x} ]; then \\\n    UBOOQUITY_VERSION=$(curl -IsL -w %{url_effective} -o /dev/null https://vaemendis.net/ubooquity/service/download.php \\\n    | sed 's|.*Ubooquity-\\([0-9\\.]*\\).zip|\\1|'); \\\n  fi && \\\n  mkdir -p \\\n    /app/ubooquity && \\\n  curl -o \\\n  /tmp/ubooquity.zip -L \\\n    \"https://vaemendis.net/ubooquity/downloads/Ubooquity-${UBOOQUITY_VERSION}.zip\" && \\\n  unzip /tmp/ubooquity.zip -d /app/ubooquity && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 2202 2203\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG UBOOQUITY_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"sparklyballs\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    unzip && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    openjdk17-jre && \\\n  echo \"**** install ubooquity ****\" && \\\n  if [ -z ${UBOOQUITY_VERSION+x} ]; then \\\n    UBOOQUITY_VERSION=$(curl -IsL -w %{url_effective} -o /dev/null https://vaemendis.net/ubooquity/service/download.php \\\n    | sed 's|.*Ubooquity-\\([0-9\\.]*\\).zip|\\1|'); \\\n  fi && \\\n  mkdir -p \\\n    /app/ubooquity && \\\n  curl -o \\\n  /tmp/ubooquity.zip -L \\\n    \"https://vaemendis.net/ubooquity/downloads/Ubooquity-${UBOOQUITY_VERSION}.zip\" && \\\n  unzip /tmp/ubooquity.zip -d /app/ubooquity && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 2202 2203\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"ubooquity:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-ubooquity-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-ubooquity-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-ubooquity\n  svc-ubooquity -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"ubooquity:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-ubooquity-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-ubooquity-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make our folders\nmkdir -p \\\n    /config/fonts\n\n# copy config\nif [[ ! -f /config/preferences.json ]]; then\n    cp /defaults/preferences.json /config/preferences.json\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-ubooquity",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nJAVAMEM=${MAXMEM:-512}\nPORT=$(jq -r '.adminPortNumber' < /config/preferences.json)\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost ${PORT:-2203}\" \\\n        cd /app/ubooquity s6-setuidgid abc java -Xmx\"$JAVAMEM\"m \\\n        -jar /app/ubooquity/Ubooquity.jar \\\n        --headless --host 0.0.0.0 --remoteadmin \\\n        --workdir /config\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 126,
+    "distro": "Alpine Linux v3.22",
+    "hash": "e1865493",
+    "by_type": {
+     "java-archive": 52,
+     "apk": 74
+    }
+   },
+   "arm64": {
+    "count": 126,
+    "distro": "Alpine Linux v3.22",
+    "hash": "e1865493",
+    "by_type": {
+     "java-archive": 52,
+     "apk": 74
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/ubooquity/builds/3.1.0-ls2/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-ubooquity/compare/3.1.0-ls1...3.1.0-ls2"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 308311,
+    "sha256": "eb42b70cb9a11157195730a5bff8b41233114ac87271e4a2ce0e435ae58289cb",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5032,
+    "sha256": "2b573535dca76f567c88a678f97559708e1134b91a87ff434bc76ac8e72a4887",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 27407,
+    "sha256": "2a42680b0ed13cfc887dc36a4f0fb8c8e8589d26c851c598a17b8a91d7b47d6a",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2284,
+    "sha256": "73c9d13c1954d81cb512147d903c13a62cc6ecbcec526d3344cb1522c3af88b5",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 31527,
+    "sha256": "b58b93efbb4c4688972b1f73f0b353719768ea4f8a24abc0040198d496887752",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 7366,
+    "sha256": "068b3bb4df404a39df82fcb857d0b1b5570271e7a27feed8e5a2508042202c47",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 308191,
+    "sha256": "2f5311afaf191ae15e71f4ede7b219ec5e293502e9fef631ff3f0ad0c423aac4",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5032,
+    "sha256": "57fefce3a8f531d993fc92f395519bb5fe6a299bb1d2829676213b4b361c99c1",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 27049,
+    "sha256": "1c85482cb4b49124388bc1256604b36e8d9df0694858774496c83bc1e7cb90c0",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2266,
+    "sha256": "540c124a0b2fc0aab40080bc3936d41eb540d0ddb782c86a744b82a150a5267c",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 31560,
+    "sha256": "013ebb32ab9c7d89588addae9f1d91df8f49373250d262bad5826dd8aaf30460",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 7366,
+    "sha256": "068b3bb4df404a39df82fcb857d0b1b5570271e7a27feed8e5a2508042202c47",
+    "url": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40256318325,
+   "run_url": "https://github.com/linuxserver-playground/docker-ubooquity/actions/runs/40256318325",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "ubooquity",
+  "branch": "master",
+  "tag": "3.1.0-ls2",
+  "previous_tag": "3.1.0-ls1",
+  "classification": "mixed",
+  "reasons": [
+   "Dockerfile changed",
+   "base image digest changed"
+  ],
+  "upstream": {
+   "from": "3.1.0",
+   "to": "3.1.0",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+    "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 110920958,
+    "to": 110920983,
+    "delta": 25
+   },
+   "arm64": {
+    "from": 111152090,
+    "to": 111152267,
+    "delta": 177
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "--- a/Dockerfile\n+++ b/Dockerfile\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:3.22\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n \n ENV LSIO_FIRST_PARTY=true\n \n",
+   "arm64": "--- a/Dockerfile.aarch64\n+++ b/Dockerfile.aarch64\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.22\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n \n ENV LSIO_FIRST_PARTY=true\n \n"
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:50941534e8ec337348733c7ae752f7d1f210ae8ea16d12f62753fa05ec09ec5e",
+    "diff_id": "sha256:4745b454a5c7d99b773225398de4efc22d0584c11a434614e1337886c25929e1",
+    "size": 6205935,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2296c5a6da23beec69dbcb13b0b1e223f27acebf165d9ee1408c77a48b58761c",
+    "diff_id": "sha256:5bd43313ffdeefc43dd58bd3d56b0ab0d98930636c189407082f23c4c88e762d",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:7549b0e9b1ec9c290ef8524124abc60bb702e1d8df5325daf5f201421e2a3c39",
+    "diff_id": "sha256:acadb2531ec3274d08bc827f603be34984fbb7dbbd2e893df7a4962685d82e4c",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:19ca47c01d6752cc903b2da165558c51835b77a2f4c2ae2336597ca2459df8f9",
+    "diff_id": "sha256:66f4bcd41ec6a6c9f380501c9df1d67a772c10250480dad14379c74e4dbd4ea3",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5ba9ed2b4f7b93c41c6f7178c514bc4ae0f2211626741c5a7bc6579cda2ce863",
+    "diff_id": "sha256:f16ba025204c705b2e552cc3ac0d42ed0c8770382942aa56656e82d95d891f15",
+    "size": 5894936,
+    "uncompressed_size": 13967197,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-25T20:18:38Z VERSION=eac05398-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:4350699b4ff402ba546fea71086ac1258f8454523b4704362c28c4100554c749",
+    "diff_id": "sha256:6341de3156483d23896bb7b94f0c82218a75ff48569f7ec62f3280a060680f6b",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:6e0b69ef0c7b2b49f431f02bf2084dc7d54acffe931cd8a9006419b75d353ea7",
+    "diff_id": "sha256:ef3506b94c97cf7ab528f683646cbd65a02f030412bff879668292ad364560bd",
+    "size": 98805307,
+    "uncompressed_size": 224871726,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T02:21:40Z VERSION=3.1.0-ls2 UBOOQUITY_VERSION=3.1.0 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     unzip &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     openjdk17-jre &&   echo \"**** install ubooquity ****\" &&   if [ -z ${UBOOQUITY_VERSION+x} ]; then     UBOOQUITY_VERSION=$(curl -IsL -w %{url_effective} -o /dev/null https://vaemendis.net/ubooquity/service/download.php     | sed 's|.*Ubooquity-\\([0-9\\.]*\\).zip|\\1|');   fi &&   mkdir -p     /app/ubooquity &&   curl -o   /tmp/ubooquity.zip -L     \"https://vaemendis.net/ubooquity/downloads/Ubooquity-${UBOOQUITY_VERSION}.zip\" &&   unzip /tmp/ubooquity.zip -d /app/ubooquity &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     14,
+     37
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:3f8f53e76e54a52a16b756caad037925a17af742a3d92903ec323bbd97c71f8e",
+    "diff_id": "sha256:eade927771099f30ac8957e4b7c4ba4985886edfef742ad90f1f3a024ee110df",
+    "size": 1445,
+    "uncompressed_size": 2002,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     40,
+     40
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d77674232f0c47cbb040cba73ff72799dba09aec91d1318e8189e6df3852dcd6",
+    "diff_id": "sha256:d92c25ce199a3e6219318e93bcb3f8e1e4e0285dea78b85215ad5615885313aa",
+    "size": 7020019,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:9d5b315da99cfe0ad0076049628c3866051b1829a4757526a2e6e6eb28f3eb6e",
+    "diff_id": "sha256:b216aa3b96b6207ce53f87c3000182aaa2c22950280408dfb970d71acaffca65",
+    "size": 1357,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:607e25ad2c61b59f2e556efeb18df513832d9e2d38b039251507f7c7dc079274",
+    "diff_id": "sha256:06a8030eaf087ea95b4b1395744e495e26bb8587869b5858a02206e3e1a1e1e8",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:19a4e67d57fd6b5e2282a2a3308677d576422b169a14dd4e8f1ee7dc003d73fe",
+    "diff_id": "sha256:09d7c10c531ec5ceacf13de18f5b33642d86850e087eee46e8d828d2a8bff827",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:6f2c4b6581d3c881202606acfd9a27a429fa51cffe5d372ccf9c2a79103e6526",
+    "diff_id": "sha256:ead62eec1755aeaf04e242afff809e2b8932c144475f219c711d0b9ee379fe28",
+    "size": 6110414,
+    "uncompressed_size": 20893504,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-25T20:18:38Z VERSION=eac05398-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:fd9a5d1991b6cf60466fdc9929f3e1a084ad55b1719b4124b06a04cdd1cffa88",
+    "diff_id": "sha256:89ae97d41a411209eb4a7ef2341bd967db2d571cea31b33d326d4c23d593a637",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:686c043329e25e71e95c1c228cbbda68608ac35cdc71443f542aee634878e75b",
+    "diff_id": "sha256:a8568e49146f57566d491b82403428f116bb41890c9b61d7d91e5e40dac40312",
+    "size": 98007034,
+    "uncompressed_size": 226365483,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T02:21:40Z VERSION=3.1.0-ls2 UBOOQUITY_VERSION=3.1.0 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     unzip &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     openjdk17-jre &&   echo \"**** install ubooquity ****\" &&   if [ -z ${UBOOQUITY_VERSION+x} ]; then     UBOOQUITY_VERSION=$(curl -IsL -w %{url_effective} -o /dev/null https://vaemendis.net/ubooquity/service/download.php     | sed 's|.*Ubooquity-\\([0-9\\.]*\\).zip|\\1|');   fi &&   mkdir -p     /app/ubooquity &&   curl -o   /tmp/ubooquity.zip -L     \"https://vaemendis.net/ubooquity/downloads/Ubooquity-${UBOOQUITY_VERSION}.zip\" &&   unzip /tmp/ubooquity.zip -d /app/ubooquity &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     14,
+     37
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:9ddab5345eb0e647cba76a96a54bd243822e331df1c03f79785dffaa2c1fc919",
+    "diff_id": "sha256:bdf2007f65e999bd137412eae927ff256ca68efe101739c990d81193295280a1",
+    "size": 1445,
+    "uncompressed_size": 2002,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     40,
+     40
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "ubooquity",
+  "tag": "3.1.0-ls2",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/ubooquity/3.1.0-ls2/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 3.018,
+    "listening_ports": [
+     "2202/tcp",
+     "2203/tcp",
+     "47998/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 172675072,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 3.014,
+    "listening_ports": [
+     "2202/tcp",
+     "2203/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 159367168,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-ubooquity/releases/download/3.1.0-ls2/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "ubooquity",
+    "tag": "amd64-ee3f26a-40256318325",
+    "arch": "amd64",
+    "started": "2026-10-26T02:35:06Z",
+    "finished": "2026-10-26T02:35:23Z",
+    "success": true,
+    "runner": "c915786b77ae",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.018,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.018
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "126 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "126 packages: syft JSON 308311 bytes gzipped, SPDX for the image attestation 328962 bytes",
+      "seconds": 0.233
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "397 dirs, 1480 files (251978372 bytes), 1458 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.04s",
+      "seconds": 0.159
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.893
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.055
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:2203/ubooquity/admin",
+      "seconds": 10.625
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [2202, 2203], rss 172675072 bytes",
+      "seconds": 0.262
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 172675072,
+     "pids": 13,
+     "listening_tcp": [
+      2202,
+      2203
+     ],
+     "listening_udp": [
+      47998
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-ubooquity"
+     ],
+     "changed_paths": 261
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "ubooquity",
+    "tag": "arm64-ee3f26a-40256318325",
+    "arch": "arm64",
+    "started": "2026-10-26T02:48:39Z",
+    "finished": "2026-10-26T02:48:55Z",
+    "success": true,
+    "runner": "8450ee633b34",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.014,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.014
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "126 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "126 packages: syft JSON 308191 bytes gzipped, SPDX for the image attestation 329036 bytes",
+      "seconds": 0.245
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "397 dirs, 1479 files (265238745 bytes), 1458 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.04s",
+      "seconds": 0.14
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.316
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.052
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:2203/ubooquity/admin",
+      "seconds": 10.739
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [2202, 2203], rss 159367168 bytes",
+      "seconds": 0.211
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 159367168,
+     "pids": 13,
+     "listening_tcp": [
+      2202,
+      2203
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-ubooquity"
+     ],
+     "changed_paths": 261
+    }
+   }
+  }
+ }
+}

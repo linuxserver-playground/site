@@ -1,0 +1,1015 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "projectsend",
+  "repository": "linuxserver-playground/docker-projectsend",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "r2098",
+   "upstream_clean": "r2098",
+   "ls_build": 1,
+   "tag": "r2098-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "r2098-ls1",
+    "version-r2098",
+    "amd64-latest",
+    "amd64-r2098-ls1",
+    "amd64-version-r2098",
+    "arm64v8-latest",
+    "arm64v8-r2098-ls1",
+    "arm64v8-version-r2098"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/projectsend/legacy/releases/tag/r2098"
+  },
+  "commit": "6869a55c73d40e68a354cf2a5c04c843c0fa3a9c",
+  "created": "2026-10-25T23:46:34Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine-nginx",
+   "image": "ghcr.io/linuxserver/baseimage-alpine-nginx:3.22",
+   "digest": "sha256:f3dfaa366215cfd40833f2bc6e660c80ec6f8d32d014f33f3979613fcdb6a35e"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:8cbe030bd51424d2760405603ac9569a35b0943895f0bf0836503ffbe94f6e2a",
+    "size": 55370254,
+    "uncompressed_size": 179142396,
+    "layers": 11,
+    "runner": "Linux-X64",
+    "build_seconds": 16
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:3b5cc10e0162f0b9c0ddc3fa6a2abb81a982711dd14e739339dee4a0cc3e19e7",
+    "size": 56584624,
+    "uncompressed_size": 186072634,
+    "layers": 11,
+    "runner": "Linux-ARM64",
+    "build_seconds": 16
+   }
+  ],
+  "index_digest": "sha256:8f6369fcfafd327da0c00c2641c034320bd3d45523d15ee7f35e0d9101f49989",
+  "labels": {
+   "build_version": "Linuxserver.io version:- r2098-ls1 Build-date:- 2026-10-25T23:41:52Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine-nginx:3.22@sha256:f3dfaa366215cfd40833f2bc6e660c80ec6f8d32d014f33f3979613fcdb6a35e",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "r2098",
+   "maintainer": "TheSpad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T23:41:52Z",
+   "org.opencontainers.image.description": "Projectsend is a self-hosted application that lets you upload files and assign them to specific clients that you create yourself.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-projectsend",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "84fad48c73fe76c719e66db1892a7b1232d89547",
+   "org.opencontainers.image.revision": "6869a55c73d40e68a354cf2a5c04c843c0fa3a9c",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-projectsend",
+   "org.opencontainers.image.title": "Projectsend",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-projectsend/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "r2098-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "PHP_INI_SCAN_DIR=:/config/php",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "443/tcp",
+    "80/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine-nginx:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PROJECTSEND_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheSpad\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    php84-bcmath \\\n    php84-bz2 \\\n    php84-cli \\\n    php84-dom \\\n    php84-gd \\\n    php84-gettext \\\n    php84-gmp \\\n    php84-ldap \\\n    php84-mysqli \\\n    php84-pdo \\\n    php84-pdo_dblib \\\n    php84-pdo_mysql \\\n    php84-pecl-apcu \\\n    php84-pecl-memcached \\\n    php84-soap \\\n    php84-xmlreader && \\\n  echo \"**** install projectsend ****\" && \\\n  mkdir -p /app/www/public && \\\n  if [ -z ${PROJECTSEND_VERSION+x} ]; then \\\n    PROJECTSEND_VERSION=$(curl -s https://api.github.com/repos/projectsend/legacy/releases/latest | jq -r '. | .tag_name'); \\\n  fi && \\\n  curl -fso \\\n    /tmp/projectsend.zip -L \\\n    \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend-${PROJECTSEND_VERSION}.zip\" || \\\n  curl -fso \\\n    /tmp/projectsend.zip -L \\\n    \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend.zip\" && \\\n  unzip \\\n    /tmp/projectsend.zip -d \\\n    /app/www/public && \\\n  mv /app/www/public/upload /defaults/ && \\\n  echo \"**** download default lang files ****\" && \\\n  mkdir -p /defaults/lang && \\\n  curl -fso \\\n    /defaults/lang/en.mo -L \\\n    \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.mo\" && \\\n  curl -fso \\\n    /defaults/lang/en.po -L \\\n    \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.po\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n    rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine-nginx:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PROJECTSEND_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheSpad\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    php84-bcmath \\\n    php84-bz2 \\\n    php84-cli \\\n    php84-dom \\\n    php84-gd \\\n    php84-gettext \\\n    php84-gmp \\\n    php84-ldap \\\n    php84-mysqli \\\n    php84-pdo \\\n    php84-pdo_dblib \\\n    php84-pdo_mysql \\\n    php84-pecl-apcu \\\n    php84-pecl-memcached \\\n    php84-soap \\\n    php84-xmlreader && \\\n  echo \"**** install projectsend ****\" && \\\n  mkdir -p /app/www/public && \\\n  if [ -z ${PROJECTSEND_VERSION+x} ]; then \\\n    PROJECTSEND_VERSION=$(curl -s https://api.github.com/repos/projectsend/legacy/releases/latest | jq -r '. | .tag_name'); \\\n  fi && \\\n  curl -fso \\\n    /tmp/projectsend.zip -L \\\n    \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend-${PROJECTSEND_VERSION}.zip\" || \\\n  curl -fso \\\n    /tmp/projectsend.zip -L \\\n    \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend.zip\" && \\\n  unzip \\\n    /tmp/projectsend.zip -d \\\n    /app/www/public && \\\n  mv /app/www/public/upload /defaults/ && \\\n  echo \"**** download default lang files ****\" && \\\n  mkdir -p /defaults/lang && \\\n  curl -fso \\\n    /defaults/lang/en.mo -L \\\n    \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.mo\" && \\\n  curl -fso \\\n    /defaults/lang/en.po -L \\\n    \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.po\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n    rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"projectsend:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-nginx-end -> init-config\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-projectsend-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-os-end -> init-folders\n  init-php -> init-keygen\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-samples -> init-nginx\n  init-version-checks -> init-nginx-end\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-keygen -> init-permissions\n  init-nginx -> init-php\n  init-nginx-end -> init-projectsend-config\n  init-folders -> init-samples\n  init-custom-files -> init-services\n  init-permissions -> init-version-checks\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-nginx\n  svc-nginx -> legacy-services\n  init-services -> svc-php-fpm\n  svc-php-fpm -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine-nginx:3.22\"\n}\n\"projectsend:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end",
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-projectsend-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-folders",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make folders\nmkdir -p \\\n    /config/{keys,php,www} \\\n    /config/log/{nginx,php} \\\n    /config/nginx/site-confs \\\n"
+    },
+    {
+     "name": "init-keygen",
+     "type": "oneshot",
+     "depends_on": [
+      "init-php"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nSUBJECT=\"/C=US/ST=CA/L=Carlsbad/O=Linuxserver.io/OU=LSIO Server/CN=*\"\nif [[ -f /config/keys/cert.key && -f /config/keys/cert.crt ]]; then\n    echo \"using keys found in /config/keys\"\nelse\n    echo \"generating self-signed keys in /config/keys, you can replace these with your own keys if required\"\n    rm -f \\\n        /config/keys/cert.key \\\n        /config/keys/cert.crt || true\n    openssl req -new -x509 -days 3650 -nodes -out /config/keys/cert.crt -keyout /config/keys/cert.key -subj \"$SUBJECT\"\nfi\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-nginx",
+     "type": "oneshot",
+     "depends_on": [
+      "init-samples"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# precreate log files\nfor file in /config/log/nginx/access.log /config/log/nginx/error.log; do\n    if [[ ! -f \"${file}\" ]]; then\n        touch \"${file}\"\n    fi\ndone\n\n# copy default config files if they don't exist\nif [[ ! -f /config/nginx/nginx.conf ]]; then\n    cp /defaults/nginx/nginx.conf.sample /config/nginx/nginx.conf\nfi\nif [[ ! -f /config/nginx/ssl.conf ]]; then\n    cp /defaults/nginx/ssl.conf.sample /config/nginx/ssl.conf\nfi\nif [[ ! -f /config/nginx/site-confs/default.conf ]]; then\n    cp /defaults/nginx/site-confs/default.conf.sample /config/nginx/site-confs/default.conf\nfi\n\n# force nginx.conf to include site-confs/*.conf instead of site-confs/*\nsed -i -E \"s#^(\\s*)include /config/nginx/site-confs/\\*;#\\1include /config/nginx/site-confs/\\*.conf;#\" /config/nginx/nginx.conf\n\n# copy index.html if no index file exists\nINDEX_EXISTS=false\nfor file in /config/www/index.*; do\n    if [[ -e \"${file}\" ]]; then\n        INDEX_EXISTS=true\n        break\n    fi\ndone\nif [[ ${INDEX_EXISTS} == false ]] && grep -Eq '^\\s*index[^#]*index\\.html' /config/nginx/**/*.conf; then\n    cp /defaults/www/index.html /config/www/index.html\nfi\n\n# copy pre-generated dhparams or generate if needed\nif [[ ! -f /config/nginx/dhparams.pem ]]; then\n    cp /defaults/nginx/dhparams.pem /config/nginx/dhparams.pem\nfi\nif ! grep -q 'PARAMETERS' \"/config/nginx/dhparams.pem\"; then\n    curl -o /config/nginx/dhparams.pem -L \"https://ssl-config.mozilla.org/ffdhe4096.txt\"\nfi\n\n# Set resolver, ignore ipv6 addresses\ntouch /config/nginx/resolver.conf\nif ! grep -q 'resolver' /config/nginx/resolver.conf; then\n    RESOLVERRAW=$(awk 'BEGIN{ORS=\" \"} $1==\"nameserver\" {print $2}' /etc/resolv.conf)\n    for i in ${RESOLVERRAW}; do\n        if [[ \"$(awk -F ':' '{print NF-1}' <<<\"${i}\")\" -le 2 ]]; then\n            RESOLVER=\"${RESOLVER} ${i}\"\n        fi\n    done\n    if [[ -z \"${RESOLVER}\" ]]; then\n        RESOLVER=\"127.0.0.11\"\n    fi\n    echo \"Setting resolver to ${RESOLVER}\"\n    RESOLVEROUTPUT=\"# This file is auto-generated only on first start, based on the container's /etc/resolv.conf file. Feel free to modify it as you wish.\\n\\nresolver ${RESOLVER} valid=30s;\"\n    echo -e \"${RESOLVEROUTPUT}\" >/config/nginx/resolver.conf\nfi\n\n# Set worker_processes\ntouch /config/nginx/worker_processes.conf\nif ! grep -q 'worker_processes' /config/nginx/worker_processes.conf; then\n    WORKER_PROCESSES=$(nproc)\n    echo \"Setting worker_processes to ${WORKER_PROCESSES}\"\n    echo -e \"# This file is auto-generated only on first start, based on the cpu cores detected. Feel free to change it to any other number or to auto to let nginx handle it automatically.\\n\\nworker_processes ${WORKER_PROCESSES};\" >/config/nginx/worker_processes.conf\nfi\n"
+    },
+    {
+     "name": "init-nginx-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-version-checks"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the nginx base init process\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-permissions",
+     "type": "oneshot",
+     "depends_on": [
+      "init-keygen"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_READ_ONLY_FS} ]] && [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # permissions\n    lsiown -R abc:abc \\\n        /var/lib/nginx\n\n    chmod -R 644 /etc/logrotate.d\nfi\n\nif [[ -f \"/config/log/logrotate.status\" ]]; then\n    chmod 600 /config/log/logrotate.status\nfi\n\nchmod -R g+w \\\n    /config/nginx\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    lsiown -R abc:abc \\\n        /config/keys \\\n        /config/log \\\n        /config/nginx \\\n        /config/php\n\n    lsiown abc:abc \\\n        /config/www\nfi\n"
+    },
+    {
+     "name": "init-php",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# precreate log files\nif [[ ! -f /config/log/php/error.log ]]; then\n    touch /config/log/php/error.log\nfi\n\n# create local php.ini if it doesn't exist, set local timezone\nif [[ ! -f /config/php/php-local.ini ]]; then\n    printf \"; Edit this file to override php.ini directives\\\\n\\\\n\" >/config/php/php-local.ini\n    # set default timezone\n    printf \"date.timezone = %s\\\\n\" \"${TZ:-UTC}\" >>/config/php/php-local.ini\nfi\n\n# create override for www.conf if it doesn't exist\nif [[ ! -f /config/php/www2.conf ]]; then\n    printf \"; Edit this file to override www.conf and php-fpm.conf directives and restart the container\\\\n\\\\n; Pool name\\\\n[www]\\\\n\\\\n\" >/config/php/www2.conf\nfi\n"
+    },
+    {
+     "name": "init-projectsend-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# set default values for variables\nPHP_MEMORY_LIMIT=${PHP_MEMORY_LIMIT:-512M}\nMAX_UPLOAD=${MAX_UPLOAD:-5000}\nPHP_MAX_FILE_UPLOAD=${PHP_MAX_FILE_UPLOAD:-200}\nUSABLE_MAX_UPLOAD=${MAX_UPLOAD//[!0-9]/}\n\n# create our folders\nmkdir -p \\\n    /config/projectsend \\\n    /data/projectsend\n\nif [[ ! -f \"/config/php/projectsend.ini\" ]]; then\n    cp /defaults/projectsend.ini /config/php/projectsend.ini\n\n    sed -i \\\n        -e \"s#;*memory_limit =.*#memory_limit = ${PHP_MEMORY_LIMIT}#i\" \\\n        -e \"s#;*upload_max_filesize =.*#upload_max_filesize = ${USABLE_MAX_UPLOAD}M#i\" \\\n        -e \"s#;*max_file_uploads =.*#max_file_uploads = ${PHP_MAX_FILE_UPLOAD}#i\" \\\n        -e \"s#;*post_max_size =.*#post_max_size = ${USABLE_MAX_UPLOAD}M#i\" \\\n        -e \"s#;*cgi.fix_pathinfo=.*#cgi.fix_pathinfo= 0#i\" \\\n        /config/php/projectsend.ini\nfi\n\n# copy config\nPREV_DIR=$(pwd)\n\ncd /defaults/upload || exit 1\nshopt -s globstar nullglob\nshopt -s dotglob\nfor i in *; do\n    if [ ! -e \"/data/projectsend/${i}\" ]; then\n        cp -R \"${i}\" \"/data/projectsend/${i}\"\n        lsiown abc:abc \"/data/projectsend/${i}\"\n    fi\ndone\n\nshopt -u globstar nullglob\nshopt -u dotglob\n\ncd \"${PREV_DIR}\" || exit 1\n\n# create symlinks\nif [[ ! -L /app/www/public/upload ]]; then\n    ln -sf /data/projectsend /app/www/public/upload\nfi\n\nif [[ -f /app/www/public/includes/sys.config.php ]]; then\n    rm /app/www/public/includes/sys.config.php\nfi\nif [[ ! -L /app/www/public/includes/sys.config.php ]]; then\n    ln -sf /config/projectsend/sys.config.php /app/www/public/includes/sys.config.php\nfi\n\n#Handle translations\nmkdir -p /config/translations\nshopt -s globstar dotglob\n\n#check if there are newer translation files in the container and if so copy them to /config\nif [[ -d /config/translations/lang && ! -L /app/www/public/lang ]]; then\n    rm -rf /app/www/public/lang\nfi\nif [[ ! -d /config/translations/lang && ! -L /app/www/public/lang ]]; then\n    mv /app/www/public/lang /config/translations/\nfi\nif [[ -d /config/translations/lang && ! -L /app/www/public/lang ]]; then\n    ln -s /config/translations/lang /app/www/public/lang\nfi\nif [[ ! -f /config/translations/lang/en.po ]] || [[ ! -f /config/translations/lang/en.mo ]]; then\n    mkdir -p /config/translations/lang\n    cp /defaults/lang/* /config/translations/lang/\nfi\n\nsymlinks=(\n    /app/www/public/templates/default/lang\n    /app/www/public/templates/gallery/lang\n    /app/www/public/templates/pinboxes/lang\n)\n\nfor i in \"${symlinks[@]}\"; do\n    path=$(echo \"${i}\" | awk -F '/' '{print $(NF-1)}')\n    # symlink translations\n    if [[ -d /config/translations/\"$path\" && ! -L \"${i}\" ]]; then\n        rm -rf \"${i}\"\n    fi\n    if [[ ! -d /config/translations/\"$path\" && ! -L \"${i}\" ]]; then\n        mv \"$i\" /config/translations/\"$(echo \"${i}\" | awk -F '/' '{print $(NF-1)}')\"\n    fi\n    if [[ -d /config/translations/\"$path\" && ! -L \"${i}\" ]]; then\n        ln -s /config/translations/\"$path\" \"${i}\"\n    fi\n    if [[ ! -f /config/translations/\"$path\"/en.po ]] || [[ ! -f /config/translations/\"$path\"/en.mo ]]; then\n        mkdir -p /config/translations/\"$path\"\n        cp /defaults/lang/* /config/translations/\"$path\"/\n    fi\ndone\n\nshopt -u globstar dotglob\n\n# handle crontab if configured\nmkdir -p /config/crontabs\ntouch /config/crontabs/abc\nlsiown abc:abc /config/crontabs/abc\ncrontab -u abc /config/crontabs/abc\n\n# permissions\nlsiown -R abc:abc \\\n    /config \\\n    /app/www/public/cache\n\nlsiown abc:abc \\\n    /data/projectsend \\\n    /app/www/public/includes\n\nchmod 755 /app/www/public/emails\n"
+    },
+    {
+     "name": "init-samples",
+     "type": "oneshot",
+     "depends_on": [
+      "init-folders"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# remove old samples\nfind /config/nginx/ \\\n    -name \"*.conf.sample\" \\\n    -type f \\\n    -delete\n\n# copy new samples\nfind /defaults/nginx/ \\\n    -maxdepth 1 \\\n    -name \"*.conf.sample\" \\\n    -type f \\\n    -exec cp \"{}\" /config/nginx/ \\;\n\nfind /defaults/nginx/site-confs/ \\\n    -maxdepth 1 \\\n    -name \"*.conf.sample\" \\\n    -type f \\\n    -exec cp \"{}\" /config/nginx/site-confs/ \\;\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-version-checks",
+     "type": "oneshot",
+     "depends_on": [
+      "init-permissions"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# detect nginx configs with dates not matching the provided sample files\nactive_confs=$(find /config/nginx/ -name \"*.conf\" -type f 2>/dev/null)\n\nfor i in ${active_confs}; do\n    if [ -f \"${i}.sample\" ]; then\n        if [ \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}\")\" != \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}.sample\")\" ]; then\n            active_confs_changed=\"│ $(printf '%10s' \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}\" | tr / -)\") │ $(printf '%10s' \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}.sample\" | tr / -)\") │ $(printf '%-70s' \"${i}\") │\\n${active_confs_changed}\"\n        fi\n    fi\ndone\n\nif [ -n \"${active_confs_changed}\" ]; then\n    echo \"**** The following active confs have different version dates than the samples that are shipped. ****\"\n    echo \"**** This may be due to user customization or an update to the samples. ****\"\n    echo \"**** You should compare the following files to the samples in the same folder and update them. ****\"\n    echo \"**** Use the link at the top of the file to view the changelog. ****\"\n    echo \"┌────────────┬────────────┬────────────────────────────────────────────────────────────────────────┐\"\n    echo \"│  old date  │  new date  │ path                                                                   │\"\n    echo \"├────────────┼────────────┼────────────────────────────────────────────────────────────────────────┤\"\n    echo -e \"${active_confs_changed%%\\\\n}\"\n    echo \"└────────────┴────────────┴────────────────────────────────────────────────────────────────────────┘\"\nfi\n\n# detect site-confs with wrong extension\nsite_confs_wrong_ext=$(find /config/nginx/site-confs/ -type f -not -name \"*.conf\" -not -name \"*.conf.sample\" 2>/dev/null)\n\nif [ -n \"${site_confs_wrong_ext}\" ]; then\n    echo \"**** The following site-confs have extensions other than .conf ****\"\n    echo \"**** This may be due to user customization. ****\"\n    echo \"**** You should review the files and rename them to use the .conf extension or remove them. ****\"\n    echo \"**** nginx.conf will only include site-confs with the .conf extension. ****\"\n    echo -e \"${site_confs_wrong_ext}\"\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-nginx",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif pgrep -f \"[n]ginx:\" >/dev/null; then\n    echo \"Zombie nginx processes detected, sending SIGTERM\"\n    pkill -ef [n]ginx:\n    sleep 1\nfi\n\nif pgrep -f \"[n]ginx:\" >/dev/null; then\n    echo \"Zombie nginx processes still active, sending SIGKILL\"\n    pkill -9 -ef [n]ginx:\n    sleep 1\nfi\n\nexec /usr/sbin/nginx -e stderr\n"
+    },
+    {
+     "name": "svc-php-fpm",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec /usr/sbin/php-fpm84 -F\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 163,
+    "distro": "Alpine Linux v3.22",
+    "hash": "492a2995",
+    "by_type": {
+     "apk": 132,
+     "php-composer": 30,
+     "npm": 1
+    }
+   },
+   "arm64": {
+    "count": 163,
+    "distro": "Alpine Linux v3.22",
+    "hash": "492a2995",
+    "by_type": {
+     "apk": 132,
+     "php-composer": 30,
+     "npm": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/projectsend/builds/r2098-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-projectsend/commits/r2098-ls1",
+   "upstream": "## What's Changed in r2098\n\n### New Features\n- **Generic OIDC single sign-on**: Any OpenID Connect provider can now be used to sign in, including Keycloak, Authentik and Authelia, alongside the existing social providers.\n- **Create own folders permission**: A new per-role permission controls who can create their own folders. It is enabled for the Client role by default, so nothing changes unless you turn it off.\n- **LiteSpeed download support**: LiteSpeed servers can now serve downloads directly through an internal redirect, the same way X-Accel and XSendFile already did.\n- **Reset a lost authenticator app**: When someone loses their authenticator and their backup codes, whoever can edit that account can now clear the app so they can enroll again on the next log in.\n\n### Security Updates\n- **Fix a two factor authentication bypass**: The email and TOTP methods shared one table, and the marker stored for TOTP rows was a value the email verifier accepted, so a TOTP challenge could be completed with no code at all. Each verifier now only accepts a token minted for its own method. Reported by Infinit3i.\n- **Stop a TOTP challenge from being traded for an email code**: The same token could be handed to the \"send me another code\" action and downgraded to email.\n- **Enforce two factor enrollment everywhere**: When two factor is required, accounts that had not enrolled yet could still reach endpoints that render no HTML, including the upload and ajax handlers.\n- **Fix stored cross site scripting in the custom footer**: Footer content was filtered with `strip_tags()`, which leaves attributes on the tags it keeps, so an event handler survived and ran on every page including the log in form. Reported by Venkata Karthik Kakarla.\n- **Fix stored cross site scripting on folder rename**: Renaming a folder stored the name unfiltered, and three places rendered it without escaping.\n- **Fix reflected cross site scripting**: The date filter parameters on the thumbnail regeneration page were echoed back unescaped.\n- **Escape names in the side modal title**: A name containing markup was inserted into the document rather than shown as text.\n- **Require the upload permission where the file actually arrives**: The upload form checked the permission but the endpoint receiving the chunks only checked for a session, so files could be written to storage without it. Reported by Zeliang Yu.\n- **Stop the e-mail templates page from writing any option**: It saved every field it was posted, so the permission to edit e-mail copy was enough to change any setting in the system, including the allowed upload extensions. Reported by Kery Qi.\n- **Fix an insecure direct object reference**: Download permission checks granted access to any staff role rather than the intended one.\n- **Close direct file access on Nginx**: Uploaded files could be fetched straight from the uploads directory, and the static asset rule served blocked uploads.\n- **Close CSRF gaps**: The token check only ran when a form body was present, so requests with an empty or JSON body skipped it. Logging out and changing the language are also covered now.\n- **Escape the address used in the LDAP search filter**: The e-mail was placed into the filter without escaping.\n- **Require a verified e-mail from the generic OIDC provider**: An unverified address was accepted at sign in.\n\n### Improvements\n- **Numbered files sort in the order people expect**: Sorting by a text column compared it character by character, so `img10` came before `img2`. Applies to every list, not just files.\n- **Encryption settings are honoured on upload**: Files were encrypted whenever the feature was on, ignoring the per upload choice, and the maximum size in the options was never read at all.\n- **Decrypted temporary files are cleaned by the cron system**: The cleanup used to run on every admin page load.\n- **Cron cleans up orphan files**: The cron option now targets orphan files rather than expired ones.\n- **HybridAuth upgraded to 3.13.0**: Includes the migration from Twitter to X.\n\n### Bug Fixes\n- Public download buttons work for visitors who are not logged in (#1431).\n- Large downloads are no longer cut off part way through.\n- Decrypted files are no longer deleted before they finish being served on X-Accel, XSendFile and LiteSpeed.\n- LDAP accounts can be created automatically again (#1545).\n- Two factor setup no longer fails on installations upgraded from older versions (#1546).\n- Two factor no longer redirects to the setup page when it is not required.\n- Permission changes on custom roles save instead of failing silently (#1597).\n- The single file editor no longer crashes on a missing value.\n- CKEditor loads correctly on release builds.\n- The public group link points at the group rather than the file list.\n- Files with no description no longer log a warning on every page that lists them.\n- The ajax actions answer with the field they are missing instead of a bare error.\n\n### Maintenance\n- Static analysis runs again: the lock file pinned a PHPStan release whose download no longer resolved, so every build failed before it could analyse anything.\n- PHPStan baseline regenerated, now covering the files added since it was last written.\n- Dependencies updated, including aws-sdk-php, axios, guzzle, immutable, picomatch and sjcl.\n- The minify tasks no longer re-minify their own output.\n- Translation templates regenerated so the strings added in this release are available to translators.\n\n**SHA-256**: `786511d3f4ede1eafc2e589233389983518d034f477ed691e66a204e2b8601c1`\n\n**Full Changelog**: https://github.com/projectsend/projectsend/compare/r2029...r2098\n\n\n\n---\n_Originally published on 2026-08-08 at [projectsend/projectsend](https://github.com/projectsend/projectsend/releases/tag/r2098). Migrated to this repository when ProjectSend v1 moved to `projectsend/legacy`._\n",
+   "upstream_url": "https://github.com/projectsend/legacy/releases/tag/r2098"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 54073,
+    "sha256": "f8785ce7aa9d2f0725e385ee156eb305259c6983d62715d9dfb639dce48cb3ac",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 9288,
+    "sha256": "6a5f98b81616d78349230519bb6adbebed4a3d5ebf783b705ff96d69ce977d2f",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 69795,
+    "sha256": "63b6f24d9853e273d8d4d9014e97d6b0340c8a72a5da14d8478a900f2b61e00b",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2318,
+    "sha256": "a7758ef2f720c20d01ec8a04b0261bec170e0597147ffe2f80858a1751f490f2",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 73769,
+    "sha256": "bf9868b9e2d0017ad24673459f6a1c2eb33eaea67ebd4484f548e55c7b203c28",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 11808,
+    "sha256": "7fdbc3bbdac9ef1bda3560b054dc35df6b0de4fad77ac3d4ff6b11056af3fb1a",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 53895,
+    "sha256": "361f920abeef8a562f6e742f56111a7b266f74f680db224aa7f77cb9f3351765",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 9288,
+    "sha256": "ab98b3975d91e12994cdbd59f5f75e3a2259c7d9b82c0a5b0eb58a7f725d0600",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 69362,
+    "sha256": "d209be575f3681c5341ad560e024caa0036d7c97846af599072de3d57b58fbca",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2318,
+    "sha256": "25b3d64296e73bd8332fa0b3a6622d0f428ad8994a9c34ce9dc6dfc2af55f39f",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 74214,
+    "sha256": "b5d8d83479f3a52bcb1f82c7f63a488fb8feec304fdf64071a11ce0fdf34feef",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 11808,
+    "sha256": "7fdbc3bbdac9ef1bda3560b054dc35df6b0de4fad77ac3d4ff6b11056af3fb1a",
+    "url": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40245541447,
+   "run_url": "https://github.com/linuxserver-playground/docker-projectsend/actions/runs/40245541447",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "projectsend",
+  "branch": "master",
+  "tag": "r2098-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "r2098",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine-nginx",
+    "image": "ghcr.io/linuxserver/baseimage-alpine-nginx:3.22",
+    "digest": "sha256:f3dfaa366215cfd40833f2bc6e660c80ec6f8d32d014f33f3979613fcdb6a35e"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 55370254
+   },
+   "arm64": {
+    "to": 56584624
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PHP_INI_SCAN_DIR",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "443/tcp",
+     "80/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:22e649327b5047b089e2e4cb653d967faec7dc8b4d876bd8ab51254b97148f26",
+    "diff_id": "sha256:0bba8e42abeb5f30bbf4415729daf7dcf4fa0a9983131c78927045c0314d9060",
+    "size": 6205880,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:3aa0554a03c35fd20b902e78df619a358fa07b521d5de4fc5f2b2ed62e77eca5",
+    "diff_id": "sha256:a7da4145d98e347099e57e208d666066835cd1fa81c9609f220afe359572509b",
+    "size": 1358,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:0f6f1adb277577022597162e00cacc733897975fb80ccffb624ad51ab868a270",
+    "diff_id": "sha256:d9db48fc5317b1e7e6e36be2c8878c72321735626bc203b205a441c52bf1b6aa",
+    "size": 699,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:9e051a8b5b0f22aa5e6f988b1a89fe85c10c5740632c10188cd1f5e4e56186ea",
+    "diff_id": "sha256:518682c9d8ae0da746ca0f593d714262241eb9e14df8b8945aaff11a14e3327d",
+    "size": 426,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:797ae1784ef0af89e6d123ae141a2c06de085e5771030f243620639c34d0513e",
+    "diff_id": "sha256:291bf7d16034291d2691234ea95b3c6fa390a587f0bbbc10ee0f334733243b92",
+    "size": 5894815,
+    "uncompressed_size": 13967197,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-21T15:53:20+00:00 VERSION=d0ffefca-ls33 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:defde855d8dcc1a8528362f33005cbac20fe66f8518eaece5c425b657a38083c",
+    "diff_id": "sha256:ccbec97442e7c9af7d7f7474a69b5749483618597ddb9474c6423cd43c61f4c2",
+    "size": 4629,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:af79e0a41c672a5b31519d2ec6479dcf103147dc82b371ebdb50d0cb2b1853cb",
+    "diff_id": "sha256:ad566c0aa292838199b5f58f8d01f1c24aef4421bc474c29b63f18ccb9531a63",
+    "size": 12855311,
+    "uncompressed_size": 44052448,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-22T15:17:57+00:00 VERSION=1.28.3-r7_8.4.27-r0-ls62 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php84     php84-ctype     php84-curl     php84-fileinfo     php84-fpm     php84-iconv     php84-json     php84-mbstring     php84-openssl     php84-phar     php84-session     php84-simplexml     php84-xml     php84-xmlwriter     php84-zip     php84-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php84\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php84 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php84/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php84/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php84/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php84/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php84/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php84/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:9c60a4e2664eda22c6d127d88af7a2b00be4a341f33b82ba54bca57d743b89c2",
+    "diff_id": "sha256:cd4bd3c61ca31cbfbf5bca155cd03485f8a90d14d1b6745a1ed7aa60d29019b2",
+    "size": 8394,
+    "uncompressed_size": 18351,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:7e25a51eb96650a0bd170e9cacca9341316186f9f8113a4b0aabd3a87109b79a",
+    "diff_id": "sha256:893a2547e9d8311714e0af1469ba04e303bffda587fc316479578fe2d072e2ff",
+    "size": 30390166,
+    "uncompressed_size": 107471751,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T23:41:52Z VERSION=r2098-ls1 PROJECTSEND_VERSION=r2098 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     php84-bcmath     php84-bz2     php84-cli     php84-dom     php84-gd     php84-gettext     php84-gmp     php84-ldap     php84-mysqli     php84-pdo     php84-pdo_dblib     php84-pdo_mysql     php84-pecl-apcu     php84-pecl-memcached     php84-soap     php84-xmlreader &&   echo \"**** install projectsend ****\" &&   mkdir -p /app/www/public &&   if [ -z ${PROJECTSEND_VERSION+x} ]; then     PROJECTSEND_VERSION=$(curl -s https://api.github.com/repos/projectsend/legacy/releases/latest | jq -r '. | .tag_name');   fi &&   curl -fso     /tmp/projectsend.zip -L     \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend-${PROJECTSEND_VERSION}.zip\" ||   curl -fso     /tmp/projectsend.zip -L     \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend.zip\" &&   unzip     /tmp/projectsend.zip -d     /app/www/public &&   mv /app/www/public/upload /defaults/ &&   echo \"**** download default lang files ****\" &&   mkdir -p /defaults/lang &&   curl -fso     /defaults/lang/en.mo -L     \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.mo\" &&   curl -fso     /defaults/lang/en.po -L     \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.po\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&     rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     14,
+     59
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:f80e57ff784ee410fa1db83deee73a5825b1cfd30891a588b7f6b06e85461e18",
+    "diff_id": "sha256:d39dffd046fdfd96cf137505c9ebb1a3964b2f98a9c24e97a13e34fc211a96d6",
+    "size": 2337,
+    "uncompressed_size": 5515,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     62,
+     62
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:89bb666fd54daa2f4dee8f1f38c92e26f64a41bc9d42b68abf9837492ad6daed",
+    "diff_id": "sha256:4531c6d44e5390fb4873887a33d612230e673218a8a8200656458996d24d10d7",
+    "size": 7019968,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:04104e46a630897257265ed324cf8fea88e4de60230a44a561fcfb238eb09848",
+    "diff_id": "sha256:42b07b2bdbb225fd6f6919b414fa342f572b43cfb216b3c697840c6049c50194",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:13bb6227a3a8f76a9d2ab0800ad5693d72920cbdffa167ab2f9e3920d8c77ea1",
+    "diff_id": "sha256:cf22f35c98b5249278d316860d66d3bf619598b927156d423e73d0eeb5faf10e",
+    "size": 699,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:8d42d1c6492ae62663fdd59f12a12df2e068b115bea62f8b30a59e2785f72133",
+    "diff_id": "sha256:8e29dd0106be1a106d1bef2a957815bc81cd39e600c83c94a66e624a8c75925d",
+    "size": 426,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:ada427fc1d4ba75b7acb983ad357a0e010e69b2548e42f53a5dc05a534d3d554",
+    "diff_id": "sha256:2704d32f8c96e3cd676e1c84d8b97f743214bbb2b929664904b0b260187e5ffa",
+    "size": 6110137,
+    "uncompressed_size": 20893504,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-21T15:53:20+00:00 VERSION=d0ffefca-ls33 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:105461c6296f30232939fef30a69154b0a44505df27fad2bacc9f5800c50d5c2",
+    "diff_id": "sha256:f62e18710787fdd0c12b603630578a166ad92a3d18e62c92b994de20e660c140",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:c902cde48ab3ac46e9bf72050c738ee1e471440cc6e3b17d4d0271fef608aa9d",
+    "diff_id": "sha256:e8efc2c1f53b32d4404e7c82f8d0603a585cd6b2b49df6e041df43d63577cf07",
+    "size": 12802328,
+    "uncompressed_size": 38734190,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-22T15:17:57+00:00 VERSION=1.28.3-r7_8.4.27-r0-ls62 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php84     php84-ctype     php84-curl     php84-fileinfo     php84-fpm     php84-iconv     php84-json     php84-mbstring     php84-openssl     php84-phar     php84-session     php84-simplexml     php84-xml     php84-xmlwriter     php84-zip     php84-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php84\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php84 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php84/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php84/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php84/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php84/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php84/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php84/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:2f38fb7490eb745513ee7a665aeb89c1bb7fa3f8935f85bc04003a413d42b6b1",
+    "diff_id": "sha256:a701ff86163367b9ed579dcd6d2c6433c2d7ada8e6d6ba837ff6328050519557",
+    "size": 8394,
+    "uncompressed_size": 18351,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:4d94263ae5ef16f93632c8b0cbdb3af0a83d9de8ec49fa3e9c8033baf302edfc",
+    "diff_id": "sha256:70147329266f16b622faaee6196b10c1a83e35c019462e131fa3a2fbf03157ff",
+    "size": 30628109,
+    "uncompressed_size": 107953504,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T23:41:52Z VERSION=r2098-ls1 PROJECTSEND_VERSION=r2098 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     php84-bcmath     php84-bz2     php84-cli     php84-dom     php84-gd     php84-gettext     php84-gmp     php84-ldap     php84-mysqli     php84-pdo     php84-pdo_dblib     php84-pdo_mysql     php84-pecl-apcu     php84-pecl-memcached     php84-soap     php84-xmlreader &&   echo \"**** install projectsend ****\" &&   mkdir -p /app/www/public &&   if [ -z ${PROJECTSEND_VERSION+x} ]; then     PROJECTSEND_VERSION=$(curl -s https://api.github.com/repos/projectsend/legacy/releases/latest | jq -r '. | .tag_name');   fi &&   curl -fso     /tmp/projectsend.zip -L     \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend-${PROJECTSEND_VERSION}.zip\" ||   curl -fso     /tmp/projectsend.zip -L     \"https://github.com/projectsend/legacy/releases/download/${PROJECTSEND_VERSION}/projectsend.zip\" &&   unzip     /tmp/projectsend.zip -d     /app/www/public &&   mv /app/www/public/upload /defaults/ &&   echo \"**** download default lang files ****\" &&   mkdir -p /defaults/lang &&   curl -fso     /defaults/lang/en.mo -L     \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.mo\" &&   curl -fso     /defaults/lang/en.po -L     \"https://raw.githubusercontent.com/projectsend/legacy/refs/heads/develop/templates/default/lang/en.po\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&     rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     14,
+     59
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:6ad37988c3c7cb057d22c3bfc14d45c5f06ca3a0f180dc15c3d550ad736e7d49",
+    "diff_id": "sha256:725f09bcd1caeb286f10aa50efdb2be94ef7ab0ca99a30d97d0ecee6c56fc6be",
+    "size": 2335,
+    "uncompressed_size": 5515,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     62,
+     62
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "projectsend",
+  "tag": "r2098-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/projectsend/r2098-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [
+     "80/tcp",
+     "443/tcp",
+     "9000/tcp",
+     "443/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 75554816,
+    "pids": 23,
+    "tarball": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [
+     "80/tcp",
+     "443/tcp",
+     "9000/tcp",
+     "443/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 69931008,
+    "pids": 23,
+    "tarball": "https://github.com/linuxserver-playground/docker-projectsend/releases/download/r2098-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "projectsend",
+    "tag": "amd64-6869a55-40245541447",
+    "arch": "amd64",
+    "started": "2026-10-25T23:44:49Z",
+    "finished": "2026-10-25T23:45:06Z",
+    "success": true,
+    "runner": "f4960642d417",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "163 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "163 packages: syft JSON 54073 bytes gzipped, SPDX for the image attestation 415351 bytes",
+      "seconds": 0.153
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2562 dirs, 6404 files (178682186 bytes), 1434 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.15s, total 0.24s",
+      "seconds": 0.386
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.321
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 11 from this image, base units assumed",
+      "seconds": 0.098
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:80/install/make-config.php",
+      "seconds": 11.078
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "23 pids, tcp [80, 443, 9000], rss 75554816 bytes",
+      "seconds": 0.69
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 75554816,
+     "pids": 23,
+     "listening_tcp": [
+      80,
+      443,
+      9000
+     ],
+     "listening_udp": [
+      443
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-nginx",
+      "svc-php-fpm"
+     ],
+     "changed_paths": 276
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "projectsend",
+    "tag": "arm64-6869a55-40245541447",
+    "arch": "arm64",
+    "started": "2026-10-25T23:44:13Z",
+    "finished": "2026-10-25T23:44:29Z",
+    "success": true,
+    "runner": "82c668809411",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "163 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "163 packages: syft JSON 53895 bytes gzipped, SPDX for the image attestation 415483 bytes",
+      "seconds": 0.14
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2562 dirs, 6404 files (185612131 bytes), 1434 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.07s, total 0.11s",
+      "seconds": 0.247
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.509
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 11 from this image, base units assumed",
+      "seconds": 0.074
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:80/install/make-config.php",
+      "seconds": 11.059
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "23 pids, tcp [80, 443, 9000], rss 69931008 bytes",
+      "seconds": 0.399
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 69931008,
+     "pids": 23,
+     "listening_tcp": [
+      80,
+      443,
+      9000
+     ],
+     "listening_udp": [
+      443
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-nginx",
+      "svc-php-fpm"
+     ],
+     "changed_paths": 276
+    }
+   }
+  }
+ }
+}

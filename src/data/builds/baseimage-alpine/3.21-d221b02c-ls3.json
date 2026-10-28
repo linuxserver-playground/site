@@ -1,0 +1,794 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "baseimage-alpine",
+  "repository": "linuxserver-playground/docker-baseimage-alpine",
+  "branch": "3.21",
+  "mode": "live",
+  "version": {
+   "upstream": "d221b02c",
+   "upstream_clean": "d221b02c",
+   "ls_build": 3,
+   "tag": "3.21-d221b02c-ls3",
+   "release_tag": "3.21",
+   "tags": [
+    "3.21",
+    "3.21-d221b02c-ls3",
+    "3.21-version-d221b02c",
+    "amd64-3.21",
+    "amd64-3.21-d221b02c-ls3",
+    "amd64-3.21-version-d221b02c",
+    "arm64v8-3.21",
+    "arm64v8-3.21-d221b02c-ls3",
+    "arm64v8-3.21-version-d221b02c"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "6cc5e8fbefa978ed29b57d0edc8bb484704f0465",
+  "created": "2026-10-27T17:19:08Z",
+  "reason": "push",
+  "previous": {
+   "tag": "3.21-d221b02c-ls2",
+   "release_url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/tag/3.21-d221b02c-ls2"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:3683b04afd3af4e40b16d3412c7dd3f4a4b23e7127ea01572fc359488ce01dc3",
+    "size": 11982659,
+    "uncompressed_size": 27079022,
+    "layers": 7,
+    "runner": "Linux-X64",
+    "build_seconds": 19
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:a0ffd9e1783bbf00f4b9fab5cd87d6d652ba7e4ca0f98fc6572ebc157da12d1d",
+    "size": 13013787,
+    "uncompressed_size": 38754535,
+    "layers": 7,
+    "runner": "Linux-ARM64",
+    "build_seconds": 10
+   }
+  ],
+  "index_digest": "sha256:b7f755399fdcc3af9c8d97074fc14a6bc25fad5ac31c85142140419aacad54fd",
+  "labels": {
+   "build_version": "Linuxserver.io version:- d221b02c-ls3 Build-date:- 2026-10-27T17:12:26Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "3.21",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "d221b02c",
+   "maintainer": "TheLamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-27T17:12:26Z",
+   "org.opencontainers.image.description": "baseimage-alpine container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-baseimage-alpine",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "6cc5e8fbefa978ed29b57d0edc8bb484704f0465",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-baseimage-alpine",
+   "org.opencontainers.image.title": "Baseimage-alpine",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "d221b02c-ls3"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3.20 AS rootfs-stage\n\n# environment\nENV ROOTFS=/root-out\nENV REL=v3.21\nENV ARCH=x86_64\nENV MIRROR=http://dl-cdn.alpinelinux.org/alpine\nENV PACKAGES=alpine-baselayout,\\\nalpine-keys,\\\napk-tools,\\\nbusybox,\\\nlibc-utils\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    xz\n\n# build rootfs\nRUN \\\n  mkdir -p \"$ROOTFS/etc/apk\" && \\\n  { \\\n    echo \"$MIRROR/$REL/main\"; \\\n    echo \"$MIRROR/$REL/community\"; \\\n  } > \"$ROOTFS/etc/apk/repositories\" && \\\n  apk --root \"$ROOTFS\" --no-cache --keys-dir /etc/apk/keys add --arch $ARCH --initdb ${PACKAGES//,/ } && \\\n  sed -i -e 's/^root::/root:!:/' /root-out/etc/shadow\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"x86_64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# environment variables\nENV PS1=\"$(whoami)@$(hostname):$(pwd)\\\\$ \" \\\n  HOME=\"/root\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    alpine-release \\\n    bash \\\n    ca-certificates \\\n    catatonit \\\n    coreutils \\\n    curl \\\n    findutils \\\n    jq \\\n    netcat-openbsd \\\n    procps-ng \\\n    shadow \\\n    tzdata && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  groupmod -g 1000 users && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3.20 AS rootfs-stage\n\n# environment\nENV ROOTFS=/root-out\nENV REL=v3.21\nENV ARCH=aarch64\nENV MIRROR=http://dl-cdn.alpinelinux.org/alpine\nENV PACKAGES=alpine-baselayout,\\\nalpine-keys,\\\napk-tools,\\\nbusybox,\\\nlibc-utils\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    xz\n\n# build rootfs\nRUN \\\n  mkdir -p \"$ROOTFS/etc/apk\" && \\\n  { \\\n    echo \"$MIRROR/$REL/main\"; \\\n    echo \"$MIRROR/$REL/community\"; \\\n  } > \"$ROOTFS/etc/apk/repositories\" && \\\n  apk --root \"$ROOTFS\" --no-cache --keys-dir /etc/apk/keys add --arch $ARCH --initdb ${PACKAGES//,/ } && \\\n  sed -i -e 's/^root::/root:!:/' /root-out/etc/shadow\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"aarch64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# environment variables\nENV PS1=\"$(whoami)@$(hostname):$(pwd)\\\\$ \" \\\n  HOME=\"/root\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    alpine-release \\\n    bash \\\n    ca-certificates \\\n    catatonit \\\n    coreutils \\\n    curl \\\n    findutils \\\n    jq \\\n    netcat-openbsd \\\n    procps-ng \\\n    shadow \\\n    tzdata && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  groupmod -g 1000 users && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"baseimage-alpine:3.21\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"scratch\"\n}\n\"baseimage-alpine:3.21\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 50,
+    "distro": "Alpine Linux v3.21",
+    "hash": "dbc45cd9",
+    "by_type": {
+     "apk": 50
+    }
+   },
+   "arm64": {
+    "count": 50,
+    "distro": "Alpine Linux v3.21",
+    "hash": "dbc45cd9",
+    "by_type": {
+     "apk": 50
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-alpine/builds/3.21-d221b02c-ls3/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-baseimage-alpine/compare/3.21-d221b02c-ls2...3.21-d221b02c-ls3"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 18870,
+    "sha256": "6fc91d12d0e6ada7e752fb4c54d1d4c2828072a07ea7e3992e952c2f1f300435",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 3309,
+    "sha256": "eaf80527293f89de14da8f05c2791dd5da80d37c7fc5de593d652c9952f0ac8b",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 22814,
+    "sha256": "18298c904b1431e4e6b087dcdc1a77037ca1de977f2930e83d8505ddece5f659",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2391,
+    "sha256": "9d45cecba4d2e0b71179cdee1b8c530845968ac8acf6c9ba568cc6c9bd0b002f",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 2836,
+    "sha256": "2ccf05e90382b63ecaf0329bfc1310cb32a859d05f3edfafe1a17c2265851061",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 2499,
+    "sha256": "f36ae4005951bf90d25d8a58ab781919ad853b02e1f92aa21fc07c77d74d6b40",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 18891,
+    "sha256": "f7de4afe98f125757c51b78a1502063d7ffab8be76f15b5af27c085a83f3b9f3",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 3309,
+    "sha256": "d97b2c38644f25289560390e28dc7bd6fd03751f618734c74978dce9e0616941",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 22563,
+    "sha256": "1016eff45aa417741cc92cbd706b16271a1bd6c921e372676aad796df3902833",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2392,
+    "sha256": "78e31b1516157b5655af58563c9d0cdd39c0d0bc77043eb546a2f63e4c57cab2",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 2807,
+    "sha256": "d1173d722c3ecb53489fa286a28550e4ae8ae12d3bf0dbc8d4d4c6cad436373e",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 2499,
+    "sha256": "f36ae4005951bf90d25d8a58ab781919ad853b02e1f92aa21fc07c77d74d6b40",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40548307300,
+   "run_url": "https://github.com/linuxserver-playground/docker-baseimage-alpine/actions/runs/40548307300",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "baseimage-alpine",
+  "branch": "3.21",
+  "tag": "3.21-d221b02c-ls3",
+  "previous_tag": "3.21-d221b02c-ls2",
+  "classification": "linuxserver",
+  "reasons": [
+   "Dockerfile changed"
+  ],
+  "upstream": {
+   "from": "d221b02c",
+   "to": "d221b02c",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "scratch"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 11982526,
+    "to": 11982659,
+    "delta": 133
+   },
+   "arm64": {
+    "from": 13013969,
+    "to": 13013787,
+    "delta": -182
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "--- a/Dockerfile\n+++ b/Dockerfile\n@@ -57,10 +57,10 @@\n LABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\n LABEL maintainer=\"TheLamer\"\n \n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n \n # environment variables\n ENV PS1=\"$(whoami)@$(hostname):$(pwd)\\\\$ \" \\\n",
+   "arm64": "--- a/Dockerfile.aarch64\n+++ b/Dockerfile.aarch64\n@@ -57,10 +57,10 @@\n LABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\n LABEL maintainer=\"TheLamer\"\n \n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n-ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n+ADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n \n # environment variables\n ENV PS1=\"$(whoami)@$(hostname):$(pwd)\\\\$ \" \\\n"
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:53f46fd3f17975cc771d0d7a4ec93096d46e38d6025d2ea73b0569c9006922f3",
+    "diff_id": "sha256:5e9eb8dcfa8b7af41f11b0f13474771d1209452bc8e3fc5302328d800ed4ebca",
+    "size": 6037440,
+    "uncompressed_size": 13073351,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:00223d06922095d35621ed163a05b5ba0a20884eab3345ea5575a4d1821809fc",
+    "diff_id": "sha256:5a1ea8a3b35ceec7da7e3e8a36750f39ed59018fcdafc89132678d10db4abab5",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:b0702603854a468d538dc4e85ceed545b368576a595e9b95f2f01526e889fb1f",
+    "diff_id": "sha256:92f470127ff64f28c753640d0b40c48f24100339ac9a12b383da8db512fa3515",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:13def7be3a4fdf5d4207e17723c19b7a70d89b5f7312230274c10a865ff60c7d",
+    "diff_id": "sha256:a27894f7880aa18c7f59ed2925c0e7b8e7ef7141fc3b6885572c9779256e8b77",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:559c3deb43ba0083b6eb9a5f3fd00fe96f0bf80359aa61705277167a36055baf",
+    "diff_id": "sha256:6ebd9a36f8bfd27855d82d019db42e767bc6b52748892f412199cc16d1347901",
+    "size": 5931861,
+    "uncompressed_size": 13959455,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:12:26Z VERSION=d221b02c-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     75,
+     101
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:0d97dc49e48a4060f42e92188b19c04ab910933521bfea07b3d334247a760fcc",
+    "diff_id": "sha256:e7f126962750f9ef05f495ebb7bc215fcfb2218b23b343174a5daa955a1a59e0",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     104,
+     104
+    ],
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:3e2cd95076295bb6b123f16f6b6a861a472be73ddfdbe04e057875cc332a7350",
+    "diff_id": "sha256:fab6f10482cef576ad9bc51f8d1cd231d6b9b53feed0cb62501ac250c26ad8e8",
+    "size": 6865322,
+    "uncompressed_size": 18015128,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:8269de589ba468be711d312e47ced926c7e820199067757200e7c1567d0e9b56",
+    "diff_id": "sha256:3885bba3ab26f1d7885ea06458e23134cf4cc0a437d0ec3e90bebd53a1c0b618",
+    "size": 1357,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:268ddec6c0faf99b181e26837c4fed9a055ffb1b0d2266c1b36bb45cded2a174",
+    "diff_id": "sha256:c0be83040f2a77ee78da9d454da8cc4de69e40f82dc78adefc07319f37222ff1",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:90abe3e558ab1e4681694bd11a1973b37ed3fb1dc46065b2f302118b3f8fdaf4",
+    "diff_id": "sha256:6c527a533a6917467bd1d1f6c70ae0346ddc5f0dae775fbbb0150ee004a548d4",
+    "size": 426,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:01f2a4eb634098eb22d64f6270a76d9e1f7297661146d472ba4fcf2aefcb9f75",
+    "diff_id": "sha256:c902bef51ad7578ebc00701cf1489b2dafcd47242e2e744d74704292f643e04f",
+    "size": 6135113,
+    "uncompressed_size": 20693191,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:12:26Z VERSION=d221b02c-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     75,
+     101
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:0d97dc49e48a4060f42e92188b19c04ab910933521bfea07b3d334247a760fcc",
+    "diff_id": "sha256:e7f126962750f9ef05f495ebb7bc215fcfb2218b23b343174a5daa955a1a59e0",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     104,
+     104
+    ],
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "baseimage-alpine",
+  "tag": "3.21-d221b02c-ls3",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/baseimage-alpine/3.21-d221b02c-ls3/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.007,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 2527232,
+    "pids": 11,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 2617344,
+    "pids": 11,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-alpine/releases/download/3.21-d221b02c-ls3/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "baseimage-alpine",
+    "tag": "amd64-6cc5e8f-40548307300",
+    "arch": "amd64",
+    "started": "2026-10-27T17:17:54Z",
+    "finished": "2026-10-27T17:18:13Z",
+    "success": true,
+    "runner": "10a3f9edfcb3",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.007,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.007
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "50 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "50 packages: syft JSON 18870 bytes gzipped, SPDX for the image attestation 96812 bytes",
+      "seconds": 0.081
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "230 dirs, 1033 files (26872331 bytes), 1199 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.05s",
+      "seconds": 0.26
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.925
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.162
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "11 pids, tcp [], rss 2527232 bytes",
+      "seconds": 0.256
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 2527232,
+     "pids": 11,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 195
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "baseimage-alpine",
+    "tag": "arm64-6cc5e8f-40548307300",
+    "arch": "arm64",
+    "started": "2026-10-27T17:13:34Z",
+    "finished": "2026-10-27T17:13:52Z",
+    "success": true,
+    "runner": "627db9b87ec6",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "50 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "50 packages: syft JSON 18891 bytes gzipped, SPDX for the image attestation 96862 bytes",
+      "seconds": 0.089
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "230 dirs, 1033 files (38547819 bytes), 1199 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.03s",
+      "seconds": 0.141
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.539
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.047
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "11 pids, tcp [], rss 2617344 bytes",
+      "seconds": 0.175
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 2617344,
+     "pids": 11,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 195
+    }
+   }
+  }
+ }
+}

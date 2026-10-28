@@ -1,0 +1,7 @@
+---
+branch: "universal-tshoot"
+---
+The packages are added to the shared mod package install list and installed once by the base image's
+`init-mods-package-install` step: `dnsutils`, `net-tools`, `iputils-ping` and `traceroute` on Ubuntu based
+images, `bind-tools` and `net-tools` on Alpine based images. Nothing is configured; the tools are simply
+available in the container after start.

@@ -1,0 +1,889 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "mariadb",
+  "repository": "linuxserver-playground/docker-mariadb",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "11.8.9-r0",
+   "upstream_clean": "11.8.9-r0",
+   "semver": "11.8.9",
+   "ls_build": 1,
+   "tag": "11.8.9-r0-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "11.8.9-r0-ls1",
+    "version-11.8.9-r0",
+    "11.8.9",
+    "amd64-latest",
+    "amd64-11.8.9-r0-ls1",
+    "amd64-version-11.8.9-r0",
+    "amd64-11.8.9",
+    "arm64v8-latest",
+    "arm64v8-11.8.9-r0-ls1",
+    "arm64v8-version-11.8.9-r0",
+    "arm64v8-11.8.9"
+   ],
+   "source": "alpine_apk",
+   "source_url": "http://dl-cdn.alpinelinux.org/alpine/v3.24/main/"
+  },
+  "commit": "829a56e409240313818614195097332cc399e12d",
+  "created": "2026-10-25T19:16:03Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/baseimage-alpine:3.24",
+   "digest": "sha256:52106d187a66ccb92e3289cb6dd25c549cb0b6b7bfec38a51994434c96db2d35"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:219d4f7b73f13c4e4c775e3d91976f82abb25057999f7873751c633373156bb8",
+    "size": 132750353,
+    "uncompressed_size": 420947912,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 25
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:9871dd3d7ecaffcd6d5efe36f6c9593e40728569f6a2211aa6dc2ef0d8c64914",
+    "size": 129298189,
+    "uncompressed_size": 426794811,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 24
+   }
+  ],
+  "index_digest": "sha256:56af48d62c7b7e3e0f57301ec0cfa65831692a528149adaf190896d1fbff19b6",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 11.8.9-r0-ls1 Build-date:- 2026-10-25T19:09:45Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine:3.24@sha256:52106d187a66ccb92e3289cb6dd25c549cb0b6b7bfec38a51994434c96db2d35",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "11.8.9-r0",
+   "maintainer": "thelamer,nemchik",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T19:09:45Z",
+   "org.opencontainers.image.description": "Mariadb is one of the most popular database servers.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-mariadb",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "809c5810b5f69228898d5fcfc087eb89d5a2ecf5",
+   "org.opencontainers.image.revision": "829a56e409240313818614195097332cc399e12d",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-mariadb",
+   "org.opencontainers.image.title": "Mariadb",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-mariadb/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "11.8.9-r0-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "MYSQL_DIR=/config",
+    "DATADIR=/config/databases"
+   ],
+   "exposed_ports": [
+    "3306/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MARIADB_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer,nemchik\"\n\n# environment variables\nENV MYSQL_DIR=\"/config\"\nENV DATADIR=\"$MYSQL_DIR/databases\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  if [ -z ${MARIADB_VERSION+x} ]; then \\\n    MARIADB_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:mariadb$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache \\\n    gnupg \\\n    logrotate \\\n    mariadb==${MARIADB_VERSION} \\\n    mariadb-backup==${MARIADB_VERSION} \\\n    mariadb-client==${MARIADB_VERSION} \\\n    mariadb-common==${MARIADB_VERSION} \\\n    mariadb-server-utils==${MARIADB_VERSION} && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3306\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MARIADB_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer,nemchik\"\n\n# environment variables\nENV MYSQL_DIR=\"/config\"\nENV DATADIR=\"$MYSQL_DIR/databases\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  if [ -z ${MARIADB_VERSION+x} ]; then \\\n    MARIADB_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:mariadb$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache \\\n    gnupg \\\n    logrotate \\\n    mariadb==${MARIADB_VERSION} \\\n    mariadb-backup==${MARIADB_VERSION} \\\n    mariadb-client==${MARIADB_VERSION} \\\n    mariadb-common==${MARIADB_VERSION} \\\n    mariadb-server-utils==${MARIADB_VERSION} && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3306\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"mariadb:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-mariadb-initdb -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-config -> init-mariadb-config\n  init-mariadb-config -> init-mariadb-initdb\n  svc-mariadb -> init-mariadb-poststart\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-mariadb\n  svc-mariadb -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"mariadb:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-mariadb-initdb"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mariadb-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make folders if required\nmkdir -p \\\n    \"${DATADIR}\" \\\n    /config/log/mysql \\\n    /run/mysqld\n\n# copy custom cnf file\nif [[ ! -f /config/custom.cnf ]]; then\n    cp /defaults/custom.cnf /config/custom.cnf\nfi\n\n# remove orphan pid file\nif [[ -f /run/mysqld/mysqld.pid ]]; then\n    rm -f /run/mysqld/mysqld.pid\nfi\n"
+    },
+    {
+     "name": "init-mariadb-initdb",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mariadb-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# set start function used later\nstart_mariadb() {\n    if [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n        mariadbd --datadir=\"${DATADIR}\" --init-file=\"${tempSqlFile}\" --pid-file=/run/mysqld/mysqld.pid --user=abc &\n    else\n        mariadbd --datadir=\"${DATADIR}\" --init-file=\"${tempSqlFile}\" --pid-file=/run/mysqld/mysqld.pid &\n    fi\n    pid=\"$!\"\n    RET=1\n    while [[ ${RET} -ne 0 ]]; do\n        mariadb -uroot -e \"status\" >/dev/null 2>&1\n        RET=$?\n        sleep 1\n    done\n}\n\n# test for existence of mysql folder in datadir and start initialise if not present\nif [[ ! -d \"${DATADIR}/mysql\" ]]; then\n    # load env file if it exists\n    if [[ -f \"/config/env\" ]]; then\n        # shellcheck source=/dev/null\n        source /config/env\n    fi\n\n    # make temp sql init file\n    tempSqlFile=$(mktemp)\n\n    # set basic sql command\n    cat >\"${tempSqlFile}\" <<-EOSQL\nDELETE FROM mysql.user WHERE user <> 'mariadb.sys' AND user <> 'root';\nEOSQL\n\n    if [[ \"${#MYSQL_ROOT_PASSWORD}\" -lt \"4\" ]]; then\n        MYSQL_PASS=\"CREATE USER 'root'@'%' IDENTIFIED BY '' ;\"\n    else\n        MYSQL_PASS=\"CREATE USER 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' ;\"\n    fi\n\n    # Make sure all user and database settings are set and pass is more than 4 characters\n    # At the end change to default database created with environment variables to run init and remote scripts there\n    if [[ \"${MYSQL_USER+x}\" ]] &&\n        [[ \"${MYSQL_DATABASE+x}\" ]] &&\n        [[ \"${MYSQL_PASSWORD+x}\" ]] &&\n        [[ \"${#MYSQL_PASSWORD}\" -gt \"3\" ]]; then\n        read -r -d '' MYSQL_DB_SETUP <<-EOM\nCREATE DATABASE \\`${MYSQL_DATABASE}\\`;\nCREATE USER '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_PASSWORD}';\nGRANT ALL PRIVILEGES ON \\`${MYSQL_DATABASE}\\`.* TO '${MYSQL_USER}'@'%';\nUSE \\`${MYSQL_DATABASE}\\`;\nEOM\n    fi\n\n    # add rest of sql commands based on password set or not\n    cat >>\"${tempSqlFile}\" <<-EONEWSQL\n$MYSQL_PASS\nGRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION ;\nDROP DATABASE IF EXISTS test ;\n$MYSQL_DB_SETUP\nEONEWSQL\n\n    echo \"Setting Up Initial Databases\"\n\n    # add all sql from a user defined directory on first init\n    if [[ -e \"/config/initdb.d\" ]] && [[ -n \"$(/bin/ls -A /config/initdb.d/*.sql 2>/dev/null)\" ]]; then\n        cat /config/initdb.d/*.sql >>\"${tempSqlFile}\"\n    fi\n\n    # ingest remote sql if REMOTE_SQL is set\n    if [[ -n \"${REMOTE_SQL+set}\" ]]; then\n        IFS=, read -ra URLS <<<\"${REMOTE_SQL}\"\n        for URL in \"${URLS[@]}\"; do\n            if [[ \"$(curl -I -sL -w \"%{http_code}\" \"${URL}\" -o /dev/null)\" == 200 ]]; then\n                curl -sL \"${URL}\" >>\"${tempSqlFile}\"\n            fi\n        done\n    fi\n\n    if [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n        lsiown -R abc:abc \"${tempSqlFile}\" /config/log/mysql /run/mysqld\n        chmod -R 777 /config/log/mysql /run/mysqld\n    fi\n\n    # initialise database structure\n    if [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n        mariadb-install-db --datadir=\"${DATADIR}\" --user=abc --auth-root-authentication-method=normal\n    else\n        mariadb-install-db --datadir=\"${DATADIR}\" --auth-root-authentication-method=normal\n    fi\n    # start mariadb and apply our sql commands we set above\n    start_mariadb\n\n    # shut down after apply sql commands, waiting for pid to stop\n    mariadb-admin -u root shutdown\n    wait \"${pid}\"\n    echo \"Database Setup Completed\"\n\n    # display a message about password if not set or too short\n    if [[ \"${#MYSQL_ROOT_PASSWORD}\" -lt \"4\" ]]; then\n        cat <<-EOFPASS\n\n\n\n#################################################################\n# No root password or too short a password, min of 4 characters #\n#    No root password will be set, this is not a good thing     #\n#   You shoud set one after initialisation with the commands:   #\n#                           mariadb                             #\n#      ALTER USER 'root'@'%' IDENTIFIED BY 'MyN3wP4ssw0rd';     #\n#                      flush privileges;                        #\n#################################################################\n\n\n\nEOFPASS\n\n        sleep 5s\n    fi\n\n    # clean up any old install files from /tmp\n    rm -f \"${tempSqlFile}\"\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # own the folder the pid for mysql runs in\n    lsiown -R abc:abc /run/mysqld\n    lsiown -R abc:abc /config\nfi\n"
+    },
+    {
+     "name": "init-mariadb-poststart",
+     "type": "oneshot",
+     "depends_on": [
+      "svc-mariadb"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# check logrotate permissions\nif mariadb-admin -uroot --local version >/dev/null 2>&1; then\n    echo \"Logrotate is enabled\"\nelse\n    cat <<-EOFPASS\n\n\n\n#####################################################################################\n#                                                                                   #\n#                             Logrotate Instructions                                #\n#                                                                                   #\n#               Add the following to /config/custom.cnf under [mysqld]:             #\n#                  log_error = /config/log/mysql/mariadb-error.log                  #\n#                                                                                   #\n#                 Login to the SQL shell inside the container using:                #\n#                           mariadb -uroot -p<PASSWORD>                             #\n#                          And run the following command:                           #\n# GRANT ALL ON *.* TO root@localhost IDENTIFIED VIA unix_socket WITH GRANT OPTION ; #\n#                                                                                   #\n#                     Restart the container to apply the changes.                   #\n#                                                                                   #\n#              You can read more about root@localhost permissions here:             #\n#             https://mariadb.com/kb/en/authentication-from-mariadb-10-4/           #\n#                                                                                   #\n#####################################################################################\n\n\n\nEOFPASS\nfi\n\n# check for upgrades\nif [[ \"${#MYSQL_ROOT_PASSWORD}\" -gt \"3\" ]]; then\n    # display a message about upgrading database if needed\n    if mariadb-upgrade -u root -p\"${MYSQL_ROOT_PASSWORD}\" --check-if-upgrade-is-needed >/dev/null 2>&1; then\n        cat <<-EOF\n\n\n\n#################################################################\n#                                                               #\n#           An upgrade is required on your databases.           #\n#                                                               #\n#         Stop any services that are accessing databases        #\n#          in this container, and then run the command          #\n#                                                               #\n#                   mariadb-upgrade -u root                     #\n#                                                               #\n#################################################################\n\n\n\nEOF\n        sleep 5s\n    fi\nfi\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-mariadb",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 3306\" \\\n        s6-setuidgid abc \\\n        /usr/bin/mariadbd-safe \\\n        --defaults-extra-file=/config/custom.cnf \\\n        --datadir=\"${DATADIR}\" \\\n        --pid-file=/run/mysqld/mysqld.pid \\\n        --skip-networking=OFF \\\n        --user=abc ${CLI_OPTS}\nelse\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 3306\" \\\n        /usr/bin/mariadbd-safe \\\n        --defaults-extra-file=/config/custom.cnf \\\n        --datadir=\"${DATADIR}\" \\\n        --pid-file=/run/mysqld/mysqld.pid \\\n        --skip-networking=OFF ${CLI_OPTS}\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 95,
+    "distro": "Alpine Linux v3.24",
+    "hash": "1f87634d",
+    "by_type": {
+     "apk": 95
+    }
+   },
+   "arm64": {
+    "count": 95,
+    "distro": "Alpine Linux v3.24",
+    "hash": "1f87634d",
+    "by_type": {
+     "apk": 95
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/mariadb/builds/11.8.9-r0-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-mariadb/commits/11.8.9-r0-ls1",
+   "upstream": "Details on this release can be found in the [Release Notes](https://mariadb.com/docs/release-notes/community-server/11.8/11.8.9)\n\n",
+   "upstream_url": "command"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 31234,
+    "sha256": "c1ed6e92622740cb53d2f9a5f960e7c6a65a7eaf483c854736f453c90a33bec0",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4680,
+    "sha256": "93e9c1bc0d46f335d3bd362c975e0d0a2eee8ab607cd6fa28a144823eed22d93",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 39312,
+    "sha256": "1be740f99b9db95d0b70b05bb50007b1b624a5144813bcc76e2d7ec2ff1159f9",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2118,
+    "sha256": "096e631ce1998263d462226b02bc618c844aa9e5dde61692f417069c8327b336",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 9906,
+    "sha256": "28a1aba47d3145a0a2bb757bd6bacb71a15d53a45c38c128ce5c78676b18414c",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 4704,
+    "sha256": "93e55b69a8a30b4c04b070800ef2568db852b290e1878029fc429b750ec3841a",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 31217,
+    "sha256": "4ad811dde85aa7e50754d26787ac176fd805b64fd0958679ad42166439aa6b66",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4680,
+    "sha256": "737aedbbb733aeef8156d60c6d4499c40aa6219851f85842466286d3fe8fbc94",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 38942,
+    "sha256": "a7348f654c9e5dee5662f880c4b8477e5069bf4702160341a5c5bf44f520a629",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2119,
+    "sha256": "65b852e7651e52f6740b3662d4c625925da2fa08aa0bed8d070e1173da96ce55",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 9916,
+    "sha256": "4b535a33bcbb8b953385c902f12f7dd3ca081060fdfce9e98ad5e700420f74ea",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 4704,
+    "sha256": "93e55b69a8a30b4c04b070800ef2568db852b290e1878029fc429b750ec3841a",
+    "url": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40224673760,
+   "run_url": "https://github.com/linuxserver-playground/docker-mariadb/actions/runs/40224673760",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "mariadb",
+  "branch": "master",
+  "tag": "11.8.9-r0-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "11.8.9-r0",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.24",
+    "digest": "sha256:52106d187a66ccb92e3289cb6dd25c549cb0b6b7bfec38a51994434c96db2d35"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 132750353
+   },
+   "arm64": {
+    "to": 129298189
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "DATADIR",
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "MYSQL_DIR",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "3306/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:c72266279417a5faff6e617848db39c83244c06962365b1b589acaf68eb04b97",
+    "diff_id": "sha256:8694d84ab86ae4fb4d424ce63b12f925e8a28b1e247d65969ba11178889c381b",
+    "size": 6265184,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:36ae26c163fabdfcee849d115a11fdfd29f9ce0e2ce11591557fdefa3a46d497",
+    "diff_id": "sha256:9bbe98c8454e1e7868ec22f386ea55b2bf7b91c60e910340f5f0d52ceb675bf4",
+    "size": 1358,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:0fce4af119545ff96a475ca34e1998b05a6679afcb19aacd17e1592bf52330b2",
+    "diff_id": "sha256:c40bda2323ba1685ac2cf801f579580fdefb7c4d088a05076ac05d0a01d9ae12",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:0f1ebc65af7490d12f97ddd6ab1df01275098e83d10a3eed69fe55e1dbdbc68c",
+    "diff_id": "sha256:e61d54197f8e67a701341e0d896bd4e7321842be1d602c5850f886a3e753eba6",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:9ba80e72bcf91d6818c07b928e768c51752674f9eb7dc01f98dfe10ca6302379",
+    "diff_id": "sha256:5cff24aaa8d5993662766cc4ab1ee7e5f16d7a781904d4967244f998440ca9aa",
+    "size": 6086095,
+    "uncompressed_size": 14398967,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:39:06+00:00 VERSION=bc9f8d41-ls16 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:6518ec658ff1145a6b3af6b0a1817dec74d6c1b84b05cb05c9ebdb3e5a9205e6",
+    "diff_id": "sha256:6c308902ce4df6793665e8af207e75d7ed3590fe7570ed9472d6a099d5ca8ceb",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:5cfd7377434c8efc1bffda6e07b57fef26b048342230124adbaaabcaa0b241f4",
+    "diff_id": "sha256:a92234b276dc7f1a877eb09695d43cfacdd1f47670c0410d0185cfdfeb62876c",
+    "size": 120379663,
+    "uncompressed_size": 392780731,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:09:45Z VERSION=11.8.9-r0-ls1 MARIADB_VERSION=11.8.9-r0 /bin/sh -c echo \"**** install runtime packages ****\" &&   if [ -z ${MARIADB_VERSION+x} ]; then     MARIADB_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:mariadb$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache     gnupg     logrotate     mariadb==${MARIADB_VERSION}     mariadb-backup==${MARIADB_VERSION}     mariadb-client==${MARIADB_VERSION}     mariadb-common==${MARIADB_VERSION}     mariadb-server-utils==${MARIADB_VERSION} &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     18,
+     36
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:d8805dbdaf93a749f10e1bc9608ad3f3751f1d4994332886ea920a5ba2d7a327",
+    "diff_id": "sha256:ad763cf9d8f6daa240d2811c78604fcf967751783f81335e4d0822c16e714dbc",
+    "size": 6056,
+    "uncompressed_size": 14894,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     39,
+     39
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d0ad8752aa04f65a21e9c0cb6cfcecea77a69269e84949011151ab18ceb2b059",
+    "diff_id": "sha256:f63e8f85ab228baa47b46453deb31469de4775e0dd5bd3781ccf06a6e35853b2",
+    "size": 7081843,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:48458dfdbada911b12529cbd1c0941efb09e2244bbf3a9f79ce7fb852c8475f4",
+    "diff_id": "sha256:45c4393b32578e3e5c80a9673545c700ddbfa9d0124a070faa8260bb1df37d25",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:df864a3b18bee853ddf3a2dc4f09ec6c9a145d0e5a4efa72e2fa573a567cd8c3",
+    "diff_id": "sha256:3d67ce0e662b1fbb688bf9d9c4e219c2398dc662e52a0f251b98d412d43c3a73",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:80d99f558dab159b941d3804e21b975d22e7234fa8a0015484455c4e4fff2f8d",
+    "diff_id": "sha256:479b7127c8b5ce1f58ee9a8e5754810d4e9dfa18ce1ff7dcacd101e78249aa1e",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:63ae92d622d3c653b330a4df711a56819df47f86fb5aaa3108813a5bfde33be2",
+    "diff_id": "sha256:aeb519a6d022d8ac91b877085000b949d3723611825192294b19b8bbecfb4765",
+    "size": 6318427,
+    "uncompressed_size": 21488923,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:39:06+00:00 VERSION=bc9f8d41-ls16 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:6f46d821e47468346c8a749ae2e40a4abe91907893b3a9a5a97d0349136a4052",
+    "diff_id": "sha256:2b64098bb122043e29464f92b828ec29d9e1678f3f3d103be3e28d236fb384a5",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:006b7c19a0d771cd1b14018148e45e66a4707de2faaabc643f3a45ffa62239e8",
+    "diff_id": "sha256:ae78e83aa633d32159cf18af6065d99b1d2c727c07539f72610f0cbcdaf2e1b4",
+    "size": 115878506,
+    "uncompressed_size": 386702187,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:09:45Z VERSION=11.8.9-r0-ls1 MARIADB_VERSION=11.8.9-r0 /bin/sh -c echo \"**** install runtime packages ****\" &&   if [ -z ${MARIADB_VERSION+x} ]; then     MARIADB_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.24/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:mariadb$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache     gnupg     logrotate     mariadb==${MARIADB_VERSION}     mariadb-backup==${MARIADB_VERSION}     mariadb-client==${MARIADB_VERSION}     mariadb-common==${MARIADB_VERSION}     mariadb-server-utils==${MARIADB_VERSION} &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     18,
+     36
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:6db24bd315eadd0593c283e1c670b0fced0389a5e70239188f08e36b82aa2527",
+    "diff_id": "sha256:2109dc085f74ecb367a66f4e0f5fe6d7fcc6f8cc251cf9daca999b1d87f674c7",
+    "size": 6059,
+    "uncompressed_size": 14894,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     39,
+     39
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "mariadb",
+  "tag": "11.8.9-r0-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/mariadb/11.8.9-r0-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 6.035,
+    "listening_ports": [
+     "3306/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 184819712,
+    "pids": 15,
+    "tarball": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 6.027,
+    "listening_ports": [
+     "3306/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 121946112,
+    "pids": 15,
+    "tarball": "https://github.com/linuxserver-playground/docker-mariadb/releases/download/11.8.9-r0-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "mariadb",
+    "tag": "amd64-829a56e-40224673760",
+    "arch": "amd64",
+    "started": "2026-10-25T19:12:44Z",
+    "finished": "2026-10-25T19:12:52Z",
+    "success": true,
+    "runner": "acd845629954",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 6.035,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 6.0s",
+      "seconds": 6.035
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "95 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "95 packages: syft JSON 31234 bytes gzipped, SPDX for the image attestation 192063 bytes",
+      "seconds": 0.114
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "621 dirs, 2838 files (420652962 bytes), 1261 symlinks, 255 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.11s",
+      "seconds": 0.26
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.435
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "21 units, 4 from this image, base units assumed",
+      "seconds": 0.081
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "15 pids, tcp [3306], rss 184819712 bytes",
+      "seconds": 0.413
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 184819712,
+     "pids": 15,
+     "listening_tcp": [
+      3306
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-mariadb"
+     ],
+     "changed_paths": 219
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "mariadb",
+    "tag": "arm64-829a56e-40224673760",
+    "arch": "arm64",
+    "started": "2026-10-25T19:11:12Z",
+    "finished": "2026-10-25T19:11:20Z",
+    "success": true,
+    "runner": "cd8c3e0a8c4e",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 6.027,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 6.0s",
+      "seconds": 6.027
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "95 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "95 packages: syft JSON 31217 bytes gzipped, SPDX for the image attestation 192158 bytes",
+      "seconds": 0.105
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "621 dirs, 2837 files (426499906 bytes), 1261 symlinks, 255 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.05s",
+      "seconds": 0.194
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.384
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "21 units, 4 from this image, base units assumed",
+      "seconds": 0.074
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "15 pids, tcp [3306], rss 121946112 bytes",
+      "seconds": 0.237
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 121946112,
+     "pids": 15,
+     "listening_tcp": [
+      3306
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-mariadb"
+     ],
+     "changed_paths": 219
+    }
+   }
+  }
+ }
+}

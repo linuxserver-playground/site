@@ -1,0 +1,895 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "mylar3",
+  "repository": "linuxserver-playground/docker-mylar3",
+  "branch": "nightly",
+  "mode": "live",
+  "version": {
+   "upstream": "3cab379d",
+   "upstream_clean": "3cab379d",
+   "ls_build": 1,
+   "tag": "nightly-3cab379d-ls1",
+   "release_tag": "nightly",
+   "tags": [
+    "nightly",
+    "nightly-3cab379d-ls1",
+    "nightly-version-3cab379d",
+    "amd64-nightly",
+    "amd64-nightly-3cab379d-ls1",
+    "amd64-nightly-version-3cab379d",
+    "arm64v8-nightly",
+    "arm64v8-nightly-3cab379d-ls1",
+    "arm64v8-nightly-version-3cab379d"
+   ],
+   "source": "github_commit",
+   "source_url": "https://github.com/MylarComics/mylar3/commit/3cab379dd89185f427b29d36fdd05ebf9fdfc084"
+  },
+  "commit": "7b923ceb10a7833935442177b5c4fccac4f64b3e",
+  "created": "2026-10-25T19:36:09Z",
+  "reason": "manual",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/unrar:latest",
+   "digest": "sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:49057cecc1c86e3a53ba88bf18cdf8b1e3fcea8f3c6a24b94ee515cf7c9e6704",
+    "size": 89648102,
+    "uncompressed_size": 230272480,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 45
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:fc68d3ef355cc72beae5531d022901b4e22605d7727e31e6108282016e73fc7c",
+    "size": 88146489,
+    "uncompressed_size": 240893127,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 41
+   }
+  ],
+  "index_digest": "sha256:d1535784e2c5a4750ae0da2d78bbcb4c12801311d7538e713c925efa4adba5c0",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 3cab379d-ls1 Build-date:- 2026-10-25T19:27:32Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/unrar:latest@sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0",
+   "io.linuxserver.image.branch": "nightly",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "3cab379d",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T19:27:32Z",
+   "org.opencontainers.image.description": "Mylar3 is an automated Comic Book downloader (cbr/cbz) for use with NZB and torrents written in python.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-mylar3",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "809c5810b5f69228898d5fcfc087eb89d5a2ecf5",
+   "org.opencontainers.image.revision": "7b923ceb10a7833935442177b5c4fccac4f64b3e",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-mylar3",
+   "org.opencontainers.image.title": "Mylar3",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-mylar3/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "3cab379d-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "8090/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MYLAR3_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\nRUN \\\n  echo \"**** install build dependencies ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    jpeg-dev \\\n    libffi-dev \\\n    libwebp-dev \\\n    python3-dev \\\n    zlib-dev && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    jpeg \\\n    libwebp-tools \\\n    nodejs \\\n    python3 \\\n    zlib && \\\n  echo \"**** install mylar3 ****\" && \\\n  if [ -z ${MYLAR3_RELEASE+x} ]; then \\\n    MYLAR3_RELEASE=$(curl -sX GET https://api.github.com/repos/MylarComics/mylar3/commits/nightly \\\n      | jq -r '.sha' | cut -c1-8); \\\n  fi && \\\n  mkdir /app/mylar3 && \\\n  curl -o \\\n    /tmp/mylar3.tar.gz -L \\\n    \"https://github.com/MylarComics/mylar3/archive/${MYLAR3_RELEASE}.tar.gz\" && \\\n  tar xf /tmp/mylar3.tar.gz -C \\\n    /app/mylar3/ --strip-components=1 && \\\n  cd /app/mylar3 && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-ubuntu /usr/bin/unrar\n\n# ports and volumes\nVOLUME /config\nEXPOSE 8090\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:arm64v8-latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MYLAR3_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\nRUN \\\n  echo \"**** install build dependencies ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    jpeg-dev \\\n    libffi-dev \\\n    libwebp-dev \\\n    python3-dev \\\n    zlib-dev && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    jpeg \\\n    libwebp-tools \\\n    nodejs \\\n    python3 \\\n    zlib && \\\n  echo \"**** install mylar3 ****\" && \\\n  if [ -z ${MYLAR3_RELEASE+x} ]; then \\\n    MYLAR3_RELEASE=$(curl -sX GET https://api.github.com/repos/MylarComics/mylar3/commits/nightly \\\n      | jq -r '.sha' | cut -c1-8); \\\n  fi && \\\n  mkdir /app/mylar3 && \\\n  curl -o \\\n    /tmp/mylar3.tar.gz -L \\\n    \"https://github.com/MylarComics/mylar3/archive/${MYLAR3_RELEASE}.tar.gz\" && \\\n  tar xf /tmp/mylar3.tar.gz -C \\\n    /app/mylar3/ --strip-components=1 && \\\n  cd /app/mylar3 && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-ubuntu /usr/bin/unrar\n\n# ports and volumes\nVOLUME /config\nEXPOSE 8090\n"
+  },
+  "init_graph": {
+   "d2": "\"mylar3:nightly\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-mylar3-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-config -> init-mylar3-config\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-mylar3\n  svc-mylar3 -> legacy-services\n}\nBase Images: {\n  \"unrar:latest\"\n}\n\"mylar3:nightly\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-mylar3-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mylar3-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make folders\nmkdir -p /config/{mylar,scripts}\n\n# copy scripts folder to config\nif [[ ! -f /config/scripts/autoProcessComics.py ]]; then\n    cp -pr /app/mylar3/post-processing/* /config/scripts/\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-mylar3",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec \\\n    s6-notifyoncheck  -d -n 300 -w 1000 -c \"nc -z localhost 8090\" \\\n        s6-setuidgid abc python3 /app/mylar3/Mylar.py --nolaunch \\\n        --datadir /config/mylar\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 208,
+    "distro": "Alpine Linux v3.24",
+    "hash": "3934cc01",
+    "by_type": {
+     "python": 94,
+     "UnknownPackage": 14,
+     "binary": 14,
+     "apk": 86
+    }
+   },
+   "arm64": {
+    "count": 208,
+    "distro": "Alpine Linux v3.24",
+    "hash": "3934cc01",
+    "by_type": {
+     "python": 94,
+     "UnknownPackage": 14,
+     "binary": 14,
+     "apk": 86
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/mylar3/builds/nightly-3cab379d-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-mylar3/commits/nightly-3cab379d-ls1",
+   "upstream": "fix: rollbacks on failed transactions to reduce db lock issue (#57)\n\n* fix: longstanding db lock issue\n\n* fix: rollback transaction at the end, return none on failed transaction",
+   "upstream_url": "https://github.com/MylarComics/mylar3/commit/3cab379dd89185f427b29d36fdd05ebf9fdfc084"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 57710,
+    "sha256": "b4302d5677b9f2fae9bbb23de586d7eb2f13a22b19681f5ce75dd92397267900",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5493,
+    "sha256": "394aa6e4d6cc5bf173b52a480abf5c9ea971b91b6904944402edb99f46e4cb0a",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 85761,
+    "sha256": "86f20d4b9eb30584d5f7970fb02a25a902ae0397d7895ee6befc7f7474f1010e",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2260,
+    "sha256": "6df1438bfab20a8c16853e88c372099023c3ed1bc7f4482136d798b29dc8a9f0",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 67135,
+    "sha256": "88c6f107d67625cab4f1073e28957becf9c657e784deddcf2d4953f25187fb46",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 15400,
+    "sha256": "5cd96a803723130b61a7651611c530ec803095831385f53d183e3e246098a937",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 57646,
+    "sha256": "cfffff6a8286d6dcbafca8d6c6237ad78f080b8eec1dc22ee61c70a461dcd29f",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5493,
+    "sha256": "14b3b341a9de2bf5fc24b2b372f39c3521a54fca0402ec51fe7f4405ff6b02de",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 85307,
+    "sha256": "b5ec7bd6fc0b167b2108f313f7a7c68642a76490c3ff0eff6030a0842ad35489",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2259,
+    "sha256": "0740d986293ae8b1c962172a483c0c6ee0398b885cacae37f8d49f67e3b184f9",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 68581,
+    "sha256": "cf0b617cf7ae63968336d7742910616e32cf2eecac6a4d46e8934d8d33e7a815",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 15400,
+    "sha256": "5cd96a803723130b61a7651611c530ec803095831385f53d183e3e246098a937",
+    "url": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40225993509,
+   "run_url": "https://github.com/linuxserver-playground/docker-mylar3/actions/runs/40225993509",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "mylar3",
+  "branch": "nightly",
+  "tag": "nightly-3cab379d-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "3cab379d",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/unrar:latest",
+    "digest": "sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 89648102
+   },
+   "arm64": {
+    "to": 88146489
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "8090/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:c72266279417a5faff6e617848db39c83244c06962365b1b589acaf68eb04b97",
+    "diff_id": "sha256:8694d84ab86ae4fb4d424ce63b12f925e8a28b1e247d65969ba11178889c381b",
+    "size": 6265184,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:36ae26c163fabdfcee849d115a11fdfd29f9ce0e2ce11591557fdefa3a46d497",
+    "diff_id": "sha256:9bbe98c8454e1e7868ec22f386ea55b2bf7b91c60e910340f5f0d52ceb675bf4",
+    "size": 1358,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:0fce4af119545ff96a475ca34e1998b05a6679afcb19aacd17e1592bf52330b2",
+    "diff_id": "sha256:c40bda2323ba1685ac2cf801f579580fdefb7c4d088a05076ac05d0a01d9ae12",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:0f1ebc65af7490d12f97ddd6ab1df01275098e83d10a3eed69fe55e1dbdbc68c",
+    "diff_id": "sha256:e61d54197f8e67a701341e0d896bd4e7321842be1d602c5850f886a3e753eba6",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:9ba80e72bcf91d6818c07b928e768c51752674f9eb7dc01f98dfe10ca6302379",
+    "diff_id": "sha256:5cff24aaa8d5993662766cc4ab1ee7e5f16d7a781904d4967244f998440ca9aa",
+    "size": 6086095,
+    "uncompressed_size": 14398967,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:39:06+00:00 VERSION=bc9f8d41-ls16 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:6518ec658ff1145a6b3af6b0a1817dec74d6c1b84b05cb05c9ebdb3e5a9205e6",
+    "diff_id": "sha256:6c308902ce4df6793665e8af207e75d7ed3590fe7570ed9472d6a099d5ca8ceb",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:eacc7aa2f2e2193fd4f09896a342e0d3365d81de4cfd1b8653cc3efd5531942f",
+    "diff_id": "sha256:797647c684de562c2e0e256e6ccbb1820cf5ac285a211a770ab8d567754c89e7",
+    "size": 76927852,
+    "uncompressed_size": 201386659,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:27:32Z VERSION=3cab379d-ls1 MYLAR3_RELEASE=3cab379d /bin/sh -c echo \"**** install build dependencies ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     jpeg-dev     libffi-dev     libwebp-dev     python3-dev     zlib-dev &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     jpeg     libwebp-tools     nodejs     python3     zlib &&   echo \"**** install mylar3 ****\" &&   if [ -z ${MYLAR3_RELEASE+x} ]; then     MYLAR3_RELEASE=$(curl -sX GET https://api.github.com/repos/MylarComics/mylar3/commits/nightly       | jq -r '.sha' | cut -c1-8);   fi &&   mkdir /app/mylar3 &&   curl -o     /tmp/mylar3.tar.gz -L     \"https://github.com/MylarComics/mylar3/archive/${MYLAR3_RELEASE}.tar.gz\" &&   tar xf /tmp/mylar3.tar.gz -C     /app/mylar3/ --strip-components=1 &&   cd /app/mylar3 &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     18,
+     57
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:3d147757faa370eda51b07c307c7c344bcf65e0dbe870569958b5958e91506ae",
+    "diff_id": "sha256:d189ca3fcf30198441c4f68981b9afe4a680ea272260730a9a66f32323e007c3",
+    "size": 972,
+    "uncompressed_size": 686,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     60,
+     60
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:d95aedafe39df8a96220fb6ac05ecdc7feddebfb65a4b7bddd26520f62241d42",
+    "diff_id": "sha256:00de8792b2a3c8d4d628a6473ac2e577e3dcf587e6baef12ebad659cea1832b5",
+    "size": 354644,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar-ubuntu /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d0ad8752aa04f65a21e9c0cb6cfcecea77a69269e84949011151ab18ceb2b059",
+    "diff_id": "sha256:f63e8f85ab228baa47b46453deb31469de4775e0dd5bd3781ccf06a6e35853b2",
+    "size": 7081843,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:48458dfdbada911b12529cbd1c0941efb09e2244bbf3a9f79ce7fb852c8475f4",
+    "diff_id": "sha256:45c4393b32578e3e5c80a9673545c700ddbfa9d0124a070faa8260bb1df37d25",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:df864a3b18bee853ddf3a2dc4f09ec6c9a145d0e5a4efa72e2fa573a567cd8c3",
+    "diff_id": "sha256:3d67ce0e662b1fbb688bf9d9c4e219c2398dc662e52a0f251b98d412d43c3a73",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:80d99f558dab159b941d3804e21b975d22e7234fa8a0015484455c4e4fff2f8d",
+    "diff_id": "sha256:479b7127c8b5ce1f58ee9a8e5754810d4e9dfa18ce1ff7dcacd101e78249aa1e",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:63ae92d622d3c653b330a4df711a56819df47f86fb5aaa3108813a5bfde33be2",
+    "diff_id": "sha256:aeb519a6d022d8ac91b877085000b949d3723611825192294b19b8bbecfb4765",
+    "size": 6318427,
+    "uncompressed_size": 21488923,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:39:06+00:00 VERSION=bc9f8d41-ls16 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:6f46d821e47468346c8a749ae2e40a4abe91907893b3a9a5a97d0349136a4052",
+    "diff_id": "sha256:2b64098bb122043e29464f92b828ec29d9e1678f3f3d103be3e28d236fb384a5",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:d59d6924de988facadd8a74a158605ed30756a0609d49403f042f80ee1123118",
+    "diff_id": "sha256:0f0154e81cd833be06b0df993d718b9b11811854980c95651db412b093e1c726",
+    "size": 74384649,
+    "uncompressed_size": 200090215,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:27:32Z VERSION=3cab379d-ls1 MYLAR3_RELEASE=3cab379d /bin/sh -c echo \"**** install build dependencies ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     jpeg-dev     libffi-dev     libwebp-dev     python3-dev     zlib-dev &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     jpeg     libwebp-tools     nodejs     python3     zlib &&   echo \"**** install mylar3 ****\" &&   if [ -z ${MYLAR3_RELEASE+x} ]; then     MYLAR3_RELEASE=$(curl -sX GET https://api.github.com/repos/MylarComics/mylar3/commits/nightly       | jq -r '.sha' | cut -c1-8);   fi &&   mkdir /app/mylar3 &&   curl -o     /tmp/mylar3.tar.gz -L     \"https://github.com/MylarComics/mylar3/archive/${MYLAR3_RELEASE}.tar.gz\" &&   tar xf /tmp/mylar3.tar.gz -C     /app/mylar3/ --strip-components=1 &&   cd /app/mylar3 &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     18,
+     57
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:28b585d3f0799471767b077771844fc9deb7ec7fadc97d68c8061ead0a919719",
+    "diff_id": "sha256:b77bf98f9195705f7f9be525e636ca0dcdccf91e858c2929bb541dab8298ab1b",
+    "size": 972,
+    "uncompressed_size": 686,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     60,
+     60
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:f6cb0f77a229f73cdd9a52cb1d660fa620df61fec45b8ac8f4c70e29941de78e",
+    "diff_id": "sha256:90f4aa2297724c17439acf65ce02e6b430c67641ec2e68c65074008c362ab46f",
+    "size": 347244,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar-ubuntu /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "mylar3",
+  "tag": "nightly-3cab379d-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/mylar3/nightly-3cab379d-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 3.022,
+    "listening_ports": [
+     "8090/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 85200896,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 3.016,
+    "listening_ports": [
+     "8090/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 83996672,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-mylar3/releases/download/nightly-3cab379d-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "mylar3",
+    "tag": "amd64-7b923ce-40225993509",
+    "arch": "amd64",
+    "started": "2026-10-25T19:34:26Z",
+    "finished": "2026-10-25T19:34:43Z",
+    "success": true,
+    "runner": "036449c37c63",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.022,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.022
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": ".NET application detected, no runtime errors in the log"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "208 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "208 packages: syft JSON 57710 bytes gzipped, SPDX for the image attestation 674286 bytes",
+      "seconds": 0.179
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1003 dirs, 8932 files (229980741 bytes), 1230 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.13s, total 0.22s",
+      "seconds": 0.369
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.618
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.073
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8090/",
+      "seconds": 10.828
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8090], rss 85200896 bytes",
+      "seconds": 0.627
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 85200896,
+     "pids": 13,
+     "listening_tcp": [
+      8090
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-mylar3"
+     ],
+     "changed_paths": 208
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "mylar3",
+    "tag": "arm64-7b923ce-40225993509",
+    "arch": "arm64",
+    "started": "2026-10-25T19:30:41Z",
+    "finished": "2026-10-25T19:30:57Z",
+    "success": true,
+    "runner": "a889a24c9ed4",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.016,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.016
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": ".NET application detected, no runtime errors in the log"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "208 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "208 packages: syft JSON 57646 bytes gzipped, SPDX for the image attestation 674375 bytes",
+      "seconds": 0.165
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1003 dirs, 8919 files (240601433 bytes), 1230 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.11s",
+      "seconds": 0.244
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.648
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.064
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8090/",
+      "seconds": 10.821
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8090], rss 83996672 bytes",
+      "seconds": 0.36
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 83996672,
+     "pids": 13,
+     "listening_tcp": [
+      8090
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-mylar3"
+     ],
+     "changed_paths": 208
+    }
+   }
+  }
+ }
+}

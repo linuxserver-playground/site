@@ -1,0 +1,903 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "bazarr",
+  "repository": "linuxserver-playground/docker-bazarr",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v1.6.2",
+   "upstream_clean": "v1.6.2",
+   "semver": "1.6.2",
+   "ls_build": 1,
+   "tag": "v1.6.2-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v1.6.2-ls1",
+    "version-v1.6.2",
+    "1.6.2",
+    "amd64-latest",
+    "amd64-v1.6.2-ls1",
+    "amd64-version-v1.6.2",
+    "amd64-1.6.2",
+    "arm64v8-latest",
+    "arm64v8-v1.6.2-ls1",
+    "arm64v8-version-v1.6.2",
+    "arm64v8-1.6.2"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/morpheus65535/bazarr/releases/tag/v1.6.2"
+  },
+  "commit": "f39d399396bad3c4845ccaa100387bac48269750",
+  "created": "2026-10-25T19:15:36Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/unrar:latest",
+   "digest": "sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:a0cbc70acc3c53c308a86108bf0c573717ab49f862508ff8534cdcd87253a0f0",
+    "size": 156225438,
+    "uncompressed_size": 441004353,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 50
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:62179728e61b27bf6a100fddade2c9746b9ee40f843f6bdd1ed441825edae52b",
+    "size": 151467919,
+    "uncompressed_size": 424715660,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 53
+   }
+  ],
+  "index_digest": "sha256:543ecaa0a5a90b21c40d8b948302084692b1e46f4157a7b272e3d853f56af000",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v1.6.2-ls1 Build-date:- 2026-10-25T19:09:07Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/unrar:latest@sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v1.6.2",
+   "maintainer": "chbmb",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T19:09:07Z",
+   "org.opencontainers.image.description": "Bazarr is a companion application to Sonarr and Radarr.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-bazarr",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "480171a2727995385645d901779db7a1401fc266",
+   "org.opencontainers.image.revision": "f39d399396bad3c4845ccaa100387bac48269750",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-bazarr",
+   "org.opencontainers.image.title": "Bazarr",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-bazarr/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v1.6.2-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "TZ=Etc/UTC"
+   ],
+   "exposed_ports": [
+    "6767/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.23\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG BAZARR_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"chbmb\"\n# hard set UTC in case the user does not define it\nENV TZ=\"Etc/UTC\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    cargo \\\n    libffi-dev \\\n    libpq-dev \\\n    libxml2-dev \\\n    libxslt-dev \\\n    python3-dev && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    ffmpeg \\\n    libxml2 \\\n    libxslt \\\n    mediainfo \\\n    python3 && \\\n  echo \"**** install bazarr ****\" && \\\n  mkdir -p \\\n    /app/bazarr/bin && \\\n  if [ -z ${BAZARR_VERSION+x} ]; then \\\n    BAZARR_VERSION=$(curl -sX GET \"https://api.github.com/repos/morpheus65535/bazarr/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/bazarr.zip -L \\\n    \"https://github.com/morpheus65535/bazarr/releases/download/${BAZARR_VERSION}/bazarr.zip\" && \\\n  unzip \\\n    /tmp/bazarr.zip -d \\\n    /app/bazarr/bin && \\\n  rm -Rf /app/bazarr/bin/bin && \\\n  echo \"UpdateMethod=docker\\nBranch=master\\nPackageVersion=${VERSION}\\nPackageAuthor=linuxserver.io\" > /app/bazarr/package_info && \\\n  curl -o \\\n    /app/bazarr/bin/postgres-requirements.txt -L \\\n    \"https://raw.githubusercontent.com/morpheus65535/bazarr/${BAZARR_VERSION}/postgres-requirements.txt\" && \\\n  echo \"**** Install requirements ****\" && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ \\\n    -r /app/bazarr/bin/requirements.txt \\\n    -r /app/bazarr/bin/postgres-requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    $HOME/.cargo \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 6767\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:arm64v8-latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.23\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG BAZARR_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"chbmb\"\n# hard set UTC in case the user does not define it\nENV TZ=\"Etc/UTC\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    cargo \\\n    libffi-dev \\\n    libpq-dev \\\n    libxml2-dev \\\n    libxslt-dev \\\n    python3-dev && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    ffmpeg \\\n    libxml2 \\\n    libxslt \\\n    mediainfo \\\n    python3 && \\\n  echo \"**** install bazarr ****\" && \\\n  mkdir -p \\\n    /app/bazarr/bin && \\\n  if [ -z ${BAZARR_VERSION+x} ]; then \\\n    BAZARR_VERSION=$(curl -sX GET \"https://api.github.com/repos/morpheus65535/bazarr/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/bazarr.zip -L \\\n    \"https://github.com/morpheus65535/bazarr/releases/download/${BAZARR_VERSION}/bazarr.zip\" && \\\n  unzip \\\n    /tmp/bazarr.zip -d \\\n    /app/bazarr/bin && \\\n  rm -Rf /app/bazarr/bin/bin && \\\n  echo \"UpdateMethod=docker\\nBranch=master\\nPackageVersion=${VERSION}\\nPackageAuthor=linuxserver.io\" > /app/bazarr/package_info && \\\n  curl -o \\\n    /app/bazarr/bin/postgres-requirements.txt -L \\\n    \"https://raw.githubusercontent.com/morpheus65535/bazarr/${BAZARR_VERSION}/postgres-requirements.txt\" && \\\n  echo \"**** Install requirements ****\" && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/ \\\n    -r /app/bazarr/bin/requirements.txt \\\n    -r /app/bazarr/bin/postgres-requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    $HOME/.cargo \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 6767\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"bazarr:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-config -> init-bazarr-config\n  init-os-end -> init-config\n  init-bazarr-config -> init-config-end\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-bazarr\n  svc-bazarr -> legacy-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"unrar:latest\"\n}\n\"bazarr:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-bazarr-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    lsiown -R abc:abc \\\n        /config\nfi\n"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-bazarr-config",
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-bazarr",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 6767\" \\\n            cd /app/bazarr/bin s6-setuidgid abc python3 /app/bazarr/bin/bazarr.py --no-update --config /config\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 6767\" \\\n            cd /app/bazarr/bin python3 /app/bazarr/bin/bazarr.py --no-update --config /config\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 467,
+    "distro": "Alpine Linux v3.23",
+    "hash": "89d08d48",
+    "by_type": {
+     "python": 163,
+     "UnknownPackage": 14,
+     "binary": 14,
+     "apk": 179,
+     "rust-crate": 97
+    }
+   },
+   "arm64": {
+    "count": 466,
+    "distro": "Alpine Linux v3.23",
+    "hash": "bea095cc",
+    "by_type": {
+     "python": 163,
+     "UnknownPackage": 14,
+     "binary": 14,
+     "apk": 178,
+     "rust-crate": 97
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/bazarr/builds/v1.6.2-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-bazarr/commits/v1.6.2-ls1",
+   "upstream": "From newest to oldest:\n- Fixed cutoff logic to correctly consider non-HI subtitles when HI is excluded in language profile for both series and movies. #3607 [7448b2a](https://github.com/morpheus65535/bazarr/commit/7448b2a7dc1a289fdc3978b782f72ecb86f8a85e)\n- Added clickable GitHub issue links to release notes by parsing #&lt;number&gt; patterns and converting them to hyperlinks [02bae52](https://github.com/morpheus65535/bazarr/commit/02bae52912867767e2b484e9408b6041d8d0450b)\n- Fixed napiprojekt to use SSL [d30a659](https://github.com/morpheus65535/bazarr/commit/d30a659d87c28fed41736b8678e186802132b861)\n- Added hash-only mode to napiprojekt provider. #3227 [3cd0600](https://github.com/morpheus65535/bazarr/commit/3cd06003e49719892a1df362fc77f4a421536933)\n- Improved subssabbz by adding a fallback to folder/file title for non-ASCII titles and prevent empty query dumps [3f012cc](https://github.com/morpheus65535/bazarr/commit/3f012ccc23f63a8bb5baff3159b9e69afc68a8b3)\n- Fixed duplicate history entries by using subquery with MIN to select single external subtitle path per episode/movie instead of joining all subtitle records. #3558 [a500741](https://github.com/morpheus65535/bazarr/commit/a500741bf2ff0d90300a3d53c224e13d7e74358b)\n- Added distinct clause to history queries to prevent duplicate entries in episode and movie subtitle history API endpoints. #3558 [f7c9919](https://github.com/morpheus65535/bazarr/commit/f7c99196424e0c06466cab36f1c762f008fa78db)\n- Added existence of subtitle in database before attempting deletion to prevent unauthorized file deletion [c76f583](https://github.com/morpheus65535/bazarr/commit/c76f5833d5c9c8ec462c593e9e0b961918cde209)\n- Added anime provider tsukihime [#3597](https://github.com/morpheus65535/bazarr/pull/3597)\n- Refactored post-processing to pass arguments as list instead of command string to prevent shell injection and fix Windows path handling. #3598 [2a9f0b3](https://github.com/morpheus65535/bazarr/commit/2a9f0b3d1d51a5979b68d3ae018aafa1c6739332)\n- Refactored post-processing placeholder replacement to use dictionary-based lookup and single regex pattern [954b47b](https://github.com/morpheus65535/bazarr/commit/954b47b11648f7b1e4d6c3339168bb573a368b33)\n- Added quality check parameters for subsync framerate-fix mode to prevent ruining correct subtitles by settings minimum score, max offset, and max framerate deviation. #3599 [bb380cf](https://github.com/morpheus65535/bazarr/commit/bb380cf9a5a097b9f701ca53144a09e187e3f845)\n- Added additional URL parameters to the generic webhook call [58e8729](https://github.com/morpheus65535/bazarr/commit/58e8729f61315aba5bda1cc5b1a47478b7ffedd6)\n- Fixed mass checkbox disabled for non srt formats [fc8ab88](https://github.com/morpheus65535/bazarr/commit/fc8ab886e35046bfbefd2b4400d2fdaad4b64883)",
+   "upstream_url": "https://github.com/morpheus65535/bazarr/releases/tag/v1.6.2"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 114305,
+    "sha256": "80b24fe17141b4db61b04c2cb39570a279dd3cf653b894a019a006061883a988",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5943,
+    "sha256": "c03cc6737a8f4217b7a2e870766b36564acb8b89f0b8f22247ea0a563c9df784",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 117594,
+    "sha256": "cb473476f122ff3adee0b39c7b2a796f28bdb5cb02ef30a14213acc6b91ece73",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2248,
+    "sha256": "443a80fd253c85690d1fefddeaf16103269b055639a14716709ff951671ae812",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 101842,
+    "sha256": "0c078c0cee890de364053eba2567e90e9a3ec741eeccdb92b20f6dcaab03b0d3",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 39160,
+    "sha256": "3d4b07b18811ee8fa715e92918dbe0c0ab2cdf0a1b1a770d8b7ca893c7a2da32",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 114181,
+    "sha256": "6fc969764f70a719728673216d7b8f135831b18f889d3e9adce0abf31c64fd03",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5943,
+    "sha256": "777a94c943f2f0c1a7dbc9eaf25de5fe00604e83575b1133e35bb5ad1b5af4bf",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 116987,
+    "sha256": "70970989546241b7502221e78d6a60a8b6d6d392c800a3832851f94ae91c13d8",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2247,
+    "sha256": "b2eecd33e11c6d58dfb49416561834d07a00d8b3bb869c6c28ba635839b4e46a",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 101934,
+    "sha256": "1f7ef8923bf79c81a0528026f778277e14eca91985de072b2206e3201145a48e",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 39072,
+    "sha256": "f6cfdf01c2c74da5488bfc8291d9b6d60fde30136b8bbfd3f57f37d6b0ecfb5c",
+    "url": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40224623378,
+   "run_url": "https://github.com/linuxserver-playground/docker-bazarr/actions/runs/40224623378",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "bazarr",
+  "branch": "master",
+  "tag": "v1.6.2-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "v1.6.2",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/unrar:latest",
+    "digest": "sha256:48c0ce2609bb3c35764956bbd9395e95b177421e3c74b3628c3676029f24f2e0"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 156225438
+   },
+   "arm64": {
+    "to": 151467919
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "TZ",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "6767/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:80733b6d59210f508944de9d1783919375a54f86c2b168c4ae3fc2487f1ed935",
+    "diff_id": "sha256:a4b4728c0547345db5004fd3eeb42c9bc2abd15970bf6b841e637a03a899ffab",
+    "size": 6262378,
+    "uncompressed_size": 13710791,
+    "created_by": "COPY /root-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2a33ffb08eb4d17e0e8d5db1ab0fbcfc5c8cff192321e78c3c61d116ba8e2fa1",
+    "diff_id": "sha256:6cff8d631745e2d345e367495c82de8b947a0a1517582c3657c42ba2eda48438",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:d96c8df8fbbab6348546e2441e5ca46942821ea3f49cccc3a2fdd18e8fabe22f",
+    "diff_id": "sha256:0ce6d81fbb7d735e6459a6e824bc8d8d2d67d9ab8f9acb5194b9f17457c6216f",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:e1b36c6ba86e478c5d1520f380af446d032afb1b9178e4d4fdb5f8d1b8b603a5",
+    "diff_id": "sha256:4ee42144065a89e8a83bca08125b982b307fcc57674785c03f64cb3ac82c2027",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:b032b2a0975969e32fe6ccd9c68b02ae273bb04a7bb835b7a15b5d3d3ef09a81",
+    "diff_id": "sha256:1ed94c5c8ba19ee8a5dea376ce0cc2cdeafd0007471ba5561926c228e87446e7",
+    "size": 6031683,
+    "uncompressed_size": 14293147,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:26+00:00 VERSION=24a5d742-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:2ddcdba5334bcc69102552567e200d85717176494357234e68a979663caa5b53",
+    "diff_id": "sha256:dd711538276221ba4b3924dab597944792e02e00b850d333e68205bfdfa3c9cd",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:9aeca16927c26bea02b5b4c09d4386f9ee97b80d0de0ce806ccdb02726af91a7",
+    "diff_id": "sha256:da609ffd92ed35f184605dcbf3777cc3e613716a1deda895ae6d834b0f8008ba",
+    "size": 143562466,
+    "uncompressed_size": 412220576,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:09:07Z VERSION=v1.6.2-ls1 BAZARR_VERSION=v1.6.2 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     cargo     libffi-dev     libpq-dev     libxml2-dev     libxslt-dev     python3-dev &&   echo \"**** install packages ****\" &&   apk add --no-cache     ffmpeg     libxml2     libxslt     mediainfo     python3 &&   echo \"**** install bazarr ****\" &&   mkdir -p     /app/bazarr/bin &&   if [ -z ${BAZARR_VERSION+x} ]; then     BAZARR_VERSION=$(curl -sX GET \"https://api.github.com/repos/morpheus65535/bazarr/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     /tmp/bazarr.zip -L     \"https://github.com/morpheus65535/bazarr/releases/download/${BAZARR_VERSION}/bazarr.zip\" &&   unzip     /tmp/bazarr.zip -d     /app/bazarr/bin &&   rm -Rf /app/bazarr/bin/bin &&   echo \"UpdateMethod=docker\\nBranch=master\\nPackageVersion=${VERSION}\\nPackageAuthor=linuxserver.io\" > /app/bazarr/package_info &&   curl -o     /app/bazarr/bin/postgres-requirements.txt -L     \"https://raw.githubusercontent.com/morpheus65535/bazarr/${BAZARR_VERSION}/postgres-requirements.txt\" &&   echo \"**** Install requirements ****\" &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/     -r /app/bazarr/bin/requirements.txt     -r /app/bazarr/bin/postgres-requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     $HOME/.cargo     /tmp/*",
+    "dockerfile_lines": [
+     20,
+     70
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:4443cacb1b148c729eac4c322872529b313ac395ca6464d39db94df0a2bab327",
+    "diff_id": "sha256:a5f4e7e7a329de6fc7e99f2930b27b42cc804746de9f9e26dbe9b7973e7f41c7",
+    "size": 905,
+    "uncompressed_size": 775,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     73,
+     73
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:b3d229466f6230b70daa39033dad2b3459efeb059074be5604dd10b81d766ebf",
+    "diff_id": "sha256:10ceed1ca2ce1ffa9ded71ffed75c4670136b10b60c4a1cafbaafd22e25d7e5f",
+    "size": 354649,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:dad9395888582260396894a8cbd013db906e59eabeec89dc66ef8fd8b3e7efce",
+    "diff_id": "sha256:c94342ad354e9a82b2997165369391dfd900b5b39f037681f1c6442e1dfba359",
+    "size": 7081100,
+    "uncompressed_size": 18550372,
+    "created_by": "COPY /root-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:b352f1b6cab5e2381767676325b10fbf9e6a04a69a7be9499524c5e21198de26",
+    "diff_id": "sha256:e6ab0e6cece673d3d1f779dfff0bf07a013fd7fe13304790250d41770d6c352d",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:f58a36e0548acfc0a8f4675c586ef12c2d41b94e093de92dab0201217a850eb8",
+    "diff_id": "sha256:a5a0208af3d320b02297e89d2a1e689311ca7e7197fe29b4585fc7729e28332b",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:a1f67a1d7afd2f7b8ec7937b3b866f8ebeee19d54867f6a0fbd72df34cdd6399",
+    "diff_id": "sha256:080a329c3afaf8536b33c0dce6d5df651df4b452adf7980e1d8ee491293a030a",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:b1fc61b1e89f9e155bf43f3f5b91449c973a59cfd0799b6311b823e1c0e121c6",
+    "diff_id": "sha256:a25be8ef0e611752f3ae11c386ad11a76324a0a6ecd2a86ce215ff04c0be7936",
+    "size": 6270241,
+    "uncompressed_size": 21436160,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:26+00:00 VERSION=24a5d742-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:1dcda4a7f11c2f570e4e36bbc6589d813e3e0058be8b5488a1588bd7025f541a",
+    "diff_id": "sha256:87b1fe0aaaa79a63b460ab3d93a88eb41bc2dd4353b616519a4243e34d7afe37",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:56d8850c96e321f32815af6f1aa639f9dc3ee0ef8a40c87f19c17dd5d8565420",
+    "diff_id": "sha256:0b1b1d95ae60057d6c7bd0ef060e54c390bc8586abdcff79c085d165bda432fb",
+    "size": 137755068,
+    "uncompressed_size": 383957641,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:09:07Z VERSION=v1.6.2-ls1 BAZARR_VERSION=v1.6.2 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     cargo     libffi-dev     libpq-dev     libxml2-dev     libxslt-dev     python3-dev &&   echo \"**** install packages ****\" &&   apk add --no-cache     ffmpeg     libxml2     libxslt     mediainfo     python3 &&   echo \"**** install bazarr ****\" &&   mkdir -p     /app/bazarr/bin &&   if [ -z ${BAZARR_VERSION+x} ]; then     BAZARR_VERSION=$(curl -sX GET \"https://api.github.com/repos/morpheus65535/bazarr/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     /tmp/bazarr.zip -L     \"https://github.com/morpheus65535/bazarr/releases/download/${BAZARR_VERSION}/bazarr.zip\" &&   unzip     /tmp/bazarr.zip -d     /app/bazarr/bin &&   rm -Rf /app/bazarr/bin/bin &&   echo \"UpdateMethod=docker\\nBranch=master\\nPackageVersion=${VERSION}\\nPackageAuthor=linuxserver.io\" > /app/bazarr/package_info &&   curl -o     /app/bazarr/bin/postgres-requirements.txt -L     \"https://raw.githubusercontent.com/morpheus65535/bazarr/${BAZARR_VERSION}/postgres-requirements.txt\" &&   echo \"**** Install requirements ****\" &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.23/     -r /app/bazarr/bin/requirements.txt     -r /app/bazarr/bin/postgres-requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     $HOME/.cargo     /tmp/*",
+    "dockerfile_lines": [
+     20,
+     70
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:7303881e1f2fa4b3713a7912285542a0838cf5a7b091af91803249cbb169cc09",
+    "diff_id": "sha256:89ca6688d606aa679ab6dc8c5129e5b2ff871190c1fe0b1e1e93e88c10d0ade2",
+    "size": 905,
+    "uncompressed_size": 775,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     73,
+     73
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:a3a1d9141cf4a2e5fb541a6d3a8bc0dd0ebfb8d2facc60a264941bfd96bfda35",
+    "diff_id": "sha256:09b39a987940031f63fbe3a9ba43a8483a3e09106b44b170809a4b5dad211fba",
+    "size": 347245,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "bazarr",
+  "tag": "v1.6.2-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/bazarr/v1.6.2-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 13.065,
+    "listening_ports": [
+     "6767/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 232280064,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 14.052,
+    "listening_ports": [
+     "6767/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 209227776,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-bazarr/releases/download/v1.6.2-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "bazarr",
+    "tag": "amd64-f39d399-40224623378",
+    "arch": "amd64",
+    "started": "2026-10-25T19:13:15Z",
+    "finished": "2026-10-25T19:13:41Z",
+    "success": true,
+    "runner": "37a95200ae73",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 13.065,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 13.1s",
+      "seconds": 13.065
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "467 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "467 packages: syft JSON 114305 bytes gzipped, SPDX for the image attestation 1405905 bytes",
+      "seconds": 0.174
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1856 dirs, 13124 files (440690580 bytes), 1396 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.16s, total 0.23s",
+      "seconds": 0.363
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.669
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.047
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:6767/system/status",
+      "seconds": 10.668
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [6767], rss 232280064 bytes",
+      "seconds": 0.648
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 232280064,
+     "pids": 14,
+     "listening_tcp": [
+      6767
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-bazarr",
+      "svc-cron"
+     ],
+     "changed_paths": 208
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "bazarr",
+    "tag": "arm64-f39d399-40224623378",
+    "arch": "arm64",
+    "started": "2026-10-25T19:10:56Z",
+    "finished": "2026-10-25T19:11:23Z",
+    "success": true,
+    "runner": "636984e9b3c3",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 14.052,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 14.1s",
+      "seconds": 14.052
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "466 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "466 packages: syft JSON 114181 bytes gzipped, SPDX for the image attestation 1403920 bytes",
+      "seconds": 0.245
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1856 dirs, 13121 files (424401933 bytes), 1395 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.09s, total 0.15s",
+      "seconds": 0.265
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 0 from base, compressed sizes from registry",
+      "seconds": 1.083
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.047
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:6767/system/status",
+      "seconds": 10.795
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [6767], rss 209227776 bytes",
+      "seconds": 0.42
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 209227776,
+     "pids": 14,
+     "listening_tcp": [
+      6767
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-bazarr",
+      "svc-cron"
+     ],
+     "changed_paths": 208
+    }
+   }
+  }
+ }
+}
