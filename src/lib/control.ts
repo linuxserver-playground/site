@@ -49,7 +49,19 @@ export interface FleetRow {
   skip: string[];
 }
 /** A `docker-*` repo that is not an image (no image.yml on its default branch), with each branch's newest build. */
-export interface HelperRepo { repo: string; name: string; archived: boolean; branches: number; success: number; running: number; failing: string[]; last_run_at: string | null }
+export interface HelperRepo {
+  repo: string;
+  name: string;
+  archived: boolean;
+  branches: number;
+  success: number;
+  running: number;
+  failing: string[];
+  /** The failing branches with the run that failed, newest first (older control planes leave it out). */
+  failures?: HelperFailure[];
+  last_run_at: string | null;
+}
+export interface HelperFailure { branch: string; run_id: number; conclusion: string; html_url: string | null; at: string }
 export interface FleetPage { rows: FleetRow[]; images: number; helpers?: HelperRepo[]; generated_at: string }
 
 export interface Run {
@@ -161,6 +173,30 @@ export interface ImagePage {
 }
 export interface SchedulerDecision { id: number; at: string; image: string; branch: string; kind: string; outcome: string; detail: string | null }
 export interface DecisionView { decision: SchedulerDecision; info: Record<string, unknown>; run: Run | null }
+
+/** `/api/batch.json`: the batch build projects (proot-apps, selkies-layers, wheelie) control schedules. */
+export interface BatchRun { run_id: number; attempt: number; repo: string; workflow: string; conclusion: string | null; html_url: string | null; completed_at: string; failed: string[]; newly_failing: string[]; recovered: string[]; alerted: boolean; evaluated_at: string }
+/** One job of a batch project (an app, a layer-distro-arch, a distro and arch) whose newest result is kept. */
+export interface BatchUnit { repo: string; workflow: string; unit: string; state: 'pass' | 'fail' | string; since: string; run_id: number; run_created_at: string; html_url: string | null; updated_at: string }
+export interface BatchProject {
+  repo: string;
+  workflow: string;
+  ref: string;
+  schedule: string;
+  cap: number;
+  live: boolean;
+  note: string;
+  next_at: string;
+  parallel_now: number;
+  active_run: Run | null;
+  last_decision: DecisionView | null;
+  last_dispatch: DecisionView | null;
+  /** The newest evaluated runs, newest first. */
+  runs: BatchRun[];
+  /** Units whose newest result is a failure. */
+  failing: BatchUnit[];
+}
+export interface BatchPage { enabled: boolean; projects: BatchProject[]; generated_at: string }
 export interface Upcoming { image: string; branch: string; kind: string; at: string }
 export interface SchedulerPage {
   enabled: boolean;

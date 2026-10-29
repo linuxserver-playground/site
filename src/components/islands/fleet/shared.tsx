@@ -313,10 +313,15 @@ export function ActionButton({
   const [result, setResult] = React.useState<{ ok: boolean; text: string } | null>(null);
   const firstField = React.useRef<HTMLSelectElement | HTMLInputElement>(null);
   const trigger = React.useRef<HTMLButtonElement>(null);
+  const form = React.useRef<HTMLFormElement>(null);
   const id = React.useId();
 
   React.useEffect(() => {
-    if (open) firstField.current?.focus();
+    if (!open) return;
+    // The form opens in the row's last column: bring all of it into view inside the table's horizontal scroll, not
+    // only the field that takes focus, so nobody is shown half a form.
+    form.current?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
+    firstField.current?.focus({ preventScroll: true });
   }, [open]);
 
   const submit = async (e: React.SubmitEvent<HTMLFormElement>) => {
@@ -358,7 +363,7 @@ export function ActionButton({
         {label}
       </button>
       {open && (
-        <form id={id} onSubmit={submit} className="raft-panel z-20 flex min-w-56 flex-col gap-2 p-3 text-sm shadow-lg" aria-label={`Confirm: ${label}`}>
+        <form ref={form} id={id} onSubmit={submit} className="raft-panel z-20 flex min-w-56 flex-col gap-2 p-3 text-sm shadow-lg" aria-label={`Confirm: ${label}`}>
           <p className="text-[0.8125rem]">{confirm}</p>
           {fields.map((f, i) => {
             const fid = `${id}-${f.name}`;
