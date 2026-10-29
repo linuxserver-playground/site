@@ -1,0 +1,894 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "smokeping",
+  "repository": "linuxserver-playground/docker-smokeping",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "2.9.0-r0",
+   "upstream_clean": "2.9.0-r0",
+   "semver": "2.9.0",
+   "ls_build": 1,
+   "tag": "2.9.0-r0-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "2.9.0-r0-ls1",
+    "version-2.9.0-r0",
+    "2.9.0",
+    "amd64-latest",
+    "amd64-2.9.0-r0-ls1",
+    "amd64-version-2.9.0-r0",
+    "amd64-2.9.0",
+    "arm64v8-latest",
+    "arm64v8-2.9.0-r0-ls1",
+    "arm64v8-version-2.9.0-r0",
+    "arm64v8-2.9.0"
+   ],
+   "source": "alpine_apk",
+   "source_url": "http://dl-cdn.alpinelinux.org/alpine/v3.22/main/"
+  },
+  "commit": "1139bee9f93c5fa2ed63d97ed7d654969aaa4467",
+  "created": "2026-10-25T19:39:03Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+   "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:a1779a260b7071ccf23736902204b40498265fc6fe67dcfafa3b1b751d18257f",
+    "size": 122976348,
+    "uncompressed_size": 221222910,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 312
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:9bb61afe51438df9b095be171bb8ba1e4a5eeba4f3912eda290e0d3074512f37",
+    "size": 123959355,
+    "uncompressed_size": 246294209,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 259
+   }
+  ],
+  "index_digest": "sha256:ac224818eaed4f35b9ae05ae7d2ee30d15e7b63b3aeaa2c4027267aac2dae81c",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 2.9.0-r0-ls1 Build-date:- 2026-10-25T19:27:10Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine:3.22@sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "2.9.0-r0",
+   "maintainer": "notdriz",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T19:27:10Z",
+   "org.opencontainers.image.description": "Smokeping keeps track of your network latency.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-smokeping",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "491c3b965a8ad044cc1140ad2651edc6f1ce0293",
+   "org.opencontainers.image.revision": "1139bee9f93c5fa2ed63d97ed7d654969aaa4467",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-smokeping",
+   "org.opencontainers.image.title": "Smokeping",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-smokeping/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "2.9.0-r0-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "80/tcp"
+   ],
+   "volumes": [
+    "/config",
+    "/data"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SMOKEPING_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"notdriz\"\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  if [ -z ${SMOKEPING_VERSION+x} ]; then \\\n    SMOKEPING_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:smokeping$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    perl-app-cpanminus \\\n    perl-dev && \\\n  apk add --no-cache \\\n    apache2 \\\n    apache2-ctl \\\n    apache2-utils \\\n    apache-mod-fcgid \\\n    bc \\\n    bind-tools \\\n    font-noto-cjk \\\n    irtt \\\n    openssh-client \\\n    perl-authen-radius \\\n    perl-io-socket-inet6 \\\n    perl-json-maybexs \\\n    perl-lwp-protocol-https \\\n    perl-path-tiny \\\n    smokeping==${SMOKEPING_VERSION} \\\n    ssmtp \\\n    sudo \\\n    traceroute \\\n    tcptraceroute && \\\n  echo \"**** Build perl TacacsPlus module ****\" && \\\n  cpanm Authen::TacacsPlus && \\\n  echo \"**** Build perl InfluxDB modules ****\" && \\\n  cpanm InfluxDB::HTTP && \\\n  cpanm Method::Signatures --force && \\\n  cpanm Object::Result && \\\n  cpanm InfluxDB::LineProtocol && \\\n  echo \"**** give setuid access to traceroute & tcptraceroute ****\" && \\\n  chmod a+s /usr/bin/traceroute && \\\n  chmod a+s /usr/bin/tcptraceroute && \\\n  echo \"**** fix path to cropper.js ****\" && \\\n  sed -i 's#src=\"/cropper/#/src=\"cropper/#' /etc/smokeping/basepage.html && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** Cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    /root/.cpanm \\\n    /etc/apache2/httpd.conf\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80\n\nVOLUME /config /data\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SMOKEPING_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"notdriz\"\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  if [ -z ${SMOKEPING_VERSION+x} ]; then \\\n    SMOKEPING_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:smokeping$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    perl-app-cpanminus \\\n    perl-dev && \\\n  apk add --no-cache \\\n    apache2 \\\n    apache2-ctl \\\n    apache2-utils \\\n    apache-mod-fcgid \\\n    bc \\\n    bind-tools \\\n    font-noto-cjk \\\n    irtt \\\n    openssh-client \\\n    perl-authen-radius \\\n    perl-io-socket-inet6 \\\n    perl-json-maybexs \\\n    perl-lwp-protocol-https \\\n    perl-path-tiny \\\n    smokeping==${SMOKEPING_VERSION} \\\n    ssmtp \\\n    sudo \\\n    traceroute \\\n    tcptraceroute && \\\n  echo \"**** Build perl TacacsPlus module ****\" && \\\n  cpanm Authen::TacacsPlus && \\\n  echo \"**** Build perl InfluxDB modules ****\" && \\\n  cpanm InfluxDB::HTTP && \\\n  cpanm Method::Signatures --force && \\\n  cpanm Object::Result && \\\n  cpanm InfluxDB::LineProtocol && \\\n  echo \"**** give setuid access to traceroute & tcptraceroute ****\" && \\\n  chmod a+s /usr/bin/traceroute && \\\n  chmod a+s /usr/bin/tcptraceroute && \\\n  echo \"**** fix path to cropper.js ****\" && \\\n  sed -i 's#src=\"/cropper/#/src=\"cropper/#' /etc/smokeping/basepage.html && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** Cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    /root/.cpanm \\\n    /etc/apache2/httpd.conf\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80\n\nVOLUME /config /data\n"
+  },
+  "init_graph": {
+   "d2": "\"smokeping:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-smokeping-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-smokeping-config\n  init-services -> svc-apache\n  svc-apache -> legacy-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  svc-apache -> svc-smokeping\n  svc-smokeping -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"smokeping:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-smokeping-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-smokeping-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# create folders\nmkdir -p \\\n    /config/site-confs \\\n    /run/apache2 \\\n    /var/cache/smokeping \\\n    /data\n\n# copy config files\n\nPREV_DIR=$(pwd)\n\ncd /defaults/smoke-conf || exit\nshopt -s globstar nullglob\nfor i in *; do\n    if [[ ! -e \"/config/${i}\" ]]; then\n        cp -v \"${i}\" \"/config/${i}\"\n    fi\ndone\n\n# Fix stupid Alpine packaging decision\nsed -i 's|exec /usr/bin/smokeping_cgi /etc/config|exec /usr/bin/smokeping_cgi /etc/smokeping/config|' /usr/share/webapps/smokeping/smokeping.cgi\n\ncd \"${PREV_DIR}\" || exit\n\n# make symlinks\nif [[ ! -L /var/www/localhost/smokeping ]]; then\n    ln -sf /usr/share/webapps/smokeping /var/www/localhost/smokeping\nfi\n\nif [[ ! -L /var/www/localhost/smokeping/cache ]]; then\n    ln -sf\t/var/cache/smokeping /var/www/localhost/smokeping/cache\nfi\n\nif [[ ! -e /config/site-confs/smokeping.conf ]]; then\n    cp /defaults/smokeping.conf /config/site-confs/smokeping.conf\nfi\n\nif [[ ! -e /config/httpd.conf ]]; then\n    cp /defaults/httpd.conf /config/httpd.conf\nfi\n\nif [[ ! -L /etc/apache2/httpd.conf ]]; then\n    ln -sf /config/httpd.conf /etc/apache2/httpd.conf\nfi\n\nif [[ ! -e /config/smokeping_secrets ]]; then\n    cp /defaults/smokeping_secrets /config/smokeping_secrets\nfi\n\nif [[ ! -L /etc/smokeping/smokeping_secrets ]]; then\n    ln -sf /config/smokeping_secrets /etc/smokeping/smokeping_secrets\nfi\n\nif [[ -e /config/ssmtp.conf ]]; then\n    cp /config/ssmtp.conf /etc/ssmtp/ssmtp.conf\nfi\n\nif [[ ! -f /usr/bin/tcpping ]]; then\n    install -m755 -D /defaults/tcpping /usr/bin/\nfi\n\n# permissions\nchmod 777 /var/cache/fontconfig/\nchmod o-rwx /config/smokeping_secrets\n\nlsiown -R abc:abc \\\n    /config \\\n    /data \\\n    /run/apache2 \\\n    /usr/share/webapps/smokeping \\\n    /var/cache/smokeping \\\n    /var/www/localhost/smokeping\n"
+    },
+    {
+     "name": "svc-apache",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -f \"/config/httpd.conf\" ]]; then\n    PORT=$(grep -e \"^Listen\" /config/httpd.conf | awk -F ' ' '{print $2}')\nfi\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost ${PORT:-80}\" \\\n        /usr/sbin/apachectl -D FOREGROUND\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-smokeping",
+     "type": "longrun",
+     "depends_on": [
+      "svc-apache"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -n \"${MASTER_URL}\" ]] && [[ -n \"${SHARED_SECRET}\" ]] && [[ -n \"${CACHE_DIR}\" ]]; then\n    install -g abc -o abc -m 400 -D <(echo \"${SHARED_SECRET}\") /var/smokeping/secret.txt\n    exec \\\n        s6-setuidgid abc /usr/sbin/smokeping --master-url=\"${MASTER_URL}\" --cache-dir=\"${CACHE_DIR}\" --shared-secret=\"/var/smokeping/secret.txt\" --nodaemon\nelse\n    exec \\\n        s6-setuidgid abc /usr/sbin/smokeping --config=\"/etc/smokeping/config\" --nodaemon\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 285,
+    "distro": "Alpine Linux v3.22",
+    "hash": "c46ed357",
+    "by_type": {
+     "cpan": 114,
+     "apk": 166,
+     "go-module": 5
+    }
+   },
+   "arm64": {
+    "count": 285,
+    "distro": "Alpine Linux v3.22",
+    "hash": "c46ed357",
+    "by_type": {
+     "cpan": 114,
+     "apk": 166,
+     "go-module": 5
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/smokeping/builds/2.9.0-r0-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-smokeping/commits/2.9.0-r0-ls1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 63562,
+    "sha256": "5e263d9de336c68aefb57a28ec5fc349e1c07002d9c25c65af0864d3ccae3419",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5507,
+    "sha256": "2171f4206a47fc9adc6c9d52402810eac9e9641633c6c8d21238bb1512c0b82c",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 55131,
+    "sha256": "ad50ff05f3fb61866a734c98b83a9ce16962fa4d0b749be9bf72a2fd7d38fd2a",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2286,
+    "sha256": "37c3c1fdb98f129f0b7506e542766d801b43b1678085a212ada89a661ec6aa4c",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 57072,
+    "sha256": "153bd2037056e21303249a6e3a62d0b721db23a43005f8b0acb31b25b7bec8d1",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 22040,
+    "sha256": "d3dfe928529159dad2b53ae840fab36791dc4caea8e7af7eedb63d771b983142",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 63769,
+    "sha256": "4d708f5cbfd1c56f2dc29c7ecbf12170cc74a912c67a5d98584edc02b927ccc2",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5507,
+    "sha256": "00d7763794bb0fa5b2dac8dc66416acc309e654ca3d341a3bc13b42c359acc44",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 54570,
+    "sha256": "8e19b7185d132b8820dce48de260e13732ee879f36cc6a10c3fd079dc9895104",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2285,
+    "sha256": "f6926e6bf0ce65680d7ba469e9a78cf7b636a1954de6fe4ed3857b08fc9f8011",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 57919,
+    "sha256": "16846170e54eaf3425a3a4b4537fda652af3fa81705318fa1c4f9641610e0251",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 22040,
+    "sha256": "d3dfe928529159dad2b53ae840fab36791dc4caea8e7af7eedb63d771b983142",
+    "url": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40225906505,
+   "run_url": "https://github.com/linuxserver-playground/docker-smokeping/actions/runs/40225906505",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "smokeping",
+  "branch": "master",
+  "tag": "2.9.0-r0-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "2.9.0-r0",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+    "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 122976348
+   },
+   "arm64": {
+    "to": 123959355
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "80/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config",
+     "/data"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:c10a8d4755c919b58303aec2ac917dbe11b34a5d209f880be5198408a96d975a",
+    "diff_id": "sha256:f860a16f1e96206b437f9868e485cd03045a7c57be1eabbc83f765a47e472a0b",
+    "size": 6205981,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:9dd90c2c20fec58f43aae9d6531d19a6f87fc0c64c97eabdec6160e4f3d794a2",
+    "diff_id": "sha256:1a7dd45a0c6161785a463caf85b31be9f25dbcd4c978ba3b8aa91c06ed9c442f",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:ae636f090219e4de94ef412de50171b64ac2ee394727d21fbdabe57782946a7a",
+    "diff_id": "sha256:c21b5dfc22f2a4bb9326a5676bdb0e06644e3c75761543690a0ad17462abd1b7",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:2e65cbf9630bbdcb8a79e30fa6df683f859f6fc0d95dc501532b73aed6534291",
+    "diff_id": "sha256:85ecbd6edad29298448740659004ac4b41bbbee545d9a07a8650aa3819c8f224",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:d9d46c85684a52c62b6debeba5395ab8a9a3f4e588264eb63c5c290ff10e62ca",
+    "diff_id": "sha256:a6229eaf3301e773efcae00176b17e9735f7a46b6bd0cacbb80d8ad902192ae4",
+    "size": 5894959,
+    "uncompressed_size": 13967197,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:00+00:00 VERSION=eac05398-ls34 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:57d5bc31944c79616f1d8ace5be1eb5e9b924bf1d99c4042a8a8c034082e9995",
+    "diff_id": "sha256:52afd5a0d7995802effa0b44a646e78dcda30cb58060fe9bd00d9c3a1b2e6116",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:84e20d837eed5023cd76a689cae7c261cc5045002e50c2b0ce095d0518c32fca",
+    "diff_id": "sha256:452fd3b4e024fd4c0e5f15d6a348f5265fc74c9b3fd6655ec1261d6f5e659357",
+    "size": 110846758,
+    "uncompressed_size": 193587296,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:27:10Z VERSION=2.9.0-r0-ls1 SMOKEPING_VERSION=2.9.0-r0 /bin/sh -c echo \"**** install packages ****\" &&   if [ -z ${SMOKEPING_VERSION+x} ]; then     SMOKEPING_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:smokeping$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache --virtual=build-dependencies     build-base     perl-app-cpanminus     perl-dev &&   apk add --no-cache     apache2     apache2-ctl     apache2-utils     apache-mod-fcgid     bc     bind-tools     font-noto-cjk     irtt     openssh-client     perl-authen-radius     perl-io-socket-inet6     perl-json-maybexs     perl-lwp-protocol-https     perl-path-tiny     smokeping==${SMOKEPING_VERSION}     ssmtp     sudo     traceroute     tcptraceroute &&   echo \"**** Build perl TacacsPlus module ****\" &&   cpanm Authen::TacacsPlus &&   echo \"**** Build perl InfluxDB modules ****\" &&   cpanm InfluxDB::HTTP &&   cpanm Method::Signatures --force &&   cpanm Object::Result &&   cpanm InfluxDB::LineProtocol &&   echo \"**** give setuid access to traceroute & tcptraceroute ****\" &&   chmod a+s /usr/bin/traceroute &&   chmod a+s /usr/bin/tcptraceroute &&   echo \"**** fix path to cropper.js ****\" &&   sed -i 's#src=\"/cropper/#/src=\"cropper/#' /etc/smokeping/basepage.html &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** Cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     /root/.cpanm     /etc/apache2/httpd.conf",
+    "dockerfile_lines": [
+     14,
+     63
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:93cc78abed50446184a1bd59019760bdd06dccdc34d2da5eadf5f115f15bb8ba",
+    "diff_id": "sha256:6c22bea3f57f758644b780a2a95e4ac47f4b1cb61838b330c6329b52a4add5c2",
+    "size": 15290,
+    "uncompressed_size": 41283,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     66,
+     66
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:7c1a12c04ebf8d8f75933dea5416a1f8176ff5ef5f27d64d474fbcc98d748912",
+    "diff_id": "sha256:7a79da10dadcae646c1f0e9d792db22875a0073bb51b1803fb068c92fd9a625e",
+    "size": 7020028,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:22685909c4d2a15a1fdd8727cb0d9faf49fdf89cc6e557e628b5343ad7aa7fb0",
+    "diff_id": "sha256:0ae8096293da622b14f4baba38df0776086245bd25468710836f8ec271c3a6f6",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:fd63569d171b3f4e336ea958a96ccf052e5905f513c93fc1587eaf1eaa8cbc93",
+    "diff_id": "sha256:5707a5e1ca04bfcf4f1a26a70b16c34f4c6e2a1703157ba38e4d0a9d27299914",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7cd069a9d6646d5693d76554ff4db39446a48b1d9fa8d7f6120c29731412b7d0",
+    "diff_id": "sha256:86549d453560321defe69345c6173dbc2290e2b4f4106f9328df62943ec17878",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:131b23cd04243350b218a023a3d334f83fdd270df92e99c65efb1b6cd30b97d5",
+    "diff_id": "sha256:5ad6d31d93f5c08ab3f4804d89d8aa13af469ce090d35789595b11e077fe2508",
+    "size": 6110453,
+    "uncompressed_size": 20893504,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:00+00:00 VERSION=eac05398-ls34 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b8667a920a12dbb0e6a31dce507cf26ff0e3a31564a0572c3b2097dc3773b353",
+    "diff_id": "sha256:05b212c0429573bc4c1a0e764e004c125c3c30899441d0136c3f6a638dacf929",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:10bdf8da71259a4d539972b3960607ce28780bdb933be4ba590ab0c9348f9838",
+    "diff_id": "sha256:487cde066e3e2bd053c8800e22ecd9f7e20bdf4a1f78588f204a82ff3e1d68bf",
+    "size": 110800225,
+    "uncompressed_size": 206891852,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T19:27:10Z VERSION=2.9.0-r0-ls1 SMOKEPING_VERSION=2.9.0-r0 /bin/sh -c echo \"**** install packages ****\" &&   if [ -z ${SMOKEPING_VERSION+x} ]; then     SMOKEPING_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:smokeping$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache --virtual=build-dependencies     build-base     perl-app-cpanminus     perl-dev &&   apk add --no-cache     apache2     apache2-ctl     apache2-utils     apache-mod-fcgid     bc     bind-tools     font-noto-cjk     irtt     openssh-client     perl-authen-radius     perl-io-socket-inet6     perl-json-maybexs     perl-lwp-protocol-https     perl-path-tiny     smokeping==${SMOKEPING_VERSION}     ssmtp     sudo     traceroute     tcptraceroute &&   echo \"**** Build perl TacacsPlus module ****\" &&   cpanm Authen::TacacsPlus &&   echo \"**** Build perl InfluxDB modules ****\" &&   cpanm InfluxDB::HTTP &&   cpanm Method::Signatures --force &&   cpanm Object::Result &&   cpanm InfluxDB::LineProtocol &&   echo \"**** give setuid access to traceroute & tcptraceroute ****\" &&   chmod a+s /usr/bin/traceroute &&   chmod a+s /usr/bin/tcptraceroute &&   echo \"**** fix path to cropper.js ****\" &&   sed -i 's#src=\"/cropper/#/src=\"cropper/#' /etc/smokeping/basepage.html &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** Cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     /root/.cpanm     /etc/apache2/httpd.conf",
+    "dockerfile_lines": [
+     14,
+     63
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:0babd44ecfe32e60263ef90762588f5bfc67f5de0edcf3cb1a5cce7e9e22b53c",
+    "diff_id": "sha256:5103bc955ce1eb314fa09131d0eb34d082797e77cda4b022cf76218607ee8d2b",
+    "size": 15290,
+    "uncompressed_size": 41283,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     66,
+     66
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "smokeping",
+  "tag": "2.9.0-r0-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/hub/builds/smokeping/2.9.0-r0-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.013,
+    "listening_ports": [
+     "80/tcp",
+     "33384/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 66494464,
+    "pids": 22,
+    "tarball": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/test.amd64.tar.gz"
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "80/tcp",
+     "33706/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 71254016,
+    "pids": 22,
+    "tarball": "https://github.com/linuxserver-playground/docker-smokeping/releases/download/2.9.0-r0-ls1/test.arm64.tar.gz"
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "smokeping",
+    "tag": "amd64-1139bee-40225906505",
+    "arch": "amd64",
+    "started": "2026-10-25T19:37:38Z",
+    "finished": "2026-10-25T19:37:56Z",
+    "success": true,
+    "runner": "97a9bd79f783",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.013,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.013
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "285 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "285 packages: syft JSON 63562 bytes gzipped, SPDX for the image attestation 586725 bytes",
+      "seconds": 0.176
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1055 dirs, 4530 files (220905371 bytes), 1318 symlinks, 257 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.09s, total 0.15s",
+      "seconds": 0.289
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.608
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, base units assumed",
+      "seconds": 0.074
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:80/smokeping/smokeping.cgi",
+      "seconds": 13.031
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "22 pids, tcp [80], rss 66494464 bytes",
+      "seconds": 0.497
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 66494464,
+     "pids": 22,
+     "listening_tcp": [
+      80
+     ],
+     "listening_udp": [
+      33384
+     ],
+     "s6_services": [
+      "svc-apache",
+      "svc-cron",
+      "svc-smokeping"
+     ],
+     "changed_paths": 272
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "smokeping",
+    "tag": "arm64-1139bee-40225906505",
+    "arch": "arm64",
+    "started": "2026-10-25T19:37:27Z",
+    "finished": "2026-10-25T19:37:45Z",
+    "success": true,
+    "runner": "8bff31be3ce7",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "285 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "285 packages: syft JSON 63769 bytes gzipped, SPDX for the image attestation 587001 bytes",
+      "seconds": 0.162
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1055 dirs, 4530 files (245976543 bytes), 1318 symlinks, 257 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.08s",
+      "seconds": 0.199
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.59
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, base units assumed",
+      "seconds": 0.065
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:80/smokeping/smokeping.cgi",
+      "seconds": 13.349
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "22 pids, tcp [80], rss 71254016 bytes",
+      "seconds": 0.298
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 71254016,
+     "pids": 22,
+     "listening_tcp": [
+      80
+     ],
+     "listening_udp": [
+      33706
+     ],
+     "s6_services": [
+      "svc-apache",
+      "svc-cron",
+      "svc-smokeping"
+     ],
+     "changed_paths": 272
+    }
+   }
+  }
+ }
+}

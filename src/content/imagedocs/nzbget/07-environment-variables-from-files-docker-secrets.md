@@ -1,0 +1,15 @@
+---
+image: "nzbget"
+section: "environment-variables-from-files-docker-secrets"
+title: "Environment variables from files (Docker secrets)"
+order: 7
+---
+You can set any environment variable from a file by using a special prepend `FILE__`.
+
+As an example:
+
+```bash
+-e FILE__MYVAR=/run/secrets/mysecretvariable
+```
+
+Will set the environment variable `MYVAR` based on the contents of the `/run/secrets/mysecretvariable` file.

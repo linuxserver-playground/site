@@ -1,0 +1,30 @@
+---
+branch: "universal-package-install"
+---
+The packages are passed to `apt-get install -y --no-install-recommends ...` on Ubuntu and `apk add --no-cache ...`
+on Alpine based images for OS packages, and to `pip install ...` for Python packages. Set at least one of the
+two variables; with neither set the mod logs that there is nothing to install and exits.
+
+E.g., to install the `rsync`, `git` and `nginx` OS packages and the `apprise` Python package, add the
+following lines to your compose service:
+
+```yaml
+- DOCKER_MODS=ghcr.io/linuxserver-playground/mods:universal-package-install
+- INSTALL_PACKAGES=rsync|git|nginx
+- INSTALL_PIP_PACKAGES=apprise
+```
+
+Notes:
+
+- Package names entered should match the names in the relevant distro repo: https://pkgs.alpinelinux.org/packages
+  or https://packages.ubuntu.com/
+- To install a specific version of a package include it in the name, e.g. `apprise==1.10.0`. `apt` requires a
+  single `=`, while `apk` and `pip` use a double `==`.
+- Setting `INSTALL_PIP_PACKAGES` results in the automatic install of the `python3-dev` and `python3-pip` OS
+  packages, an update of `pip` to the latest version and installation of the latest `setuptools` and `wheel`
+  packages to set up the necessary environment.
+- Any other OS dependency such as `make` or `git` that the pip install process may need should be added to
+  `INSTALL_PACKAGES` manually.
+- The OS packages are installed first, followed by the pip packages.
+- Pip also uses the relevant LinuxServer wheel repo as an additional index to pull prebuilt wheels for common
+  packages (https://wheel-index.linuxserver.io/ubuntu/ and https://wheel-index.linuxserver.io/alpine-3.16/).
