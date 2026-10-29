@@ -46,18 +46,14 @@ export default function HelperRepos({ helpers, modsBase, prootBase, runsBase, fa
 
   return (
     <section aria-labelledby="helpers-title" id="helpers" className="scroll-mt-24 pt-10">
-      <p className="raft-eyebrow">
-        <span className="text-primary" aria-hidden="true">
-          //
-        </span>{' '}
-        Helper repositories
-      </p>
-      <h2 id="helpers-title" className="mt-2 text-2xl font-semibold tracking-tight md:text-[2rem] md:leading-tight">
-        {helpers && batch.data ? (failing ? `${failing} failing outside the images` : 'Everything outside the images passes') : 'Outside the images'}
+      <h2 id="helpers-title" className="text-2xl font-semibold tracking-tight md:text-[2rem] md:leading-tight">
+        Non Image Repos
       </h2>
-      <p className="mt-3 max-w-2xl text-muted-foreground">Mods, PRoot apps, wheels and the Selkies layers build in their own repositories. They stay off the board; each one with failures gets its own table below.</p>
+      <p className="mt-2 font-mono text-sm text-muted-foreground" aria-live="polite">
+        Status - {helpers && batch.data ? (failing ? <span className="text-[var(--raft-danger)]">{failing} failing</span> : <span className="text-[var(--raft-ok)]">all passing</span>) : 'loading…'}
+      </p>
 
-      <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Helper repositories">
+      <ul className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4" aria-label="Non image repos">
         {helpers === undefined ? (
           <li className="raft-panel">
             <Skeleton rows={3} label="Loading the helper repositories…" />
