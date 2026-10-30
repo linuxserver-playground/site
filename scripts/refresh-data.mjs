@@ -30,7 +30,8 @@
  *   GITHUB_ORG    org whose public members are the team (default linuxserver-playground).
  *   GITHUB_TOKEN  avoids GitHub rate limits.
  *   --skip-github keep the existing team.json and avatars.
- *   REFRESH_ALL=1 refetch every retained build. Otherwise a build already in builds/ is kept as it is: a
+ *   REFRESH_ALL=1 refetch every retained build. Otherwise a build already in builds/ is kept while the hub lists
+ *   the same build (`created`; a rebuilt head republishes under its tag with a newer one): a
  *                 released build's documents do not change, and refetching thousands of them on every run hit
  *                 GitHub Pages' rate limit (429). The daily scheduled deploy sets it, so anything the hub
  *                 re-derives is picked up within a day.
@@ -165,7 +166,17 @@ await pool(images, 6, async (img) => {
     const file = `builds/${img.name}/${b.tag}.json`;
     retained.add(file);
     buildCount++;
-    if (!refreshAll && existsSync(out(file))) return;
+    if (!refreshAll && existsSync(out(file))) {
+      // A rebuild of an already released head republishes under its tag with a new record (the hub ingests it
+      // again): keep ours only while it is the build the hub lists.
+      let held = null;
+      try {
+        held = JSON.parse(readFileSync(out(file), 'utf8')).build?.created ?? null;
+      } catch {
+        held = null;
+      }
+      if (held === b.created) return;
+    }
     const tagBase = `${base}/builds/${b.tag}`;
     const [record, diff, tests, ...layers] = await Promise.all([
       optional(hubJSON(`${tagBase}.json`)),
