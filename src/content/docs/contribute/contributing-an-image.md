@@ -57,7 +57,7 @@ The manifest is validated against [`image.schema.json`](https://github.com/linux
 | `deprecation` | `status` and `message`. |
 | `changelog` | Newest first. Every Dockerfile or `root/` change adds an entry. |
 
-User-facing text lives here, not in `README.md`. If the docs page is wrong, fix `image.yml`.
+User-facing text lives here, not in `README.md`. If the docs page is wrong, fix `image.yml`. The field-by-field reference, with the version source types and `require_assets`, is in the [maintainer pages](/docs/maintain/image-manifest/).
 
 ## Validate with `builder check` and `builder render`
 
