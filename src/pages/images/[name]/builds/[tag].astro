@@ -18,8 +18,9 @@ import Explorer from '@/components/islands/explorer/Explorer';
 import InitGraph from '@/components/islands/explorer/InitGraph';
 import { withBase } from '@/lib/base';
 import { buildPage } from '@/lib/build-page';
-import { allBuildRecords, buildUrl, getBuilds, type BuildRecord } from '@/lib/builds';
+import { allBuildRecords, buildUrl, getBuildRecord, getBuilds, type BuildRecord } from '@/lib/builds';
 import { hubTestsUrl } from '@/lib/hub';
+import { resolveChain } from '@/lib/init-chain';
 import { getImage, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { githubRepo, renderNotes } from '@/lib/markdown/notes';
 
@@ -40,6 +41,16 @@ const notesHtml = {
   upstream: b.notes?.upstream ? renderNotes(b.notes.upstream, { github: !!upstreamRepo, repo: upstreamRepo }) : '',
 };
 const units = b.init_graph?.units ?? [];
+// The chain of base images under this build, from the snapshots: the island reads each base's build from the hub for
+// the inherited units' scripts only when someone opens them. The index digest comes from the base build's own record
+// when the builds list predates the field.
+const chain =
+  units.length > 0
+    ? await resolveChain(b.base, (name) => {
+        const builds = getBuilds(name);
+        return builds.length ? builds.map((s) => ({ ...s, index_digest: s.index_digest ?? getBuildRecord(name, s.tag)?.build.index_digest ?? null })) : null;
+      })
+    : null;
 // Section C: the CI report. tests.json is in the snapshot when the hub had it at refresh time; the island
 // fetches it otherwise and loads the screenshot, logs and package diff on demand.
 const tests = record.tests ?? null;
@@ -119,7 +130,7 @@ const controlBuild = page.controlBuild;
           <AnchorHeading id="init">Init graph</AnchorHeading>
           <p class="mt-2 text-sm text-muted-foreground">The s6-rc units that run when the container starts. Select a unit for its dependencies and run script.</p>
           <Panel class="mt-4">
-            <InitGraph client:visible units={units} image={image.name} />
+            <InitGraph client:visible units={units} image={image.name} base={b.base} chain={chain} />
           </Panel>
         </section>
       )

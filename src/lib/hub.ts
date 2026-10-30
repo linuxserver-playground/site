@@ -165,6 +165,9 @@ export interface BuildSummary {
   test_success?: boolean | null;
   base: BuildBase;
   platforms: PlatformBuild[];
+  /** The digest of the build's multi-arch index: what an image built on this one records as `base.digest`. Absent in
+   * snapshots taken before the hub listed it and for releases that predate the field. */
+  index_digest?: string | null;
   /** Every tag the build published (build.json `published.tags`, or `version.tags` before that field). */
   tags?: string[] | null;
   classification?: Classification | null;

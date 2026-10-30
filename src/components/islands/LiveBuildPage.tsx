@@ -237,7 +237,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             <AnchorHeading id="init">Init graph</AnchorHeading>
             <p className="mt-2 text-sm text-muted-foreground">The s6-rc units that run when the container starts. Select a unit for its dependencies and run script.</p>
             <div className="raft-panel mt-4 overflow-hidden">
-              <InitGraph units={units} image={image.name} />
+              <InitGraph units={units} image={image.name} base={b.base} />
             </div>
           </section>
         )}

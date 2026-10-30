@@ -1,12 +1,23 @@
 import * as React from 'react';
-import type { InitUnit } from '@/lib/hub';
+import type { BuildBase, InitUnit } from '@/lib/hub';
+import { withBase } from '@/lib/base';
+import { buildUrl } from '@/lib/build-helpers';
 import { initStages, reducedMotion, SOURCE_COLOR } from '@/lib/explorer';
+import { attributeUnits, loadBaseLayers, unresolvedReason, type Attribution, type BaseLayers, type InitChain } from '@/lib/init-chain';
 import CopyButton from '../CopyButton';
 
 interface Props {
   units: InitUnit[];
   image: string;
+  /** What this build was built on: the start of the chain of base images whose builds define the inherited units. */
+  base?: BuildBase | null;
+  /** The chain resolved at build time from the snapshots; left out on the live page, where the island resolves it. */
+  chain?: InitChain | null;
 }
+
+type LayersState = { status: 'idle' | 'loading' } | { status: 'error'; message: string } | ({ status: 'ready' } & BaseLayers);
+
+const LINK = 'underline decoration-[var(--raft-hair-strong)] underline-offset-4 hover:text-primary hover:decoration-current';
 
 type Item = { kind: 'unit'; key: string; unit: InitUnit; stage: number } | { kind: 'base'; key: string; units: InitUnit[]; stages: [number, number] };
 
@@ -183,10 +194,12 @@ function TypePill({ type }: { type: string }) {
  * The init graph from the bundle's `init_graph.units` as a left-to-right stage view: each column is a
  * topological stage (the longest dependency path below a unit), this image's units and mods are full
  * nodes, the base image's units fold into one "base init" node per run of base-only stages, expandable to
- * a compact list. Selecting a unit shows its type, dependencies and, for the image's own units, the run
- * script. A text list carries the same information for screen readers, reduced motion and narrow screens.
+ * a compact list. Selecting a unit shows its type, dependencies and its run script: the image's own from the
+ * record, a base image's from that base's own build, read from the hub the first time the base units are opened
+ * (`init-chain.ts`: the chain of bases, selkies on ubuntu, is walked and each unit linked to the build that
+ * defines it). A text list carries the same information for screen readers, reduced motion and narrow screens.
  */
-export default function InitGraph({ units, image }: Props) {
+export default function InitGraph({ units, image, base, chain }: Props) {
   const { stages, stageOf, missing } = React.useMemo(() => initStages(units), [units]);
   const columns = React.useMemo(() => buildColumns(stages), [stages]);
   const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
@@ -200,6 +213,55 @@ export default function InitGraph({ units, image }: Props) {
 
   const sel = selected ? byName.get(selected) : undefined;
   const related = new Set<string>(sel ? [sel.name, ...sel.depends_on, ...dependents(sel.name)] : []);
+
+  // The base images' builds, read once someone looks at a base unit.
+  const [layers, setLayers] = React.useState<LayersState>({ status: 'idle' });
+  const loading = React.useRef(false);
+  const ensureLayers = React.useCallback(() => {
+    if (!base || loading.current) return;
+    loading.current = true;
+    setLayers({ status: 'loading' });
+    loadBaseLayers(base, chain)
+      .then((r) => setLayers({ status: 'ready', ...r }))
+      .catch((e: unknown) => {
+        loading.current = false;
+        setLayers({ status: 'error', message: e instanceof Error ? e.message : String(e) });
+      });
+  }, [base, chain]);
+  React.useEffect(() => {
+    if (layers.status === 'idle' && ((sel && sel.source === 'base') || expanded.size > 0)) ensureLayers();
+  }, [sel, expanded, layers.status, ensureLayers]);
+  const attributed = React.useMemo(() => (layers.status === 'ready' ? attributeUnits(units, layers.hops) : new Map<string, Attribution>()), [units, layers]);
+  const hopOf = (name: string) => (layers.status === 'ready' ? layers.chain.hops[attributed.get(name)?.hop ?? -1] : undefined);
+  const labelOf = (u: InitUnit) => hopOf(u.name)?.image ?? sourceLabel(u, image);
+  const selHop = sel ? hopOf(sel.name) : undefined;
+  const script = sel ? (sel.script ?? attributed.get(sel.name)?.script ?? null) : null;
+  const scriptNote = (u: InitUnit): React.ReactNode => {
+    if (u.type === 'bundle') return 'A bundle: it groups units and has no script of its own.';
+    if (u.source !== 'base' && !attributed.has(u.name)) return 'No script for this unit.';
+    if (!base) return 'Defined in the base image.';
+    switch (layers.status) {
+      case 'idle':
+      case 'loading':
+        return 'Reading the base image’s build…';
+      case 'error':
+        return (
+          <>
+            The base image’s build could not be read: {layers.message}.{' '}
+            <button type="button" onClick={ensureLayers} className={LINK}>
+              Retry
+            </button>
+          </>
+        );
+      default:
+        return unresolvedReason(layers.chain, layers.hops);
+    }
+  };
+  const hopLink = (h: InitChain['hops'][number], text: string) => (
+    <a href={withBase(`${buildUrl(h.image, h.tag)}#init`)} className={LINK}>
+      {text}
+    </a>
+  );
   const counts = { base: 0, image: 0, mod: 0 };
   for (const u of units) if (u.source && u.source in counts) counts[u.source as keyof typeof counts]++;
   const services = units.filter((u) => u.type === 'longrun').map((u) => u.name);
@@ -219,7 +281,7 @@ export default function InitGraph({ units, image }: Props) {
     }
   };
   // Accessible names start with the node's visible text, in the order it is drawn (WCAG 2.5.3).
-  const describe = (u: InitUnit, prefix = u.name) => `${prefix}, ${u.type}, from ${sourceLabel(u, image)}, stage ${stageOf.get(u.name)! + 1}${u.depends_on.length ? `, after ${u.depends_on.join(', ')}` : ', starts first'}`;
+  const describe = (u: InitUnit, prefix = u.name) => `${prefix}, ${u.type}, from ${labelOf(u)}, stage ${stageOf.get(u.name)! + 1}${u.depends_on.length ? `, after ${u.depends_on.join(', ')}` : ', starts first'}`;
   const groupEdges = (g: Extract<Item, { kind: 'base' }>) => {
     const names = new Set(g.units.map((u) => u.name));
     let within = 0;
@@ -250,7 +312,7 @@ export default function InitGraph({ units, image }: Props) {
             </button>
             <span className="font-mono text-[0.6875rem] text-muted-foreground">
               {u.type}
-              {u.source && ` · ${u.source === 'image' ? image : u.source}`}
+              {u.source && ` · ${hopOf(u.name)?.image ?? (u.source === 'image' ? image : u.source)}`}
               {u.depends_on.length > 0 && ` · after ${u.depends_on.join(', ')}`}
             </span>
           </li>
@@ -263,6 +325,20 @@ export default function InitGraph({ units, image }: Props) {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] px-3.5 py-2">
         <p className="font-mono text-xs text-muted-foreground">{summary}</p>
+        {layers.status === 'ready' && layers.chain.hops.length > 0 && (
+          <p className="order-last basis-full font-mono text-xs text-muted-foreground">
+            base images:{' '}
+            {layers.chain.hops.map((h, i) => (
+              <React.Fragment key={`${h.image}:${h.tag}`}>
+                {i > 0 && ' → '}
+                {hopLink(h, h.ref)}
+                {!h.exact && ' (newest build; this build’s exact base is no longer held)'}
+              </React.Fragment>
+            ))}
+            {layers.chain.end.kind === 'upstream' && ` → ${layers.chain.end.image} (not built here)`}
+            {layers.chain.end.kind === 'missing' && ` → ${layers.chain.end.image} (no build held)`}
+          </p>
+        )}
         <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-label="Legend">
           {(['image', 'mod', 'base'] as const)
             .filter((s) => counts[s])
@@ -420,7 +496,7 @@ export default function InitGraph({ units, image }: Props) {
             <h3 className="font-mono text-base font-semibold">{sel.name}</h3>
             <TypePill type={sel.type} />
             <span className="font-mono text-xs text-muted-foreground">
-              from {sourceLabel(sel, image)} · stage {stageOf.get(sel.name)! + 1} of {stages.length}
+              from {selHop ? hopLink(selHop, selHop.image) : sourceLabel(sel, image)} · stage {stageOf.get(sel.name)! + 1} of {stages.length}
             </span>
             <button type="button" onClick={() => setSelected(null)} className="ml-auto font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
               close
@@ -466,24 +542,28 @@ export default function InitGraph({ units, image }: Props) {
               </dd>
             </div>
           </dl>
-          {sel.script ? (
+          {script ? (
             <div className="mt-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="font-mono text-xs text-muted-foreground">
-                  run · {sel.script.split('\n').length} lines
+                  run · {script.split('\n').length} lines
+                  {selHop && (
+                    <>
+                      {' '}· from {hopLink(selHop, `${selHop.image} ${selHop.tag}`)}
+                      {!selHop.exact && ' (newest build)'}
+                    </>
+                  )}
                 </p>
-                <CopyButton text={sel.script} label={`Copy the run script of ${sel.name}`} showLabel />
+                <CopyButton text={script} label={`Copy the run script of ${sel.name}`} showLabel />
               </div>
               <pre className="mt-2 max-h-96 overflow-auto rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] p-3 font-mono text-xs leading-relaxed" tabIndex={0} aria-label={`Run script of ${sel.name}`}>
                 <code>
-                  <ShellCode text={sel.script} />
+                  <ShellCode text={script} />
                 </code>
               </pre>
             </div>
           ) : (
-            <p className="mt-4 text-xs text-muted-foreground">
-              {sel.source === 'base' ? 'Defined in the base image.' : 'No script for this unit.'}
-            </p>
+            <p className="mt-4 text-xs text-muted-foreground">{scriptNote(sel)}</p>
           )}
         </div>
       )}
