@@ -267,7 +267,14 @@ version:
     - asset: '_linux64\.AppImage$'
 ```
 
-Its arm64 Dockerfile downloads from a different repository (`rpcs3-binaries-linux-arm64`), which the version source does not read, so that asset is not checked. Images are versioned from their x86 release by convention; an arm64 side that uses a different upstream is accepted and documented, not fixed.
+Its arm64 Dockerfile downloads from a different repository, `rpcs3-binaries-linux-arm64`, whose versions the source does not follow: images are versioned from their x86 release by convention, and an arm64 side that takes the latest release of a sibling repository is normal (blender's arm64 is versions apart from its x86). An entry with `repo` checks the latest release of that repository on the same forge instead of the resolved release, so the arm64 asset is still waited for and still pings when renamed:
+
+```yaml
+require_assets:
+  - asset: '_linux64\.AppImage$'
+  - asset: '\.AppImage$'
+    repo: RPCS3/rpcs3-binaries-linux-arm64
+```
 
 Pair the check with a Dockerfile that downloads the *resolved* release, not `releases/latest`: a build dispatched for version X must not fetch X+1's assets. The pattern is a fallback for local builds plus a lookup by tag:
 
