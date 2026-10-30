@@ -35,11 +35,11 @@ interface Bytes {
   layers: number[];
 }
 
-const ROW = 'grid grid-cols-[2.5rem_5.25rem_3.5rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[2.5rem_5.25rem_5.25rem_3.5rem_minmax(0,1fr)]';
+const ROW = 'grid grid-cols-[2.5rem_4rem_minmax(0,1fr)] gap-x-3 sm:grid-cols-[2.5rem_4rem_4rem_minmax(0,1fr)]';
 
 /**
  * The Dockerfile as built, with the layer each instruction produced read off `layers.<arch>.json`: compressed
- * and on-disk bytes in the gutter and a bar proportional to the compressed size. The base image's layers are
+ * and on-disk bytes in a narrow gutter, nothing else between them and the text. The base image's layers are
  * summed into one line above the text, since a LinuxServer image is essentially one RUN and one COPY on top
  * of its base.
  */
@@ -66,7 +66,6 @@ export default function DockerfileView({ dockerfile, layers, base, layersUrls, i
   }, [table, text, instructions]);
   const total = table.reduce((a, l) => a + l.size, 0);
   const own = total - baseBytes.size;
-  const max = Math.max(1, ...[...byInstruction.values()].map((v) => v.size));
   const startOf = new Map(instructions.map((i) => [i.start, i]));
   const layersUrl = layersUrls?.[arch];
 
@@ -102,7 +101,6 @@ export default function DockerfileView({ dockerfile, layers, base, layersUrls, i
               <span className="text-right">compressed</span>
               <span className="hidden text-right sm:block">on disk</span>
               <span />
-              <span />
             </span>
           )}
           <code>
@@ -123,17 +121,10 @@ export default function DockerfileView({ dockerfile, layers, base, layersUrls, i
                         {b ? fmtBytes(b.size, 1) : '–'}
                       </span>
                       <span className="hidden select-none text-right text-muted-foreground tabular-nums sm:block">{b && b.uncompressed > 0 ? fmtBytes(b.uncompressed, 1) : b ? '' : '–'}</span>
-                      <span className="flex items-center" aria-hidden="true">
-                        {b && (
-                          <span className="h-1.5 w-full overflow-hidden rounded-sm bg-[var(--raft-bar-track)]">
-                            <span className={`block h-full rounded-sm ${isFrom ? 'bg-[var(--raft-hair-strong)]' : 'bg-[var(--raft-bar)]'}`} style={{ width: `${Math.min(100, Math.max(2, (b.size / max) * 100))}%` }} />
-                          </span>
-                        )}
-                      </span>
                       <span className="sr-only">{b ? `${isFrom ? 'base image brings' : 'added'} ${fmtBytes(b.size)} compressed${b.uncompressed ? `, ${fmtBytes(b.uncompressed)} on disk,` : ''} in layer ${b.layers.join(', ')}` : 'added no layer'}</span>
                     </>
                   ) : (
-                    <span className="col-span-2 sm:col-span-3" />
+                    <span className="sm:col-span-2" />
                   )}
                   <span className="whitespace-pre">
                     <Line text={line} />
