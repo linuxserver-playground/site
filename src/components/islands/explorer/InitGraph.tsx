@@ -3,7 +3,7 @@ import type { BuildBase, InitUnit } from '@/lib/hub';
 import { withBase } from '@/lib/base';
 import { buildUrl } from '@/lib/build-helpers';
 import { initStages, reducedMotion, SOURCE_COLOR } from '@/lib/explorer';
-import { attributeUnits, loadBaseLayers, unresolvedReason, type Attribution, type BaseLayers, type InitChain } from '@/lib/init-chain';
+import { attributeUnits, loadBaseLayers, unresolvedReason, type Attribution, type BaseLayers, type ChainHop, type InitChain } from '@/lib/init-chain';
 import CopyButton from '../CopyButton';
 
 interface Props {
@@ -19,7 +19,17 @@ type LayersState = { status: 'idle' | 'loading' } | { status: 'error'; message: 
 
 const LINK = 'underline decoration-[var(--raft-hair-strong)] underline-offset-4 hover:text-primary hover:decoration-current';
 
-type Item = { kind: 'unit'; key: string; unit: InitUnit; stage: number } | { kind: 'base'; key: string; units: InitUnit[]; stages: [number, number] };
+type Item =
+  | { kind: 'unit'; key: string; unit: InitUnit; stage: number }
+  | {
+      kind: 'base';
+      key: string;
+      units: InitUnit[];
+      stages: [number, number];
+      /** Index of the base image in the chain that defines these units; null until the chain is read or when it ends short. */
+      layer: number | null;
+      label: string;
+    };
 
 interface Column {
   items: Item[];
@@ -57,31 +67,42 @@ const PAD = 16;
 const LABEL_H = 20;
 
 const sourceLabel = (u: InitUnit, image: string) => (u.source === 'image' ? image : u.source === 'base' ? 'the base image' : u.source === 'mod' ? 'a mod' : 'unknown');
-const groupLabel = (g: Extract<Item, { kind: 'base' }>) => `base init · ${g.units.length} unit${g.units.length === 1 ? '' : 's'}`;
 const stageLabel = ([a, b]: [number, number]) => (a === b ? `stage ${a + 1}` : `stages ${a + 1}–${b + 1}`);
+/** One colour per base image of the chain: the first base violet as before, the one under it amber. */
+const layerColor = (layer: number | null) => (layer === null || layer === 0 ? SOURCE_COLOR.base : layer === 1 ? 'var(--raft-amber)' : 'var(--muted-foreground)');
 
 /**
- * Columns, left to right, one per stage, except that runs of stages holding nothing but base units fold
- * into one column: a LinuxServer image inherits a dozen `init-*` steps from its base and the point of the
- * drawing is where this image's units slot in between them.
+ * Columns, left to right, one per stage, except that runs of stages holding nothing but one base image's units
+ * fold into one column: a LinuxServer image inherits a dozen `init-*` steps from its base and the point of the
+ * drawing is where this image's units, and each base's, slot in between the others'. Before the chain of bases
+ * is read every inherited unit is one layer; after it, selkies' units group apart from ubuntu's.
  */
-function buildColumns(stages: InitUnit[][]): Column[] {
+function buildColumns(stages: InitUnit[][], layerOf: (name: string) => number | null, layerName: (layer: number | null) => string): Column[] {
   const cols: Column[] = [];
   stages.forEach((units, s) => {
-    const own = units.filter((u) => u.source !== 'base');
-    const base = units.filter((u) => u.source === 'base');
+    const own = units.filter((u) => u.source !== 'base' && layerOf(u.name) === null);
+    const byLayer = new Map<number | null, InitUnit[]>();
+    for (const u of units) {
+      if (own.includes(u)) continue;
+      const layer = layerOf(u.name);
+      byLayer.set(layer, [...(byLayer.get(layer) ?? []), u]);
+    }
     const last = cols[cols.length - 1];
     const lastGroup = last?.items.length === 1 && last.items[0].kind === 'base' ? last.items[0] : undefined;
-    if (!own.length && base.length && lastGroup && last.stages[1] === s - 1) {
-      lastGroup.units.push(...base);
+    const onlyLayer = !own.length && byLayer.size === 1 ? [...byLayer.keys()][0] : undefined;
+    if (onlyLayer !== undefined && lastGroup && lastGroup.layer === onlyLayer && last.stages[1] === s - 1) {
+      lastGroup.units.push(...byLayer.get(onlyLayer)!);
       lastGroup.stages[1] = s;
       last.stages[1] = s;
       return;
     }
     const items: Item[] = own.map((u) => ({ kind: 'unit', key: u.name, unit: u, stage: s }));
-    if (base.length) items.push({ kind: 'base', key: `base-${s}`, units: [...base], stages: [s, s] });
+    for (const layer of [...byLayer.keys()].sort((a, b) => (a ?? 99) - (b ?? 99))) {
+      items.push({ kind: 'base', key: `base-${layer ?? 'x'}-${s}`, units: [...byLayer.get(layer)!], stages: [s, s], layer, label: '' });
+    }
     cols.push({ items, stages: [s, s], x: 0, width: 0 });
   });
+  for (const col of cols) for (const it of col.items) if (it.kind === 'base') it.label = `${layerName(it.layer)} · ${it.units.length} unit${it.units.length === 1 ? '' : 's'}`;
   return cols;
 }
 
@@ -89,7 +110,7 @@ const unitWidth = (u: InitUnit) => 10 + (u.type.length * PILL_CHAR + 10) + 8 + u
 const itemWidth = (it: Item, expanded: boolean) =>
   it.kind === 'unit'
     ? unitWidth(it.unit)
-    : Math.max((groupLabel(it).length + 4) * CHAR + 24, expanded ? Math.max(...it.units.map((u) => u.name.length)) * CHAR + 44 : 0);
+    : Math.max((it.label.length + 4) * CHAR + 24, expanded ? Math.max(...it.units.map((u) => u.name.length)) * CHAR + 44 : 0);
 const itemHeight = (it: Item, expanded: boolean) => (it.kind === 'base' && expanded ? NODE_H + it.units.length * ROW_H + 6 : NODE_H);
 
 function place(columns: Column[], expanded: Set<string>) {
@@ -201,20 +222,9 @@ function TypePill({ type }: { type: string }) {
  */
 export default function InitGraph({ units, image, base, chain }: Props) {
   const { stages, stageOf, missing } = React.useMemo(() => initStages(units), [units]);
-  const columns = React.useMemo(() => buildColumns(stages), [stages]);
-  const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
-  const [selected, setSelected] = React.useState<string | null>(null);
-  const [reduced, setReduced] = React.useState(false);
-  React.useEffect(() => setReduced(reducedMotion()), []);
-  const { spots, rects, width, height } = React.useMemo(() => place(columns, expanded), [columns, expanded]);
-  const edges = React.useMemo(() => edgesOf(units, spots), [units, spots]);
-  const byName = React.useMemo(() => new Map(units.map((u) => [u.name, u])), [units]);
-  const dependents = React.useCallback((name: string) => units.filter((u) => u.depends_on.includes(name)).map((u) => u.name), [units]);
 
-  const sel = selected ? byName.get(selected) : undefined;
-  const related = new Set<string>(sel ? [sel.name, ...sel.depends_on, ...dependents(sel.name)] : []);
-
-  // The base images' builds, read once someone looks at a base unit.
+  // The base images' builds: which base defines each inherited unit, and its script. Read when the island mounts,
+  // because an image with no units of its own (every selkies app) is one blob of inherited units until then.
   const [layers, setLayers] = React.useState<LayersState>({ status: 'idle' });
   const loading = React.useRef(false);
   const ensureLayers = React.useCallback(() => {
@@ -228,12 +238,40 @@ export default function InitGraph({ units, image, base, chain }: Props) {
         setLayers({ status: 'error', message: e instanceof Error ? e.message : String(e) });
       });
   }, [base, chain]);
-  React.useEffect(() => {
-    if (layers.status === 'idle' && ((sel && sel.source === 'base') || expanded.size > 0)) ensureLayers();
-  }, [sel, expanded, layers.status, ensureLayers]);
+  React.useEffect(() => ensureLayers(), [ensureLayers]);
   const attributed = React.useMemo(() => (layers.status === 'ready' ? attributeUnits(units, layers.hops) : new Map<string, Attribution>()), [units, layers]);
-  const hopOf = (name: string) => (layers.status === 'ready' ? layers.chain.hops[attributed.get(name)?.hop ?? -1] : undefined);
+  const hops = React.useMemo<ChainHop[]>(() => (layers.status === 'ready' ? layers.chain.hops : []), [layers]);
+  const layerOf = React.useCallback((name: string) => attributed.get(name)?.hop ?? null, [attributed]);
+  // Units no base's build claims: the layer under the last base that did claim some, or a base not built here.
+  const belowName = React.useMemo(() => {
+    if (layers.status !== 'ready') return 'base init';
+    const end = layers.chain.end;
+    if (end.kind === 'upstream' || end.kind === 'missing') return end.image;
+    const claimed = [...attributed.values()].reduce((m, a) => Math.max(m, a.hop), -1);
+    if (claimed >= 0) return `below ${hops[claimed].image}`;
+    return hops.length ? `${hops[0].image} (older build)` : 'base init';
+  }, [layers, attributed, hops]);
+  const layerName = React.useCallback((layer: number | null) => (layer === null ? belowName : hops[layer].image), [hops, belowName]);
+  const hopOf = (name: string) => hops[attributed.get(name)?.hop ?? -1];
   const labelOf = (u: InitUnit) => hopOf(u.name)?.image ?? sourceLabel(u, image);
+
+  const columns = React.useMemo(() => buildColumns(stages, layerOf, layerName), [stages, layerOf, layerName]);
+  const [expanded, setExpanded] = React.useState<Set<string>>(() => new Set());
+  // With nothing of its own to slot between them, the image's graph is its bases': show their units.
+  const nothingOwn = units.every((u) => u.source === 'base' || attributed.has(u.name));
+  React.useEffect(() => {
+    if (nothingOwn) setExpanded(new Set(columns.flatMap((c) => c.items.filter((it) => it.kind === 'base').map((it) => it.key))));
+  }, [columns, nothingOwn]);
+  const [selected, setSelected] = React.useState<string | null>(null);
+  const [reduced, setReduced] = React.useState(false);
+  React.useEffect(() => setReduced(reducedMotion()), []);
+  const { spots, rects, width, height } = React.useMemo(() => place(columns, expanded), [columns, expanded]);
+  const edges = React.useMemo(() => edgesOf(units, spots), [units, spots]);
+  const byName = React.useMemo(() => new Map(units.map((u) => [u.name, u])), [units]);
+  const dependents = React.useCallback((name: string) => units.filter((u) => u.depends_on.includes(name)).map((u) => u.name), [units]);
+
+  const sel = selected ? byName.get(selected) : undefined;
+  const related = new Set<string>(sel ? [sel.name, ...sel.depends_on, ...dependents(sel.name)] : []);
   const selHop = sel ? hopOf(sel.name) : undefined;
   const script = sel ? (sel.script ?? attributed.get(sel.name)?.script ?? null) : null;
   const scriptNote = (u: InitUnit): React.ReactNode => {
@@ -263,7 +301,9 @@ export default function InitGraph({ units, image, base, chain }: Props) {
     </a>
   );
   const counts = { base: 0, image: 0, mod: 0 };
-  for (const u of units) if (u.source && u.source in counts) counts[u.source as keyof typeof counts]++;
+  for (const u of units) if (u.source && u.source in counts) counts[attributed.has(u.name) ? 'base' : (u.source as keyof typeof counts)]++;
+  const perLayer = hops.map((h, i) => ({ hop: h, n: units.filter((u) => attributed.get(u.name)?.hop === i).length })).filter((x) => x.n);
+  const unattributed = units.filter((u) => u.source === 'base' && !attributed.has(u.name)).length;
   const services = units.filter((u) => u.type === 'longrun').map((u) => u.name);
 
   const toggle = (key: string) =>
@@ -295,7 +335,8 @@ export default function InitGraph({ units, image, base, chain }: Props) {
     return { within, into, out };
   };
 
-  const summary = `${units.length} units, ${counts.image} from this image, ${counts.base} from the base${counts.mod ? `, ${counts.mod} from mods` : ''}, in ${stages.length} stages${services.length ? `; services: ${services.join(', ')}` : ''}`;
+  const fromBases = perLayer.length ? perLayer.map((x) => `${x.n} from ${x.hop.image}`).join(', ') + (unattributed ? `, ${unattributed} ${belowName.startsWith('below') ? belowName : `from ${belowName}`}` : '') : `${counts.base} from the base`;
+  const summary = `${units.length} units, ${counts.image} from this image, ${fromBases}${counts.mod ? `, ${counts.mod} from mods` : ''}, in ${stages.length} stages${services.length ? `; services: ${services.join(', ')}` : ''}`;
 
   const list = (imageFirst: boolean) => {
     const rank = (u: InitUnit) => (u.source === 'image' ? 0 : u.source === 'mod' ? 1 : 2);
@@ -340,14 +381,26 @@ export default function InitGraph({ units, image, base, chain }: Props) {
           </p>
         )}
         <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-label="Legend">
-          {(['image', 'mod', 'base'] as const)
+          {(['image', 'mod'] as const)
             .filter((s) => counts[s])
             .map((s) => (
               <li key={s} className="inline-flex items-center gap-1.5">
                 <span className="size-2.5 rounded-sm" style={{ background: SOURCE_COLOR[s] }} aria-hidden="true" />
-                {s === 'image' ? 'this image' : s === 'base' ? 'base image' : 'mod'}
+                {s === 'image' ? 'this image' : 'mod'}
               </li>
             ))}
+          {perLayer.map((x, i) => (
+            <li key={x.hop.image} className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm" style={{ background: layerColor(hops.indexOf(x.hop)) }} aria-hidden="true" />
+              {x.hop.image}
+            </li>
+          ))}
+          {(unattributed > 0 || (!perLayer.length && counts.base > 0)) && (
+            <li className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm" style={{ background: SOURCE_COLOR.base }} aria-hidden="true" />
+              {perLayer.length ? belowName : 'base image'}
+            </li>
+          )}
           <li className="inline-flex items-center gap-1.5">
             <TypePill type="oneshot" /> runs once
           </li>
@@ -435,19 +488,19 @@ export default function InitGraph({ units, image, base, chain }: Props) {
                       role="button"
                       tabIndex={0}
                       aria-expanded={open}
-                      aria-label={`${groupLabel(it)} from the base image, ${stageLabel(it.stages)}; ${ec.within} dependencies between them, ${ec.into} in, ${ec.out} out. ${open ? 'Collapse' : 'Expand'}`}
+                      aria-label={`${it.label}${it.layer === null ? ' from the base image' : ''}, ${stageLabel(it.stages)}; ${ec.within} dependencies between them, ${ec.into} in, ${ec.out} out. ${open ? 'Collapse' : 'Expand'}`}
                       onClick={() => toggle(it.key)}
                       onKeyDown={onKey(() => toggle(it.key))}
                       className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--ring)] focus-visible:[&>rect]:stroke-2"
                     >
                       <title>{`${it.units.map((u) => u.name).join(', ')}\n${ec.within} dependencies between them, ${ec.into} in, ${ec.out} out`}</title>
                       <rect width={r.w} height={NODE_H} rx={6} fill="transparent" stroke="transparent" />
-                      <rect x={0} y={0} width={4} height={NODE_H} rx={2} fill={SOURCE_COLOR.base} />
+                      <rect x={0} y={0} width={4} height={NODE_H} rx={2} fill={layerColor(it.layer)} />
                       <text y={NODE_H / 2 + 4} fill="var(--foreground)" style={{ fontSize: 11 }}>
                         <tspan x={12} fill="var(--muted-foreground)">
                           {open ? '▾' : '▸'}
                         </tspan>{' '}
-                        <tspan x={24}>{groupLabel(it)}</tspan>
+                        <tspan x={24}>{it.label}</tspan>
                       </text>
                     </g>
                     {open &&
