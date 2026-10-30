@@ -13,6 +13,24 @@ import { LINKS } from '@/lib/site';
 
 const sections = await getSections();
 const pageCount = sections.reduce((n, s) => n + s.sequence.length, 0);
+
+/**
+ * Two columns packed by height, not a grid: a section with forty pages beside one with four would stretch both
+ * cards to the taller one. Each card's height is roughly its header plus one row per two pages (and one per group
+ * heading); the heaviest section goes first into the lighter column, then each column keeps the sections' own
+ * order. The lighter column sits on the left so that, stacked on a phone, the short sections come first.
+ */
+type Section = (typeof sections)[number];
+const weight = (s: Section) => 4 + s.groups.reduce((n, g) => n + Math.ceil(g.pages.length / 2) + (g.name ? 1 : 0), 0);
+const packed: [Section[], Section[]] = [[], []];
+const load = [0, 0];
+for (const s of [...sections].sort((a, b) => weight(b) - weight(a))) {
+  const i = load[0] <= load[1] ? 0 : 1;
+  packed[i].push(s);
+  load[i] += weight(s);
+}
+const columns = packed.map((c) => c.sort((a, b) => sections.indexOf(a) - sections.indexOf(b)));
+if (load[0] > load[1]) columns.reverse();
 const crumbs = [{ name: 'Docs', href: '/docs/' }];
 const description =
   'General guides for running LinuxServer.io containers, the Selkies platform documentation, our policies and the FAQ. Every image has its own page in the catalogue.';
@@ -49,9 +67,12 @@ const contact = [
 
   <section class="raft-container pt-14" aria-labelledby="sections-title">
     <h2 id="sections-title" class="raft-eyebrow"><span class="text-primary" aria-hidden="true">//</span> Sections</h2>
-    <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div class="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2 md:items-start">
       {
-        sections.map((s) => (
+        columns.map((column) => (
+          <div class="flex flex-col gap-4">
+      {
+        column.map((s) => (
           <section class="raft-panel raft-glow-edge flex flex-col p-6" aria-labelledby={`section-${s.id}`}>
             <h3 id={`section-${s.id}`} class="text-xl font-semibold tracking-tight">
               <a href={s.url} class="hover:text-primary">
@@ -79,6 +100,9 @@ const contact = [
               <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </a>
           </section>
+        ))
+      }
+          </div>
         ))
       }
     </div>
