@@ -1,0 +1,923 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "znc",
+  "repository": "linuxserver-playground/docker-znc",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "znc-1.10.3",
+   "upstream_clean": "znc-1.10.3",
+   "semver": "1.10.3",
+   "ls_build": 1,
+   "tag": "znc-1.10.3-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "znc-1.10.3-ls1",
+    "version-znc-1.10.3",
+    "1.10.3",
+    "amd64-latest",
+    "amd64-znc-1.10.3-ls1",
+    "amd64-version-znc-1.10.3",
+    "amd64-1.10.3",
+    "arm64v8-latest",
+    "arm64v8-znc-1.10.3-ls1",
+    "arm64v8-version-znc-1.10.3",
+    "arm64v8-1.10.3"
+   ],
+   "source": "json",
+   "source_url": "https://api.github.com/repos/znc/znc/tags"
+  },
+  "commit": "54d18f26e009020231fb49fc371cffecea504eed",
+  "created": "2026-10-26T00:54:58Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+   "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:d3cb9f491b3ba2acd1f6f9c883b0fdb7145fd71271594f227cf447f6da4ffc16",
+    "size": 26402886,
+    "uncompressed_size": 78908548,
+    "layers": 11,
+    "runner": "Linux-X64",
+    "build_seconds": 144
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:55e32e61d7de0c8b0ce06b0684dde37bbabed392b76cae3edfc42fa9323360ba",
+    "size": 27162469,
+    "uncompressed_size": 94256907,
+    "layers": 11,
+    "runner": "Linux-ARM64",
+    "build_seconds": 96
+   }
+  ],
+  "index_digest": "sha256:7a55ab2515d94ca6ed176ed6ff8ef211222f90ec4b0e0bde2cac3e4665d47218",
+  "labels": {
+   "build_version": "Linuxserver.io version:- znc-1.10.3-ls1 Build-date:- 2026-10-26T00:43:56Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine:3.22@sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "znc-1.10.3",
+   "maintainer": "notaptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T00:43:56Z",
+   "org.opencontainers.image.description": "Znc is an IRC network bouncer or BNC.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-znc",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "491c3b965a8ad044cc1140ad2651edc6f1ce0293",
+   "org.opencontainers.image.revision": "54d18f26e009020231fb49fc371cffecea504eed",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-znc",
+   "org.opencontainers.image.title": "Znc",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-znc/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "znc-1.10.3-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "6501/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.22 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n############## build stage ##############\n\n# package version\nARG ZNC_RELEASE\n\nENV MAKEFLAGS=\"-j4\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add -U --update --no-cache \\\n    argon2-dev \\\n    autoconf \\\n    automake \\\n    boost-dev\\\n    build-base \\\n    c-ares-dev \\\n    cyrus-sasl-dev \\\n    gettext-dev \\\n    git \\\n    icu-dev \\\n    openssl-dev \\\n    perl-dev \\\n    python3-dev \\\n    swig \\\n    tar \\\n    tcl-dev && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir pip setuptools && \\\n  pip install -U --no-cache-dir cmake\n\nRUN \\\n  echo \"**** compile znc ****\" && \\\n  if [ -z ${ZNC_RELEASE+x} ]; then \\\n    ZNC_RELEASE=$(curl -s https://api.github.com/repos/znc/znc/tags \\\n    | jq -r 'first(.[] | select(.name | test(\"-rc|-beta|-alpha\") | not)) | .name'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/znc && \\\n  git clone --branch \"${ZNC_RELEASE}\" --depth 1 \\\n    --recurse-submodules \\\n    https://github.com/znc/znc.git \\\n    /tmp/znc && \\\n  curl -o \\\n    /tmp/playback.tar.gz -L \\\n    https://github.com/jpnurmi/znc-playback/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/playback.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  curl -o \\\n    /tmp/znc-push.tar.gz -L \\\n    https://github.com/jreese/znc-push/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/znc-push.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  curl -o \\\n    /tmp/znc-clientbuffer.tar.gz -L \\\n    https://github.com/CyberShadow/znc-clientbuffer/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/znc-clientbuffer.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  curl -o \\\n    /tmp/znc-palaver.tar.gz -L \\\n    https://github.com/cocodelabs/znc-palaver/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/znc-palaver.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  cd /tmp/znc && \\\n  mkdir -p build && \\\n  cd build && \\\n  cmake .. \\\n    -DWANT_PYTHON=yes \\\n    -DWANT_PERL=yes \\\n    -DWANT_TCL=yes && \\\n  make && \\\n  make DESTDIR=/tmp/znc install\n\nRUN \\\n  echo \"**** determine runtime packages ****\" && \\\n  scanelf --needed --nobanner /tmp/znc/usr/local/bin/znc \\\n    | awk '{ gsub(/,/, \"\\nso:\", $2); print \"so:\" $2 }' \\\n    | sort -u \\\n    | xargs -r apk info --installed \\\n    | sort -u \\\n    >> /tmp/znc/packages\n############## runtime stage ##############\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"notaptalca\"\n\n# copy files from build stage\nCOPY --from=buildstage /tmp/znc/usr/ /usr/\nCOPY --from=buildstage /tmp/znc/packages /packages\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  RUNTIME_PACKAGES=$(echo $(cat /packages)) && \\\n  apk add -U --update --no-cache \\\n    ${RUNTIME_PACKAGES} && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 6501\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.22 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n############## build stage ##############\n\n# package version\nARG ZNC_RELEASE\n\nENV MAKEFLAGS=\"-j4\"\n\nRUN \\\n  apk add -U --update --no-cache \\\n    argon2-dev \\\n    autoconf \\\n    automake \\\n    boost-dev\\\n    build-base \\\n    c-ares-dev \\\n    cyrus-sasl-dev \\\n    gettext-dev \\\n    git \\\n    icu-dev \\\n    openssl-dev \\\n    perl-dev \\\n    python3-dev \\\n    swig \\\n    tar \\\n    tcl-dev && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir pip setuptools && \\\n  pip install -U --no-cache-dir cmake\n\nRUN \\\n  echo \"**** compile znc ****\" && \\\n  if [ -z ${ZNC_RELEASE+x} ]; then \\\n    ZNC_RELEASE=$(curl -s https://api.github.com/repos/znc/znc/tags \\\n    | jq -r 'first(.[] | select(.name | test(\"-rc|-beta|-alpha\") | not)) | .name'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/znc && \\\n  git clone --branch \"${ZNC_RELEASE}\" --depth 1 \\\n    --recurse-submodules \\\n    https://github.com/znc/znc.git \\\n    /tmp/znc && \\\n  curl -o \\\n    /tmp/playback.tar.gz -L \\\n    https://github.com/jpnurmi/znc-playback/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/playback.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  curl -o \\\n    /tmp/znc-push.tar.gz -L \\\n    https://github.com/jreese/znc-push/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/znc-push.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  curl -o \\\n    /tmp/znc-clientbuffer.tar.gz -L \\\n    https://github.com/CyberShadow/znc-clientbuffer/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/znc-clientbuffer.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  curl -o \\\n    /tmp/znc-palaver.tar.gz -L \\\n    https://github.com/cocodelabs/znc-palaver/archive/master.tar.gz && \\\n  tar xf \\\n    /tmp/znc-palaver.tar.gz -C \\\n    /tmp/znc/modules --strip-components=1 && \\\n  cd /tmp/znc && \\\n  mkdir -p build && \\\n  cd build && \\\n  cmake .. \\\n    -DWANT_PYTHON=yes \\\n    -DWANT_PERL=yes \\\n    -DWANT_TCL=yes && \\\n  make && \\\n  make DESTDIR=/tmp/znc install\n\nRUN \\\n  echo \"**** determine runtime packages ****\" && \\\n  scanelf --needed --nobanner /tmp/znc/usr/local/bin/znc \\\n    | awk '{ gsub(/,/, \"\\nso:\", $2); print \"so:\" $2 }' \\\n    | sort -u \\\n    | xargs -r apk info --installed \\\n    | sort -u \\\n    >> /tmp/znc/packages\n############## runtime stage ##############\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"notaptalca\"\n\n# copy files from build stage\nCOPY --from=buildstage /tmp/znc/usr/ /usr/\nCOPY --from=buildstage /tmp/znc/packages /packages\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  RUNTIME_PACKAGES=$(echo $(cat /packages)) && \\\n  apk add -U --update --no-cache \\\n    ${RUNTIME_PACKAGES} && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 6501\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"znc:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-znc-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-znc-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-znc\n  svc-znc -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"znc:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-znc-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-znc-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make folders\nmkdir -p \\\n    /config/configs\n\n# generate license file\nif [[ ! -f /config/znc.pem ]]; then\n    /usr/local/bin/znc -d /config -p\nfi\n\nwhile [[ ! -f \"/config/znc.pem\" ]]; do\n    echo \"waiting for pem file to be generated\"\n    sleep 2s\ndone\n\n# copy config\nif [[ ! -f /config/configs/znc.conf ]]; then\n    cp /defaults/znc.conf /config/configs/znc.conf\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-znc",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nPORT=$(grep \"Port =\" /config/configs/znc.conf | awk -F '=' '{print $2;exit}')\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost ${PORT}\" \\\n        s6-setuidgid abc /usr/local/bin/znc -d /config \\\n        --foreground\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 58,
+    "distro": "Alpine Linux v3.22",
+    "hash": "406cdfbe",
+    "by_type": {
+     "apk": 58
+    }
+   },
+   "arm64": {
+    "count": 58,
+    "distro": "Alpine Linux v3.22",
+    "hash": "406cdfbe",
+    "by_type": {
+     "apk": 58
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/znc/builds/znc-1.10.3-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-znc/commits/znc-1.10.3-ls1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 22668,
+    "sha256": "8177c49e5afb1974f1e60a402036143e04c5d623e7d7cb399347a53dc4e6f5b0",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5103,
+    "sha256": "38063d7ef21ed6562ab8adae76ba4ddcd2aff8688eb3d2cda3e8d62d4ab86ae8",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 29511,
+    "sha256": "31d8692d547bec95da7af0a61baf155630e2d7392f2098c0e42fcdc04e76d17e",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2250,
+    "sha256": "7486c91680d3b0ebce343f575df6eefe6d50b6162086dee4c7135001346b1c28",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 24215,
+    "sha256": "c76e87aa7fcafb4c2885a1fc81b7047554e967138d04876e411842c12ceea496",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 2891,
+    "sha256": "73fd44cced8209bf35e9e66d12fd6963a84b9e49b4cc8d9a19798c0e72487472",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 22550,
+    "sha256": "8d6fe6bb9665259d3a693f110718935c071bb90853dfa6d411d500da1be9f839",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5103,
+    "sha256": "e62d7720fa0cc7302e7d42e51f9489767961989a545a7f651514b85e405f6983",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 29287,
+    "sha256": "ed4cc5042b68c2dab4569247007519842c673c420dd7b353a60ba7355844edcd",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2246,
+    "sha256": "7fb419ee40ab76f560fa977822eea8028cdf1a1bbb2ce5a492e998d0cf32bf12",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 24998,
+    "sha256": "8922e84b85f046c4a31744229de920ffd29d4901f2bcdf7b7c5ef03aa5bcbc89",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 2891,
+    "sha256": "73fd44cced8209bf35e9e66d12fd6963a84b9e49b4cc8d9a19798c0e72487472",
+    "url": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40250483259,
+   "run_url": "https://github.com/linuxserver-playground/docker-znc/actions/runs/40250483259",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "znc",
+  "branch": "master",
+  "tag": "znc-1.10.3-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "znc-1.10.3",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+    "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 26402886
+   },
+   "arm64": {
+    "to": 27162469
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "6501/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:c10a8d4755c919b58303aec2ac917dbe11b34a5d209f880be5198408a96d975a",
+    "diff_id": "sha256:f860a16f1e96206b437f9868e485cd03045a7c57be1eabbc83f765a47e472a0b",
+    "size": 6205981,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:9dd90c2c20fec58f43aae9d6531d19a6f87fc0c64c97eabdec6160e4f3d794a2",
+    "diff_id": "sha256:1a7dd45a0c6161785a463caf85b31be9f25dbcd4c978ba3b8aa91c06ed9c442f",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:ae636f090219e4de94ef412de50171b64ac2ee394727d21fbdabe57782946a7a",
+    "diff_id": "sha256:c21b5dfc22f2a4bb9326a5676bdb0e06644e3c75761543690a0ad17462abd1b7",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:2e65cbf9630bbdcb8a79e30fa6df683f859f6fc0d95dc501532b73aed6534291",
+    "diff_id": "sha256:85ecbd6edad29298448740659004ac4b41bbbee545d9a07a8650aa3819c8f224",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:d9d46c85684a52c62b6debeba5395ab8a9a3f4e588264eb63c5c290ff10e62ca",
+    "diff_id": "sha256:a6229eaf3301e773efcae00176b17e9735f7a46b6bd0cacbb80d8ad902192ae4",
+    "size": 5894959,
+    "uncompressed_size": 13967197,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:00+00:00 VERSION=eac05398-ls34 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:57d5bc31944c79616f1d8ace5be1eb5e9b924bf1d99c4042a8a8c034082e9995",
+    "diff_id": "sha256:52afd5a0d7995802effa0b44a646e78dcda30cb58060fe9bd00d9c3a1b2e6116",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:0102863ebd81e2560e4415c949700c225a5b96a8414aad6ef538394307afb80b",
+    "diff_id": "sha256:6a0b757e47285a91db9e8e5da721a56aacd80c9f16416986d44e13907a5f6063",
+    "size": 9666826,
+    "uncompressed_size": 39370640,
+    "created_by": "COPY /tmp/znc/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:a7494de0fcbd0389ea9184ab3894b0c2eaa9fd36dbce76cb4acd223183237f60",
+    "diff_id": "sha256:5252bf49ea8ac3bcb7fc080e23e8048a6c526fe3365ddf1b624731ebe6e1c80e",
+    "size": 169,
+    "uncompressed_size": 84,
+    "created_by": "COPY /tmp/znc/packages /packages",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:4acc9692069ee0dd546a29b3b21b21f1e396af923953bd360cc554bdc7fbbc65",
+    "diff_id": "sha256:df90583b07bc7701c795f11b77c9d27648225ae0ef3f3374560a7b60e06ae6c8",
+    "size": 4620145,
+    "uncompressed_size": 11941881,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-26T00:43:56Z VERSION=znc-1.10.3-ls1 /bin/sh -c echo \"**** install runtime packages ****\" &&   RUNTIME_PACKAGES=$(echo $(cat /packages)) &&   apk add -U --update --no-cache     ${RUNTIME_PACKAGES} &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     106,
+     111
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:cb9c0da3c3d617390c06fe69859e5b93866353e6262bc55a828752fce08ff7d8",
+    "diff_id": "sha256:74b01d3b8e9a9ff2f34519b621789342f725d390acac6d8a0e9e8877067dd13c",
+    "size": 1446,
+    "uncompressed_size": 1612,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     114,
+     114
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:7c1a12c04ebf8d8f75933dea5416a1f8176ff5ef5f27d64d474fbcc98d748912",
+    "diff_id": "sha256:7a79da10dadcae646c1f0e9d792db22875a0073bb51b1803fb068c92fd9a625e",
+    "size": 7020028,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:22685909c4d2a15a1fdd8727cb0d9faf49fdf89cc6e557e628b5343ad7aa7fb0",
+    "diff_id": "sha256:0ae8096293da622b14f4baba38df0776086245bd25468710836f8ec271c3a6f6",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:fd63569d171b3f4e336ea958a96ccf052e5905f513c93fc1587eaf1eaa8cbc93",
+    "diff_id": "sha256:5707a5e1ca04bfcf4f1a26a70b16c34f4c6e2a1703157ba38e4d0a9d27299914",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7cd069a9d6646d5693d76554ff4db39446a48b1d9fa8d7f6120c29731412b7d0",
+    "diff_id": "sha256:86549d453560321defe69345c6173dbc2290e2b4f4106f9328df62943ec17878",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:131b23cd04243350b218a023a3d334f83fdd270df92e99c65efb1b6cd30b97d5",
+    "diff_id": "sha256:5ad6d31d93f5c08ab3f4804d89d8aa13af469ce090d35789595b11e077fe2508",
+    "size": 6110453,
+    "uncompressed_size": 20893504,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:00+00:00 VERSION=eac05398-ls34 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b8667a920a12dbb0e6a31dce507cf26ff0e3a31564a0572c3b2097dc3773b353",
+    "diff_id": "sha256:05b212c0429573bc4c1a0e764e004c125c3c30899441d0136c3f6a638dacf929",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:4ef294b07338f41985cc6be8a1ab27463446be45b845ee579abc1df76b24a033",
+    "diff_id": "sha256:c56507ea6061eb73dd0c51dc664b95188e9bb7b23cb381d4c976b0c8e077a3b4",
+    "size": 9453552,
+    "uncompressed_size": 42648616,
+    "created_by": "COPY /tmp/znc/usr/ /usr/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:d522d1903463fa2fec0efc6f6d65c35ac7c332047c6d8b38dccb59c2bfb5e253",
+    "diff_id": "sha256:d9e890d3183224743143c47e29a8ca49628dd8d541f0111cc27f715e5c9b23b0",
+    "size": 167,
+    "uncompressed_size": 84,
+    "created_by": "COPY /tmp/znc/packages /packages",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:c056149562efcc2ede42e43105a20694e7dac95a10a45dcd6dd1c8c9dd39f5fa",
+    "diff_id": "sha256:e67cc357bf8fc0bbb4f7fd504a659b123436fbda881665742d06bdff8206d9f4",
+    "size": 4563464,
+    "uncompressed_size": 12245521,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-26T00:43:56Z VERSION=znc-1.10.3-ls1 /bin/sh -c echo \"**** install runtime packages ****\" &&   RUNTIME_PACKAGES=$(echo $(cat /packages)) &&   apk add -U --update --no-cache     ${RUNTIME_PACKAGES} &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     105,
+     110
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:448407bd0e9bfde3f743e2d30d65d6bf228b07ec57317332de3893ec52050ff1",
+    "diff_id": "sha256:696e11ba9c0c21cb5a44943a16989d9cd59f1fb45c599505f6328509a79ae264",
+    "size": 1446,
+    "uncompressed_size": 1612,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     113,
+     113
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "znc",
+  "tag": "znc-1.10.3-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/znc/builds/znc-1.10.3-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 3.017,
+    "listening_ports": [
+     "6501/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 28626944,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.01,
+    "listening_ports": [
+     "6501/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 29708288,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-znc/releases/download/znc-1.10.3-ls1/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-znc/builds/znc-1.10.3-ls1/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "znc",
+    "tag": "amd64-54d18f2-40250483259",
+    "arch": "amd64",
+    "started": "2026-10-26T00:51:50Z",
+    "finished": "2026-10-26T00:52:06Z",
+    "success": true,
+    "runner": "24eb00d7a9fa",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.017,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.017
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": ".NET application detected, no runtime errors in the log"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "58 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "58 packages: syft JSON 22668 bytes gzipped, SPDX for the image attestation 121187 bytes",
+      "seconds": 0.097
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "323 dirs, 2153 files (78597652 bytes), 1203 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.08s",
+      "seconds": 0.215
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.372
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.074
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:6501/",
+      "seconds": 10.627
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [6501], rss 28626944 bytes",
+      "seconds": 0.362
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 28626944,
+     "pids": 13,
+     "listening_tcp": [
+      6501
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-znc"
+     ],
+     "changed_paths": 207
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "znc",
+    "tag": "arm64-54d18f2-40250483259",
+    "arch": "arm64",
+    "started": "2026-10-26T00:47:18Z",
+    "finished": "2026-10-26T00:47:33Z",
+    "success": true,
+    "runner": "acb413c12c15",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.01,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.01
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": ".NET application detected, no runtime errors in the log"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "58 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "58 packages: syft JSON 22550 bytes gzipped, SPDX for the image attestation 121245 bytes",
+      "seconds": 0.091
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "323 dirs, 2153 files (93945884 bytes), 1203 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.04s",
+      "seconds": 0.235
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.918
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.048
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:6501/",
+      "seconds": 10.546
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [6501], rss 29708288 bytes",
+      "seconds": 0.2
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 29708288,
+     "pids": 13,
+     "listening_tcp": [
+      6501
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-znc"
+     ],
+     "changed_paths": 207
+    }
+   }
+  }
+ }
+}
