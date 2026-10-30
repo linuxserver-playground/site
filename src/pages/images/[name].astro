@@ -34,7 +34,7 @@ import { getPosts, postsForImage } from '@/lib/posts';
 import { LINKS, SUPPORT_CHANNELS } from '@/lib/site';
 import { imagePrompts } from '@/lib/contribute';
 import { toPostViews } from '@/lib/views';
-import { AlertTriangle, AppWindow, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
+import { AlertTriangle, AppWindow, ArrowRight, ArrowUpRight, Check, Heart, Minus, X } from 'lucide-react';
 
 export function getStaticPaths() {
   return getAllImages().map((image) => ({ params: { name: image.name }, props: { image } }));
@@ -54,6 +54,9 @@ const kindNote =
       ? "A tool: you run it once as a command, or the project's tooling or other images use it. It is not a long-running application and is not in the stores."
       : null;
 const summary = app || hasRealSummary(image) ? image.summary : kindNote!;
+// The upstream project's donation pages. They do the hard work; the image only packages it, so they lead the page.
+const sponsors = (image.sponsor ?? []).filter((s) => /^https?:\/\//.test(s.url));
+const sponsorHost = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 const related = app ? relatedImages(image, 4) : [];
 const posts = await toPostViews(postsForImage(image.name, await getPosts(), 3));
 const extras = getImageExtras(image.name);
@@ -221,6 +224,7 @@ const links = [
   { label: 'Source on GitHub', href: image.github_url },
   { label: 'Package on GHCR', href: image.registries.packages_url },
   ...(image.project_url ? [{ label: `${image.title} project`, href: image.project_url }] : []),
+  ...sponsors.map((s) => ({ label: `Support: ${s.name}`, href: s.url })),
   { label: 'Build status', href: controlImageUrl(image.name) },
   { label: 'Hub API record', href: hubApi(`catalog/${image.name}.json`) },
 ];
@@ -294,6 +298,35 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
         <span class="min-w-0 flex-1 truncate"><span class="text-primary" aria-hidden="true">$ </span>{pull}</span>
         <CopyButton client:visible text={pull} label="Copy docker pull command" variant="secondary" />
       </div>
+      {
+        sponsors.length > 0 && (
+          <aside aria-labelledby="support-upstream" class="mt-6 max-w-2xl rounded-[var(--radius)] border border-[var(--raft-hair-strong)] bg-card/80 p-4 shadow-[var(--raft-shadow)]">
+            <p id="support-upstream" class="flex items-center gap-2 font-medium">
+              <Heart className="size-4 text-primary" aria-hidden="true" /> Support the {image.title} project
+            </p>
+            <p class="mt-1 text-sm text-muted-foreground">
+              {image.title} is made by its own developers; this image only packages it. If it is useful to you, support them directly.
+            </p>
+            <ul class="mt-3 flex flex-wrap gap-2" aria-label={`Ways to support ${image.title}`}>
+              {sponsors.map((s) => (
+                <li>
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:brightness-110"
+                  >
+                    {s.name}
+                    <span class="font-normal">{sponsorHost(s.url)}</span>
+                    <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                    <span class="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </aside>
+        )
+      }
       </div>
       {heroShot && <HeroScreenshot client:load {...heroShot} className="max-w-xl lg:max-w-none" />}
     </div>

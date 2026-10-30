@@ -81,6 +81,8 @@ export interface ImageDetail {
   changelog?: { date: string; desc: string }[] | null;
   config: ImageConfig;
   title: string;
+  /** The upstream project's donation pages (`upstream.sponsor` in the manifest), up to 3. Older snapshots omit it. */
+  sponsor?: { name: string; url: string }[];
   /** `app` for an application; `base` for a base image, `tool` for a run-once or helper image. Older snapshots omit it. */
   kind?: ImageKind;
   categories: string[];
