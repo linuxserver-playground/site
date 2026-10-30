@@ -68,6 +68,9 @@ const LABEL_H = 20;
 
 const sourceLabel = (u: InitUnit, image: string) => (u.source === 'image' ? image : u.source === 'base' ? 'the base image' : u.source === 'mod' ? 'a mod' : 'unknown');
 const stageLabel = ([a, b]: [number, number]) => (a === b ? `stage ${a + 1}` : `stages ${a + 1}–${b + 1}`);
+/** A marker runs nothing: its script is comments only (`init-config-end`: "This file doesn't do anything, it's just
+ * the end of the downstream image init process"). It exists so other units can order themselves around it. */
+const isMarker = (script: string | null | undefined) => !!script && script.split('\n').every((line) => /^\s*(#.*)?$/.test(line));
 /** One colour per base image of the chain: the first base violet as before, the one under it amber. */
 const layerColor = (layer: number | null) => (layer === null || layer === 0 ? SOURCE_COLOR.base : layer === 1 ? 'var(--raft-amber)' : 'var(--muted-foreground)');
 
@@ -273,7 +276,10 @@ export default function InitGraph({ units, image, base, chain }: Props) {
   const sel = selected ? byName.get(selected) : undefined;
   const related = new Set<string>(sel ? [sel.name, ...sel.depends_on, ...dependents(sel.name)] : []);
   const selHop = sel ? hopOf(sel.name) : undefined;
-  const script = sel ? (sel.script ?? attributed.get(sel.name)?.script ?? null) : null;
+  const scriptOf = (u: InitUnit) => u.script ?? attributed.get(u.name)?.script ?? null;
+  const marker = (u: InitUnit) => u.type !== 'bundle' && isMarker(scriptOf(u));
+  const markers = units.filter(marker).length;
+  const script = sel ? scriptOf(sel) : null;
   const scriptNote = (u: InitUnit): React.ReactNode => {
     if (u.type === 'bundle') return 'A bundle: it groups units and has no script of its own.';
     if (u.source !== 'base' && !attributed.has(u.name)) return 'No script for this unit.';
@@ -321,7 +327,7 @@ export default function InitGraph({ units, image, base, chain }: Props) {
     }
   };
   // Accessible names start with the node's visible text, in the order it is drawn (WCAG 2.5.3).
-  const describe = (u: InitUnit, prefix = u.name) => `${prefix}, ${u.type}, from ${labelOf(u)}, stage ${stageOf.get(u.name)! + 1}${u.depends_on.length ? `, after ${u.depends_on.join(', ')}` : ', starts first'}`;
+  const describe = (u: InitUnit, prefix = u.name) => `${prefix}, ${u.type}${marker(u) ? ', a marker that runs nothing' : ''}, from ${labelOf(u)}, stage ${stageOf.get(u.name)! + 1}${u.depends_on.length ? `, after ${u.depends_on.join(', ')}` : ', starts first'}`;
   const groupEdges = (g: Extract<Item, { kind: 'base' }>) => {
     const names = new Set(g.units.map((u) => u.name));
     let within = 0;
@@ -336,7 +342,7 @@ export default function InitGraph({ units, image, base, chain }: Props) {
   };
 
   const fromBases = perLayer.length ? perLayer.map((x) => `${x.n} from ${x.hop.image}`).join(', ') + (unattributed ? `, ${unattributed} ${belowName.startsWith('below') ? belowName : `from ${belowName}`}` : '') : `${counts.base} from the base`;
-  const summary = `${units.length} units, ${counts.image} from this image, ${fromBases}${counts.mod ? `, ${counts.mod} from mods` : ''}, in ${stages.length} stages${services.length ? `; services: ${services.join(', ')}` : ''}`;
+  const summary = `${units.length} units, ${counts.image} from this image, ${fromBases}${counts.mod ? `, ${counts.mod} from mods` : ''}${markers ? `, ${markers} markers` : ''}, in ${stages.length} stages${services.length ? `; services: ${services.join(', ')}` : ''}`;
 
   const list = (imageFirst: boolean) => {
     const rank = (u: InitUnit) => (u.source === 'image' ? 0 : u.source === 'mod' ? 1 : 2);
@@ -348,11 +354,12 @@ export default function InitGraph({ units, image, base, chain }: Props) {
             <span className="w-6 shrink-0 text-right font-mono text-xs text-muted-foreground tabular-nums" aria-label={`stage ${stageOf.get(u.name)! + 1}`}>
               {stageOf.get(u.name)! + 1}
             </span>
-            <button type="button" onClick={() => select(u.name)} aria-pressed={selected === u.name} className={`font-mono text-xs font-medium underline-offset-4 hover:underline ${u.source === 'image' ? 'text-primary' : u.source === 'mod' ? 'text-[var(--raft-ok)]' : ''}`}>
+            <button type="button" onClick={() => select(u.name)} aria-pressed={selected === u.name} className={`font-mono text-xs font-medium underline-offset-4 hover:underline ${marker(u) ? 'text-muted-foreground' : u.source === 'image' ? 'text-primary' : u.source === 'mod' ? 'text-[var(--raft-ok)]' : ''}`}>
               {u.name}
             </button>
             <span className="font-mono text-[0.6875rem] text-muted-foreground">
               {u.type}
+              {marker(u) && ' · marker'}
               {u.source && ` · ${hopOf(u.name)?.image ?? (u.source === 'image' ? image : u.source)}`}
               {u.depends_on.length > 0 && ` · after ${u.depends_on.join(', ')}`}
             </span>
@@ -404,6 +411,11 @@ export default function InitGraph({ units, image, base, chain }: Props) {
           <li className="inline-flex items-center gap-1.5">
             <TypePill type="oneshot" /> runs once
           </li>
+          {markers > 0 && (
+            <li className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm border border-dashed border-[var(--muted-foreground)]" aria-hidden="true" /> marker, runs nothing
+            </li>
+          )}
           <li className="inline-flex items-center gap-1.5">
             <TypePill type="longrun" /> service
           </li>
@@ -454,6 +466,7 @@ export default function InitGraph({ units, image, base, chain }: Props) {
                   const dim = sel && !related.has(u.name);
                   const color = SOURCE_COLOR[u.source ?? ''] ?? 'var(--muted-foreground)';
                   const pillW = u.type.length * PILL_CHAR + 10;
+                  const mk = marker(u);
                   return (
                     <g
                       key={it.key}
@@ -464,13 +477,13 @@ export default function InitGraph({ units, image, base, chain }: Props) {
                       onClick={() => select(u.name)}
                       onKeyDown={onKey(() => select(u.name))}
                       className="cursor-pointer outline-none focus-visible:[&>rect:first-of-type]:stroke-[var(--ring)] focus-visible:[&>rect:first-of-type]:stroke-2"
-                      opacity={dim ? 0.65 : 1}
+                      opacity={dim ? 0.65 : mk ? 0.75 : 1}
                       transform={`translate(${r.x},${r.y})`}
                     >
-                      <rect width={r.w} height={r.h} rx={6} fill="var(--card)" stroke={isSel ? 'var(--primary)' : color} strokeWidth={isSel ? 2 : 1.25} />
-                      <rect x={0} y={0} width={4} height={r.h} rx={2} fill={color} />
+                      <rect width={r.w} height={r.h} rx={6} fill="var(--card)" stroke={isSel ? 'var(--primary)' : color} strokeWidth={isSel ? 2 : 1.25} strokeDasharray={mk && !isSel ? '4 3' : undefined} />
+                      <rect x={0} y={0} width={4} height={r.h} rx={2} fill={color} opacity={mk ? 0.4 : 1} />
                       <rect x={10} y={(r.h - 14) / 2} width={pillW} height={14} rx={3} fill="var(--muted)" stroke="var(--raft-hair-strong)" />
-                      <text y={r.h / 2 + 4} fill="var(--foreground)" style={{ fontSize: 11, fontWeight: 500 }}>
+                      <text y={r.h / 2 + 4} fill={mk ? 'var(--muted-foreground)' : 'var(--foreground)'} style={{ fontSize: 11, fontWeight: mk ? 400 : 500 }}>
                         <tspan x={10 + pillW / 2} textAnchor="middle" fill="var(--muted-foreground)" style={{ fontSize: 9.5, fontWeight: 400 }}>
                           {u.type}
                         </tspan>{' '}
@@ -522,7 +535,7 @@ export default function InitGraph({ units, image, base, chain }: Props) {
                             transform={`translate(6,${NODE_H + i * ROW_H})`}
                           >
                             <rect width={r.w - 12} height={ROW_H} rx={4} fill={isSel ? 'var(--card)' : 'transparent'} stroke={isSel ? 'var(--primary)' : 'transparent'} strokeWidth={isSel ? 1.5 : 1} />
-                            <text y={ROW_H / 2 + 4} fill="var(--foreground)" style={{ fontSize: 11 }}>
+                            <text y={ROW_H / 2 + 4} fill={marker(u) ? 'var(--muted-foreground)' : 'var(--foreground)'} style={{ fontSize: 11 }}>
                               {spans && (
                                 <>
                                   <tspan x={8} fill="var(--muted-foreground)" style={{ fontSize: 9.5 }}>
@@ -595,6 +608,9 @@ export default function InitGraph({ units, image, base, chain }: Props) {
               </dd>
             </div>
           </dl>
+          {sel && marker(sel) && (
+            <p className="mt-3 text-xs text-muted-foreground">A marker: it runs nothing. It exists so other units can order themselves before or after it.</p>
+          )}
           {script ? (
             <div className="mt-4">
               <div className="flex items-center justify-between gap-2">
