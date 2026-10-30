@@ -45,26 +45,24 @@ Every URL the templates print comes from `Settings` in `builder/manifest.py`, ov
 
 `README.md.j2` and `docs.md.j2` are skeletons: a `flavour` variable (`gfm` or `mkdocs`), the do-not-edit banner, then `parts/body.j2`, which includes one part per section in this order. A part is included only when the condition holds.
 
-| Part | Heading | Rendered when | Fields |
-| --- | --- | --- | --- |
-| `deprecation.j2` | (banner) | `deprecation.status` | `deprecation.message` |
-| `project_badges.j2` | (badges under the title) | always | `name`, `release.tag`, control and site URLs |
-| `body.j2` itself | summary, extras, logo | always | `summary`, `extras`, `docs.logo`, `upstream.url` |
-| `supported_architectures.j2` | Supported Architectures | always | `build.platforms` |
-| `version_tags.j2` | Version Tags | `release.tags` set | `release.tags` |
-| `application_setup.j2` | Application Setup | `docs.setup`, any notice, or selkies | `docs.setup`, `docs.notices.*` (sub-sections `strict_proxy`, `seccomp`, `keyboard.j2`, `hwaccel.j2`, `media.j2`, `kasm.j2`, `selkies.j2`) |
-| `readonly.j2`, `nonroot.j2` | Read-Only Operation, Non-Root Operation | `runtime.readonly.supported`, `runtime.nonroot.supported` | their `notes` |
-| `usage.j2` | Usage | always | `compose_snippet`, `run_snippet` (from `snippets.py`) |
-| `parameters_gfm.j2` / `parameters_mkdocs.j2` | Parameters | always | the whole normalised `runtime` (`rt`), via `misc_rows.j2` for hostname, mac, caps, security_opt, custom |
-| `env_var_files.j2` | Environment variables from files (Docker secrets) | always | |
-| `umask.j2` | Umask for running applications | always | |
-| (inline) | Optional Parameters | `docs.optional_parameters` | |
-| `user_group_identifiers.j2` | User / Group Identifiers | `runtime.common_env` | |
-| `docker_mods.j2` | Docker Mods | always | mods URLs for this image |
-| `support_info.j2` | Support Info | always | `runtime.container_name`, image ref |
-| `updating_info.j2` | Updating Info | always | same |
-| `building_locally.j2` | Building locally | always | repo, image ref, control page |
-| `versions.j2` | Versions | always | `changelog` |
+- **`deprecation.j2`**: banner. Rendered when `deprecation.status`. Uses `deprecation.message`.
+- **`project_badges.j2`**: badges under the title. Uses `name`, `release.tag`, control and site URLs.
+- **`body.j2` itself**: summary, extras, logo. Uses `summary`, `extras`, `docs.logo`, `upstream.url`.
+- **`supported_architectures.j2`**: Supported Architectures. Uses `build.platforms`.
+- **`version_tags.j2`**: Version Tags. Rendered when `release.tags` set. Uses `release.tags`.
+- **`application_setup.j2`**: Application Setup. Rendered when `docs.setup`, any notice, or selkies. Uses `docs.setup`, `docs.notices.*` (sub-sections `strict_proxy`, `seccomp`, `keyboard.j2`, `hwaccel.j2`, `media.j2`, `kasm.j2`, `selkies.j2`).
+- **`readonly.j2`, `nonroot.j2`**: Read-Only Operation, Non-Root Operation. Rendered when `runtime.readonly.supported`, `runtime.nonroot.supported`. Uses their `notes`.
+- **`usage.j2`**: Usage. Uses `compose_snippet`, `run_snippet` (from `snippets.py`).
+- **`parameters_gfm.j2` / `parameters_mkdocs.j2`**: Parameters. Uses the whole normalised `runtime` (`rt`), via `misc_rows.j2` for hostname, mac, caps, security_opt, custom.
+- **`env_var_files.j2`**: Environment variables from files (Docker secrets).
+- **`umask.j2`**: Umask for running applications.
+- **(inline)**: Optional Parameters. Rendered when `docs.optional_parameters`.
+- **`user_group_identifiers.j2`**: User / Group Identifiers. Rendered when `runtime.common_env`.
+- **`docker_mods.j2`**: Docker Mods. Uses mods URLs for this image.
+- **`support_info.j2`**: Support Info. Uses `runtime.container_name`, image ref.
+- **`updating_info.j2`**: Updating Info. Uses same.
+- **`building_locally.j2`**: Building locally. Uses repo, image ref, control page.
+- **`versions.j2`**: Versions. Uses `changelog`.
 
 `group_info.j2` (the LinuxServer blurb and badges above the title) is in the README only; the mkdocs page has front matter from `docs.categories` and the one-line summary instead. `custom_readme` replaces everything after the banner in both.
 

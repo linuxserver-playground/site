@@ -298,15 +298,13 @@ What control does while assets are missing: the upstream check keeps its hourly 
 
 Where the upstream release notes shown on build pages come from. Stored verbatim with the Release and in the hub; rendered as GitHub-flavoured Markdown (or HTML from a feed) and sanitised on the site.
 
-| Type | Keys | Notes |
-| --- | --- | --- |
-| `github_release`, `codeberg_release` | `repo`, `tag` | The release body. `tag` is a template for the release tag, default `${VERSION}`; `v${VERSION}` when the tag has a prefix the version lost in a `transform`. |
-| `gitea_release` | `base_url`, `repo`, `tag` | Same, any Gitea. |
-| `github_commit`, `gitlab_commit` | `repo` / `project_id`, `branch` | The commit message. |
-| `json` | `url`, `jq` | Any JSON body. |
-| `rss` | `url`, `title` | The description of the feed item whose title matches `title` (a template, `calibre ${VERSION}`; the version also matches without a leading `v` and without trailing `.0` parts). Usually HTML; stored as is. |
-| `command` | `run` | A bash command; its output is the notes. |
-| `none` | | No upstream notes. |
+- **`github_release`, `codeberg_release`** (`repo`, `tag`). The release body. `tag` is a template for the release tag, default `${VERSION}`; `v${VERSION}` when the tag has a prefix the version lost in a `transform`.
+- **`gitea_release`** (`base_url`, `repo`, `tag`). Same, any Gitea.
+- **`github_commit`, `gitlab_commit`** (`repo` / `project_id`, `branch`). The commit message.
+- **`json`** (`url`, `jq`). Any JSON body.
+- **`rss`** (`url`, `title`). The description of the feed item whose title matches `title` (a template, `calibre ${VERSION}`; the version also matches without a leading `v` and without trailing `.0` parts). Usually HTML; stored as is.
+- **`command`** (`run`). A bash command; its output is the notes.
+- **`none`**: No upstream notes.
 
 ## How the control plane uses the source
 

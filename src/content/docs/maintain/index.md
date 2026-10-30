@@ -28,28 +28,26 @@ The hub does not read the README. It loads the manifest from each release and re
 
 ## Where to edit what
 
-| To change | Edit | Repository | Then |
-| --- | --- | --- | --- |
-| Text or facts about one image (summary, parameters, setup, ports, changelog) | `image.yml` on the live branch | `docker-<name>` | `builder check`; the live build re-renders README and friends as `Update generated files [skip ci]` |
-| The wording or layout of a README section, for every image | `builder/templates/parts/<section>.j2` | builder | `UPDATE_GOLDEN=1 pytest tests/test_render.py`, review `tests/golden/`, push; every image picks it up on its next live build |
-| The skeleton of the README or the mkdocs page | `builder/templates/README.md.j2`, `docs.md.j2`, `parts/body.j2` | builder | same |
-| The image repos' `AGENTS.md` | `templates/agents/image.md.j2` | builder | same |
-| The 40-line `build.yml` caller or `pr-report.yml` in every image repo | `builder/templates/build.yml.j2`, `pr-report.yml.j2` | builder | same; the workflow logic itself is in workflows |
-| The compose and `docker run` snippets (README, hub API, site) | `builder/snippets.py` | builder | pytest |
-| Admonition rendering (`?+note[Title](|text|)`) | `builder/admonition.py` | builder | pytest |
-| Values derived from the manifest before any template sees them | `builder/manifest.py` (`normalize_runtime`, `build_context`) | builder | pytest |
-| What `builder check` enforces beyond the schema | `builder/check.py` | builder | pytest; it runs in every PR and live build |
-| A new or changed `image.yml` field | `schemas/image.schema.json`, then the consumers (below) | builder, then hub, site, workflows or control | `contracts_version` bump; an example under `examples/`; a test |
-| How a version is resolved, any source type | `scripts/resolve_version.py` | workflows, then copy into `control/vendor/` | workflows `./scripts/check.sh`; control's `tests/test_vendor.py` fails until the copy matches |
-| How images build, test, publish, release | `.github/workflows/image-build.yml`, `.github/actions/*` | workflows | `./scripts/check.sh`, push, move `v1`, dispatch a small image |
-| The container test harness and screenshots | the `ci` repository | ci | its AGENTS.md |
-| Store templates (Unraid, Portainer, CasaOS, Umbrel, Runtipi, Cosmos, Arcane) | `lsio_hub/generate/<store>.py` | hub | fixture tests for sonarr, swag and multidb |
-| SWAG proxy confs, Kubernetes manifests, quadlets | `lsio_hub/generate/proxy.py`, `kubernetes.py`, `quadlet.py` | hub | same |
-| The hub API shape (`catalog/<name>.json`, `docs.json`) | `lsio_hub/transform.py`, `models.py`, `responses.py` | hub | same; then the site's `src/lib/hub.ts` |
-| An image page on the site | `src/pages/images/[name].astro` and `src/components/` | site | `npm run check`, `npm run build`, a11y, 390 px |
-| When builds are scheduled, cooldowns, alerts | `control/scheduler.py` (settings are code defaults in `control/config.py`) | control | ruff, mypy, pytest; a push to main deploys |
-| Legacy conversion (`readme-vars`, `jenkins-vars` to `image.yml`) | `builder/migrate.py`, `legacy_vars.py` | builder | pytest; `tests/fixtures/live/` are real pairs |
-| A mod's README, AGENTS.md and workflow | `mod.yml` on the mod branch; templates `mod-readme.md.j2`, `mod-build.yml`, `agents/mod.md.j2` | docker-mods; builder | `builder render-mod`, `tools/check-branch.sh` |
+- **Text or facts about one image (summary, parameters, setup, ports, changelog)**: `image.yml` on the live branch (`docker-<name>`). Then `builder check`; the live build re-renders README and friends as `Update generated files [skip ci]`
+- **The wording or layout of a README section, for every image**: `builder/templates/parts/<section>.j2` (builder). Then `UPDATE_GOLDEN=1 pytest tests/test_render.py`, review `tests/golden/`, push; every image picks it up on its next live build.
+- **The skeleton of the README or the mkdocs page**: `builder/templates/README.md.j2`, `docs.md.j2`, `parts/body.j2` (builder). Then the same.
+- **The image repos' `AGENTS.md`**: `templates/agents/image.md.j2` (builder). Then the same.
+- **The 40-line `build.yml` caller or `pr-report.yml` in every image repo**: `builder/templates/build.yml.j2`, `pr-report.yml.j2` (builder). Then same; the workflow logic itself is in workflows.
+- **The compose and `docker run` snippets (README, hub API, site)**: `builder/snippets.py` (builder). Then pytest.
+- **Admonition rendering (`?+note[Title](|text|)`)**: `builder/admonition.py` (builder). Then pytest.
+- **Values derived from the manifest before any template sees them**: `builder/manifest.py` (`normalize_runtime`, `build_context`) (builder). Then pytest.
+- **What `builder check` enforces beyond the schema**: `builder/check.py` (builder). Then pytest; it runs in every PR and live build.
+- **A new or changed `image.yml` field**: `schemas/image.schema.json`, then the consumers (below) (builder, then hub, site, workflows or control). Then `contracts_version` bump; an example under `examples/`; a test.
+- **How a version is resolved, any source type**: `scripts/resolve_version.py` (workflows, then copy into `control/vendor/`). Then workflows `./scripts/check.sh`; control's `tests/test_vendor.py` fails until the copy matches.
+- **How images build, test, publish, release**: `.github/workflows/image-build.yml`, `.github/actions/*` (workflows). Then `./scripts/check.sh`, push, move `v1`, dispatch a small image.
+- **The container test harness and screenshots**: the `ci` repository (ci). Then its AGENTS.md.
+- **Store templates (Unraid, Portainer, CasaOS, Umbrel, Runtipi, Cosmos, Arcane)**: `lsio_hub/generate/<store>.py` (hub). Then fixture tests for sonarr, swag and multidb.
+- **SWAG proxy confs, Kubernetes manifests, quadlets**: `lsio_hub/generate/proxy.py`, `kubernetes.py`, `quadlet.py` (hub). Then the same.
+- **The hub API shape (`catalog/<name>.json`, `docs.json`)**: `lsio_hub/transform.py`, `models.py`, `responses.py` (hub). Then same; then the site's `src/lib/hub.ts`
+- **An image page on the site**: `src/pages/images/[name].astro` and `src/components/` (site). Then `npm run check`, `npm run build`, a11y, 390 px.
+- **When builds are scheduled, cooldowns, alerts**: `control/scheduler.py` (settings are code defaults in `control/config.py`) (control). Then ruff, mypy, pytest; a push to main deploys.
+- **Legacy conversion (`readme-vars`, `jenkins-vars` to `image.yml`)**: `builder/migrate.py`, `legacy_vars.py` (builder). Then pytest; `tests/fixtures/live/` are real pairs.
+- **A mod's README, AGENTS.md and workflow**: `mod.yml` on the mod branch; templates `mod-readme.md.j2`, `mod-build.yml`, `agents/mod.md.j2` (docker-mods; builder). Then `builder render-mod`, `tools/check-branch.sh`
 
 ## How a change reaches the fleet
 
