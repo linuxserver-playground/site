@@ -199,6 +199,8 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             <CiReport image={image.name} tag={tag} tests={record.tests ?? null} testEnabled={b.test.enabled} reportDir={page.reportDir} runJson={page.runJson} logsZip={page.logsZip} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={page.controlBuild} />
           </div>
         </section>
+        {/* The notes renderer runs at build time only; until the site rebuilds, the notes show as plain text. */}
+        <NotesAndData page={page} dataAsOf={{ label: 'Live from the hub', date: new Date() }} />
         <Vulns url={page.vulnsUrl} summary={page.vulnsSummary} image={image.name} tag={tag} />
         <section aria-labelledby="explorer">
           <AnchorHeading id="explorer">Explore the image</AnchorHeading>
@@ -225,13 +227,6 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             {record.diff ? <DiffViewer diff={record.diff} previousUrl={prev ? withBase(buildUrl(image.name, prev.tag)) : undefined} /> : <p className="px-4 py-6 text-sm text-muted-foreground">No diff for this build.</p>}
           </div>
         </section>
-        <section aria-labelledby="dockerfile">
-          <AnchorHeading id="dockerfile">Dockerfile, annotated</AnchorHeading>
-          <p className="mt-2 text-sm text-muted-foreground">Each instruction shows the compressed and on-disk size of the layer it produced.</p>
-          <div className="raft-panel mt-4 overflow-hidden">
-            <DockerfileView dockerfile={b.dockerfile} layers={record.layers} base={b.base.image} layersUrls={page.layersUrls} initialArch={arches[0]} />
-          </div>
-        </section>
         {units.length > 0 && (
           <section aria-labelledby="init">
             <AnchorHeading id="init">Init graph</AnchorHeading>
@@ -241,8 +236,13 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             </div>
           </section>
         )}
-        {/* The notes renderer runs at build time only; until the site rebuilds, the notes show as plain text. */}
-        <NotesAndData page={page} dataAsOf={{ label: 'Live from the hub', date: new Date() }} />
+        <section aria-labelledby="dockerfile">
+          <AnchorHeading id="dockerfile">Dockerfile, annotated</AnchorHeading>
+          <p className="mt-2 text-sm text-muted-foreground">Each instruction shows the compressed and on-disk size of the layer it produced.</p>
+          <div className="raft-panel mt-4 overflow-hidden">
+            <DockerfileView dockerfile={b.dockerfile} layers={record.layers} base={b.base.image} layersUrls={page.layersUrls} initialArch={arches[0]} />
+          </div>
+        </section>
       </div>
     </>
   );
