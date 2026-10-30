@@ -24,6 +24,8 @@ Jinja2 (StrictUndefined, trim_blocks, lstrip_blocks; filters noter, admonition, 
   ├─ README.md.j2            ─▶ README.md                       (gfm flavour)
   ├─ agents/image.md.j2      ─▶ AGENTS.md
   ├─ LICENSE                 ─▶ LICENSE                         (copied verbatim)
+  ├─ FUNDING.yml.j2          ─▶ .github/FUNDING.yml             (the repo's sponsor buttons: ours, then upstream's)
+  ├─ donate.txt.j2           ─▶ root/donate.txt                 (only with upstream.sponsor; the start-up banner prints it)
   ├─ build.yml.j2            ─▶ .github/workflows/build.yml     (the ~40-line caller of image-build.yml@v1)
   ├─ pr-report.yml.j2        ─▶ .github/workflows/pr-report.yml (the trusted half of PR builds)
   ├─ docs.md.j2              ─▶ .builder-out/docs.md            (mkdocs flavour; hub only)
@@ -33,7 +35,7 @@ Jinja2 (StrictUndefined, trim_blocks, lstrip_blocks; filters noter, admonition, 
 _tidy: collapse blank runs outside code fences, one trailing newline
 ```
 
-`builder render` writes the first five into the repository (`--all` adds the two under `.builder-out/`, which image repos never commit). `builder check` renders everything in memory and reports each committed file that differs (`drift`: `differs` or `missing`). The live build runs `render` after a successful release and commits the result as `Update generated files [skip ci]`, so an image repository's generated files always reflect the builder version that last built it; in a pull request, drift is a warning, and the contributor must not edit the files by hand.
+`builder render` writes the first seven into the repository (`--all` adds the two under `.builder-out/`, which image repos never commit) and removes `root/donate.txt` when the manifest lists no sponsor. `builder check` renders everything in memory and reports each committed file that differs (`drift`: `differs`, `missing`, or `stale` for a `root/donate.txt` the manifest no longer calls for). The live build runs `render` after a successful release and commits the result as `Update generated files [skip ci]`, so an image repository's generated files always reflect the builder version that last built it; in a pull request, drift is a warning, and the contributor must not edit the files by hand.
 
 `StrictUndefined` means a template that references a context key that does not exist fails the render rather than printing nothing. Add the key in `build_context` first.
 
@@ -92,6 +94,7 @@ The hub installs `lsio-builder` from `builder@main` when its workflow runs, so a
 - **`AGENTS.md`** in every image repository comes from `templates/agents/image.md.j2` (the shared `templates/` directory of the builder repo, not `builder/templates/`). It is the instruction file AI agents and contributors read; it carries the repo-specific facts (image name, platforms, base, version arg) from the context and the fixed rules from the template. The infrastructure repos' AGENTS.md files are hand-written (`templates/agents/infra.md` is the skeleton they started from).
 - **`.github/workflows/build.yml`** is the caller: `on: push, pull_request, workflow_dispatch (reason: manual|upstream|packages|rebuild|pages), repository_dispatch`, one `concurrency` group per ref, `uses: linuxserver-playground/workflows/.github/workflows/image-build.yml@v1` with `secrets: inherit`. A test pins its text, because the workflow's behaviour lives in the workflows repository, not here; the only reason to touch the template is a new input.
 - **`.github/workflows/pr-report.yml`** is the trusted half of pull request builds (`workflow_run` and `pull_request_target` from the base branch), rendered from `pr-report.yml.j2`. It only reads the Build run's artifacts as data and never checks out pull request code; a test enforces that shape.
+- **`.github/FUNDING.yml`** and **`root/donate.txt`** come from `upstream.sponsor`, the upstream project's donation pages (up to three). FUNDING.yml lists LinuxServer's GitHub Sponsors and Open Collective, then the upstream pages as `custom` URLs, which is what puts the sponsor buttons in the repository's sidebar; `root/donate.txt` is copied into the image at `/donate.txt`, and the base images' start-up banner prints it under "To support the app dev(s) visit:". The image page on this site shows the same links in its header; the hub carries them in the catalog as `sponsor`.
 - **`LICENSE`** is copied verbatim.
 
 ## Mods
