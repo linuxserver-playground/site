@@ -1,12 +1,17 @@
 ---
-/** The images section's tabs: applications, base images and tools, each its own page. */
+/**
+ * The images section's tabs: applications, base images and tools, each its own page, and at the far end the
+ * package index (which image ships which package), which is the same catalogue seen from the inside.
+ */
 import { withBase } from '@/lib/base';
+import { getPackageIndex } from '@/lib/fleet';
 import { getApps, getImagesOfKind, IMAGE_KINDS, type ImageKind } from '@/lib/images';
 
 interface Props {
-  current: ImageKind;
+  current: ImageKind | 'packages';
 }
 const { current } = Astro.props;
+const packageCount = getPackageIndex().length;
 const counts: Record<ImageKind, number> = {
   app: getApps().length,
   base: getImagesOfKind('base').filter((i) => !i.deprecated).length,
@@ -31,6 +36,16 @@ const counts: Record<ImageKind, number> = {
           </li>
         ))
       }
+      <li class="ml-auto shrink-0">
+        <a
+          href={withBase('/packages/')}
+          aria-current={current === 'packages' ? 'page' : undefined}
+          class="relative inline-flex h-9 items-center gap-2 rounded-md px-3 text-sm text-muted-foreground hover:text-foreground aria-[current=page]:text-foreground aria-[current=page]:after:absolute aria-[current=page]:after:inset-x-3 aria-[current=page]:after:-bottom-1 aria-[current=page]:after:h-px aria-[current=page]:after:bg-primary"
+        >
+          Packages
+          <span class="font-mono text-xs text-muted-foreground tabular-nums">{packageCount.toLocaleString('en-GB')}</span>
+        </a>
+      </li>
     </ul>
   </div>
 </nav>
