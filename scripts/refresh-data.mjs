@@ -149,6 +149,7 @@ const retained = new Set();
 
 let buildCount = 0;
 let buildsFetched = 0;
+let buildsSkipped = 0;
 await pool(images, 6, async (img) => {
   const base = `api/v1/catalog/${img.name}`;
   const [builds, proxy, kubernetes, quadlet] = await Promise.all([
@@ -167,11 +168,18 @@ await pool(images, 6, async (img) => {
     if (!refreshAll && existsSync(out(file))) return;
     const tagBase = `${base}/builds/${b.tag}`;
     const [record, diff, tests, ...layers] = await Promise.all([
-      hubJSON(`${tagBase}.json`),
+      optional(hubJSON(`${tagBase}.json`)),
       optional(hubJSON(`${tagBase}/diff.json`)),
       optional(hubJSON(`${tagBase}/tests.json`)),
       ...b.platforms.map((p) => optional(hubJSON(`${tagBase}/layers.${p.arch}.json`))),
     ]);
+    if (!record) {
+      // The hub's index lists the build but Pages does not serve its record yet: a deploy still rolling out
+      // (2026-10-30, two Deploys failed on this during a Pages incident). The next refresh fetches it.
+      console.warn(`  skipped ${file}: the hub lists the build but does not serve its record yet`);
+      buildsSkipped++;
+      return;
+    }
     const layerTables = {};
     b.platforms.forEach((p, i) => {
       if (layers[i]) layerTables[p.arch] = layers[i].data.layers;
@@ -369,4 +377,5 @@ const stats = {
 };
 write('stats.json', stats);
 console.log(stats);
-console.log(`${images.length} images, ${buildCount} builds (${buildsFetched} fetched${refreshAll ? ', full refresh' : ''}), ${readdirSync(out('images')).length} image files`);
+const skipped = buildsSkipped ? `, ${buildsSkipped} not served yet` : '';
+console.log(`${images.length} images, ${buildCount} builds (${buildsFetched} fetched${skipped}${refreshAll ? ', full refresh' : ''}), ${readdirSync(out('images')).length} image files`);
