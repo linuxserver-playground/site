@@ -8,7 +8,7 @@ import Layout from '@/layouts/Layout.astro';
 import ImageLogo from '@/components/ImageLogo.astro';
 import Panel from '@/components/Panel.astro';
 import AnchorHeading from '@/components/AnchorHeading.astro';
-import { BuildHeader, BuildRecordSection, CiHeading, NotesAndData } from '@/components/build/BuildParts';
+import { BuildHeader, BuildRecordSection, CiHeading, NotesAndData, WhyThisBuild } from '@/components/build/BuildParts';
 import CopyButton from '@/components/islands/CopyButton';
 import CiReport from '@/components/islands/explorer/CiReport';
 import Vulns from '@/components/islands/explorer/Vulns';
@@ -20,7 +20,8 @@ import { withBase } from '@/lib/base';
 import { buildPage } from '@/lib/build-page';
 import { allBuildRecords, buildUrl, getBuildRecord, getBuilds, type BuildRecord } from '@/lib/builds';
 import { hubTestsUrl } from '@/lib/hub';
-import { resolveChain } from '@/lib/init-chain';
+import { matchBaseBuild, parseBaseRef, resolveChain } from '@/lib/init-chain';
+import { baseBuildsBetween, baseRefOf, explainBuild } from '@/lib/why';
 import { getImage, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { githubRepo, renderNotes } from '@/lib/markdown/notes';
 
@@ -41,6 +42,22 @@ const notesHtml = {
   upstream: b.notes?.upstream ? renderNotes(b.notes.upstream, { github: !!upstreamRepo, repo: upstreamRepo }) : '',
 };
 const units = b.init_graph?.units ?? [];
+// Why this build: the base build this one moved to, and every base build between the previous base digest and it,
+// with their diffs, say how much of the package change is the base's. Looked up as the init chain does, by index
+// digest, from the snapshots.
+const baseRef = record.diff?.base.changed ? parseBaseRef(b.base.image) : null;
+const baseBuilds = baseRef ? getBuilds(baseRef.name).map((s) => ({ ...s, index_digest: s.index_digest ?? getBuildRecord(baseRef.name, s.tag)?.build.index_digest ?? null })) : [];
+const baseTo = baseRef && baseBuilds.length ? matchBaseBuild(baseBuilds, b.base) : null;
+const baseBuild =
+  baseRef && baseTo?.exact
+    ? {
+        image: baseRef.name,
+        tag: baseTo.build.tag,
+        url: buildUrl(baseRef.name, baseTo.build.tag),
+        diffs: baseBuildsBetween(baseBuilds, record.diff?.base.from?.digest, baseTo.build, prev?.created).map((s) => getBuildRecord(baseRef.name, s.tag)?.diff ?? null),
+      }
+    : null;
+const why = explainBuild(b, record.diff, baseBuild);
 // The chain of base images under this build, from the snapshots: the island reads each base's build from the hub for
 // the inherited units' scripts only when someone opens them. The index digest comes from the base build's own record
 // when the builds list predates the field.
@@ -63,6 +80,7 @@ const controlBuild = page.controlBuild;
     <CopyButton slot="copy" client:visible text={page.pull} label="Copy docker pull command" variant="secondary" />
   </BuildHeader>
   <div class="raft-container mt-10 space-y-12" data-pagefind-body>
+    <WhyThisBuild why={why} baseHref={baseBuild ? withBase(baseBuild.url) : undefined} baseImage={baseRefOf(b.base.image)} />
     <BuildRecordSection page={page} />
 
     <!-- CI report -->

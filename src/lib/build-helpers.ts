@@ -18,14 +18,14 @@ export const CLASSIFICATION: Record<Classification, { label: string; desc: strin
 
 export const classify = (c?: Classification | null) => (c ? CLASSIFICATION[c] : undefined);
 
-/** Human reason for a build: "rebuild", "upstream", "push"… as the workflow reported it. */
+/** Human reason for a build, from build.json's `reason`: what started the run, not what changed in it. */
 export const REASONS: Record<string, string> = {
-  rebuild: 'scheduled rebuild',
-  upstream: 'new upstream version',
-  push: 'commit to the branch',
-  manual: 'manual trigger',
-  base: 'base image update',
-  dispatch: 'scheduler dispatch',
+  push: 'push to the branch',
+  upstream: 'upstream check',
+  packages: 'weekly package check',
+  rebuild: 'release check or requested rebuild',
+  manual: 'manual dispatch',
+  pull_request: 'pull request',
 };
 export const reasonLabel = (r: string) => REASONS[r] ?? r;
 

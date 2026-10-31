@@ -48,9 +48,9 @@ function DockerfileDiff({ text }: { text: string }) {
 /** build.json's `reason`, as a phrase after "Triggered by". */
 const TRIGGERS: Record<string, string> = {
   push: 'a push to the branch',
-  upstream: 'the upstream check: a new upstream version',
-  packages: 'the package check: the installed packages changed',
-  rebuild: 'the release check: the branch head had not been released',
+  upstream: 'the hourly upstream check',
+  packages: 'the weekly package check: the installed packages had changed',
+  rebuild: 'the release check (the branch head had no release) or a requested rebuild',
   manual: 'a manual dispatch',
   pull_request: 'a pull request',
 };
@@ -115,10 +115,16 @@ export default function DiffViewer({ diff, previousUrl }: Props) {
               {diff.commit.changed ? (
                 <>
                   <span className="text-muted-foreground">{diff.commit.from?.slice(0, 7) ?? '?'}</span> → <span className="text-foreground">{diff.commit.to?.slice(0, 7)}</span>
+                  {diff.commit.commits && (
+                    <span className="block text-xs text-muted-foreground">
+                      {diff.commit.count ?? diff.commit.commits.length} {(diff.commit.count ?? diff.commit.commits.length) === 1 ? 'commit' : 'commits'}
+                      {diff.commit.commits.every((c) => c.bot) ? ", the pipeline's own" : diff.commit.commits.some((c) => c.bot) ? `, ${diff.commit.commits.filter((c) => c.bot).length} the pipeline's own` : ''}
+                    </span>
+                  )}
                   {diff.commit.compare_url && (
-                    <a href={diff.commit.compare_url} target="_blank" rel="noopener" className="ml-2 inline-flex items-center gap-0.5 text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline">
-                      commits <ArrowUpRight className="size-3" aria-hidden="true" />
-                      <span className="sr-only">between the two builds on GitHub (opens in a new tab)</span>
+                    <a href={diff.commit.compare_url} target="_blank" rel="noopener" className="inline-flex items-center gap-0.5 text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline">
+                      commits between the two builds on GitHub <ArrowUpRight className="size-3" aria-hidden="true" />
+                      <span className="sr-only">(opens in a new tab)</span>
                     </a>
                   )}
                 </>

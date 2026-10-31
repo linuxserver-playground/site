@@ -267,6 +267,34 @@ export interface Layer {
 export interface PackageChange { name: string; version?: string | null; from?: string | null; to?: string | null; purl?: string | null }
 export interface EcosystemDiff { added: PackageChange[]; removed: PackageChange[]; upgraded: PackageChange[]; downgraded: PackageChange[] }
 
+/** One commit between two builds, as GitHub's compare lists it. */
+export interface CommitEntry {
+  sha: string;
+  subject: string;
+  author?: { name?: string | null; login?: string | null } | null;
+  date?: string | null;
+  url?: string | null;
+  /** The pipeline's own commit: a [bot] account, or one of the two subjects the shared workflow writes. */
+  bot: boolean;
+}
+
+/** Files changed between two builds per area of the repository; only areas with changes. The first three can
+ * change the image, the rest never do. */
+export type CommitArea = 'manifest' | 'dockerfile' | 'root' | 'generated' | 'packages' | 'other';
+
+export interface CommitChange {
+  from?: string | null;
+  to?: string | null;
+  changed: boolean;
+  compare_url?: string | null;
+  /** Oldest first, as GitHub lists them (at most 250). */
+  commits?: CommitEntry[] | null;
+  /** GitHub's total for the range; above the commits listed past 250. */
+  count?: number | null;
+  truncated?: boolean | null;
+  areas?: Partial<Record<CommitArea, number>> | null;
+}
+
 export interface Diff {
   image: string;
   branch: string;
@@ -275,8 +303,9 @@ export interface Diff {
   classification: Classification;
   reasons: string[];
   upstream: { from?: string | null; to?: string | null; changed: boolean };
-  /** The repository commits compared, with GitHub's compare page (records made before contracts 1.14 lack it). */
-  commit?: { from?: string | null; to?: string | null; changed: boolean; compare_url?: string | null } | null;
+  /** The repository commits compared, with GitHub's compare page (records made before contracts 1.14 lack it) and,
+   * from contracts 1.15, the commits between them and what they touched. */
+  commit?: CommitChange | null;
   /** build.json's `reason`: why this build ran. */
   trigger?: string | null;
   base: { from?: BuildBase | null; to: BuildBase; changed: boolean };

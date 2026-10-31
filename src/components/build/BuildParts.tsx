@@ -12,6 +12,7 @@ import type { BuildPage } from '@/lib/build-page';
 import { bytes, formatDate, isoDate, relative, shortDigest } from '@/lib/format';
 import type { Classification } from '@/lib/hub';
 import { cn } from '@/lib/utils';
+import type { Explanation } from '@/lib/why';
 
 /** AnchorHeading.astro in React: the id is a public contract, the "#" link copies the section URL (Layout wires it). */
 export function AnchorHeading({ id, as: Tag = 'h2', className = 'text-xl font-semibold tracking-tight', children }: { id: string; as?: 'h2' | 'h3'; className?: string; children: React.ReactNode }) {
@@ -139,6 +140,86 @@ export function BuildHeader({ page, now, logo, copy }: { page: BuildPage; now: D
         </div>
       </div>
     </header>
+  );
+}
+
+/**
+ * Why this build exists, first on the page: what started the run, what changed since the previous release (with
+ * how much of it came with the base image), and the commits between the two with the pipeline's own marked.
+ * The explanation is `explainBuild`'s; this only lays it out.
+ */
+export function WhyThisBuild({ why, baseHref, baseImage }: { why: Explanation; baseHref?: string; baseImage?: string }) {
+  const commits = [...why.commits].reverse(); // newest first, as a log reads
+  const base = why.base;
+  return (
+    <section aria-labelledby="why" className="raft-panel p-5">
+      <AnchorHeading id="why" className="raft-eyebrow">
+        Why this build
+      </AnchorHeading>
+      <p className="mt-3 text-base font-medium text-foreground">{why.headline}</p>
+      <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
+        {base && (
+          <li>
+            The base image {baseImage ?? base.image} was rebuilt: this build is on its build{' '}
+            {baseHref ? (
+              <a href={baseHref} className="font-mono text-foreground underline-offset-4 hover:text-primary hover:underline">
+                {base.tag}
+              </a>
+            ) : (
+              <span className="font-mono text-foreground">{base.tag}</span>
+            )}
+            .
+          </li>
+        )}
+        {why.details.map((d) => (
+          <li key={d}>{d}</li>
+        ))}
+      </ul>
+      {commits.length > 0 && (
+        <div className="mt-4 border-t border-[var(--raft-hair)] pt-3">
+          <p className="font-mono text-xs text-muted-foreground">
+            {commits.length === 1 ? 'The commit' : `${commits.length} commits`} since the previous release
+            {why.botCommits > 0 && ` · ${why.botCommits} by the pipeline`}
+            {why.compareUrl && (
+              <>
+                {' · '}
+                <a href={why.compareUrl} target="_blank" rel="noopener" className="inline-flex items-center gap-0.5 underline-offset-4 hover:text-primary hover:underline">
+                  compare on GitHub <ArrowUpRight className="size-3" aria-hidden="true" />
+                  <span className="sr-only">(opens in a new tab)</span>
+                </a>
+              </>
+            )}
+          </p>
+          <ol className="mt-2 space-y-1.5 text-sm">
+            {commits.map((c) => (
+              <li key={c.sha} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                <a href={c.url ?? '#'} target="_blank" rel="noopener" className="font-mono text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline">
+                  {c.sha.slice(0, 7)}
+                </a>
+                <span className="min-w-0 break-words text-foreground">{c.subject.replace(/\s*\[skip ci\]\s*$/, '')}</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {c.bot ? (
+                    <span className="rounded border border-[var(--raft-hair)] px-1 py-px">pipeline</span>
+                  ) : (
+                    (c.author?.login ?? c.author?.name ?? 'unknown')
+                  )}
+                  {c.date && <> · {formatDate(c.date)}</>}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+      {!why.hasCommits && why.compareUrl && (
+        <p className="mt-3 font-mono text-xs text-muted-foreground">
+          This record predates the commit list; see the{' '}
+          <a href={why.compareUrl} target="_blank" rel="noopener" className="underline-offset-4 hover:text-primary hover:underline">
+            commits on GitHub
+          </a>
+          .
+        </p>
+      )}
+    </section>
   );
 }
 

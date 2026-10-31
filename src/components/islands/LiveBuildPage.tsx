@@ -12,7 +12,9 @@ import { buildUrl } from '@/lib/build-helpers';
 import { buildPage, type BuildPageImage } from '@/lib/build-page';
 import type { BuildRecord } from '@/lib/builds';
 import { hubApi, hubTestsUrl, type Bundle, type BuildsData, type Diff, type HistoryEntry, type Layer, type TestsData } from '@/lib/hub';
-import { AnchorHeading, BuildHeader, BuildRecordSection, CiHeading, NotesAndData } from '@/components/build/BuildParts';
+import { AnchorHeading, BuildHeader, BuildRecordSection, CiHeading, NotesAndData, WhyThisBuild } from '@/components/build/BuildParts';
+import { matchBaseBuild, parseBaseRef } from '@/lib/init-chain';
+import { baseBuildsBetween, baseRefOf, explainBuild, type BaseBuilds } from '@/lib/why';
 import CopyButton from '@/components/islands/CopyButton';
 import CiReport from '@/components/islands/explorer/CiReport';
 import DiffViewer from '@/components/islands/explorer/DiffViewer';
@@ -33,7 +35,7 @@ type State =
   /** A release the hub no longer holds (older than the newest five of its branch): it has no page, only its Release. */
   | { kind: 'rotated'; name: string; tag: string; entry: HistoryEntry }
   | { kind: 'error'; name: string; tag: string }
-  | { kind: 'ready'; image: LiveImage; record: BuildRecord; builds: BuildsData };
+  | { kind: 'ready'; image: LiveImage; record: BuildRecord; builds: BuildsData; base: BaseBuilds | null };
 
 /** `/images/<name>/builds/<tag>/` (after the base path) to its parts, or null for any other path. */
 export function buildPath(pathname: string): { name: string; tag: string } | null {
@@ -47,6 +49,19 @@ async function hubJSON<T>(path: string, signal: AbortSignal): Promise<T | null> 
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`${res.status} for ${path}`);
   return ((await res.json()) as { data: T }).data;
+}
+
+/** The base build this one moved to, with the diffs of the base builds since the previous base digest, for the
+ * "why" panel; null when the base did not change or the hub no longer holds the exact build. */
+async function baseBuildOf(b: Bundle, diff: Diff | null, since: string | null, signal: AbortSignal): Promise<BaseBuilds | null> {
+  const ref = diff?.base.changed ? parseBaseRef(b.base.image) : null;
+  if (!ref) return null;
+  const builds = await hubJSON<BuildsData>(`catalog/${ref.name}/builds.json`, signal).catch(() => null);
+  const match = builds?.builds.length ? matchBaseBuild(builds.builds, b.base) : null;
+  if (!match?.exact) return null;
+  const between = baseBuildsBetween(builds!.builds, diff?.base.from?.digest, match.build, since);
+  const diffs = await Promise.all(between.map((s) => hubJSON<{ diff: Diff }>(`catalog/${ref.name}/builds/${s.tag}/diff.json`, signal).then((d) => d?.diff ?? null).catch(() => null)));
+  return { image: ref.name, tag: match.build.tag, url: buildUrl(ref.name, match.build.tag), diffs };
 }
 
 function Logo({ image }: { image: LiveImage }) {
@@ -91,7 +106,10 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
       }
       const b = build.build;
       const arches = b.platforms.filter((p) => p.result === 'success').map((p) => p.arch);
-      const layers = await Promise.all(arches.map((a) => hubJSON<{ layers: Layer[] }>(`${base}/layers.${a}.json`, ctrl.signal).catch(() => null)));
+      const [layers, baseBuild] = await Promise.all([
+        Promise.all(arches.map((a) => hubJSON<{ layers: Layer[] }>(`${base}/layers.${a}.json`, ctrl.signal).catch(() => null))),
+        baseBuildOf(b, diff?.diff ?? null, builds?.builds.find((x) => x.tag === b.previous?.tag)?.created ?? null, ctrl.signal),
+      ]);
       const record: BuildRecord = {
         build: b,
         diff: diff?.diff ?? null,
@@ -99,7 +117,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
         tests,
       };
       document.title = document.title.replace(/^[^|·—-]+/, `${image.name} ${b.version.tag} `);
-      setState({ kind: 'ready', image, record, builds: builds ?? { image: where.name, builds: [], history: {} } });
+      setState({ kind: 'ready', image, record, builds: builds ?? { image: where.name, builds: [], history: {} }, base: baseBuild });
     })().catch((e) => {
       if ((e as Error).name !== 'AbortError') setState({ kind: 'error', ...where });
     });
@@ -184,14 +202,16 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
     );
   }
 
-  const { image, record, builds } = state;
+  const { image, record, builds, base: baseBuild } = state;
   const page = buildPage(image, record, builds.builds);
   const { b, tag, prev, arches } = page;
   const units = b.init_graph?.units ?? [];
+  const why = explainBuild(b, record.diff, baseBuild);
   return (
     <>
       <BuildHeader page={page} now={new Date()} logo={<Logo image={image} />} copy={<CopyButton text={page.pull} label="Copy docker pull command" variant="secondary" />} />
       <div className="raft-container mt-10 space-y-12">
+        <WhyThisBuild why={why} baseHref={baseBuild ? withBase(baseBuild.url) : undefined} baseImage={baseRefOf(b.base.image)} />
         <BuildRecordSection page={page} />
         <section aria-labelledby="ci" id="ci-section">
           <CiHeading page={page} />
