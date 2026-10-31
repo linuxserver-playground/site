@@ -275,6 +275,10 @@ export interface Diff {
   classification: Classification;
   reasons: string[];
   upstream: { from?: string | null; to?: string | null; changed: boolean };
+  /** The repository commits compared, with GitHub's compare page (records made before contracts 1.14 lack it). */
+  commit?: { from?: string | null; to?: string | null; changed: boolean; compare_url?: string | null } | null;
+  /** build.json's `reason`: why this build ran. */
+  trigger?: string | null;
   base: { from?: BuildBase | null; to: BuildBase; changed: boolean };
   size: Record<string, { from?: number | null; to?: number | null; delta?: number | null }>;
   config: {

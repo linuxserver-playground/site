@@ -2,6 +2,8 @@ import * as React from 'react';
 import type { Arch, Diff, EcosystemDiff, PackageChange } from '@/lib/hub';
 import { fmtBytes, fmtDelta } from '@/lib/explorer';
 import ArchToggle from './ArchToggle';
+import { ArrowUpRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface Props {
   diff: Diff;
@@ -43,6 +45,16 @@ function DockerfileDiff({ text }: { text: string }) {
  * config (env, ports, volumes), base digest, compressed size and the Dockerfile. Entirely static data from
  * the snapshot; the only interaction is the architecture switch and expanding lists.
  */
+/** build.json's `reason`, as a phrase after "Triggered by". */
+const TRIGGERS: Record<string, string> = {
+  push: 'a push to the branch',
+  upstream: 'the upstream check: a new upstream version',
+  packages: 'the package check: the installed packages changed',
+  rebuild: 'the release check: the branch head had not been released',
+  manual: 'a manual dispatch',
+  pull_request: 'a pull request',
+};
+
 export default function DiffViewer({ diff, previousUrl }: Props) {
   const arches = Object.keys(diff.size) as Arch[];
   const pkgArches = Object.keys(diff.packages ?? {}) as Arch[];
@@ -53,6 +65,7 @@ export default function DiffViewer({ diff, previousUrl }: Props) {
   const cfgEmpty = !cfg.env.added.length && !cfg.env.removed.length && !cfg.env.changed.length && !cfg.exposed_ports.added.length && !cfg.exposed_ports.removed.length && !cfg.volumes.added.length && !cfg.volumes.removed.length;
   const dfChanged = Object.values(diff.dockerfile).some(Boolean);
   const t = diff.totals;
+  const trigger = diff.trigger ? (TRIGGERS[diff.trigger] ?? diff.trigger) : null;
 
   if (diff.classification === 'initial') {
     return (
@@ -79,6 +92,7 @@ export default function DiffViewer({ diff, previousUrl }: Props) {
             , the build before it on <span className="font-mono">{diff.branch}</span>.
           </p>
           {diff.reasons.length > 0 && <p className="mt-1 text-xs text-muted-foreground">{diff.reasons.join('; ')}</p>}
+          {trigger && <p className="mt-1 text-xs text-muted-foreground">Triggered by {trigger}.</p>}
         </div>
         <dl className="flex flex-wrap gap-x-4 gap-y-1 font-mono text-xs">
           {KINDS.map((k) => (
@@ -93,7 +107,27 @@ export default function DiffViewer({ diff, previousUrl }: Props) {
         </dl>
       </div>
 
-      <dl className="grid grid-cols-1 gap-px bg-[var(--raft-hair)] sm:grid-cols-3">
+      <dl className={cn('grid grid-cols-1 gap-px bg-[var(--raft-hair)] sm:grid-cols-2', diff.commit ? 'lg:grid-cols-4' : 'lg:grid-cols-3')}>
+        {diff.commit && (
+          <div className="bg-card p-4">
+            <dt className="raft-eyebrow">Repository commit</dt>
+            <dd className="mt-1.5 font-mono text-sm">
+              {diff.commit.changed ? (
+                <>
+                  <span className="text-muted-foreground">{diff.commit.from?.slice(0, 7) ?? '?'}</span> → <span className="text-foreground">{diff.commit.to?.slice(0, 7)}</span>
+                  {diff.commit.compare_url && (
+                    <a href={diff.commit.compare_url} target="_blank" rel="noopener" className="ml-2 inline-flex items-center gap-0.5 text-xs text-muted-foreground underline-offset-4 hover:text-primary hover:underline">
+                      commits <ArrowUpRight className="size-3" aria-hidden="true" />
+                      <span className="sr-only">between the two builds on GitHub (opens in a new tab)</span>
+                    </a>
+                  )}
+                </>
+              ) : (
+                <span className="text-muted-foreground">unchanged · {diff.commit.to?.slice(0, 7)}</span>
+              )}
+            </dd>
+          </div>
+        )}
         <div className="bg-card p-4">
           <dt className="raft-eyebrow">Upstream version</dt>
           <dd className="mt-1.5 font-mono text-sm">
