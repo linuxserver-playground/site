@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Maximize2, Minimize2, X } from 'lucide-react';
+import { Maximize2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Ctx {
@@ -113,10 +113,7 @@ export default function FullscreenFrame({ title, children }: { title: string; ch
               <span className="size-2.5 rounded-full bg-[#28c840]/80" />
             </span>
             <span className="truncate font-mono text-xs text-muted-foreground">{title}</span>
-            <span className="ml-auto hidden text-xs text-muted-foreground sm:inline" aria-hidden="true">
-              Esc or Back also exits
-            </span>
-            <Button ref={exitButton} type="button" variant="outline" size="sm" onClick={leave} className="ml-auto sm:ml-0">
+            <Button ref={exitButton} type="button" variant="outline" size="sm" onClick={leave} className="ml-auto">
               <X aria-hidden="true" />
               Exit full screen
             </Button>
@@ -128,13 +125,16 @@ export default function FullscreenFrame({ title, children }: { title: string; ch
   );
 }
 
-/** The toggle, placed in the view's own header. Before hydration it is drawn but does nothing, like every island control. */
+/**
+ * The button that opens the view, placed in the view's own header; full screen, the bar's Exit button is the one
+ * way out shown. Before hydration it is drawn but does nothing, like every island control.
+ */
 export function FullscreenButton({ className }: { className?: string }) {
   const { active, toggle } = React.useContext(FullscreenContext);
-  const label = active ? 'Exit full screen' : 'View full screen';
+  if (active) return null;
   return (
-    <Button type="button" variant="ghost" size="icon-sm" onClick={toggle} className={className} aria-label={label} aria-pressed={active} title={label}>
-      {active ? <Minimize2 aria-hidden="true" /> : <Maximize2 aria-hidden="true" />}
+    <Button type="button" variant="ghost" size="icon-sm" onClick={toggle} className={className} aria-label="View full screen" title="Full screen">
+      <Maximize2 aria-hidden="true" />
     </Button>
   );
 }
