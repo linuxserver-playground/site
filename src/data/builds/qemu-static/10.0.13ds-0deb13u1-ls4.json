@@ -1,0 +1,559 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "qemu-static",
+  "repository": "linuxserver-playground/docker-qemu-static",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "10.0.13+ds-0+deb13u1",
+   "upstream_clean": "10.0.13ds-0deb13u1",
+   "semver": "10.0.13",
+   "ls_build": 4,
+   "tag": "10.0.13ds-0deb13u1-ls4",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "10.0.13ds-0deb13u1-ls4",
+    "version-10.0.13ds-0deb13u1",
+    "10.0.13",
+    "amd64-latest",
+    "amd64-10.0.13ds-0deb13u1-ls4",
+    "amd64-version-10.0.13ds-0deb13u1",
+    "amd64-10.0.13",
+    "arm64v8-latest",
+    "arm64v8-10.0.13ds-0deb13u1-ls4",
+    "arm64v8-version-10.0.13ds-0deb13u1",
+    "arm64v8-10.0.13"
+   ],
+   "source": "deb_packages",
+   "source_url": "https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz"
+  },
+  "commit": "c0dc95ac93162d5ffef32bf6ae3ec9a8d7892ca4",
+  "created": "2026-10-30T20:35:52Z",
+  "reason": "push",
+  "previous": {
+   "tag": "10.0.13ds-0deb13u1-ls3",
+   "release_url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/tag/10.0.13ds-0deb13u1-ls3"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "alpine:latest",
+   "digest": "sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:f7b3054c67cc49c90f3db9bb975ba1ed19f9402255d96a4c92ebb19cfe9aba58",
+    "size": 130917325,
+    "uncompressed_size": 587141230,
+    "layers": 3,
+    "runner": "Linux-X64",
+    "build_seconds": 36
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:7163614378d8d839f54d00146cca09716d4eaa6915c490e17c42aa57cdb6e42b",
+    "size": 127074812,
+    "uncompressed_size": 586010139,
+    "layers": 3,
+    "runner": "Linux-ARM64",
+    "build_seconds": 62
+   }
+  ],
+  "index_digest": "sha256:6beff88b24d7c4974654db3090d0229103b3e3faa28780e8731172ed9213dc58",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 10.0.13ds-0deb13u1-ls4 Build-date:- 2026-10-30T20:02:52Z",
+   "io.linuxserver.image.base": "alpine:latest@sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "10.0.13+ds-0+deb13u1",
+   "maintainer": "thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-30T20:02:52Z",
+   "org.opencontainers.image.description": "Run multiple architectures of Docker containers on an x86_64 or aarch64 host using QEMU static.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-qemu-static",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "c0dc95ac93162d5ffef32bf6ae3ec9a8d7892ca4",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-qemu-static",
+   "org.opencontainers.image.title": "Qemu-static",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-qemu-static/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "10.0.13ds-0deb13u1-ls4"
+  },
+  "config": {
+   "env": [
+    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "entrypoint": [
+    "/register"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM debian:trixie AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\nARG QEMU_VERSION \\\n  DEBIAN_FRONTEND=noninteractive\n\nRUN \\\n  echo \"**** install build deps ****\" && \\\n  apt-get update && \\\n  apt-get install -y \\\n    curl \\\n    xz-utils\n\nRUN \\\n  echo \"**** ingest external assets ****\" && \\\n  mkdir -p \\\n    /build-out/qemu \\\n    /build-out/usr/bin \\\n    /tmp/qemu && \\\n  if [ -z \"${QEMU_VERSION}\" ]; then \\\n    QEMU_VERSION=$(curl -sX GET https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz | xz -dc |grep -A 7 -m 2 'Package: qemu-user$' | awk -F ': ' '/Version/{print $2;exit}' | awk -F ':' '{print $2}'); \\\n  fi && \\\n  curl -o \\\n    /tmp/qemu.deb -L \\\n    \"http://deb.debian.org/debian/pool/main/q/qemu/qemu-user_${QEMU_VERSION}_amd64.deb\" && \\\n  cd /tmp && \\\n  dpkg-deb -R \\\n    qemu.deb \\\n    /tmp/qemu && \\\n  cp \\\n    /tmp/qemu/usr/bin/* \\\n    /build-out/qemu && \\\n  curl -o \\\n    /build-out/usr/bin/qemu-binfmt-conf -L \\\n    \"https://raw.githubusercontent.com/qemu/qemu/refs/heads/master/scripts/qemu-binfmt-conf.sh\" && \\\n  chmod +x /build-out/usr/bin/qemu-binfmt-conf\n\n# runtime stage\nFROM alpine:latest\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG QEMU_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\n# Add build assets\nCOPY --from=buildstage /build-out/ /\n\n# add local files\nCOPY /root /\n\nENTRYPOINT [\"/register\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM debian:trixie AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\nARG QEMU_VERSION \\\n  DEBIAN_FRONTEND=noninteractive\n\nRUN \\\n  echo \"**** install build deps ****\" && \\\n  apt-get update && \\\n  apt-get install -y \\\n    curl \\\n    xz-utils\n\nRUN \\\n  echo \"**** ingest external assets ****\" && \\\n  mkdir -p \\\n    /build-out/qemu \\\n    /build-out/usr/bin \\\n    /tmp/qemu && \\\n  if [ -z \"${QEMU_VERSION}\" ]; then \\\n    QEMU_VERSION=$(curl -sX GET https://deb.debian.org/debian/dists/trixie/main/binary-amd64/Packages.xz | xz -dc |grep -A 7 -m 2 'Package: qemu-user$' | awk -F ': ' '/Version/{print $2;exit}' | awk -F ':' '{print $2}'); \\\n  fi && \\\n  curl -o \\\n    /tmp/qemu.deb -L \\\n    \"http://deb.debian.org/debian/pool/main/q/qemu/qemu-user_${QEMU_VERSION}_arm64.deb\" && \\\n  cd /tmp && \\\n  dpkg-deb -R \\\n    qemu.deb \\\n    /tmp/qemu && \\\n  cp \\\n    /tmp/qemu/usr/bin/* \\\n    /build-out/qemu && \\\n  curl -o \\\n    /build-out/usr/bin/qemu-binfmt-conf -L \\\n    \"https://raw.githubusercontent.com/qemu/qemu/refs/heads/master/scripts/qemu-binfmt-conf.sh\" && \\\n  chmod +x /build-out/usr/bin/qemu-binfmt-conf\n\n# runtime stage\nFROM alpine:latest\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG QEMU_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\n# Add build assets\nCOPY --from=buildstage /build-out/ /\n\n# add local files\nCOPY /root /\n\nENTRYPOINT [\"/register\"]\n"
+  },
+  "packages": {
+   "amd64": {
+    "count": 16,
+    "distro": "Alpine Linux v3.24",
+    "hash": "30355e82",
+    "by_type": {
+     "apk": 16
+    }
+   },
+   "arm64": {
+    "count": 16,
+    "distro": "Alpine Linux v3.24",
+    "hash": "30355e82",
+    "by_type": {
+     "apk": 16
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/qemu-static/builds/10.0.13ds-0deb13u1-ls4/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-qemu-static/compare/10.0.13ds-0deb13u1-ls3...10.0.13ds-0deb13u1-ls4"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 8695,
+    "sha256": "cc6c4644f8303f674fd2b1e0b9caa98a9ee759a12d6170e16745751dd5d3b816",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 1044,
+    "sha256": "bb429d55b1a9a6ba9e2d0b2df4896e27427354abccfbc83d4184193a9e3a0738",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 3543,
+    "sha256": "aa1c58252fcafc9f7d2bf374b2bede664871a8fc3964d859d8248bd2f20edb79",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1931,
+    "sha256": "fd046f314163a3782579f8dc9b2da6ed55e9673f0282b3ba7866878886e54632",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 217,
+    "sha256": "5018ec1ac7d4ed276281c1765f0107793d4b7798faeb99fae4ce44223d67d8af",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 748,
+    "sha256": "b3d873f0e496d842979ef952d33be335b2beeeaa6580f0374fda83a2bce5d895",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 8684,
+    "sha256": "42cc042ee7bb87b65fb5d9105f9722806f771a429c010b887784cf7621dc67a0",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 1045,
+    "sha256": "a36572810cd12d2f5ad5492b87de2dc0f8c77963732af8a001efacc837811904",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 3498,
+    "sha256": "905522f503a9c73e4b3686b8e71fcf59e04452b8c14481e9ce968ceb6074713a",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1931,
+    "sha256": "14b783465a10352da618cabd8c4a1ddf4c17f7b06cd0af7d1c67fb271633c6a1",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 220,
+    "sha256": "f9dfeaf98f7809d72dd97badea19e656f3522fa57956eac6ab35ad3d21a5556e",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 748,
+    "sha256": "b3d873f0e496d842979ef952d33be335b2beeeaa6580f0374fda83a2bce5d895",
+    "url": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41116852214,
+   "run_url": "https://github.com/linuxserver-playground/docker-qemu-static/actions/runs/41116852214",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/qemu-static",
+   "tags": [
+    "latest",
+    "10.0.13ds-0deb13u1-ls4",
+    "version-10.0.13ds-0deb13u1",
+    "10.0.13",
+    "amd64-latest",
+    "amd64-10.0.13ds-0deb13u1-ls4",
+    "amd64-version-10.0.13ds-0deb13u1",
+    "amd64-10.0.13",
+    "arm64v8-latest",
+    "arm64v8-10.0.13ds-0deb13u1-ls4",
+    "arm64v8-version-10.0.13ds-0deb13u1",
+    "arm64v8-10.0.13"
+   ]
+  }
+ },
+ "diff": {
+  "image": "qemu-static",
+  "branch": "master",
+  "tag": "10.0.13ds-0deb13u1-ls4",
+  "previous_tag": "10.0.13ds-0deb13u1-ls3",
+  "classification": "linuxserver",
+  "reasons": [
+   "built from a push with the same upstream and base (root/ or build settings changed)"
+  ],
+  "upstream": {
+   "from": "10.0.13+ds-0+deb13u1",
+   "to": "10.0.13+ds-0+deb13u1",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "alpine:latest",
+    "digest": "sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "alpine:latest",
+    "digest": "sha256:be2656061b536c1883c4034790e21d0a09c5aaaf51968b89368a3c0371ea2c9a"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 130917154,
+    "to": 130917325,
+    "delta": 171
+   },
+   "arm64": {
+    "from": 127074307,
+    "to": 127074812,
+    "delta": 505
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:7b229517ed222597277036d94892173207d01a731ab3a88eeb1de2e963a2c788",
+    "diff_id": "sha256:75c137aedfb2760f88629236cb7b797630aed0c3d91d626d1d1bb694878fc2ba",
+    "size": 3853109,
+    "uncompressed_size": 8422403,
+    "created_by": "ADD alpine-minirootfs-3.24.3-x86_64.tar.gz /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:ec8da1e0942f986cddddb1a7a88823ede16d10806959299e1458ee44829658cc",
+    "diff_id": "sha256:b3f3b662fad2a3af0e0d683f761bfaaf7f77789ca4e18721c0d03a5333ec7860",
+    "size": 127063735,
+    "uncompressed_size": 578718213,
+    "created_by": "COPY /build-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:e1806b969425eaca79d3c76085f88f7890e50b89cf79396d9834cce2755cce9c",
+    "diff_id": "sha256:892a37b69b62285e66be4d63650b2e918b8680dc6cd3ffb062c917a51a53ebb1",
+    "size": 481,
+    "uncompressed_size": 614,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     57,
+     57
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d3531b7a4f217bdc3426c57bcff84c170f086f456a39689d4a615c6d026c4be0",
+    "diff_id": "sha256:a278e6f39431cd0ed74238a3d377893ad0d905d68b676bf9a65529080669756b",
+    "size": 4190488,
+    "uncompressed_size": 8652224,
+    "created_by": "ADD alpine-minirootfs-3.24.3-aarch64.tar.gz /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:c2b2536b7d5d36858b5d74691cd3a081b2662bef7a603e6355e8e26d25b97dbb",
+    "diff_id": "sha256:e3b005f7efbca300c7ced7c29292722fe1e2e7a1e6ce905aa0b1513dddedd6d1",
+    "size": 122883841,
+    "uncompressed_size": 577357301,
+    "created_by": "COPY /build-out/ /",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:b516899790d32bda0195f8f51377388ab5e47ed2fedd0ef3cf03b5bf39567744",
+    "diff_id": "sha256:034e06f6f92c928f74c3d3b6fec639f74bbea51a0b66cc1cbf0cc4f3659c7bf2",
+    "size": 483,
+    "uncompressed_size": 614,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     57,
+     57
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "qemu-static",
+  "tag": "10.0.13ds-0deb13u1-ls4",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/qemu-static/builds/10.0.13ds-0deb13u1-ls4/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 4,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/test.amd64.tar.gz",
+    "files": {}
+   },
+   "arm64": {
+    "success": true,
+    "passed": 4,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-qemu-static/releases/download/10.0.13ds-0deb13u1-ls4/test.arm64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "qemu-static",
+    "tag": "amd64-c0dc95a-41116852214",
+    "arch": "amd64",
+    "started": "2026-10-30T20:28:05Z",
+    "finished": "2026-10-30T20:28:11Z",
+    "success": true,
+    "runner": "5bbe0a6524df",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "16 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "16 packages: syft JSON 8695 bytes gzipped, SPDX for the image attestation 31314 bytes",
+      "seconds": 0.094
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "97 dirs, 128 files (587141141 bytes), 335 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.01s, total 0.01s",
+      "seconds": 0.158
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "3 layers, 1 from base, compressed sizes from registry",
+      "seconds": 0.364
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.017
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "qemu-static",
+    "tag": "arm64-c0dc95a-41116852214",
+    "arch": "arm64",
+    "started": "2026-10-30T20:21:52Z",
+    "finished": "2026-10-30T20:22:00Z",
+    "success": true,
+    "runner": "cb3184a77a80",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "16 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "16 packages: syft JSON 8684 bytes gzipped, SPDX for the image attestation 31330 bytes",
+      "seconds": 0.083
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "97 dirs, 127 files (586010050 bytes), 335 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.01s, total 0.01s",
+      "seconds": 0.119
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "3 layers, 1 from base, compressed sizes from registry",
+      "seconds": 1.197
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.015
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}

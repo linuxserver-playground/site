@@ -1,0 +1,925 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "kometa",
+  "repository": "linuxserver-playground/docker-kometa",
+  "branch": "nightly",
+  "mode": "live",
+  "version": {
+   "upstream": "eedd765c",
+   "upstream_clean": "eedd765c",
+   "ls_build": 3,
+   "tag": "nightly-eedd765c-ls3",
+   "release_tag": "nightly",
+   "tags": [
+    "nightly",
+    "nightly-eedd765c-ls3",
+    "nightly-version-eedd765c",
+    "amd64-nightly",
+    "amd64-nightly-eedd765c-ls3",
+    "amd64-nightly-version-eedd765c",
+    "arm64v8-nightly",
+    "arm64v8-nightly-eedd765c-ls3",
+    "arm64v8-nightly-version-eedd765c"
+   ],
+   "source": "github_commit",
+   "source_url": "https://github.com/Kometa-Team/Kometa/commit/eedd765ce273d87960c4eecc0ac06a2a89a8f961"
+  },
+  "commit": "3236614a7eb471ec03f67cce5848cb749d158896",
+  "created": "2026-10-29T05:37:57Z",
+  "reason": "upstream",
+  "previous": {
+   "tag": "nightly-c29464d7-ls3",
+   "release_url": "https://github.com/linuxserver-playground/docker-kometa/releases/tag/nightly-c29464d7-ls3"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:851775bf21ca1a68d41225887753dd0c93739e6a636417b54934822f0d989cec",
+    "size": 317854603,
+    "uncompressed_size": 489622664,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 81
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:826f0182b02fd52ef279a81b162c6f19671845a6e3e182a8f0858523d899e827",
+    "size": 317267118,
+    "uncompressed_size": 504584938,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 62
+   }
+  ],
+  "index_digest": "sha256:08562a272629bcc96c28978ffab178821d6b7623a8b1d03578ab5be2d388285a",
+  "labels": {
+   "build_version": "Linuxserver.io version:- eedd765c-ls3 Build-date:- 2026-10-29T05:33:30Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b",
+   "io.linuxserver.image.branch": "nightly",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "eedd765c",
+   "maintainer": "thespad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-29T05:33:30Z",
+   "org.opencontainers.image.description": "Kometa is a powerful tool designed to give you complete control over your media libraries.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-kometa",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "3236614a7eb471ec03f67cce5848cb749d158896",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-kometa",
+   "org.opencontainers.image.title": "Kometa",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-kometa/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "eedd765c-ls3"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/init-hook",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "PYTHONIOENCODING=utf-8"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init-kometa"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KOMETA_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\n# environment settings\nENV S6_STAGE2_HOOK=/init-hook\nENV HOME=\"/config\" \\\nPYTHONIOENCODING=utf-8\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add -U --update --no-cache --virtual=build-dependencies \\\n    build-base \\\n    git \\\n    libffi-dev \\\n    libxml2-dev \\\n    libzen-dev \\\n    python3-dev && \\\n  apk add  -U --update --no-cache \\\n    grep \\\n    libjpeg \\\n    libxslt \\\n    python3 && \\\n  if [ -z ${KOMETA_VERSION+x} ]; then \\\n    KOMETA_VERSION=$(curl -s \"https://api.github.com/repos/Kometa-Team/Kometa/commits/nightly\" \\\n    | jq -r '. | .sha' | cut -c1-8); \\\n  fi && \\\n  mkdir -p /app/kometa && \\\n  curl -o \\\n    /tmp/kometa.tar.gz -L \\\n    \"https://github.com/Kometa-Team/Kometa/archive/${KOMETA_VERSION}.tar.gz\" && \\\n  tar xf \\\n    /tmp/kometa.tar.gz -C \\\n    /app/kometa --strip-components=1 && \\\n  cd /app/kometa && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config\n\nENTRYPOINT [\"/init-kometa\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KOMETA_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\n# environment settings\nENV S6_STAGE2_HOOK=/init-hook\nENV HOME=\"/config\" \\\nPYTHONIOENCODING=utf-8\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add -U --update --no-cache --virtual=build-dependencies \\\n    build-base \\\n    git \\\n    libffi-dev \\\n    libxml2-dev \\\n    libzen-dev \\\n    python3-dev && \\\n  apk add  -U --update --no-cache \\\n    grep \\\n    libjpeg \\\n    libxslt \\\n    python3 && \\\n  if [ -z ${KOMETA_VERSION+x} ]; then \\\n    KOMETA_VERSION=$(curl -s \"https://api.github.com/repos/Kometa-Team/Kometa/commits/nightly\" \\\n    | jq -r '. | .sha' | cut -c1-8); \\\n  fi && \\\n  mkdir -p /app/kometa && \\\n  curl -o \\\n    /tmp/kometa.tar.gz -L \\\n    \"https://github.com/Kometa-Team/Kometa/archive/${KOMETA_VERSION}.tar.gz\" && \\\n  tar xf \\\n    /tmp/kometa.tar.gz -C \\\n    /app/kometa --strip-components=1 && \\\n  cd /app/kometa && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config\n\nENTRYPOINT [\"/init-kometa\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"kometa:nightly\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-kometa-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-config -> init-kometa-config\n  init-config -> init-kometa-oneshot\n  legacy-services -> init-kometa-shutdown\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-kometa\n  svc-kometa -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"kometa:nightly\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-kometa-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-kometa-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\ncp /app/kometa/config/config.yml.template /config\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "init-kometa-oneshot",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nIFS=\"|\" read -r -a CLI_OPTIONS <<< \"$CLI_OPTIONS_STRING\"\n\nexport KOMETA_LINUXSERVER=True\n\ncd / || exit 1\n\n# halt startup if no config file is found\nif [[ -n \"${KOMETA_CONFIG}\" ]]; then\n    CONFIG_FILE=\"${KOMETA_CONFIG}\"\nelif echo \"${CLI_OPTIONS[@]}\" | grep -qPo '([\\s]|^)(--config|-c)([\\s])(.+\\/[^\\/]+)\\.(yml|yaml)'; then\n    CONFIG_FILE=$(echo \"${CLI_OPTIONS[@]}\" | grep -Po '([\\s]|^)(--config|-c)([\\s])\\K(.+\\/[^\\/]+)\\.(yml|yaml)')\nelse\n    CONFIG_FILE=\"/config/config.yml\"\nfi\n\nif [[ -n \"${CONFIG_FILE}\" ]] && [[ ! -e \"${CONFIG_FILE}\" ]]; then\n    echo \"No config file found at ${CONFIG_FILE}, halting init.\"\n    echo \"[ls.io-init] done.\"\n    s6-rc -bad change\nfi\n\nif { echo \"${CLI_OPTIONS[@]}\" | grep -qPo '([\\s]|^)(--run|-r)([\\s]|$)'; } && { echo \"${CLI_OPTIONS[@]}\" | grep -qPo '([\\s]|^)(--config|-c)([\\s])(.+\\/[^\\/]+)\\.(yml|yaml)'; }; then\n    s6-setuidgid abc python3 /app/kometa/kometa.py \"${CLI_OPTIONS[@]}\"\nelif echo \"${CLI_OPTIONS[@]}\" | grep -qPo '([\\s]|^)(--run|-r)([\\s]|$)'; then\n    s6-setuidgid abc python3 /app/kometa/kometa.py --config \"${CONFIG_FILE}\" \"${CLI_OPTIONS[@]}\"\nelif echo \"${CLI_OPTIONS[@]}\" | grep -qPo '([\\s]|^)(--config|-c)([\\s])(.+\\/[^\\/]+)\\.(yml|yaml)'; then\n    s6-setuidgid abc python3 /app/kometa/kometa.py --run \"${CLI_OPTIONS[@]}\"\nelse\n    s6-setuidgid abc python3 /app/kometa/kometa.py --run --config \"${CONFIG_FILE}\" \"${CLI_OPTIONS[@]}\"\nfi\n"
+    },
+    {
+     "name": "init-kometa-shutdown",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "image",
+     "script": "s6-svscanctl -t /run/service\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-kometa",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nIFS=\"|\" read -r -a CLI_OPTIONS <<< \"$CLI_OPTIONS_STRING\"\n\nexport KOMETA_LINUXSERVER=True\n\ncd / || exit 1\n\n# halt startup if no config file is found\nif [[ -n \"${KOMETA_CONFIG}\" ]]; then\n    CONFIG_FILE=\"${KOMETA_CONFIG}\"\nelif echo \"${CLI_OPTIONS[@]}\" | grep -qPo '([\\s]|^)(--config|-c)([\\s])(.+\\/[^\\/]+)\\.(yml|yaml)'; then\n    CONFIG_FILE=$(echo \"${CLI_OPTIONS[@]}\" | grep -Po '([\\s]|^)(--config|-c)([\\s])\\K(.+\\/[^\\/]+)\\.(yml|yaml)')\nelse\n    CONFIG_FILE=\"/config/config.yml\"\nfi\n\nif [[ -n \"${CONFIG_FILE}\" ]] && [[ ! -e \"${CONFIG_FILE}\" ]]; then\n    echo \"No config file found at ${CONFIG_FILE}, halting init.\"\n    s6-rc -bad change\nfi\n\nif echo \"${CLI_OPTIONS[@]}\" | grep -qPo '([\\s]|^)(--config|-c)([\\s])(.+\\/[^\\/]+)\\.(yml|yaml)'; then\n    exec \\\n        s6-setuidgid abc python3 /app/kometa/kometa.py \"${CLI_OPTIONS[@]}\"\nelse\n    exec \\\n        s6-setuidgid abc python3 /app/kometa/kometa.py --config \"${CONFIG_FILE}\" \"${CLI_OPTIONS[@]}\"\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 212,
+    "distro": "Alpine Linux v3.24",
+    "hash": "b0a028ce",
+    "by_type": {
+     "python": 109,
+     "UnknownPackage": 14,
+     "binary": 14,
+     "apk": 75
+    }
+   },
+   "arm64": {
+    "count": 212,
+    "distro": "Alpine Linux v3.24",
+    "hash": "b0a028ce",
+    "by_type": {
+     "python": 109,
+     "UnknownPackage": 14,
+     "binary": 14,
+     "apk": 75
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/kometa/builds/nightly-eedd765c-ls3/"
+  },
+  "notes": {
+   "linuxserver": "No changes",
+   "upstream": "fix(schema): reconcile seasonal template variable overrides (#3800)",
+   "upstream_url": "https://github.com/Kometa-Team/Kometa/commit/eedd765ce273d87960c4eecc0ac06a2a89a8f961"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 60144,
+    "sha256": "1f0f3bf2a688bab2629fadd69180a8e0c61aa1982b2728f4635cacb38e829515",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5324,
+    "sha256": "8b3fae00bf507833c345c35b490a0b334e32ce623d7603173dd9ce252383f405",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 108632,
+    "sha256": "d8ea5332d7b102db58f7382febdc228b4c5397b92bf370519b47ab0105e695d8",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2397,
+    "sha256": "f7bcf2fccdc3effe71f45699f2e6a97d5b9dd33e555a614af325229a24094144",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3007,
+    "sha256": "0e3276e962c3b846d81a72fede8eb0bd496ddab4cae9a2a71c51859ba90c8dcb",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 16116,
+    "sha256": "5e78849e40a1a31e86019f21ea3694cb9d615f6eb75c0b67d69d5df63e45b29b",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 60335,
+    "sha256": "3e6ee757df72cb05109aef97e88448e8c3047fb62c3ff2e9ad0b1e2287cf70dc",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5324,
+    "sha256": "33b774b1d0d0159e7d45cea8092f8466cc5ffc335de36c5456764f6198f3c3f7",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 108349,
+    "sha256": "beb9709fbf6985e9a627afec40d406b76de554ff4036e04957dfc672ed662797",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2401,
+    "sha256": "46a2bcc33c33b8554a96f9f6067d3a3afe695e7e9a50d68e4718c71f620e8925",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3002,
+    "sha256": "d3860330c6d9c6dbe172a2a3a2d9e99220c05263c4ace0c5fee86a8602d2049a",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 16116,
+    "sha256": "5e78849e40a1a31e86019f21ea3694cb9d615f6eb75c0b67d69d5df63e45b29b",
+    "url": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40824051858,
+   "run_url": "https://github.com/linuxserver-playground/docker-kometa/actions/runs/40824051858",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/kometa",
+   "tags": [
+    "nightly",
+    "nightly-eedd765c-ls3",
+    "nightly-version-eedd765c",
+    "amd64-nightly",
+    "amd64-nightly-eedd765c-ls3",
+    "amd64-nightly-version-eedd765c",
+    "arm64v8-nightly",
+    "arm64v8-nightly-eedd765c-ls3",
+    "arm64v8-nightly-version-eedd765c"
+   ]
+  }
+ },
+ "diff": {
+  "image": "kometa",
+  "branch": "nightly",
+  "tag": "nightly-eedd765c-ls3",
+  "previous_tag": "nightly-e52ea1a3-ls2",
+  "classification": "upstream",
+  "reasons": [
+   "upstream version changed"
+  ],
+  "upstream": {
+   "from": "e52ea1a3",
+   "to": "eedd765c",
+   "changed": true
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 317862625,
+    "to": 317854603,
+    "delta": -8022
+   },
+   "arm64": {
+    "from": 317264146,
+    "to": 317267118,
+    "delta": 2972
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:589803e87188fe95e3165a8e9187c6731e15603dd7a74dc6534f5f95b84e7ed1",
+    "diff_id": "sha256:0b99ea0c13ad1a760422d7e1f69f2c3d13e525d4c088a216d5662c6292139cc3",
+    "size": 6265106,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dd3c4763431fc043f72fc92f11325e747aa19f0b7f4ffd80517b5fa481ba041f",
+    "diff_id": "sha256:1e91ca23263f0d3a483cf7c05ec39d0d57c50778ffd8616345ba1286c41c06de",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:249f35cba001ff3d0ddf7581471f6edb98d9dbb361c67b26fb2fa5ab692b6660",
+    "diff_id": "sha256:3559f1f3d49deb06085010b784908957b88928276ec7558d8ad77dbbf9a89fdd",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:b7d1faa21c64f4326523fab2a06c795639fe1376a23ff0d181572d53ca5586f4",
+    "diff_id": "sha256:2d06e6867adf71ae6a4ef4870814b2c2292f68ce890dafef59a1dca3440a3898",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:a861600f1bf8431781e397e10f319d78ead8d622c2aa8b91d2a6b5249a4030c6",
+    "diff_id": "sha256:6292ce65870e4f1a225a829ee83f814667a6397e7cbe48c7e52f267943b945f2",
+    "size": 6091115,
+    "uncompressed_size": 14407494,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:06:22Z VERSION=bc9f8d41-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:0df303fa4d766b7825d742864244937b74ee6bf523fb7b6572deee90009e0c12",
+    "diff_id": "sha256:a33689d0fe508cb641cfba678a9a95904dc7ce37322a5b05290a69df700f2c6d",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:af5a724cb827c1859752de136d1c1501df39eed5ca30fad2ecdd9292800ddc9d",
+    "diff_id": "sha256:8d10184e3b0cc6354e7ae38ff2ddd4f9483655c8ee62921c8415d00305d8f00b",
+    "size": 305483277,
+    "uncompressed_size": 461458016,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-29T05:33:30Z VERSION=eedd765c-ls3 KOMETA_VERSION=eedd765c /bin/sh -c echo \"**** install packages ****\" &&   apk add -U --update --no-cache --virtual=build-dependencies     build-base     git     libffi-dev     libxml2-dev     libzen-dev     python3-dev &&   apk add  -U --update --no-cache     grep     libjpeg     libxslt     python3 &&   if [ -z ${KOMETA_VERSION+x} ]; then     KOMETA_VERSION=$(curl -s \"https://api.github.com/repos/Kometa-Team/Kometa/commits/nightly\"     | jq -r '. | .sha' | cut -c1-8);   fi &&   mkdir -p /app/kometa &&   curl -o     /tmp/kometa.tar.gz -L     \"https://github.com/Kometa-Team/Kometa/archive/${KOMETA_VERSION}.tar.gz\" &&   tar xf     /tmp/kometa.tar.gz -C     /app/kometa --strip-components=1 &&   cd /app/kometa &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     19,
+     56
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:c80c4546d90b0b8b2d8f43c493f63b482b93d078fe3a48c31fdf1b15835abeba",
+    "diff_id": "sha256:bce103630ac8833a41b4bdeb46e210824d9d0287e08d2357257704faa23b45b8",
+    "size": 1746,
+    "uncompressed_size": 3834,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     59,
+     59
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:1cd35515ce1a5bc0117474968b266414e9a91ef99075a268adde897972d892b2",
+    "diff_id": "sha256:3415d3b1946bed135e557eff27451a76bdeaabe3fde8b52a1d7844fcd4126ae9",
+    "size": 7081730,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dee64e5694572850ee9673269eeb89465be67dae5fcee1e29c9aa56ad728a5b5",
+    "diff_id": "sha256:5323a65059c682158a782051cf4e13d726a8932c2e2affcf2e76ac5d3c7b461a",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:4af5a54b292f879fc2302386da26ef76c5ed3db24532819f961c11ceb9829d23",
+    "diff_id": "sha256:626e29f4e2488ba06ebde8f123b299add5c55e9c5227cab90006c8d31d48c88c",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:2fbd35a78b7ee61742257273cab91ba4a6225edd4bc1730ad8a3f21864d490e8",
+    "diff_id": "sha256:f25d5fb1cb94efa44855da1ddaff8563c657115135bc19d1864c72aab3d2863c",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:e7671b4018139e055361ffac46bbc0238dd938e07984e1536f9c7ead2f14ec5f",
+    "diff_id": "sha256:615f3472d38777c86fc2dee4e742e1c1065581d04133040630ca69842aadb668",
+    "size": 6326020,
+    "uncompressed_size": 21489258,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:06:22Z VERSION=bc9f8d41-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:a41e0be880b2df1376ffe0adef1b0158277abc81fa0186cf5b9de51a938a08da",
+    "diff_id": "sha256:08b597c734c6b5e3650735d97cbf8eeb882cc4b519ddecee888f5666a384eb69",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:ab3c7eec615c424538177588ee610db7ef106d3ee83a9f3b07146529ab61980b",
+    "diff_id": "sha256:962bdb59ff6e67ac5c9952683ac6bd157278f82cbf383478089ac29439a4e7a3",
+    "size": 303844270,
+    "uncompressed_size": 464503039,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-29T05:33:30Z VERSION=eedd765c-ls3 KOMETA_VERSION=eedd765c /bin/sh -c echo \"**** install packages ****\" &&   apk add -U --update --no-cache --virtual=build-dependencies     build-base     git     libffi-dev     libxml2-dev     libzen-dev     python3-dev &&   apk add  -U --update --no-cache     grep     libjpeg     libxslt     python3 &&   if [ -z ${KOMETA_VERSION+x} ]; then     KOMETA_VERSION=$(curl -s \"https://api.github.com/repos/Kometa-Team/Kometa/commits/nightly\"     | jq -r '. | .sha' | cut -c1-8);   fi &&   mkdir -p /app/kometa &&   curl -o     /tmp/kometa.tar.gz -L     \"https://github.com/Kometa-Team/Kometa/archive/${KOMETA_VERSION}.tar.gz\" &&   tar xf     /tmp/kometa.tar.gz -C     /app/kometa --strip-components=1 &&   cd /app/kometa &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     19,
+     56
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:99b816b84f49a8b4aa33cf6d2530e6161aa8d77b56141bb96a0c758ebfabe8e9",
+    "diff_id": "sha256:609405edd9df36e05e860dd0dd022df94fd5cac2fd42e13e7fb11ee6f0d1432f",
+    "size": 1744,
+    "uncompressed_size": 3834,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     59,
+     59
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "kometa",
+  "tag": "nightly-eedd765c-ls3",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/kometa/builds/nightly-eedd765c-ls3/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.01,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 1650688,
+    "pids": 10,
+    "tarball": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-kometa/builds/nightly-eedd765c-ls3/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-kometa/builds/nightly-eedd765c-ls3/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.011,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 1613824,
+    "pids": 10,
+    "tarball": "https://github.com/linuxserver-playground/docker-kometa/releases/download/nightly-eedd765c-ls3/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-kometa/builds/nightly-eedd765c-ls3/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-kometa/builds/nightly-eedd765c-ls3/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "kometa",
+    "tag": "amd64-3236614-40824051858",
+    "arch": "amd64",
+    "started": "2026-10-29T05:36:41Z",
+    "finished": "2026-10-29T05:37:04Z",
+    "success": true,
+    "runner": "724d6f7ffb04",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.01,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.01
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "0 services stayed up for 15s: ",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "212 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "212 packages: syft JSON 60144 bytes gzipped, SPDX for the image attestation 718573 bytes",
+      "seconds": 0.199
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1353 dirs, 11966 files (489330925 bytes), 1218 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.17s, total 0.30s",
+      "seconds": 0.46
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.913
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "21 units, 4 from this image, base units assumed",
+      "seconds": 0.081
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "10 pids, tcp [], rss 1650688 bytes",
+      "seconds": 0.75
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 1650688,
+     "pids": 10,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-kometa"
+     ],
+     "changed_paths": 212
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "kometa",
+    "tag": "arm64-3236614-40824051858",
+    "arch": "arm64",
+    "started": "2026-10-29T05:35:38Z",
+    "finished": "2026-10-29T05:35:59Z",
+    "success": true,
+    "runner": "f46217feb4ad",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "0 services stayed up for 15s: ",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "212 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "212 packages: syft JSON 60335 bytes gzipped, SPDX for the image attestation 718651 bytes",
+      "seconds": 0.174
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1353 dirs, 11965 files (504293244 bytes), 1218 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.09s, total 0.16s",
+      "seconds": 0.311
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.629
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "21 units, 4 from this image, base units assumed",
+      "seconds": 0.063
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "10 pids, tcp [], rss 1613824 bytes",
+      "seconds": 0.475
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 1613824,
+     "pids": 10,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-kometa"
+     ],
+     "changed_paths": 212
+    }
+   }
+  }
+ }
+}

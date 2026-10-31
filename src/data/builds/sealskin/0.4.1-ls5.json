@@ -1,0 +1,968 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "sealskin",
+  "repository": "linuxserver-playground/docker-sealskin",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "0.4.1",
+   "upstream_clean": "0.4.1",
+   "semver": "0.4.1",
+   "ls_build": 5,
+   "tag": "0.4.1-ls5",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "0.4.1-ls5",
+    "version-0.4.1",
+    "0.4.1",
+    "amd64-latest",
+    "amd64-0.4.1-ls5",
+    "amd64-version-0.4.1",
+    "amd64-0.4.1",
+    "arm64v8-latest",
+    "arm64v8-0.4.1-ls5",
+    "arm64v8-version-0.4.1",
+    "arm64v8-0.4.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/selkies-project/sealskin/releases/tag/0.4.1"
+  },
+  "commit": "00584ad63da1e7a85c28e178a32e5dbc13ac55e3",
+  "created": "2026-10-31T13:00:44Z",
+  "reason": "rebuild",
+  "previous": {
+   "tag": "0.4.1-ls4",
+   "release_url": "https://github.com/linuxserver-playground/docker-sealskin/releases/tag/0.4.1-ls4"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:2124cf9f813072f8caaa4fdc164c5131de5ffec7cf78b43ccb1bbd20209429f1"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:5dc6f67ce3caeee8158b92adfec0d3f8019c9c99dddadd52f790e97ef8f0ebc9",
+    "size": 88299844,
+    "uncompressed_size": 232168669,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 30
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:360c4040566f26ce49634112f59ed212321bc0fab5ee38c8397a54cae5e1f787",
+    "size": 86371220,
+    "uncompressed_size": 243959808,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 27
+   }
+  ],
+  "index_digest": "sha256:6d5be248e111c259fb065de2707757e2cde4a745149522f7fc9a1b819f4dc1d8",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 0.4.1-ls5 Build-date:- 2026-10-31T12:55:43Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:2124cf9f813072f8caaa4fdc164c5131de5ffec7cf78b43ccb1bbd20209429f1",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "0.4.1",
+   "maintainer": "thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-31T12:55:43Z",
+   "org.opencontainers.image.description": "Sealskin is a self-hosted browser isolation and remote application streaming platform.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-sealskin",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "00584ad63da1e7a85c28e178a32e5dbc13ac55e3",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-sealskin",
+   "org.opencontainers.image.title": "Sealskin",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-sealskin/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "0.4.1-ls5"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "8000/tcp",
+    "8443/tcp"
+   ],
+   "volumes": [
+    "/config",
+    "/storage"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SEALSKIN_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\nENV HOME=/config\n\n# install software\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    python3-dev \\\n    py3-pip && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    caddy \\\n    openssl \\\n    python3 && \\\n  echo \"**** install sealskin ****\" && \\\n  if [ -z ${SEALSKIN_VERSION+x} ]; then \\\n    SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L \\\n    \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" && \\\n  pip3 install \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages && \\\n  echo \"**** cleanup ****\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8000 8443\nVOLUME /config /storage\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SEALSKIN_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\nENV HOME=/config\n\n# install software\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    python3-dev \\\n    py3-pip && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    caddy \\\n    openssl \\\n    python3 && \\\n  echo \"**** install sealskin ****\" && \\\n  if [ -z ${SEALSKIN_VERSION+x} ]; then \\\n    SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L \\\n    \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" && \\\n  pip3 install \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages && \\\n  echo \"**** cleanup ****\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8000 8443\nVOLUME /config /storage\n"
+  },
+  "init_graph": {
+   "d2": "\"sealskin:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-sealskin -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-sealskin\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-sealskin\n  svc-sealskin -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"sealskin:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-sealskin"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-sealskin",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p /config/ssl\n\n# create self signed cert\nif [ ! -f \"/config/ssl/proxy_key.pem\" ]; then\n  openssl req -new -x509 \\\n    -days 3650 -nodes \\\n    -out /config/ssl/proxy_cert.pem \\\n    -keyout /config/ssl/proxy_key.pem \\\n    -subj \"/C=US/ST=CA/L=Carlsbad/O=Linuxserver.io/OU=LSIO Server/CN=*\"\n  chmod 600 /config/ssl/proxy_key.pem\nfi\n\n# generate server key\nif [ ! -f \"/config/ssl/server_key.pem\" ]; then\n  openssl genpkey \\\n    -algorithm RSA \\\n    -out /config/ssl/server_key.pem \\\n    -pkeyopt rsa_keygen_bits:4096\n  chmod 600 /config/ssl/server_key.pem\nfi\n\n# docker socket perms\nDOCKER_SOCK_PATH=\"/var/run/docker.sock\"\nif [ -S \"${DOCKER_SOCK_PATH}\" ]; then\n  DOCKER_GID=$(stat -c '%g' \"${DOCKER_SOCK_PATH}\")\n  if ! id -G abc | grep -qw \"${DOCKER_GID}\"; then\n    DOCKER_GROUP_NAME=$(getent group \"${DOCKER_GID}\" | awk -F: '{print $1}')\n    if [ -z \"${DOCKER_GROUP_NAME}\" ]; then\n      DOCKER_GROUP_NAME=\"docker_sock_group\"\n      echo \"**** Creating group '${DOCKER_GROUP_NAME}' with GID ${DOCKER_GID} for the Docker socket ****\"\n      groupadd -g \"${DOCKER_GID}\" \"${DOCKER_GROUP_NAME}\"\n    fi\n    echo \"**** Adding user 'abc' to group '${DOCKER_GROUP_NAME}' (GID: ${DOCKER_GID}) ****\"\n    usermod -a -G \"${DOCKER_GROUP_NAME}\" abc\n  fi\n  if [ \"$(stat -c '%A' \"${DOCKER_SOCK_PATH}\" | cut -c 5,6)\" != \"rw\" ]; then\n    echo -e \"\\n**** WARNING: The Docker socket ${DOCKER_SOCK_PATH} does not have group read/write permissions. ****\"\n    echo \"**** To fix this, run the following command on your DOCKER HOST: ****\"\n    echo -e \"sudo chmod g+rw ${DOCKER_SOCK_PATH}\\n\"\n  fi\nfi\n\n# perms\nlsiown abc:abc /storage\nlsiown -R abc:abc /config\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-sealskin",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# Run SealSkin\nexec s6-setuidgid abc \\\n  sealskin-server\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 294,
+    "distro": "Alpine Linux v3.24",
+    "hash": "c2e18afe",
+    "by_type": {
+     "UnknownPackage": 13,
+     "python": 50,
+     "apk": 72,
+     "go-module": 159
+    }
+   },
+   "arm64": {
+    "count": 294,
+    "distro": "Alpine Linux v3.24",
+    "hash": "c2e18afe",
+    "by_type": {
+     "UnknownPackage": 13,
+     "python": 50,
+     "apk": 72,
+     "go-module": 159
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/sealskin/builds/0.4.1-ls5/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-sealskin/compare/0.4.1-ls4...0.4.1-ls5",
+   "upstream": "# SealSkin 0.4.1\n\nMaintenance release.\n\n## Changes\n\n* **Collaboration rooms on LinuxServer.io images.** A room's viewers reach\n  the container on the session's own login again, not a view-only login of\n  their own. The view-only login broke collaboration in LinuxServer.io\n  images, and it held nothing back: every collaboration session already caps\n  each participant through its Selkies token.\n* **Kubernetes pull secrets.** The server reads a session template's pull\n  secrets on the first call, however recently the host booted.\n",
+   "upstream_url": "https://github.com/selkies-project/sealskin/releases/tag/0.4.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 52528,
+    "sha256": "ed8a6aa5971e9862ce0f454747fade1a8228e0564e57c0c6e2aab2b67600d5bb",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5219,
+    "sha256": "84b1d5486835473188a2bc9f4c04dd587f9d2600bf1576c3a9db2fa21c775a97",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 53728,
+    "sha256": "6569dcdafb593ac6b51333b9d17aff145b0e5e025baae4c15ee8edfb4405e518",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2661,
+    "sha256": "27a5413fabfbdaee0ad1bb0fb229915a1d9eea68dcb8f9a316633b30b14c7cb4",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 80143,
+    "sha256": "d79b645781e2585af43e9d5bbc5c0a8f98b6f7d581389cd67345ac02ec843878",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 40296,
+    "sha256": "0f423fad1233d55519bd7c640b393c0c7115848493295a8265984534b370c053",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 52761,
+    "sha256": "df3350fdbb37341726c9d80954062b5374ad5c33a5fc66e6ad735c22a9f71ca4",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5219,
+    "sha256": "a6c2fbac019c7e21d9ead48be4d5659a8057cdb8f2c249a847b39f5eecdc802b",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 53450,
+    "sha256": "ea4e203b5d884279bd117a18d3705fae08265eeb3f0a628ddbb19d1b62999490",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2661,
+    "sha256": "d32f19fc052b45bdf401bd94426ea56585fdae1548b525e72e40d58fb412bd4a",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 81132,
+    "sha256": "9a4fb448372c494769892f618b73099317fffecd224709ac945a8bf6b83a4700",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 40296,
+    "sha256": "0f423fad1233d55519bd7c640b393c0c7115848493295a8265984534b370c053",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41203213060,
+   "run_url": "https://github.com/linuxserver-playground/docker-sealskin/actions/runs/41203213060",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/sealskin",
+   "tags": [
+    "latest",
+    "0.4.1-ls5",
+    "version-0.4.1",
+    "0.4.1",
+    "amd64-latest",
+    "amd64-0.4.1-ls5",
+    "amd64-version-0.4.1",
+    "amd64-0.4.1",
+    "arm64v8-latest",
+    "arm64v8-0.4.1-ls5",
+    "arm64v8-version-0.4.1",
+    "arm64v8-0.4.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "sealskin",
+  "branch": "master",
+  "tag": "0.4.1-ls5",
+  "previous_tag": "0.4.1-ls4",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "repository at a newer commit (3015504 → 00584ad)"
+  ],
+  "upstream": {
+   "from": "0.4.1",
+   "to": "0.4.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "3015504585a02d5e44c445f713403d7b9582ee23",
+   "to": "00584ad63da1e7a85c28e178a32e5dbc13ac55e3",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-sealskin/compare/3015504585a02d5e44c445f713403d7b9582ee23...00584ad63da1e7a85c28e178a32e5dbc13ac55e3"
+  },
+  "trigger": "rebuild",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:2124cf9f813072f8caaa4fdc164c5131de5ffec7cf78b43ccb1bbd20209429f1"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 88299978,
+    "to": 88299844,
+    "delta": -134
+   },
+   "arm64": {
+    "from": 86371006,
+    "to": 86371220,
+    "delta": 214
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:276ea8a0f29bb646a3dc93e87bbea3581f514c7929015396944850be51454382",
+    "diff_id": "sha256:3c5ca511ef276351983687c2dd4bd3c27337af53150bbfe5a6fc9662f77b7c99",
+    "size": 6265151,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dfaf858b81f5ab9a890a227b430ad33961048bd20816ad5ce275fc4264927010",
+    "diff_id": "sha256:74c13f909e56c95485f1aa1a09973dd554e2b001df8047f65f690865c98058a3",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:2b034c1c7f430eb81c21d0b7e3d0b1dcc0503a470ec8fe6654dabfbc33e05e7a",
+    "diff_id": "sha256:008a44e2c4cc94af50c21a30ae1a7b19bb984a08a624a771afd4045cbf9d7f9c",
+    "size": 699,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:40c2fe273430a640283a5ba91caef5cab6dbee9031ecc070be2c1d7738ce28c4",
+    "diff_id": "sha256:02f905ec27229ca760095099595ccf7411aaca9fd9c6ff32c753ae9e028cbd88",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:300afd0130e859e1336ceb823b90c9a7113aae4f42d7b54c49230aeb326647bd",
+    "diff_id": "sha256:cf164d722f8a2dc5d78b78b691b518a65275c15fee7730bde8dd4fb8c59c6694",
+    "size": 6091189,
+    "uncompressed_size": 14407494,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-31T02:02:38Z VERSION=3ad40b41-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:c0c4a9f3b59406855c19a223e11de699721cb09e65367d125028ffb80026016f",
+    "diff_id": "sha256:8c4769757b2ba9f6a68fe7f23b5f0e7aa42122a7f45e326e130c9ed09736e961",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:4cd6d4ef11943c4313b68e846e0ad54fec77373fb6ea2efa049492304a7c5fe2",
+    "diff_id": "sha256:fd840ffc75d8bb89f69e3ad794669884acbe64e6b0890f4784912a5c06d5bec9",
+    "size": 75928822,
+    "uncompressed_size": 204006000,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-31T12:55:43Z VERSION=0.4.1-ls5 SEALSKIN_VERSION=0.4.1 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     python3-dev     py3-pip &&   echo \"**** install packages ****\" &&   apk add --no-cache     caddy     openssl     python3 &&   echo \"**** install sealskin ****\" &&   if [ -z ${SEALSKIN_VERSION+x} ]; then     SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L     \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" &&   pip3 install     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages &&   echo \"**** cleanup ****\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:1e7dafa9cfb039d8b6612fc94898401cdaf87994f986743e6aa7dea27591dfff",
+    "diff_id": "sha256:e7141f0b49e717c427e16f7a48a6a38ed55dc459e8d5d9ab0a1ec3e6f715bf98",
+    "size": 1325,
+    "uncompressed_size": 1855,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     45,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:9568b0aceceb516e8273c368310228e7b23fd52de9d56d3b47e18860aca45f92",
+    "diff_id": "sha256:f7b0edc6f23b692d184cf0582344c895909172bdda2d2c682e048f3b15fe8873",
+    "size": 7081765,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:ccc2c4748adffa3127a326368b64f78b07c13f1dd55d1ac949626c82923409d8",
+    "diff_id": "sha256:2dd0e8f6cdac974e242fa852c4d498d691cf5b9fcac1b0c97e31404c25dc2315",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:58ab7436e8a06cb67027499c952d52b72adc675d5dda22149c44d02f45b59580",
+    "diff_id": "sha256:2f7c3894fc82924a5d26297b09a2cb4f36e5ccc6f62f644641a6d830073ea18f",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7d65306f0871d2248bc7c84cef9e39a917cffdc10c04b65c81781655a7a8c691",
+    "diff_id": "sha256:7ca379c7c04fb5de8aa50fc25afc5e17f42e5d498a3e03d75d5d0798e1703862",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:cdf4a2c48e65040aaf83ce92ddcee81efe0b3901d7b868d598634ac337189679",
+    "diff_id": "sha256:7b0560e0dc9ce3bf814190da52ab7c6bd91d7070ab3ce15be59eb0b805256c1f",
+    "size": 6326259,
+    "uncompressed_size": 21489258,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-31T02:02:38Z VERSION=3ad40b41-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:994ec26d34f26ad8cebd8471be112b494aed867ccff39d0fb0b5f174bb467831",
+    "diff_id": "sha256:174f8f7ea850a7fd06f535c20b0186a07348f6687f2e8af7035770a87b34c4df",
+    "size": 4633,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:64833ae5be7382b2d0abd17835a21ea40f173cecab879e50a7876175d09317ee",
+    "diff_id": "sha256:a0ed5070212c3535801c3441db26e2e4afe0e0190d998e627004cf23e15ae2ad",
+    "size": 72948513,
+    "uncompressed_size": 203879888,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-31T12:55:43Z VERSION=0.4.1-ls5 SEALSKIN_VERSION=0.4.1 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     python3-dev     py3-pip &&   echo \"**** install packages ****\" &&   apk add --no-cache     caddy     openssl     python3 &&   echo \"**** install sealskin ****\" &&   if [ -z ${SEALSKIN_VERSION+x} ]; then     SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L     \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" &&   pip3 install     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages &&   echo \"**** cleanup ****\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:d272acf413538e1bec0fc4191d98cbe2d4142310f2232a4bb7da6bff610c67f4",
+    "diff_id": "sha256:68f4d9abca7bd2fc5306304da01f255497865ef0df4b1b4602d525a1b0123ed8",
+    "size": 1325,
+    "uncompressed_size": 1855,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     45,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "sealskin",
+  "tag": "0.4.1-ls5",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/sealskin/builds/0.4.1-ls5/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [
+     "2019/tcp",
+     "8000/tcp",
+     "8443/tcp",
+     "8444/tcp",
+     "8443/udp",
+     "8444/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 178667520,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.017,
+    "listening_ports": [
+     "2019/tcp",
+     "8000/tcp",
+     "8443/tcp",
+     "8444/tcp",
+     "8443/udp",
+     "8444/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 174157824,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.4.1-ls5/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.4.1-ls5/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "sealskin",
+    "tag": "amd64-00584ad-41203213060",
+    "arch": "amd64",
+    "started": "2026-10-31T12:58:56Z",
+    "finished": "2026-10-31T12:59:20Z",
+    "success": true,
+    "runner": "9d6b69e53ce4",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 18s: svc-cron, svc-sealskin",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8443/tcp",
+      "seconds": 0.086
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8000/ after 6.1s",
+      "seconds": 6.078
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "294 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "294 packages: syft JSON 52528 bytes gzipped, SPDX for the image attestation 637968 bytes",
+      "seconds": 0.172
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "706 dirs, 4922 files (231873719 bytes), 1210 symlinks, 254 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.08s, total 0.14s",
+      "seconds": 0.285
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.658
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.067
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8000/",
+      "seconds": 10.752
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [2019, 8000, 8443, 8444], rss 178667520 bytes",
+      "seconds": 0.461
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 178667520,
+     "pids": 14,
+     "listening_tcp": [
+      2019,
+      8000,
+      8443,
+      8444
+     ],
+     "listening_udp": [
+      8443,
+      8444
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-sealskin"
+     ],
+     "changed_paths": 207
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "sealskin",
+    "tag": "arm64-00584ad-41203213060",
+    "arch": "arm64",
+    "started": "2026-10-31T12:57:23Z",
+    "finished": "2026-10-31T12:57:45Z",
+    "success": true,
+    "runner": "dcaae4a28b65",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.017,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.017
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 17s: svc-cron, svc-sealskin",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8443/tcp",
+      "seconds": 0.048
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8000/ after 6.1s",
+      "seconds": 6.099
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "294 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "294 packages: syft JSON 52761 bytes gzipped, SPDX for the image attestation 638074 bytes",
+      "seconds": 0.156
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "706 dirs, 4921 files (243664903 bytes), 1210 symlinks, 254 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.08s",
+      "seconds": 0.197
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.743
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.057
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8000/",
+      "seconds": 10.718
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [2019, 8000, 8443, 8444], rss 174157824 bytes",
+      "seconds": 0.297
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 174157824,
+     "pids": 14,
+     "listening_tcp": [
+      2019,
+      8000,
+      8443,
+      8444
+     ],
+     "listening_udp": [
+      8443,
+      8444
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-sealskin"
+     ],
+     "changed_paths": 207
+    }
+   }
+  }
+ }
+}
