@@ -295,7 +295,8 @@ const NOTES_PROSE =
 
 /**
  * Release notes and the data links. `notesHtml` is renderNotes' output (sanitised to its allowlist); nothing else
- * is ever set as HTML here, and without it the notes are plain text.
+ * is ever set as HTML here, and without it the notes are plain text. Both panels stay short: the data links sit in
+ * two columns, and the notes scroll inside the panel past that height, upstream notes open by default.
  */
 export function NotesAndData({ page, notesHtml, dataAsOf }: { page: BuildPage; notesHtml?: { linuxserver: string; upstream: string }; dataAsOf: { label: string; date: Date } }) {
   const { b, upstreamSource } = page;
@@ -303,39 +304,42 @@ export function NotesAndData({ page, notesHtml, dataAsOf }: { page: BuildPage; n
   const notes = (html: string | undefined, text: string, className: string) =>
     html !== undefined ? <div className={cn(NOTES_PROSE, className)} dangerouslySetInnerHTML={{ __html: html }} /> : <p className={cn('text-sm break-words whitespace-pre-wrap text-muted-foreground', className)}>{text}</p>;
   return (
-    <section aria-labelledby="notes" className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_22rem]">
+    <section aria-labelledby="notes" className="grid grid-cols-1 gap-3 lg:grid-cols-[minmax(0,1fr)_30rem]">
       <div className="raft-panel p-5">
         <AnchorHeading id="notes" className="raft-eyebrow">
           Release notes
         </AnchorHeading>
-        {b.notes?.linuxserver && (
-          <div className="mt-3">
-            <h3 className="text-sm font-semibold">LinuxServer changes</h3>
-            {notes(notesHtml?.linuxserver, b.notes.linuxserver, 'mt-1')}
-          </div>
-        )}
-        {b.notes?.upstream && (
-          <details className="mt-4">
-            <summary className="cursor-pointer text-sm font-semibold hover:text-primary">
-              Upstream changes{b.version.upstream && ` for ${b.version.upstream}`}
-            </summary>
-            {notes(notesHtml?.upstream, b.notes.upstream, 'mt-2')}
-            {upstreamSource && (
-              <p className="mt-2 text-xs">
-                <a href={upstreamSource} target="_blank" rel="noopener" className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
-                  Source<span className="sr-only"> (opens in a new tab)</span>
-                </a>
-              </p>
-            )}
-          </details>
-        )}
-        {!b.notes?.linuxserver && !b.notes?.upstream && <p className="mt-3 text-sm text-muted-foreground">No release notes.</p>}
+        {/* Keyboard users can scroll the box; the region name says what it holds. */}
+        <div className="mt-1 max-h-64 overflow-y-auto overscroll-contain pr-2" tabIndex={0} role="region" aria-label="Release notes text">
+          {b.notes?.linuxserver && (
+            <div className="mt-2">
+              <h3 className="text-sm font-semibold">LinuxServer changes</h3>
+              {notes(notesHtml?.linuxserver, b.notes.linuxserver, 'mt-1')}
+            </div>
+          )}
+          {b.notes?.upstream && (
+            <details className="mt-4" open>
+              <summary className="cursor-pointer text-sm font-semibold hover:text-primary">
+                Upstream changes{b.version.upstream && ` for ${b.version.upstream}`}
+              </summary>
+              {notes(notesHtml?.upstream, b.notes.upstream, 'mt-2')}
+              {upstreamSource && (
+                <p className="mt-2 text-xs">
+                  <a href={upstreamSource} target="_blank" rel="noopener" className="underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:text-foreground hover:decoration-current">
+                    Source<span className="sr-only"> (opens in a new tab)</span>
+                  </a>
+                </p>
+              )}
+            </details>
+          )}
+          {!b.notes?.linuxserver && !b.notes?.upstream && <p className="mt-2 text-sm text-muted-foreground">No release notes.</p>}
+        </div>
       </div>
       <nav className="raft-panel p-2" aria-label="Release assets and API">
         <h2 className="raft-eyebrow px-3 pt-2 pb-1">Data</h2>
-        <ul className="text-sm">
+        <ul className="grid grid-cols-1 gap-x-1 text-sm sm:grid-cols-2">
           {page.dataLinks.map((l) => (
-            <li key={l.label}>
+            <li key={l.label} className="min-w-0">
               <a href={l.href} target="_blank" rel="noopener" className="flex items-center justify-between gap-2 rounded-md px-3 py-1.5 font-mono text-xs hover:bg-muted">
                 <span className="truncate">{l.label}</span>
                 <ArrowUpRight className="size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
