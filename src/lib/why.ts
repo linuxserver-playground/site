@@ -30,6 +30,9 @@ export interface BaseAttribution {
 export interface Explanation {
   /** One sentence: what started the run. */
   headline: string;
+  /** The upstream move behind the headline, with where to read it: the commits between two shas (a `github_commit`
+   * source), else the release or page the version came from. */
+  upstream: { from: string; to: string; href: string | null } | null;
   /** What changed, one sentence each, in the order a reader wants them. */
   details: string[];
   /** The base build this one moved to, when the base changed and the site holds it; rendered as a link. */
@@ -48,10 +51,19 @@ const AREA_NAMES: Record<CommitArea, string> = {
   manifest: 'image.yml',
   dockerfile: 'the Dockerfiles',
   root: 'root/',
-  generated: 'generated files (README, AGENTS.md, workflows)',
+  generated: 'generated files',
   packages: 'the package table',
   other: 'other files',
 };
+
+/** Where to read an upstream move: GitHub's compare between two commit shas when the version source is a commit,
+ * else the release, commit or feed the version came from. */
+export function upstreamLink(b: Bundle, from: string | null | undefined, to: string): string | null {
+  const url = b.version.source_url ?? null;
+  const repo = url?.match(/^(https:\/\/github\.com\/[^/]+\/[^/]+)\/commit\//)?.[1];
+  if (repo && from && /^[0-9a-f]{7,40}$/i.test(from) && /^[0-9a-f]{7,40}$/i.test(to)) return `${repo}/compare/${from}...${to}`;
+  return url;
+}
 const IMAGE_AREAS: CommitArea[] = ['manifest', 'dockerfile', 'root'];
 const AREA_ORDER: CommitArea[] = ['manifest', 'dockerfile', 'root', 'generated', 'packages', 'other'];
 
@@ -114,7 +126,7 @@ function headline(b: Bundle, diff: Diff | null): string {
         ? 'Released by the weekly package check: the packages installed in the image had changed.'
         : 'Released by the weekly package check.';
     case 'upstream':
-      return upstreamChanged ? `Built for a new upstream version: ${diff!.upstream.from ?? '?'} → ${to}.` : `Dispatched by the hourly upstream check; the upstream version is still ${to}.`;
+      return upstreamChanged ? 'Built for a new upstream version:' : `Dispatched by the hourly upstream check; the upstream version is still ${to}.`;
     case 'push':
       return `Built from a push to ${b.branch}.`;
     case 'rebuild':
@@ -138,15 +150,11 @@ function commitSentence(diff: Diff): string | null {
   const people = c.commits.length - bots;
   const areas = AREA_ORDER.filter((a) => (c.areas?.[a] ?? 0) > 0);
   const since = diff.previous_tag ? ` since ${diff.previous_tag}` : '';
-  let who: string;
-  if (people === 0 && !c.truncated) who = n === 1 ? "The one commit" + since + " is the pipeline's own" : `All ${n} commits${since} are the pipeline's own`;
-  else if (bots === 0) who = `${plural(n, 'commit')}${since}`;
-  else who = `${plural(n, 'commit')}${since} (${plural(people, 'person’s')}, ${bots} the pipeline's own)`;
+  const who = people === 0 && !c.truncated ? `${plural(n, 'pipeline commit')}${since}` : bots === 0 ? `${plural(n, 'commit')}${since}` : `${plural(n, 'commit')}${since} (${bots} by the pipeline)`;
   if (c.truncated) return `${who}; GitHub listed only part of the range.`;
   if (!areas.length) return `${who}.`;
-  const reaches = areas.filter((a) => IMAGE_AREAS.includes(a));
-  if (!reaches.length) return `${who}, touching only ${list(areas.map((a) => AREA_NAMES[a]))}: nothing that reaches the image.`;
-  return `${who}, changing ${list(areas.map((a) => AREA_NAMES[a]))}.`;
+  const what = list(areas.map((a) => AREA_NAMES[a]));
+  return areas.some((a) => IMAGE_AREAS.includes(a)) ? `${who}, changing ${what}.` : `${who}: ${what}, nothing that reaches the image.`;
 }
 
 function packageSentence(diff: Diff, base: BaseAttribution | null, baseChanged: boolean): string | null {
@@ -177,7 +185,8 @@ function packageSentence(diff: Diff, base: BaseAttribution | null, baseChanged: 
 export function explainBuild(b: Bundle, diff: Diff | null, base: BaseBuilds | null = null): Explanation {
   const commits = diff?.commit?.commits ?? [];
   const botCommits = commits.filter((c) => c.bot).length;
-  const out: Explanation = { headline: headline(b, diff), details: [], base: null, commits, botCommits, compareUrl: diff?.commit?.compare_url ?? null, hasCommits: !!diff?.commit?.commits };
+  const out: Explanation = { headline: headline(b, diff), upstream: null, details: [], base: null, commits, botCommits, compareUrl: diff?.commit?.compare_url ?? null, hasCommits: !!diff?.commit?.commits };
+  if (diff?.upstream.changed && b.reason === 'upstream') out.upstream = { from: diff.upstream.from ?? '?', to: diff.upstream.to ?? b.version.upstream, href: upstreamLink(b, diff.upstream.from, diff.upstream.to ?? b.version.upstream) };
   if (!diff) {
     out.details.push('No comparison with a previous build is available.');
     return out;

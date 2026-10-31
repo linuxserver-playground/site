@@ -154,9 +154,28 @@ export function WhyThisBuild({ why, baseHref, baseImage }: { why: Explanation; b
   return (
     <section aria-labelledby="why" className="raft-panel p-5">
       <AnchorHeading id="why" className="raft-eyebrow">
-        Why this build
+        Why this built
       </AnchorHeading>
-      <p className="mt-3 text-base font-medium text-foreground">{why.headline}</p>
+      <p className="mt-3 text-base font-medium text-foreground">
+        {why.headline}
+        {why.upstream && (
+          <>
+            {' '}
+            {why.upstream.href ? (
+              <a href={why.upstream.href} target="_blank" rel="noopener" className="inline-flex items-center gap-1 font-mono underline-offset-4 hover:text-primary hover:underline">
+                {why.upstream.from} → {why.upstream.to}
+                <ArrowUpRight className="size-3.5 text-muted-foreground" aria-hidden="true" />
+                <span className="sr-only">(the upstream changes, opens in a new tab)</span>
+              </a>
+            ) : (
+              <span className="font-mono">
+                {why.upstream.from} → {why.upstream.to}
+              </span>
+            )}
+            .
+          </>
+        )}
+      </p>
       <ul className="mt-2 space-y-1 text-sm text-muted-foreground">
         {base && (
           <li>

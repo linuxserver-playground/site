@@ -108,7 +108,7 @@ export function buildPage(image: BuildPageImage, record: BuildRecord, builds: Bu
   const description = `Build ${tag} of ${image.name}: CI ${result}${b.test.enabled ? (b.test.success ? ', tests passed' : ', tests failed') : ''}; ${b.platforms.map((p) => `${p.arch} ${bytes(p.size)}`).join(', ')}, base ${b.base.image}, ${reasonLabel(b.reason)}${classification ? `, ${classification} change` : ''}.`;
 
   const facts: Fact[] = [
-    { label: 'Upstream version', value: b.version.upstream, mono: true },
+    { label: 'Upstream version', value: b.version.upstream, mono: true, ...(b.version.source_url ? { href: b.version.source_url } : {}) },
     { label: 'LinuxServer build', value: `ls${b.version.ls_build}`, mono: true },
     { label: 'Branch', value: `${b.branch} → :${b.version.release_tag ?? b.branch}`, mono: true },
     { label: 'Commit', value: shortSha(b.commit), href: `https://github.com/${b.repository}/commit/${b.commit}`, mono: true, title: b.commit },
