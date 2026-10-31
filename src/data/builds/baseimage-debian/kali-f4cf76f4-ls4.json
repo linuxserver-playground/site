@@ -1,0 +1,978 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "baseimage-debian",
+  "repository": "linuxserver-playground/docker-baseimage-debian",
+  "branch": "kali",
+  "mode": "live",
+  "version": {
+   "upstream": "f4cf76f4",
+   "upstream_clean": "f4cf76f4",
+   "ls_build": 4,
+   "tag": "kali-f4cf76f4-ls4",
+   "release_tag": "kali",
+   "tags": [
+    "kali",
+    "kali-f4cf76f4-ls4",
+    "kali-version-f4cf76f4",
+    "amd64-kali",
+    "amd64-kali-f4cf76f4-ls4",
+    "amd64-kali-version-f4cf76f4",
+    "arm64v8-kali",
+    "arm64v8-kali-f4cf76f4-ls4",
+    "arm64v8-kali-version-f4cf76f4"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "a17531ba1cb8bffac609ab58d64f1856f689cc3b",
+  "created": "2026-10-30T23:30:55Z",
+  "reason": "manual",
+  "previous": {
+   "tag": "kali-f4cf76f4-ls3",
+   "release_url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/tag/kali-f4cf76f4-ls3"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:5e57e56e3b9320893c984336c5d509bd94aa992a7c2371892683b9f2497c702e",
+    "size": 84244435,
+    "uncompressed_size": 201810781,
+    "layers": 6,
+    "runner": "Linux-X64",
+    "build_seconds": 93
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:39a8b8a311ca9fe5f16407cd4ac4a1bf89bcab4b3c2ba5b930a32daca0e70dc1",
+    "size": 83155626,
+    "uncompressed_size": 230044193,
+    "layers": 6,
+    "runner": "Linux-ARM64",
+    "build_seconds": 77
+   }
+  ],
+  "index_digest": "sha256:74853d443c3a793a1525dab0e72dd411bf2b978e2128d72c262d0eb99e66dc6c",
+  "labels": {
+   "build_version": "Linuxserver.io version:- f4cf76f4-ls4 Build-date:- 2026-10-30T23:25:13Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "kali",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "f4cf76f4",
+   "maintainer": "TheLamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-30T23:25:13Z",
+   "org.opencontainers.image.description": "baseimage-debian container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-baseimage-debian",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "a17531ba1cb8bffac609ab58d64f1856f689cc3b",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-baseimage-debian",
+   "org.opencontainers.image.title": "Baseimage-debian",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-baseimage-debian/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "f4cf76f4-ls4"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/root",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM debian:testing AS rootfs-stage\n\n# environment\nENV ARCH=amd64\n\n# install packages\nRUN \\\n  apt-get update && \\\n  apt-get install -y \\\n    curl \\\n    debootstrap \\\n    gnupg2 \\\n    xz-utils\n\n# create base image with debootstrap\nRUN \\\n  echo \"**** modify repo ****\" && \\\n  echo \"deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  curl -o \\\n    /etc/apt/trusted.gpg.d/kali-archive-keyring.asc -L \\\n    \"https://archive.kali.org/archive-key.asc\" && \\\n  gpg -o \\\n    /usr/share/keyrings/kali-archive-keyring.gpg --dearmor \\\n    /etc/apt/trusted.gpg.d/kali-archive-keyring.asc && \\\n  rm -f /etc/apt/sources.list.d/debian.sources && \\\n  apt-get update && \\\n  mkdir /root-out && \\\n  debootstrap \\\n    --variant=minbase \\\n    --components=main,contrib,non-free,non-free-firmware \\\n    --arch=\"${ARCH}\" \\\n    --include=kali-archive-keyring \\\n    kali-rolling /root-out http://http.kali.org/kali && \\\n  rm -rf \\\n    /root-out/tmp/* \\\n    /root-out/var/lib/apt/lists/* \\\n    /root-out/var/cache/* \\\n    /root-out/var/tmp/* \\\n    /root-out/var/log/* && \\\n  echo \"**** modify layer repo ****\" && \\\n  echo \"deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" > /root-out/etc/apt/sources.list && \\\n  echo \"deb-src http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" >> /root-out/etc/apt/sources.list\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"x86_64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y --no-install-recommends \\\n    ca-certificates \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    kali-defaults \\\n    netcat-traditional \\\n    tzdata && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get -y autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/* \\\n    /usr/share/man\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM debian:testing AS rootfs-stage\n\n# environment\nENV ARCH=arm64\n\n# install packages\nRUN \\\n  apt-get update && \\\n  apt-get install -y \\\n    curl \\\n    debootstrap \\\n    gnupg2 \\\n    xz-utils\n\n# create base image with debootstrap\nRUN \\\n  echo \"**** modify repo ****\" && \\\n  echo \"deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  curl -o \\\n    /etc/apt/trusted.gpg.d/kali-archive-keyring.asc -L \\\n    \"https://archive.kali.org/archive-key.asc\" && \\\n  gpg -o \\\n    /usr/share/keyrings/kali-archive-keyring.gpg --dearmor \\\n    /etc/apt/trusted.gpg.d/kali-archive-keyring.asc && \\\n  rm -f /etc/apt/sources.list.d/debian.sources && \\\n  apt-get update && \\\n  mkdir /root-out && \\\n  debootstrap \\\n    --variant=minbase \\\n    --components=main,contrib,non-free,non-free-firmware \\\n    --arch=\"${ARCH}\" \\\n    --include=kali-archive-keyring \\\n    kali-rolling /root-out http://http.kali.org/kali && \\\n  rm -rf \\\n    /root-out/tmp/* \\\n    /root-out/var/lib/apt/lists/* \\\n    /root-out/var/cache/* \\\n    /root-out/var/tmp/* \\\n    /root-out/var/log/* && \\\n  echo \"**** modify layer repo ****\" && \\\n  echo \"deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" > /root-out/etc/apt/sources.list && \\\n  echo \"deb-src http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware\" >> /root-out/etc/apt/sources.list\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"aarch64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y --no-install-recommends \\\n    ca-certificates \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    kali-defaults \\\n    netcat-traditional \\\n    tzdata && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get -y autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/* \\\n    /usr/share/man\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"baseimage-debian:kali\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-os-end -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  base -> init-mods\n  init-config-end -> init-mods\n  init-mods -> init-mods-end\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  base -> init-os-end\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-migrations -> init-os-end\n  init-custom-files -> init-services\n  init-mods-end -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"scratch\"\n}\n\"baseimage-debian:kali\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "image",
+     "script": "echo \"[ls.io-init] done.\""
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nPUID=${PUID:-911}\nPGID=${PGID:-911}\n\ngroupmod -o -g \"$PGID\" abc\nusermod -o -u \"$PUID\" abc\n\ncat /etc/s6-overlay/s6-rc.d/init-adduser/branding\n\nif [[ -f /donate.txt ]]; then\n    echo '\nTo support the app dev(s) visit:'\n    cat /donate.txt\nfi\necho '\nTo support LSIO projects visit:\nhttps://www.linuxserver.io/donate/\n\n───────────────────────────────────────\nGID/UID\n───────────────────────────────────────'\necho \"\nUser UID:    $(id -u abc)\nUser GID:    $(id -g abc)\n───────────────────────────────────────\"\nif [[ -f /build_version ]]; then\n    cat /build_version\n    echo '\n───────────────────────────────────────\n    '\nfi\n\nlsiown abc:abc /app\nlsiown abc:abc /config\nlsiown abc:abc /defaults\n"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the start of the downstream image init process\n"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the downstream image init process\n"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nfor cron_user in abc root; do\n    if [[ -f \"/etc/crontabs/${cron_user}\" ]]; then\n        lsiown \"${cron_user}\":\"${cron_user}\" \"/etc/crontabs/${cron_user}\"\n        crontab -u \"${cron_user}\" \"/etc/crontabs/${cron_user}\"\n    fi\n\n    if [[ -f \"/defaults/crontabs/${cron_user}\" ]]; then\n        # make folders\n        mkdir -p \\\n            /config/crontabs\n\n        # if crontabs do not exist in config\n        if [[ ! -f \"/config/crontabs/${cron_user}\" ]]; then\n            # copy crontab from system\n            if crontab -l -u \"${cron_user}\" >/dev/null 2>&1; then\n                crontab -l -u \"${cron_user}\" >\"/config/crontabs/${cron_user}\"\n            fi\n\n            # if crontabs still do not exist in config (were not copied from system)\n            # copy crontab from image defaults (using -n, do not overwrite an existing file)\n            cp -n \"/defaults/crontabs/${cron_user}\" /config/crontabs/\n        fi\n\n        # set permissions and import user crontabs\n        lsiown \"${cron_user}\":\"${cron_user}\" \"/config/crontabs/${cron_user}\"\n        crontab -u \"${cron_user}\" \"/config/crontabs/${cron_user}\"\n    fi\ndone\n"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# Directories\nSCRIPTS_DIR=\"/custom-cont-init.d\"\n\n# Make sure custom init directory exists and has files in it\nif [[ -e \"${SCRIPTS_DIR}\" ]] && [[ -n \"$(/bin/ls -A ${SCRIPTS_DIR} 2>/dev/null)\" ]]; then\n    echo \"[custom-init] Files found, executing\"\n    for SCRIPT in \"${SCRIPTS_DIR}\"/*; do\n        NAME=\"$(basename \"${SCRIPT}\")\"\n        if [[ -x \"${SCRIPT}\" ]]; then\n            echo \"[custom-init] ${NAME}: executing...\"\n            /bin/bash \"${SCRIPT}\"\n            echo \"[custom-init] ${NAME}: exited $?\"\n        elif [[ ! -x \"${SCRIPT}\" ]]; then\n            echo \"[custom-init] ${NAME}: is not an executable file\"\n        fi\n    done\nelse\n    echo \"[custom-init] No custom files found, skipping...\"\nfi\n"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]] && [[ -n ${ATTACHED_DEVICES_PERMS} ]]; then\n    FILES=$(find ${ATTACHED_DEVICES_PERMS} -print 2>/dev/null)\n\n    for i in ${FILES}; do\n        FILE_GID=$(stat -c '%g' \"${i}\")\n        FILE_UID=$(stat -c '%u' \"${i}\")\n        # check if user matches device\n        if id -u abc | grep -qw \"${FILE_UID}\"; then\n            echo \"**** permissions for ${i} are good ****\"\n        else\n            # check if group matches and that device has group rw\n            if id -G abc | grep -qw \"${FILE_GID}\" && [[ $(stat -c '%A' \"${i}\" | cut -b 5,6) == \"rw\" ]]; then\n                echo \"**** permissions for ${i} are good ****\"\n            # check if device needs to be added to group\n            elif ! id -G abc | grep -qw \"${FILE_GID}\"; then\n                # check if group needs to be created\n                GROUP_NAME=$(getent group \"${FILE_GID}\" | awk -F: '{print $1}')\n                if [[ -z \"${GROUP_NAME}\" ]]; then\n                    GROUP_NAME=\"group$(head /dev/urandom | tr -dc 'a-z0-9' | head -c4)\"\n                    groupadd \"${GROUP_NAME}\"\n                    groupmod -g \"${FILE_GID}\" \"${GROUP_NAME}\"\n                    echo \"**** creating group ${GROUP_NAME} with id ${FILE_GID} ****\"\n                fi\n                echo \"**** adding ${i} to group ${GROUP_NAME} with id ${FILE_GID} ****\"\n                usermod -a -G \"${GROUP_NAME}\" abc\n            fi\n            # check if device has group rw\n            if [[ $(stat -c '%A' \"${i}\" | cut -b 5,6) != \"rw\" ]]; then\n                echo -e \"**** The device ${i} does not have group read/write permissions, attempting to fix inside the container. ****\"\n                chmod g+rw \"${i}\"\n            fi\n        fi\n    done\nfi\n"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif find /run/s6/container_environment/FILE__* -maxdepth 1 > /dev/null 2>&1; then\n    for FILENAME in /run/s6/container_environment/FILE__*; do\n            SECRETFILE=$(cat \"${FILENAME}\")\n            if [[ -f ${SECRETFILE} ]]; then\n                FILESTRIP=${FILENAME//FILE__/}\n                if [[ $(tail -n1 \"${SECRETFILE}\" | wc -l) != 0 ]]; then\n                    echo \"[env-init] Your secret: ${FILENAME##*/}\"\n                    echo \"           contains a trailing newline and may not work as expected\"\n                fi\n                cat \"${SECRETFILE}\" >\"${FILESTRIP}\"\n                echo \"[env-init] ${FILESTRIP##*/} set from ${FILENAME##*/}\"\n            else\n                echo \"[env-init] cannot find secret in ${FILENAME##*/}\"\n            fi\n    done\nfi\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nMIGRATIONS_DIR=\"/migrations\"\nMIGRATIONS_HISTORY=\"/config/.migrations\"\n\necho \"[migrations] started\"\n\nif [[ ! -d ${MIGRATIONS_DIR} ]]; then\n    echo \"[migrations] no migrations found\"\n    exit\nfi\n\nfor MIGRATION in $(find ${MIGRATIONS_DIR}/* | sort -n); do\n    NAME=\"$(basename \"${MIGRATION}\")\"\n    if [[ -f ${MIGRATIONS_HISTORY} ]] && grep -Fxq \"${NAME}\" ${MIGRATIONS_HISTORY}; then\n        echo \"[migrations] ${NAME}: skipped\"\n        continue\n    fi\n    echo \"[migrations] ${NAME}: executing...\"\n    chmod +x \"${MIGRATION}\"\n    # Execute migration script in a subshell to prevent it from modifying the current environment\n    (\"${MIGRATION}\")\n    EXIT_CODE=$?\n    if [[ ${EXIT_CODE} -ne 0 ]]; then\n        echo \"[migrations] ${NAME}: failed with exit code ${EXIT_CODE}, contact support\"\n        exit \"${EXIT_CODE}\"\n    fi\n    echo \"${NAME}\" >>${MIGRATIONS_HISTORY}\n    echo \"[migrations] ${NAME}: succeeded\"\ndone\n\necho \"[migrations] done\"\n"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "base",
+      "init-config-end"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the start of the mod init process\n"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods",
+      "init-mods-package-install"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the mod init process\n"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# Version 1\n# 2024-03-26 - Initial Version\nPKG_SCRIPT_VER=\"1.20240608\"\n\nwrite_mod_info() {\n    local MSG=$*\n    echo \"[pkg-install-init] **** $MSG ****\"\n}\n\nwrite_mod_debug() {\n    local MSG=$*\n    if [[ ${DOCKER_MODS_DEBUG,,} = \"true\" ]]; then echo \"[pkg-install-init] (DEBUG) $MSG\"; fi\n}\n\nwrite_mod_debug \"Package install script version ${PKG_SCRIPT_VER}\"\n\nif [[ -f \"/mod-pip-packages-to-install.list\" ]]; then\n    IFS=' ' read -ra PIP_PACKAGES <<< \"$(tr '\\n' ' ' < /mod-pip-packages-to-install.list)\"\n    if [[ ${#PIP_PACKAGES[@]} -ne 0 ]] && [[ ${PIP_PACKAGES[*]} != \"\" ]]; then\n        if [[ \"$(command -v python3)\" != \"/lsiopy/bin/python3\" ]]; then\n            CREATE_VENV=\"true\"\n            write_mod_debug \"Marking venv for creation and adding python os dependencies to install list.\"\n            if [[ -f /usr/bin/apt ]]; then\n                echo \"python3-venv\" >> /mod-repo-packages-to-install.list\n            elif [[ -f /sbin/apk ]]; then\n                echo \"python3\" >> /mod-repo-packages-to-install.list\n            elif [[ -f /usr/sbin/pacman ]]; then\n                echo \"python\" >> /mod-repo-packages-to-install.list\n            elif [[ -f /usr/bin/dnf ]]; then\n                echo \"python3\" >> /mod-repo-packages-to-install.list\n            fi\n        else\n            write_mod_debug \"Venv at /lsiopy is already active\"\n        fi\n    else\n        write_mod_debug \"No pip packages identified in install list, skipping.\"\n    fi\nelse\n    write_mod_debug \"No pip packages defined for install, skipping.\"\nfi\n\nif [[ -f \"/mod-repo-packages-to-install.list\" ]]; then\n    IFS=' ' read -ra REPO_PACKAGES <<< \"$(tr '\\n' ' ' < /mod-repo-packages-to-install.list)\"\n    if [[ ${#REPO_PACKAGES[@]} -ne 0 ]] && [[ ${REPO_PACKAGES[*]} != \"\" ]]; then\n        write_mod_info \"Installing all mod packages\"\n        write_mod_debug \"Defined packages: ${REPO_PACKAGES[*]}\"\n        if [[ -f /usr/bin/apt ]]; then\n            export DEBIAN_FRONTEND=\"noninteractive\"\n            apt-get update\n            apt-get install -y --no-install-recommends \\\n                \"${REPO_PACKAGES[@]}\"\n        elif [[ -f /sbin/apk ]]; then\n            apk add --no-cache \\\n                \"${REPO_PACKAGES[@]}\"\n        elif [[ -f /usr/sbin/pacman ]]; then\n            pacman -Sy --noconfirm \\\n                \"${REPO_PACKAGES[@]}\"\n        elif [[ -f /usr/bin/dnf ]]; then\n            dnf install -y --setopt=install_weak_deps=False --best \\\n                \"${REPO_PACKAGES[@]}\"\n        fi\n    else\n        write_mod_debug \"No os packages identified in install list, skipping.\"\n    fi\nelse\n    write_mod_debug \"No os packages defined for install, skipping.\"\nfi\n\nif [[ -f \"/mod-pip-packages-to-install.list\" ]]; then\n    IFS=' ' read -ra PIP_PACKAGES <<< \"$(tr '\\n' ' ' < /mod-pip-packages-to-install.list)\"\n    if [[ ${#PIP_PACKAGES[@]} -ne 0 ]] && [[ ${PIP_PACKAGES[*]} != \"\" ]]; then\n        write_mod_info \"Installing all pip packages\"\n        if [[ ${CREATE_VENV} == \"true\" ]]; then\n            write_mod_info \"Creating venv\"\n            python3 -m venv /lsiopy\n        fi\n        write_mod_debug \"Updating/installing pip, wheel and setuptools.\"\n        python3 -m pip install -U pip wheel setuptools\n        PIP_ARGS=()\n        if [[ -f /usr/bin/apt ]] && grep -q 'ID=ubuntu' /etc/os-release; then\n            PIP_ARGS+=(\"-f\" \"https://wheel-index.linuxserver.io/ubuntu/\")\n        elif [[ -f /sbin/apk ]]; then\n            ALPINE_VER=$(grep main /etc/apk/repositories | sed 's|.*alpine/v||' | sed 's|/main.*||')\n            PIP_ARGS+=(\"-f\" \"https://wheel-index.linuxserver.io/alpine-${ALPINE_VER}/\")\n        fi\n        write_mod_debug \"Installing defined pip packages: ${PIP_PACKAGES[*]}\"\n        write_mod_debug \"Using pip args ${PIP_ARGS[*]}\"\n        python3 -m pip install \\\n            \"${PIP_ARGS[@]}\" \\\n            \"${PIP_PACKAGES[@]}\"\n    fi\nfi\n\nwrite_mod_debug \"Deleting temporary install lists for os and pip packages.\"\nif [[ -f \"/mod-repo-packages-to-install.list\" ]]; then\n    rm -rf /mod-repo-packages-to-install.list\nfi\nif [[ -f \"/mod-pip-packages-to-install.list\" ]]; then\n    rm -rf /mod-pip-packages-to-install.list\nfi\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "base",
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile",
+      "init-migrations"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the mod init process\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files",
+      "init-mods-end"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it just signals that services can start\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif builtin command -v crontab >/dev/null 2>&1 && [[ -n \"$(crontab -l -u abc 2>/dev/null || true)\" || -n \"$(crontab -l -u root 2>/dev/null || true)\" ]]; then\n    if builtin command -v busybox >/dev/null 2>&1 && [[ $(busybox || true) =~ [[:space:]](crond)([,]|$) ]]; then\n        exec busybox crond -f -S -l 5\n    elif [[ -f /usr/bin/apt ]] && [[ -f /usr/sbin/cron ]]; then\n        exec /usr/sbin/cron -f -L 5\n    else\n        echo \"**** cron not found ****\"\n        sleep infinity\n    fi\nelse\n    sleep infinity\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "image"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "image"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 134,
+    "distro": "Kali GNU/Linux Rolling",
+    "hash": "8896cb4f",
+    "by_type": {
+     "deb": 134
+    }
+   },
+   "arm64": {
+    "count": 134,
+    "distro": "Kali GNU/Linux Rolling",
+    "hash": "2e0bd92a",
+    "by_type": {
+     "deb": 134
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-debian/builds/kali-f4cf76f4-ls4/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-baseimage-debian/compare/kali-f4cf76f4-ls3...kali-f4cf76f4-ls4"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 40560,
+    "sha256": "392767c2dc200f5fd6fec112ecbebb650e980351206bbf5ced20166015787dc1",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4497,
+    "sha256": "21fea39e91aa9b27d596c4d347a28e9f93debbd179ec42d8641adc5e13f1c377",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 60008,
+    "sha256": "98d76b19956adbbc1475ba72da95867bbe30243cab2bce8778361526d39e8daf",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2403,
+    "sha256": "68f40dd9fdadb1c1eca73d42d283439790f53d24ba287a9648edd930ff94ce05",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 2729,
+    "sha256": "0f9626b1ef23e1a86d97579f86828adab81f43ea5df858fade0f69397b74c80e",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 8100,
+    "sha256": "6a8b611ab19f7a28f42401ebb1bdf2c8a6c83b527bad8058eab1d2befa2cdcf2",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 40575,
+    "sha256": "6322ee2c3532d24841c1d2920c57149d69d0e491d39023dfe048db954be35786",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4497,
+    "sha256": "69a3f51d4b5cd78f3e3e1cec597e862bf13ae413f871824fc56f03c5392994db",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 59342,
+    "sha256": "b74462d51b17031ad0f5b3bd81aa7d3dd6eee87dc66b54c728f79eed3ff44cd6",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2404,
+    "sha256": "2c4a123526108a03a3a67aed89d8f6286cd34491d9277e46114a2ac6bc861e07",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 2731,
+    "sha256": "726fb32d1f71a634ae110bd6f44372da39bf20f82510c8f886f81a5e5d9613f1",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 8100,
+    "sha256": "5ddef76d5e7032ef7f62ffb7d54e46c191841fd45394fc2086d6fa75ab48d2d8",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41144317602,
+   "run_url": "https://github.com/linuxserver-playground/docker-baseimage-debian/actions/runs/41144317602",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/baseimage-debian",
+   "tags": [
+    "kali",
+    "kali-f4cf76f4-ls4",
+    "kali-version-f4cf76f4",
+    "amd64-kali",
+    "amd64-kali-f4cf76f4-ls4",
+    "amd64-kali-version-f4cf76f4",
+    "arm64v8-kali",
+    "arm64v8-kali-f4cf76f4-ls4",
+    "arm64v8-kali-version-f4cf76f4"
+   ]
+  }
+ },
+ "diff": {
+  "image": "baseimage-debian",
+  "branch": "kali",
+  "tag": "kali-f4cf76f4-ls4",
+  "previous_tag": "kali-f4cf76f4-ls3",
+  "classification": "packages",
+  "reasons": [
+   "packages changed"
+  ],
+  "upstream": {
+   "from": "f4cf76f4",
+   "to": "f4cf76f4",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "scratch"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 84244659,
+    "to": 84244435,
+    "delta": -224
+   },
+   "arm64": {
+    "from": 83164598,
+    "to": 83155626,
+    "delta": -8972
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "cron",
+       "from": "3.0pl1-211",
+       "to": "3.0pl1-212",
+       "purl": "pkg:deb/kali/cron@3.0pl1-212?arch=amd64&distro=kali-2026.3"
+      },
+      {
+       "name": "cron-daemon-common",
+       "from": "3.0pl1-211",
+       "to": "3.0pl1-212",
+       "purl": "pkg:deb/kali/cron-daemon-common@3.0pl1-212?arch=all&distro=kali-2026.3&upstream=cron"
+      },
+      {
+       "name": "dirmngr",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/dirmngr@2.4.9-8?arch=amd64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gnupg",
+       "from": "2.4.9-7",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gnupg@2.4.9-8?arch=all&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gnupg-l10n",
+       "from": "2.4.9-7",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gnupg-l10n@2.4.9-8?arch=all&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpg",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpg@2.4.9-8?arch=amd64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpg-agent",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpg-agent@2.4.9-8?arch=amd64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpgconf",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpgconf@2.4.9-8?arch=amd64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpgsm",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpgsm@2.4.9-8?arch=amd64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "libsasl2-2",
+       "from": "2.1.28+dfsg1-11",
+       "to": "2.1.28+dfsg1-12",
+       "purl": "pkg:deb/kali/libsasl2-2@2.1.28%2Bdfsg1-12?arch=amd64&distro=kali-2026.3&upstream=cyrus-sasl2"
+      },
+      {
+       "name": "libsasl2-modules-db",
+       "from": "2.1.28+dfsg1-11",
+       "to": "2.1.28+dfsg1-12",
+       "purl": "pkg:deb/kali/libsasl2-modules-db@2.1.28%2Bdfsg1-12?arch=amd64&distro=kali-2026.3&upstream=cyrus-sasl2"
+      },
+      {
+       "name": "libsemanage2",
+       "from": "3.11-1+b1",
+       "to": "3.11-1+b2",
+       "purl": "pkg:deb/kali/libsemanage2@3.11-1%2Bb2?arch=amd64&distro=kali-2026.3&upstream=libsemanage%403.11-1"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "cron",
+       "from": "3.0pl1-211",
+       "to": "3.0pl1-212",
+       "purl": "pkg:deb/kali/cron@3.0pl1-212?arch=arm64&distro=kali-2026.3"
+      },
+      {
+       "name": "cron-daemon-common",
+       "from": "3.0pl1-211",
+       "to": "3.0pl1-212",
+       "purl": "pkg:deb/kali/cron-daemon-common@3.0pl1-212?arch=all&distro=kali-2026.3&upstream=cron"
+      },
+      {
+       "name": "dirmngr",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/dirmngr@2.4.9-8?arch=arm64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gnupg",
+       "from": "2.4.9-7",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gnupg@2.4.9-8?arch=all&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gnupg-l10n",
+       "from": "2.4.9-7",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gnupg-l10n@2.4.9-8?arch=all&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpg",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpg@2.4.9-8?arch=arm64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpg-agent",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpg-agent@2.4.9-8?arch=arm64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpgconf",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpgconf@2.4.9-8?arch=arm64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "gpgsm",
+       "from": "2.4.9-7+b1",
+       "to": "2.4.9-8",
+       "purl": "pkg:deb/kali/gpgsm@2.4.9-8?arch=arm64&distro=kali-2026.3&upstream=gnupg2"
+      },
+      {
+       "name": "libsasl2-2",
+       "from": "2.1.28+dfsg1-11",
+       "to": "2.1.28+dfsg1-12",
+       "purl": "pkg:deb/kali/libsasl2-2@2.1.28%2Bdfsg1-12?arch=arm64&distro=kali-2026.3&upstream=cyrus-sasl2"
+      },
+      {
+       "name": "libsasl2-modules-db",
+       "from": "2.1.28+dfsg1-11",
+       "to": "2.1.28+dfsg1-12",
+       "purl": "pkg:deb/kali/libsasl2-modules-db@2.1.28%2Bdfsg1-12?arch=arm64&distro=kali-2026.3&upstream=cyrus-sasl2"
+      },
+      {
+       "name": "libsemanage2",
+       "from": "3.11-1+b1",
+       "to": "3.11-1+b2",
+       "purl": "pkg:deb/kali/libsemanage2@3.11-1%2Bb2?arch=arm64&distro=kali-2026.3&upstream=libsemanage%403.11-1"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 24,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:6530a71f14891ec95974aee1a881c4795d124d60d0db954dc527473adb85bf44",
+    "diff_id": "sha256:cb8647851519e72695d982960db2f236f810bd73083d88c4bcffc884b4c4e703",
+    "size": 53434823,
+    "uncompressed_size": 124698101,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:4c686a1dbdd78313168308f21f297d6df48b15ae857339d237cb961658a8dbab",
+    "diff_id": "sha256:34542d9eb39eddad9eb945e9295fcb2a6a23353d525de96c76723cf427f5733c",
+    "size": 1371,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:6d142ec2b19fd0eb48f3947c3bae91ef623a470269934575b33e1fa74c295faa",
+    "diff_id": "sha256:667c9eca203a4d110fd1617a0f04826d8f7da1afe3ebdf198e7eda29a1b139d5",
+    "size": 704,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:acf25a2a5305826b1bf928b1184cd098e483d4cdb1577778a663922c209a0eb2",
+    "diff_id": "sha256:45162c5ed8a7fba258cda5d5720ff1747d75c50b226c5684a3259f2b54ef4b7a",
+    "size": 30796744,
+    "uncompressed_size": 77067696,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-30T23:25:13Z VERSION=f4cf76f4-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y --no-install-recommends     ca-certificates     catatonit     cron     curl     gnupg     jq     kali-defaults     netcat-traditional     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   apt-get -y autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*     /usr/share/man",
+    "dockerfile_lines": [
+     90,
+     157
+    ],
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:1c5da32019bc817b804c724762114574dc0d7899dc61b680cd875749d8cc46a6",
+    "diff_id": "sha256:b23918fbe64bb92f1c1ebd1fa9e2056f6a09bcd528efbdf8444cdeb34c9cabb0",
+    "size": 4554,
+    "uncompressed_size": 8668,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     160,
+     160
+    ],
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:5e3d1a993e3ba1a96162bef6094d7fb8fa95115c9d2ac7afbf85124ea826c5e0",
+    "diff_id": "sha256:2577ea79de56b8264fe7d67aa48c87429e03ca57c4e033a17e235cc3d3bbc46d",
+    "size": 53540440,
+    "uncompressed_size": 149427355,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2ab9163dbc2de7c7590b4609e818c353e9f2af5c960fe52637248486799cd2ff",
+    "diff_id": "sha256:1b68a721630e54c29d19c132934aa568ccb470b8b18940b52421d5058b56b486",
+    "size": 1371,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:e4462209ef308defebf1208e3d0457e6f046a8baf71babd9be1593e1b3772e44",
+    "diff_id": "sha256:a23b860933ade92904d0d7682aa610dbe8bdc63fd8267e830d681c5697cdea70",
+    "size": 704,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:8075a07387027aac8f6151db507f415c87eed46ac749773180db0cf2cab3f378",
+    "diff_id": "sha256:115aa34bdfff5418d75b27fb25082a8eded0759208d2740835bf0fca191b9645",
+    "size": 29602316,
+    "uncompressed_size": 80571854,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-30T23:25:13Z VERSION=f4cf76f4-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y --no-install-recommends     ca-certificates     catatonit     cron     curl     gnupg     jq     kali-defaults     netcat-traditional     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   apt-get -y autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*     /usr/share/man",
+    "dockerfile_lines": [
+     90,
+     157
+    ],
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:075cf2f234f57030affa70d2267a9d3c87f7730839f5925716128a2c88baf5fc",
+    "diff_id": "sha256:7842fb06fc46ae26300922b995530f10a3528cb444326aac18b04c5b0673edd5",
+    "size": 4556,
+    "uncompressed_size": 8668,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     160,
+     160
+    ],
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "baseimage-debian",
+  "tag": "kali-f4cf76f4-ls4",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-debian/builds/kali-f4cf76f4-ls4/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 7720960,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/kali-f4cf76f4-ls4/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/kali-f4cf76f4-ls4/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.01,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 6516736,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/kali-f4cf76f4-ls4/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/kali-f4cf76f4-ls4/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/kali-f4cf76f4-ls4/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "baseimage-debian",
+    "tag": "amd64-a17531b-41144317602",
+    "arch": "amd64",
+    "started": "2026-10-30T23:29:28Z",
+    "finished": "2026-10-30T23:29:49Z",
+    "success": true,
+    "runner": "a3a0d7ac70f0",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "134 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "134 packages: syft JSON 40560 bytes gzipped, SPDX for the image attestation 282560 bytes",
+      "seconds": 0.16
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "999 dirs, 6118 files (199027445 bytes), 1206 symlinks, 1 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.10s, total 0.16s",
+      "seconds": 0.3
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "6 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.886
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 17 from this image, own units from the repository",
+      "seconds": 0.064
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 7720960 bytes",
+      "seconds": 0.492
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 7720960,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 194
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "baseimage-debian",
+    "tag": "arm64-a17531b-41144317602",
+    "arch": "arm64",
+    "started": "2026-10-30T23:27:16Z",
+    "finished": "2026-10-30T23:27:35Z",
+    "success": true,
+    "runner": "86ecc56b7592",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.01,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.01
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "134 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "134 packages: syft JSON 40575 bytes gzipped, SPDX for the image attestation 282835 bytes",
+      "seconds": 0.146
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "998 dirs, 6123 files (227260296 bytes), 1203 symlinks, 1 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.09s",
+      "seconds": 0.216
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "6 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.346
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 17 from this image, own units from the repository",
+      "seconds": 0.054
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 6516736 bytes",
+      "seconds": 0.304
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 6516736,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 194
+    }
+   }
+  }
+ }
+}

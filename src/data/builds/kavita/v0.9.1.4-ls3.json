@@ -1,0 +1,981 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "kavita",
+  "repository": "linuxserver-playground/docker-kavita",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "v0.9.1.4",
+   "upstream_clean": "v0.9.1.4",
+   "semver": "0.9.1",
+   "ls_build": 3,
+   "tag": "v0.9.1.4-ls3",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v0.9.1.4-ls3",
+    "version-v0.9.1.4",
+    "0.9.1",
+    "amd64-latest",
+    "amd64-v0.9.1.4-ls3",
+    "amd64-version-v0.9.1.4",
+    "amd64-0.9.1",
+    "arm64v8-latest",
+    "arm64v8-v0.9.1.4-ls3",
+    "arm64v8-version-v0.9.1.4",
+    "arm64v8-0.9.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/Kareadita/Kavita/releases/tag/v0.9.1.4"
+  },
+  "commit": "cef3bcbebd4227e0f821755e0283cff9f434fd62",
+  "created": "2026-10-30T17:15:57Z",
+  "reason": "push",
+  "previous": {
+   "tag": "v0.9.1.4-ls2",
+   "release_url": "https://github.com/linuxserver-playground/docker-kavita/releases/tag/v0.9.1.4-ls2"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+   "digest": "sha256:c2398fa94f700f68208462f0b6278794968d3d7436ccba605cacb7f32e2dc120"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:ff5c491451d66435edb9f64e3b8b24bc272c7d395276d5257ba185604246ee13",
+    "size": 197049160,
+    "uncompressed_size": 472268408,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 35
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:4b222bf2953f1fcf36c71b2474c87adb4cf9962233f3a6ea205474ffd9e36dd7",
+    "size": 194275378,
+    "uncompressed_size": 506758903,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 32
+   }
+  ],
+  "index_digest": "sha256:9619774b608acadd15c071c1564d5aa43aedac0bdfaa022675fcd5296163be24",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v0.9.1.4-ls3 Build-date:- 2026-10-30T16:44:24Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute@sha256:c2398fa94f700f68208462f0b6278794968d3d7436ccba605cacb7f32e2dc120",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v0.9.1.4",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-30T16:44:24Z",
+   "org.opencontainers.image.description": "Kavita is a fast, feature rich, cross platform reading server.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-kavita",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "cef3bcbebd4227e0f821755e0283cff9f434fd62",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-kavita",
+   "org.opencontainers.image.title": "Kavita",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-kavita/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v0.9.1.4-ls3"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/config",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "5000/tcp"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "FROM ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KAVITA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment settings\nENV HOME=\"/config\"\n\nRUN \\\n  apt-get update && \\\n  apt-get install -y \\\n    libjemalloc2 \\\n    libicu78 && \\\n  echo \"**** install kavita ****\" && \\\n  mkdir -p \\\n    /app/kavita && \\\n  if [ -z ${KAVITA_RELEASE+x} ]; then \\\n    KAVITA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kareadita/kavita/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/kavita.tar.gz -fL \\\n    \"https://github.com/Kareadita/Kavita/releases/download/${KAVITA_RELEASE}/kavita-linux-x64.tar.gz\" && \\\n  tar xf \\\n    /tmp/kavita.tar.gz -C \\\n    /app/kavita --strip-components=1 \\\n    --no-same-owner && \\\n  chmod +x /app/kavita/Kavita && \\\n  cp /app/kavita/config/appsettings-init.json /defaults/ && \\\n  rm -rf /app/kavita/config && \\\n  ln -s /config /app/kavita/config && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/*\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 5000\n",
+   "arm64": "FROM ghcr.io/linuxserver-playground/baseimage-ubuntu:arm64v8-resolute\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KAVITA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment settings\nENV HOME=\"/config\"\n\nRUN \\\n  apt-get update && \\\n  apt-get install -y \\\n    libjemalloc2 \\\n    libicu78 && \\\n  echo \"**** install kavita ****\" && \\\n  mkdir -p \\\n    /app/kavita && \\\n  if [ -z ${KAVITA_RELEASE+x} ]; then \\\n    KAVITA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kareadita/kavita/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/kavita.tar.gz -fL \\\n    \"https://github.com/Kareadita/Kavita/releases/download/${KAVITA_RELEASE}/kavita-linux-arm64.tar.gz\" && \\\n  tar xf \\\n    /tmp/kavita.tar.gz -C \\\n    /app/kavita --strip-components=1 \\\n    --no-same-owner && \\\n  chmod +x /app/kavita/Kavita && \\\n  cp /app/kavita/config/appsettings-init.json /defaults/ && \\\n  rm -rf /app/kavita/config && \\\n  ln -s /config /app/kavita/config && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/*\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 5000\n"
+  },
+  "init_graph": {
+   "d2": "\"kavita:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-kavita-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-config -> init-kavita-config\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-kavita\n  svc-kavita -> legacy-services\n}\nBase Images: {\n  \"baseimage-ubuntu:resolute\"\n}\n\"kavita:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-kavita-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-kavita-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ ! -f \"/config/appsettings.json\" ]]; then\n    cp /defaults/appsettings-init.json /config/\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config \\\n    /app/kavita/wwwroot/index.html\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-kavita",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexport LD_PRELOAD=\"$(find / -name libjemalloc.so.2)\"\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 5000\" \\\n    cd /app/kavita s6-setuidgid abc /app/kavita/Kavita\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 293,
+    "distro": "Ubuntu 26.04.1 LTS",
+    "hash": "c96c0dcf",
+    "by_type": {
+     "dotnet": 135,
+     "deb": 147,
+     "go-module": 11
+    }
+   },
+   "arm64": {
+    "count": 293,
+    "distro": "Ubuntu 26.04.1 LTS",
+    "hash": "3779352a",
+    "by_type": {
+     "dotnet": 135,
+     "deb": 147,
+     "go-module": 11
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/kavita/builds/v0.9.1.4-ls3/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-kavita/compare/v0.9.1.4-ls2...v0.9.1.4-ls3",
+   "upstream": "We had a few bugs and key regressions that I felt it was necessary to release a hotfix for. In addition, since Hardcover officially launched OAuth and Recommendations (Vibes) just as we released v0.9.1, we decided to wrap that in with this. Recommendations from Hardcover REQUIRES this version or later to work. v0.9.1 will not serve recommendations.  Hardcover PATs will continue working, but switching to OAuth allows Kavita to refresh your key for you.\r\n\r\n# Added\r\n- Added: (Kavita+) Added support for loading recommendations from Hardcover. These will be the books linked to the first book in the series. \r\n- Added: (Kavita+) Added Hardcover OAuth support (PAT tokens will still work)\r\n- Added: Added support for Mangabaka's new URL structure (released 8/31/2026)\r\n\r\n# Changed\r\n- Changed: Opening a completed chapter while reading places you on the first page, but your reading progress won't reset unless you page forward.\r\n\r\n# Fixed\r\n- Fixed: (Kavita+) Fixes chapter cover images sometimes being removed when Kavita+ writes a volume image\r\n- Fixed: Fixed black & white lists not being available for non Kavita+ users\r\n- Fixed: Fixed series age rating not being derived from tags on first scan and from updated tags in consecutive scans\r\n- Fixed: Fixed chapter age rating not being derived from tags\r\n- Fixed: Fixed settings not saving for some users \r\n- Fixed: Fixed chapters with one page not saving progress while paging (Thanks @333fred)\r\n- Fixed: Fixed a bug where users couldn't update reading profile from the reader due to Breakpoint enum values changing when we streamlined the breakpoint service in v0.9.1.\r\n- Fixed: Fixed the fullscreen icon not updating when triggered from the Manga reader\r\n- Fixed: Query parameters (?q=) from Mangabaka would break parsing out ids for Match modal\r\n- Fixed: Version update modal title would render incorrectly on new Stable releases\r\n- Fixed: Fixed an issue where rereading multiple single page chapters, the next chapter would set as unread.\r\n- Fixed: Fixed search in the audit log being case sensitive\r\n- Fixed: Fixed series with only chapters incorrectly being set to completed if upstream has a volume numbers\r\n- Fixed: Fixed no results message showing an empty query for the default (series name) query\r\n- Fixed: Fixed chapter sorting for some users under very specific circumstances\r\n- Fixed: Fixed sent to device action item not rendering when Email is setup without Hostname\r\n- Fixed: Fixed a bug where clients could get logged out on token refresh, when they shouldn't\r\n- Fixed: Fixed up a regression for a unique filename pattern (c79x1) which was getting caught in the scene name regex. ",
+   "upstream_url": "https://github.com/Kareadita/Kavita/releases/tag/v0.9.1.4"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 96244,
+    "sha256": "b30630590a0d41856920c6202d297f350395756be04e9fc58e900275050e2311",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 7107,
+    "sha256": "8fbbdcfaae1267b05536ab0e34cb502c954e190db982d90381adff14b086f83a",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 85187,
+    "sha256": "c68cd715a6a3bc467e294def95a41ae5520ece31f1f9ccba1a56a05633dd680f",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2563,
+    "sha256": "d989f2b30f5926275204cfa08524a1aa9511c3d05ad5f51d536d50a9cfc285c8",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 1672521,
+    "sha256": "13cf6157f6739d0168b63359cb3a66166c752d1267183b532853f6d3fd557cbe",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 31752,
+    "sha256": "92d1bc6618fdaedecdd56ad024787b4d03f91a3523e68b1d6273610e6479af28",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 95987,
+    "sha256": "a2ae9c4308aaf3379e9129b5f0a5c28b4395deceea8a580d9fb5972081503eaa",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 7113,
+    "sha256": "71f8a938cc5c77b45eebb476a8fb0042bc1809865ec9ccc2507e0741423c7c00",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 84459,
+    "sha256": "e84ca5d8fcd28d99350ffab203af4320111992a29bcd7f0e2492007774d21ffb",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2561,
+    "sha256": "cf81d7c67be891aac4f3508948f78248865c014f60d05ea07154e3554b4a72aa",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 1672558,
+    "sha256": "605a0b2d1ab4649a7b175f72dc2f51670ccb24fb1e7bd2a6be6bd9276e183a22",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 32046,
+    "sha256": "edb1765fb09cdaa24b615b6ad9cbfb293cab6fde87407fe7f1fb87b3c3f83fbe",
+    "url": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41092190999,
+   "run_url": "https://github.com/linuxserver-playground/docker-kavita/actions/runs/41092190999",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/kavita",
+   "tags": [
+    "latest",
+    "v0.9.1.4-ls3",
+    "version-v0.9.1.4",
+    "0.9.1",
+    "amd64-latest",
+    "amd64-v0.9.1.4-ls3",
+    "amd64-version-v0.9.1.4",
+    "amd64-0.9.1",
+    "arm64v8-latest",
+    "arm64v8-v0.9.1.4-ls3",
+    "arm64v8-version-v0.9.1.4",
+    "arm64v8-0.9.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "kavita",
+  "branch": "main",
+  "tag": "v0.9.1.4-ls3",
+  "previous_tag": "v0.9.1.4-ls2",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed"
+  ],
+  "upstream": {
+   "from": "v0.9.1.4",
+   "to": "v0.9.1.4",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+    "digest": "sha256:af31dd6a7384f37b9936e8fa93c72fc8182603a5e4e1d749563f46d3d21e0993"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+    "digest": "sha256:c2398fa94f700f68208462f0b6278794968d3d7436ccba605cacb7f32e2dc120"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 197048560,
+    "to": 197049160,
+    "delta": 600
+   },
+   "arm64": {
+    "from": 194275232,
+    "to": 194275378,
+    "delta": 146
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libbrotli1",
+       "from": "1.2.0-3build1",
+       "to": "1.2.0-3ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/libbrotli1@1.2.0-3ubuntu0.1?arch=amd64&distro=ubuntu-26.04&upstream=brotli"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libbrotli1",
+       "from": "1.2.0-3build1",
+       "to": "1.2.0-3ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/libbrotli1@1.2.0-3ubuntu0.1?arch=arm64&distro=ubuntu-26.04&upstream=brotli"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:99d693f5d4425e0892ef5b685fd239311c8409743edb11d2913a08fb8ec0b9ee",
+    "diff_id": "sha256:8d0d4b58c7f0927b6e90acc72965721b7dceff555c60738fa35b016207005913",
+    "size": 42669677,
+    "uncompressed_size": 106517659,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:ac7c201e9829644a083de81bdd18bf57c1190ef84d31c6d67b213c32c0c51f9b",
+    "diff_id": "sha256:986968761c7b41a426f920819641affdf2caf66a3f133cf5f6d35e0a12b0ce2e",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:ba31d3c31bb39205d523a93c180005be6be376bafa180e14fb8410dbb3a5c6b4",
+    "diff_id": "sha256:6daa6888d5a156c966f50be47f1d84ace5c656022c25072072b11306678d16e8",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:b66074cd396968a3124edfb6a86c395d398f8913a9b9f7d48711179f554c7159",
+    "diff_id": "sha256:cf9fbd42887af25fc48cfaeccef84e77950ef0d273a5296f4ba55c9c0e7e67e5",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:888943e571a24fdbe7f05a053923b5bfc9271d0a4e2a1f962cf1bce5218487b7",
+    "diff_id": "sha256:3945018d2cffb6fcd1ce70769e6d94ba4d992e464fbe2a657a1bf823665fab30",
+    "size": 339,
+    "uncompressed_size": 413,
+    "created_by": "COPY ubuntu.sources /etc/apt/sources.d/ubuntu.sources",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:e1a6bebbe8c1adf28c2f3332c12ec4368ed8f22b14ff724409e744b9d6a1fd7b",
+    "diff_id": "sha256:b0009a400db505e9886ae1aa077cdb2b158d97ea58863013105159df49d9fae9",
+    "size": 18191955,
+    "uncompressed_size": 48808280,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-28T07:29:08Z VERSION=e6d9eba6-ls5 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:653d9e1e7d01edf975ba7244106953abff668e69d3eae3608102c632c6cff51c",
+    "diff_id": "sha256:89eef9467435b435b3a44a64bfd03af4dae0f719718286274c1b4c1357ada2d2",
+    "size": 4642,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:42584f4957c503612f98a8ac7165f9af01756719dc4394871ec62db8ee9210de",
+    "diff_id": "sha256:038b4c294aa89877e8c0ab1799924e350e8be12c0bb0f2f1f95d17186c0c0c91",
+    "size": 136172921,
+    "uncompressed_size": 316895232,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T16:44:24Z VERSION=v0.9.1.4-ls3 KAVITA_RELEASE=v0.9.1.4 /bin/sh -c apt-get update &&   apt-get install -y     libjemalloc2     libicu78 &&   echo \"**** install kavita ****\" &&   mkdir -p     /app/kavita &&   if [ -z ${KAVITA_RELEASE+x} ]; then     KAVITA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kareadita/kavita/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/kavita.tar.gz -fL     \"https://github.com/Kareadita/Kavita/releases/download/${KAVITA_RELEASE}/kavita-linux-x64.tar.gz\" &&   tar xf     /tmp/kavita.tar.gz -C     /app/kavita --strip-components=1     --no-same-owner &&   chmod +x /app/kavita/Kavita &&   cp /app/kavita/config/appsettings-init.json /defaults/ &&   rm -rf /app/kavita/config &&   ln -s /config /app/kavita/config &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*",
+    "dockerfile_lines": [
+     15,
+     43
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:260f81d69e1eb553ce1ae8d4b0c039ab1ad42cd7da9c540e8f77dac0137e3620",
+    "diff_id": "sha256:8be4095299f6d589b0e850464e85a5b2218836fccbf7f531eea722d89eb6397d",
+    "size": 900,
+    "uncompressed_size": 580,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     46,
+     46
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:fd98fca9bf7478e0883fe3ded048e9e338e01ea413e965537a18ec5eb4fd4cde",
+    "diff_id": "sha256:59fd7750883644054e5b28d31a10a4a5d479a22f2d81243432d5af60746d9122",
+    "size": 42445301,
+    "uncompressed_size": 130610655,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:0b2f44d4e3d873435c49e05f4f904980e6eed061dc4004600bbf061962315055",
+    "diff_id": "sha256:c65183e6168fe463e363e6d4af295a5fabbacadcedc42e7c9138080c05ae91a1",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:4c7c742578cd648b508b72e99ea0507e9abc3d4d63bac9dc81ceab4e11ede22f",
+    "diff_id": "sha256:da9fae2c76395b9d2434db8971619e2ae6324b42675fb0d1b14b7fed43de064c",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:47d951dc2008fa6653a385d957cb60b6fc44e6c59cdc3c0b628838984d027811",
+    "diff_id": "sha256:04911a370e1339c08ed85d0103b9797601c2d94931d50f8071feaf58f4957038",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:268f14126f091ea63846743462eb05bb2a9a8bb6f88916cf9b667cdf31950afa",
+    "diff_id": "sha256:7140fbcb23b61d2967a1133c09e8c7e355c220927571763dc1544e8d00cd59ca",
+    "size": 336,
+    "uncompressed_size": 417,
+    "created_by": "COPY ubuntu.sources.arm /etc/apt/sources.d/ubuntu.sources",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:5ad99c34fb787138be2d5039055d4594bb6aa6d31d54e548ce2bb42743af094c",
+    "diff_id": "sha256:7f5a6cdb3a3782faab7af594f596a51b569834bd41cd5a397af2ec9753314a29",
+    "size": 17941595,
+    "uncompressed_size": 50685508,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-28T07:29:08Z VERSION=e6d9eba6-ls5 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:114c1a30681c3753ed8d7a2406a77238a9665eb3d9247ad8d8637bde73ec1a5c",
+    "diff_id": "sha256:55360aa7fc4f57df461ee53fa32bf20664a3656dc4724d88c945a603af0eaf60",
+    "size": 4643,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:9eba7e5bdb84d141f7a300cbd5111c468ac4772d8040913c6fb181b040c45dc5",
+    "diff_id": "sha256:568bd9dea0fc47dca4941347211c85d84a2d73b410df7e38160ffa476e9c4d73",
+    "size": 133873876,
+    "uncompressed_size": 325415499,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T16:44:24Z VERSION=v0.9.1.4-ls3 KAVITA_RELEASE=v0.9.1.4 /bin/sh -c apt-get update &&   apt-get install -y     libjemalloc2     libicu78 &&   echo \"**** install kavita ****\" &&   mkdir -p     /app/kavita &&   if [ -z ${KAVITA_RELEASE+x} ]; then     KAVITA_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kareadita/kavita/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/kavita.tar.gz -fL     \"https://github.com/Kareadita/Kavita/releases/download/${KAVITA_RELEASE}/kavita-linux-arm64.tar.gz\" &&   tar xf     /tmp/kavita.tar.gz -C     /app/kavita --strip-components=1     --no-same-owner &&   chmod +x /app/kavita/Kavita &&   cp /app/kavita/config/appsettings-init.json /defaults/ &&   rm -rf /app/kavita/config &&   ln -s /config /app/kavita/config &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*",
+    "dockerfile_lines": [
+     15,
+     43
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:ca8b1466b7c1fa612b6590faa74c38e2a61ac17ce8e4f96a2bf31e0a6d7c0778",
+    "diff_id": "sha256:664515d8d6bd19da7b28f8c8d213b267eb58c77a92ae532e05d2e54ce614ff85",
+    "size": 900,
+    "uncompressed_size": 580,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     46,
+     46
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "kavita",
+  "tag": "v0.9.1.4-ls3",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/kavita/builds/v0.9.1.4-ls3/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 10.044,
+    "listening_ports": [
+     "5000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 474652672,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 17.064,
+    "listening_ports": [
+     "5000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 536567808,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-kavita/releases/download/v0.9.1.4-ls3/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-kavita/builds/v0.9.1.4-ls3/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "kavita",
+    "tag": "amd64-cef3bcb-41092190999",
+    "arch": "amd64",
+    "started": "2026-10-30T17:07:55Z",
+    "finished": "2026-10-30T17:08:23Z",
+    "success": true,
+    "runner": "868334448eac",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 10.044,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 10.0s",
+      "seconds": 10.044
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-kavita",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 5000/tcp",
+      "seconds": 0.054
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:5000/ after 0.1s",
+      "seconds": 0.071
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running .NET; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "293 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "293 packages: syft JSON 96244 bytes gzipped, SPDX for the image attestation 618344 bytes",
+      "seconds": 0.14
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1150 dirs, 9775 files (471357166 bytes), 1823 symlinks, 116 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.11s, total 0.16s",
+      "seconds": 0.284
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.667
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.044
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:5000/",
+      "seconds": 11.04
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [5000], rss 474652672 bytes",
+      "seconds": 0.552
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 474652672,
+     "pids": 14,
+     "listening_tcp": [
+      5000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-kavita"
+     ],
+     "changed_paths": 246
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "kavita",
+    "tag": "arm64-cef3bcb-41092190999",
+    "arch": "arm64",
+    "started": "2026-10-30T16:48:39Z",
+    "finished": "2026-10-30T16:49:13Z",
+    "success": true,
+    "runner": "4cf861fb54d0",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 17.064,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 17.1s",
+      "seconds": 17.064
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-kavita",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 5000/tcp",
+      "seconds": 0.046
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:5000/ after 0.1s",
+      "seconds": 0.121
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running .NET; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "293 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "293 packages: syft JSON 95987 bytes gzipped, SPDX for the image attestation 618382 bytes",
+      "seconds": 0.2
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1149 dirs, 9774 files (505846913 bytes), 1820 symlinks, 116 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.08s, total 0.13s",
+      "seconds": 0.241
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.33
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.05
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:5000/",
+      "seconds": 11.287
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [5000], rss 536567808 bytes",
+      "seconds": 0.406
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 536567808,
+     "pids": 14,
+     "listening_tcp": [
+      5000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-kavita"
+     ],
+     "changed_paths": 249
+    }
+   }
+  }
+ }
+}

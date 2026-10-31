@@ -1,0 +1,911 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "ngircd",
+  "repository": "linuxserver-playground/docker-ngircd",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "27-r1",
+   "upstream_clean": "27-r1",
+   "ls_build": 3,
+   "tag": "27-r1-ls3",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "27-r1-ls3",
+    "version-27-r1",
+    "amd64-latest",
+    "amd64-27-r1-ls3",
+    "amd64-version-27-r1",
+    "arm64v8-latest",
+    "arm64v8-27-r1-ls3",
+    "arm64v8-version-27-r1"
+   ],
+   "source": "alpine_apk",
+   "source_url": "http://dl-cdn.alpinelinux.org/alpine/v3.22/main/"
+  },
+  "commit": "d07bcd06e062e22449a88d7ed5becd76a325d173",
+  "created": "2026-10-30T20:24:49Z",
+  "reason": "push",
+  "previous": {
+   "tag": "27-r1-ls2",
+   "release_url": "https://github.com/linuxserver-playground/docker-ngircd/releases/tag/27-r1-ls2"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+   "digest": "sha256:9008d6d5bb98aa82222a5c4a9463dd82801a1cc2bfacd5862caf4b895fbcf578"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:90056a226f8f739be198a4d663bbc911d4217fb07bd3bb4969b559809673068d",
+    "size": 12404664,
+    "uncompressed_size": 28316286,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 6
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:8fbac697c3e619696692347b3c341a5ffb2600d3526a1ecea77ede0346aeeef8",
+    "size": 13434279,
+    "uncompressed_size": 40136251,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 6
+   }
+  ],
+  "index_digest": "sha256:3da444b7ac2b7aa33d1fbc7768fdf4f7f7ea7da272a548f741b9a687c196ddc4",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 27-r1-ls3 Build-date:- 2026-10-30T19:42:43Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22@sha256:9008d6d5bb98aa82222a5c4a9463dd82801a1cc2bfacd5862caf4b895fbcf578",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "27-r1",
+   "maintainer": "anoma",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-30T19:42:43Z",
+   "org.opencontainers.image.description": "Ngircd is a free, portable and lightweight Internet Relay Chat server for small or private networks, developed under the GNU General Public License (GPL).",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-ngircd",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "d07bcd06e062e22449a88d7ed5becd76a325d173",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-ngircd",
+   "org.opencontainers.image.title": "Ngircd",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-ngircd/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "27-r1-ls3"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "6667/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG NGIRCD_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"anoma\"\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  if [ -z ${NGIRCD_RELEASE+x} ]; then \\\n    NGIRCD_RELEASE=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:ngircd$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache \\\n    ngircd==${NGIRCD_RELEASE} \\\n    ngircd-doc==${NGIRCD_RELEASE} && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 6667\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG NGIRCD_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"anoma\"\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  if [ -z ${NGIRCD_RELEASE+x} ]; then \\\n    NGIRCD_RELEASE=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:ngircd$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache \\\n    ngircd==${NGIRCD_RELEASE} \\\n    ngircd-doc==${NGIRCD_RELEASE} && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 6667\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"ngircd:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-ngircd-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-config -> init-ngircd-config\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-ngircd\n  svc-ngircd -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"ngircd:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-ngircd-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-ngircd-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make our folders\nmkdir -p \\\n    /var/run/ngircd\n\n# copy config\nif [[ ! -f /config/ngircd.conf ]]; then\n    cp /defaults/ngircd.conf /config/ngircd.conf\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config \\\n    /var/run/ngircd\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-ngircd",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 6667\" \\\n        s6-setuidgid abc /usr/sbin/ngircd -n -f /config/ngircd.conf\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 53,
+    "distro": "Alpine Linux v3.22",
+    "hash": "bc17ec65",
+    "by_type": {
+     "apk": 53
+    }
+   },
+   "arm64": {
+    "count": 53,
+    "distro": "Alpine Linux v3.22",
+    "hash": "bc17ec65",
+    "by_type": {
+     "apk": 53
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/ngircd/builds/27-r1-ls3/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-ngircd/compare/27-r1-ls2...27-r1-ls3",
+   "upstream": "More than three years have passed since the last release of [ngIRCd](http://ngircd.barton.de) – a free, portable and lightweight Internet Relay Chat server for small or private networks – and more than 130 individual patches have accumulated in the Git “master branch” in the meantime. Some are cosmetic, some bring new functionality, others improve the documentation or fix bugs. All in all, it’s more than time for the next “big” release of ngIRCd!\r\n\r\nAnd here it is, ngIRCd release 27! 🎉\r\n\r\nThe most prominent and possibly breaking(!) change is that ngIRCd now validates SSL/TLS certificates on server-server links. Until now, ngIRCd optionally used encrypted server-server links (when `SSLConnect = yes` is set in a `[Server]` block, which is not the default) but never checked and validated any certificates. Oh my! Most probably we never should have released it this way in ngIRCd 13 back in 2008 … I hope you all were aware of this, right? Because you never configured a CA to trust, for example …?\r\n\r\nBut finally we made it, and _ngIRCd now validates SSL/TLS certificates on outgoing server-server links by default_ and **drops**(!) connections when the remote certificate is invalid (for example self-signed, expired, not matching the host name, …). Therefore you have to make sure that all relevant _certificates are valid_ (or to disable certificate validation on this connection using the new `SSLVerify = false` setting in the affected `[Server]` block, where the remote certificate is not valid and you can not fix this issue).\r\n\r\nThe original patch for OpenSSL certificate validation on server-links dates back to 2009 and was written by Florian Westphal and extended for GnuTLS in 2014 by Christoph Biedl. But it took us another 10 years to bring it to life … oh my! Many thanks to both Florian and Christoph! (This closes issue #120)\r\n\r\nBut that’s not all. In addition to the above, the following noteworthy changes are listed in the [`NEWS`](https://github.com/ngircd/ngircd/blob/master/NEWS) file:\r\n\r\n- Add an example filter file for \"Fail2Ban\": `contrib/ngircd-fail2ban.conf` (new since RC1).\r\n\r\n- Add support for the “sd_notify” protocol of `systemd(8)`: Periodically “ping” the service manager (every 3 seconds) and set a status message showing current connection statistics which then is included in `systemctl status ngircd.service` output. In addition, this enables using the `systemd(8)` watchdog functionality (`WatchdogSec`) for the `ngircd.service` unit and allows it to use the `notify` service type, which results in better status tracking by the service manager.\r\n\r\n- Try to set file descriptor limit to its maximum and show info on startup: The number of possible parallel connections is limited by the file descriptor limit of the process (among other things). Therefore try to upgrade the current “soft” limit to its “hard” maximum (but limited to 100000 instead of “infinite”), and show an information or even warning when the limit is still less than the configured `MaxConnections` setting. Please note that ngIRCd and its linked libraries (like PAM) need file descriptors not only for incoming and outgoing IRC connections, but for reading files and inter-process communication, too! Therefore the actual connection limit is less(!) than the file descriptor limit!\r\n\r\n- Add a _Docker file_ (`contrib/Dockerfile`) and corresponding documentation ([`doc/Container.md`](https://github.com/ngircd/ngircd/blob/master/doc/Container.md)) to the project. The resulting container is based on the latest Debian “stable-slim” container and built using a “build container”.\r\n\r\n- No longer use a default built-in value for the `IncludeDir` directive when a configuration file was explicitly specified on the command line using `--config`/`-f`: This way no default include directory is scanned when a possibly non-default configuration file is used which (intentionally) did not specify an `IncludeDir` directive. So now you can use `-f /dev/null` for checking all built-in defaults, regardless of any local configuration files in the default drop-in directory (which would have been read in until this change).\r\n\r\n- The server `Name` in the `[Global]` section of the configuration file no longer needs to be set: When not set (or empty), ngIRCd now tries to deduce a valid IRC server name from the local host name (“node name”), possibly adding a `.host` extension when the host name does not contain a dot (`.`) which is required in an IRC server name (“ID”). This new behavior, with all configuration parameters now being optional, allows running ngIRCd without any configuration file at all.\r\n\r\n- Autodetect support for IPv6 by default: Until now, IPv6 support was disabled by default, which seems a bit outdated in 2024. Note: You still can pass `--enable-ipv6`/`--disable-ipv6` to the `./configure` script to forcefully activate or deactivate IPv6 support.\r\n\r\n- Do IDENT requests even when DNS lookups are disabled: Up to now disabling DNS in the configuration disabled IDENT lookups as well (for no good reason). Now you can activate/deactivate DNS lookups and IDENT requests completely separately. Thanks for reporting this, Miniontoby! Closes #291.\r\n\r\n- Allow SSL client-only configurations without keys/certificates: You don’t need to configure certificates/keys as long as you don’t configure SSL-enabled listening ports. This can make sense when you want to only link your local daemon to an uplink server using SSL and only have clients on your local host or in your fully trusted network, where SSL is not required.\r\n\r\n- Respect `SSLConnect` option for incoming connections and do not accept incoming plain-text (“non SSL”) server connections for servers configured with `SSLConnect` enabled. This change prevents an authenticated client-server being able to force the server-server to send its password on a plain-text connection when SSL/TLS was intended.\r\n\r\n- Add a new option `Autojoin` to `[Channel]` blocks: When it is set, ngIRCd automatically joins all local users to this channel on connect. Note: The users must have permissions to access the channel, otherwise joining them will fail. Thanks Ivan Agarkov for the initial patch!\r\n\r\n- Hide invisible (+i) users on `WHOIS <pattern>`: Let’s behave like most(?) other IRC daemons (at least ircd2.11) and hide all +i users when `WHOIS` is used with a pattern. Otherwise privacy of this users is not guaranteed and the +i mode a bit useless … Reported by Cahata on #ngircd, thanks!\r\n\r\n- Make the debug log level (`--debug`/`-d` command line option) always available, not only when `./configure`’d with `--enable-debug`: the latter now only enables additional checks (like the tests done using `assert`(2)) and is signalled by adding `+DEBUG` to the version “feature string”. This change enables everyone to get even more detailed logging when required.\r\n\r\n- Allow IRC operators to use the `WHO` command on any channel.\r\n\r\n- Send the `NAMES` list and channel topic to users “forcefully” joined to a channel using `NJOIN`, like they joined on their own using `JOIN`, and streamline the order of `NAMES` list and channel topic messages. Closes #288.\r\n\r\n- Added a new command line option `-y`/`--syslog`, with which logging to syslog can be activated/deactivated separately from running on the console (using `--nodaemon`) or in the background. Thanks Katherine Peeters for the patch and pull request! Closes #294.\r\n\r\n- Update, enhance and extend our documentation in [`README.md`](https://github.com/ngircd/ngircd/blob/master/README.md), [`INSTALL.md`](https://github.com/ngircd/ngircd/blob/master/INSTALL.md), [`doc/HowToRelease.txt`](https://github.com/ngircd/ngircd/blob/master/doc/HowToRelease.txt) and the manual pages `ngircd`(8) and `ngircd.conf`(5), add a new [`doc/QuickStart.md`](https://github.com/ngircd/ngircd/blob/master/doc/QuickStart.md) document, and convert some more documentation files to Markdown ([`AUTHORS.md`](https://github.com/ngircd/ngircd/blob/master/AUTHORS.md), [`contrib/README.md`](https://github.com/ngircd/ngircd/blob/master/contrib/README.md), [`doc/FAQ.md`](https://github.com/ngircd/ngircd/blob/master/doc/FAQ.md), [`doc/SSL.md`](https://github.com/ngircd/ngircd/blob/master/doc/SSL.md)).\r\n\r\nAnd the [`ChangeLog`](https://github.com/ngircd/ngircd/blob/master/ChangeLog) has even more details and lists all the fixes, minor enhancements and tweaks. Since RC1, the test suite can cope better with non-interactive environments, startup is no longer aborted when setgid()/setuid() fails with EINVAL and the RPL_NAMEREPLY numeric was fixed for secret channels. Thanks a lot to all who run tests and reported bugs!\r\n\r\nYou can download ngIRCd 27 from the download section on our homepage at https://ngircd.barton.de (mirror: https://ngircd.sourceforge.io). The primary download locations are:\r\n\r\n- https://github.com/ngircd/ngircd/releases\r\n- https://ngircd.barton.de/pub/ngircd/\r\n- https://ngircd.sourceforge.io/pub/ngircd/\r\n\r\nPlease report any issues and glitches you find to the GitHub issue tracker (https://github.com/ngircd/ngircd/issues) and use the mailing list (ngircd@lists.barton.de) and the #ngircd channel on IRC (<irc://irc.barton.de/ngircd>) for questions and discussions. Enhancements and additions to the documentation, manual pages and the homepage are welcome as well!\r\n\r\nThanks a lot to all contributors & testers!\r\n\r\nHappy IRC'ing!\r\nAlex",
+   "upstream_url": "https://github.com/ngircd/ngircd/releases/tag/rel-27"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 20833,
+    "sha256": "7e72c7058a0a28da856dd5c1dcc9e19edbfca2240bcb43ac1c61670a147b8f1d",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4730,
+    "sha256": "4dbc42d291eef4c2dd090a5a5b7606ad9f2d2e939bede883a8ef6b848eca0341",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 23226,
+    "sha256": "d1f5718ecf73e335b69b97b78194fc1f66ccb0de4075df1f4a08e2071aeaeef5",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2417,
+    "sha256": "2b72bb07de269f9dbf48f6bb79d1e7580cc424f55e6b0b8126fcdae85e08a8c4",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3631,
+    "sha256": "edce762ff1bd2003e4420c4a35f23a734492d24dcdcbb3fcb33557fa66f0d53e",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 2646,
+    "sha256": "fe47862d0a0cd35be73d5fac8a492d2b73a3b13d07b9865707ec936078653c36",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 20743,
+    "sha256": "a33a79e82450e5a2a2140d974c3d2784498c77c8112104bcac6313e52857c28d",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4730,
+    "sha256": "b4c58b10b2b18d12211b4b12b56f15c436419cbf8f76aeb1d435fc914225ea0d",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 22973,
+    "sha256": "937ef334d900e07b9eb92772a3e8047926c99efc83630532459b0a07bee5fe61",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2418,
+    "sha256": "78684c376072dab37583d5026225e018a3726c36bd5d0068aae2e741a0346481",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3616,
+    "sha256": "5191558317a1a5e2c482f226cd917367ab02efc6b0379fe5b936510726c07129",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 2646,
+    "sha256": "fe47862d0a0cd35be73d5fac8a492d2b73a3b13d07b9865707ec936078653c36",
+    "url": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41116781121,
+   "run_url": "https://github.com/linuxserver-playground/docker-ngircd/actions/runs/41116781121",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/ngircd",
+   "tags": [
+    "latest",
+    "27-r1-ls3",
+    "version-27-r1",
+    "amd64-latest",
+    "amd64-27-r1-ls3",
+    "amd64-version-27-r1",
+    "arm64v8-latest",
+    "arm64v8-27-r1-ls3",
+    "arm64v8-version-27-r1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "ngircd",
+  "branch": "master",
+  "tag": "27-r1-ls3",
+  "previous_tag": "27-r1-ls2",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed"
+  ],
+  "upstream": {
+   "from": "27-r1",
+   "to": "27-r1",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:9008d6d5bb98aa82222a5c4a9463dd82801a1cc2bfacd5862caf4b895fbcf578"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 12404640,
+    "to": 12404664,
+    "delta": 24
+   },
+   "arm64": {
+    "from": 13434258,
+    "to": 13434279,
+    "delta": 21
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:ca8b0b87fe657a910bc5f3484facc4747141195075f2c5afc2e026c0d5dac072",
+    "diff_id": "sha256:913ef81158b4b122bee87b690d6bb78e28d1742d5da1b4ddc46c71fede64cd5b",
+    "size": 6205963,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:ada0d875993688fd656665c9724cdd09657b00f9dd195027da3cab49e5b40565",
+    "diff_id": "sha256:e776bf84dc8c1729f6914a33b521ed11b21aa64a9ce32a23e8c29c899fb14670",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:67421216ddbbed79dd5158b1cbcbe255a2dfa0aad218d38d11436a4906bd403b",
+    "diff_id": "sha256:cbe603f086c51498a46b80efce3f85b92ce8a719b28f8f0b6487ab85b4124fc6",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:07254bbe7d9ae2901fdc85e67ddad9d9eaecd5d314b3877e315052f5a1d23886",
+    "diff_id": "sha256:a9fcf2b31060ac1d397b3a5c42db3bd5ebb5df512c863d0664816e5542ed5dd6",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:0efd1404f25c6b6fed87b8d17ebdcfe4d8ce601accb53701b6c02f2384fe85e4",
+    "diff_id": "sha256:3a03984582cb7edf94313b4a92dcc048f02a3c26fe6fab577c54950cc0c4d086",
+    "size": 5894935,
+    "uncompressed_size": 13967197,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:12:26Z VERSION=eac05398-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:86e889798d9579cf9d2dc6db6700c92ae05fa75aa70f92a439e3743e96609a96",
+    "diff_id": "sha256:966d44c04ca63d06909bd34dae551c1b95d8fb0bd43f912d32c65cad5af65376",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:9e2e4dd2c8e7febe6f868f2fad3c1bb0174e6f4ee37c708825d1bda3deda801a",
+    "diff_id": "sha256:4db74c0feb32fa79510d1e6d12ea4f0194c4aa136d176d22885c3ea18bb4c5ed",
+    "size": 283835,
+    "uncompressed_size": 706875,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T19:42:43Z VERSION=27-r1-ls3 NGIRCD_RELEASE=27-r1 /bin/sh -c echo \"**** install packages ****\" &&   if [ -z ${NGIRCD_RELEASE+x} ]; then     NGIRCD_RELEASE=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:ngircd$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache     ngircd==${NGIRCD_RELEASE}     ngircd-doc==${NGIRCD_RELEASE} &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     14,
+     26
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:6bc0b8e7384ed22ab2701191b777878e46a40e7c4504bf0faf51ed8335422064",
+    "diff_id": "sha256:4e87ccef13d106946bcc2917908135468199abc211e3f9738b967142693ef4a5",
+    "size": 6578,
+    "uncompressed_size": 15080,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     29,
+     29
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:750b56abeeeec1e87b143fbeb29b1604e209f7cde24b354820d5c682a17efba2",
+    "diff_id": "sha256:61bf3aaf81172ff2a231db565c2a245fab80dcc80bc7b6a7b716cdad01da6905",
+    "size": 7020015,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:d65e4e00803a0e9740173c4007d8854f57935635006291587cac520419e2207e",
+    "diff_id": "sha256:26c75e6bf3d3043dc0d888fbf14b7c74bb72541c3410d08074d09fa901a807ce",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:2bab4f638374747c5039a845e6e378ef4fd263ab99fd0de3917162f2f9ee6c89",
+    "diff_id": "sha256:8c16831081b046d78ae565ca3a2128c5fdeb763341cabea6937354c40d9a5f0a",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:a250d3e633645fffe0a95b7374b664f325f9b912f950eeb9dcd822d66cfe3e88",
+    "diff_id": "sha256:93217f1a521d0656400126e7d94e4bfb4ec0ed11465ffbc9549cd0ac248e4214",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:66505bc0b35daa141a253f880831a28058935cc8a14ac790451560999695bd32",
+    "diff_id": "sha256:0dab1b36e6ef5e23d4d6a71d90320381159d3ce0e031592bf20ac078530c2885",
+    "size": 6110447,
+    "uncompressed_size": 20893504,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:12:26Z VERSION=eac05398-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:4284add9bcfaff30216ae5d0b8902207ac03d7f9c7bbfc6dfe7e8cb36f44c037",
+    "diff_id": "sha256:93d8e6d1ba8f61ccffa6b8d267f9d07c73d6ed06668cb74e892c0bbe9e1fdefc",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:ceced55055e822abc7476033bc9b84ce8180aa7482e96add30fd1d1dfbe2969e",
+    "diff_id": "sha256:52fa7b7b90e67bad97d3a476f70afe1b0ec592d384e3b096cc76db1606bb5054",
+    "size": 283885,
+    "uncompressed_size": 760097,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T19:42:43Z VERSION=27-r1-ls3 NGIRCD_RELEASE=27-r1 /bin/sh -c echo \"**** install packages ****\" &&   if [ -z ${NGIRCD_RELEASE+x} ]; then     NGIRCD_RELEASE=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.22/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:ngircd$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache     ngircd==${NGIRCD_RELEASE}     ngircd-doc==${NGIRCD_RELEASE} &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     14,
+     26
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:1c93707c5c4d777ac2f12f9dc100bae0c4e045a76359d46968be11f484d5949a",
+    "diff_id": "sha256:f0107f183ea286c54e1aec1aea001cbd44bc57736a2fda035bdaa9fe83cb8abf",
+    "size": 6576,
+    "uncompressed_size": 15080,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     29,
+     29
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "ngircd",
+  "tag": "27-r1-ls3",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/ngircd/builds/27-r1-ls3/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [
+     "6667/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 5144576,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-ngircd/builds/27-r1-ls3/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-ngircd/builds/27-r1-ls3/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [
+     "6667/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 4894720,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-ngircd/releases/download/27-r1-ls3/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-ngircd/builds/27-r1-ls3/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-ngircd/builds/27-r1-ls3/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "ngircd",
+    "tag": "amd64-d07bcd0-41116781121",
+    "arch": "amd64",
+    "started": "2026-10-30T20:18:22Z",
+    "finished": "2026-10-30T20:18:40Z",
+    "success": true,
+    "runner": "f4eda265c920",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-ngircd",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 6667/tcp",
+      "seconds": 0.076
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "53 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "53 packages: syft JSON 20833 bytes gzipped, SPDX for the image attestation 102504 bytes",
+      "seconds": 0.108
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "240 dirs, 1074 files (28002179 bytes), 1198 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.06s",
+      "seconds": 0.196
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.411
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.072
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [6667], rss 5144576 bytes",
+      "seconds": 0.32
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 5144576,
+     "pids": 13,
+     "listening_tcp": [
+      6667
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-ngircd"
+     ],
+     "changed_paths": 209
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "ngircd",
+    "tag": "arm64-d07bcd0-41116781121",
+    "arch": "arm64",
+    "started": "2026-10-30T19:47:03Z",
+    "finished": "2026-10-30T19:47:22Z",
+    "success": true,
+    "runner": "f2e75efb3025",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-ngircd",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 6667/tcp",
+      "seconds": 0.049
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "53 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "53 packages: syft JSON 20743 bytes gzipped, SPDX for the image attestation 102557 bytes",
+      "seconds": 0.098
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "240 dirs, 1074 files (39822017 bytes), 1198 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.03s",
+      "seconds": 0.153
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.515
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.058
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [6667], rss 4894720 bytes",
+      "seconds": 0.214
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 4894720,
+     "pids": 13,
+     "listening_tcp": [
+      6667
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-ngircd"
+     ],
+     "changed_paths": 209
+    }
+   }
+  }
+ }
+}

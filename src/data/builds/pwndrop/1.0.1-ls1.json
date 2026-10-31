@@ -1,0 +1,908 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "pwndrop",
+  "repository": "linuxserver-playground/docker-pwndrop",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "1.0.1",
+   "upstream_clean": "1.0.1",
+   "semver": "1.0.1",
+   "ls_build": 1,
+   "tag": "1.0.1-ls1",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "1.0.1-ls1",
+    "version-1.0.1",
+    "1.0.1",
+    "amd64-latest",
+    "amd64-1.0.1-ls1",
+    "amd64-version-1.0.1",
+    "amd64-1.0.1",
+    "arm64v8-latest",
+    "arm64v8-1.0.1-ls1",
+    "arm64v8-version-1.0.1",
+    "arm64v8-1.0.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/kgretzky/pwndrop/releases/tag/1.0.1"
+  },
+  "commit": "5f0f6489f78c8362e7e2a79c8c4e262e9a822379",
+  "created": "2026-10-26T00:04:01Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/baseimage-alpine:3.24",
+   "digest": "sha256:52106d187a66ccb92e3289cb6dd25c549cb0b6b7bfec38a51994434c96db2d35"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:01b883810d81fc46d3a81883489366d2b82e7bf5af289ca0f0fe69c9fbce6369",
+    "size": 18727815,
+    "uncompressed_size": 43799899,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 30
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:6e6fd98ecccbc9d8c5ffa2e779bfbcf56ad6f903a62d5a8df669aa07ac3694d1",
+    "size": 19340627,
+    "uncompressed_size": 54971678,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 25
+   }
+  ],
+  "index_digest": "sha256:7df358b3f0b49a0d020adf5b4b7014eefd02890189c35cdbbb8a3aec829c9b83",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 1.0.1-ls1 Build-date:- 2026-10-25T23:57:01Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine:3.24@sha256:52106d187a66ccb92e3289cb6dd25c549cb0b6b7bfec38a51994434c96db2d35",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "1.0.1",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T23:57:01Z",
+   "org.opencontainers.image.description": "Pwndrop is a self-deployable file hosting service for sending out red teaming payloads or securely sharing your private files over HTTP and WebDAV.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-pwndrop",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "809c5810b5f69228898d5fcfc087eb89d5a2ecf5",
+   "org.opencontainers.image.revision": "5f0f6489f78c8362e7e2a79c8c4e262e9a822379",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-pwndrop",
+   "org.opencontainers.image.title": "Pwndrop",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-pwndrop/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "1.0.1-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "4443/tcp",
+    "8080/tcp"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# build variables\nARG PWNDROP_RELEASE\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    build-base \\\n    go\n\nRUN \\\necho \"**** fetch source code ****\" && \\\n  if [ -z ${PWNDROP_RELEASE+x} ]; then \\\n    PWNDROP_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kgretzky/pwndrop/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/pwndrop && \\\n  curl -o \\\n  /tmp/pwndrop-src.tar.gz -L \\\n    \"https://github.com/kgretzky/pwndrop/archive/${PWNDROP_RELEASE}.tar.gz\" && \\\n  tar xf \\\n  /tmp/pwndrop-src.tar.gz -C \\\n    /tmp/pwndrop --strip-components=1 && \\\n  echo \"**** compile pwndrop  ****\" && \\\n  cd /tmp/pwndrop && \\\n  go build -ldflags=\"-s -w\" \\\n    -o /app/pwndrop/pwndrop \\\n    -mod=vendor \\\n    main.go && \\\n  cp -r ./www /app/pwndrop/admin\n\n############## runtime stage ##############\nFROM ghcr.io/linuxserver/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PWNDROP_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# add pwndrop\nCOPY --from=buildstage /app/pwndrop/ /app/pwndrop/\n\nRUN \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 8080 4443\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# build variables\nARG PWNDROP_RELEASE\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    build-base \\\n    go\n\nRUN \\\n  echo \"**** fetch source code ****\" && \\\n  if [ -z ${PWNDROP_RELEASE+x} ]; then \\\n    PWNDROP_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kgretzky/pwndrop/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/pwndrop && \\\n  curl -o \\\n  /tmp/pwndrop-src.tar.gz -L \\\n    \"https://github.com/kgretzky/pwndrop/archive/${PWNDROP_RELEASE}.tar.gz\" && \\\n  tar xf \\\n  /tmp/pwndrop-src.tar.gz -C \\\n    /tmp/pwndrop --strip-components=1 && \\\n  echo \"**** compile pwndrop  ****\" && \\\n  cd /tmp/pwndrop && \\\n  go build -ldflags=\"-s -w\" \\\n    -o /app/pwndrop/pwndrop \\\n    -mod=vendor \\\n    main.go && \\\n  cp -r ./www /app/pwndrop/admin\n\n############## runtime stage ##############\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PWNDROP_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# add pwndrop\nCOPY --from=buildstage /app/pwndrop/ /app/pwndrop/\n\nRUN \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 8080 4443\n"
+  },
+  "init_graph": {
+   "d2": "\"pwndrop:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-pwndrop-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-pwndrop-config\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-pwndrop\n  svc-pwndrop -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"pwndrop:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-pwndrop-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-pwndrop-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p /config/data\n\nif [[ ! -f \"/config/data/pwndrop.db\" ]]; then\n    SECRET_PATH=${SECRET_PATH:-/pwndrop}\n    echo \"New install detected, starting pwndrop with secret path ${SECRET_PATH}\"\n    echo -e \"\\n[setup]\\nsecret_path = \\\"${SECRET_PATH}\\\"\" >> /defaults/pwndrop.ini\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config \\\n    /defaults\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-pwndrop",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8080\" \\\n        s6-setuidgid abc \\\n            /app/pwndrop/pwndrop \\\n                -debug \\\n                -no-autocert \\\n                -no-dns \\\n                -config /defaults/pwndrop.ini\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 68,
+    "distro": "Alpine Linux v3.24",
+    "hash": "17ecfe77",
+    "by_type": {
+     "apk": 51,
+     "go-module": 17
+    }
+   },
+   "arm64": {
+    "count": 68,
+    "distro": "Alpine Linux v3.24",
+    "hash": "17ecfe77",
+    "by_type": {
+     "apk": 51,
+     "go-module": 17
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/pwndrop/builds/1.0.1-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-pwndrop/commits/1.0.1-ls1",
+   "upstream": "- [x] Increased the time limit for uploads and downloads from 15 seconds to 15 minutes. Should fix the issue of uploads/downloads being interrupted on slow connections, when handling big files.",
+   "upstream_url": "https://github.com/kgretzky/pwndrop/releases/tag/1.0.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 22595,
+    "sha256": "a34e3f3c36ee051d758bf3cb5f5ba2cb7cd3ab77c31f1a897af87cf7c9e21705",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4614,
+    "sha256": "3d48e9db097a5511772fa577c1b4cedc7af822cdf24675e8699ba768589554f7",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 23418,
+    "sha256": "88db1e38e0f3bfb3b959c85537d5a36522e45954efc789524705eb1ea68f2aa3",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2250,
+    "sha256": "fce93fd6dcacfee44662ef906dcce1371c2fadf7dd89c99285410c313af318ec",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 43525,
+    "sha256": "593593473b747d92fc12ca5d28e40e59ae84363167b89779f7dac5047de821e1",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 5451,
+    "sha256": "faa9e888afeca1a7e87e65cbdce77cc77ac590934b0de7fa9c9dbfa1ead080dd",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 22616,
+    "sha256": "29a6ff669e369d3e829d4a5cb6e3f953195edc10d682bb6821d58d91ebb4415f",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4614,
+    "sha256": "6cead6483d3b4776c1d0f33ca173b89c5508e77e9ecc7977cca40efe0a1c800e",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 23166,
+    "sha256": "4be4f5d34f56d60f6af0e669349eccf1f4126619ffeee7203c6fa6079aecded1",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2250,
+    "sha256": "4574fac1ad026200e721d3024a8c846ef6e4abbf1793aa6e1e98daf9fddb6e55",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 43360,
+    "sha256": "b44ae071b589173709604dbeb7888e6f608d69e0a1d4daf9328f672d564df9a0",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 5451,
+    "sha256": "faa9e888afeca1a7e87e65cbdce77cc77ac590934b0de7fa9c9dbfa1ead080dd",
+    "url": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40246988906,
+   "run_url": "https://github.com/linuxserver-playground/docker-pwndrop/actions/runs/40246988906",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "pwndrop",
+  "branch": "master",
+  "tag": "1.0.1-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "1.0.1",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.24",
+    "digest": "sha256:52106d187a66ccb92e3289cb6dd25c549cb0b6b7bfec38a51994434c96db2d35"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 18727815
+   },
+   "arm64": {
+    "to": 19340627
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "4443/tcp",
+     "8080/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:c72266279417a5faff6e617848db39c83244c06962365b1b589acaf68eb04b97",
+    "diff_id": "sha256:8694d84ab86ae4fb4d424ce63b12f925e8a28b1e247d65969ba11178889c381b",
+    "size": 6265184,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:36ae26c163fabdfcee849d115a11fdfd29f9ce0e2ce11591557fdefa3a46d497",
+    "diff_id": "sha256:9bbe98c8454e1e7868ec22f386ea55b2bf7b91c60e910340f5f0d52ceb675bf4",
+    "size": 1358,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:0fce4af119545ff96a475ca34e1998b05a6679afcb19aacd17e1592bf52330b2",
+    "diff_id": "sha256:c40bda2323ba1685ac2cf801f579580fdefb7c4d088a05076ac05d0a01d9ae12",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:0f1ebc65af7490d12f97ddd6ab1df01275098e83d10a3eed69fe55e1dbdbc68c",
+    "diff_id": "sha256:e61d54197f8e67a701341e0d896bd4e7321842be1d602c5850f886a3e753eba6",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:9ba80e72bcf91d6818c07b928e768c51752674f9eb7dc01f98dfe10ca6302379",
+    "diff_id": "sha256:5cff24aaa8d5993662766cc4ab1ee7e5f16d7a781904d4967244f998440ca9aa",
+    "size": 6086095,
+    "uncompressed_size": 14398967,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:39:06+00:00 VERSION=bc9f8d41-ls16 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:6518ec658ff1145a6b3af6b0a1817dec74d6c1b84b05cb05c9ebdb3e5a9205e6",
+    "diff_id": "sha256:6c308902ce4df6793665e8af207e75d7ed3590fe7570ed9472d6a099d5ca8ceb",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:7d31e4b093a2473d479088e510fe0cd6e0574a83e4568f8310e3eb6811d153f1",
+    "diff_id": "sha256:d8001e2954a381926b8f6e0923d882ca482d0717dbadb6b492ecdaf9596565d8",
+    "size": 6361917,
+    "uncompressed_size": 15646503,
+    "created_by": "COPY /app/pwndrop/ /app/pwndrop/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:74569326fcd684ac5553b4d77ee885f34607b8a6d6c95f13668b02fd60a277d3",
+    "diff_id": "sha256:6e5305c4fdff00674bc93f831bbffb2e5e5e7f969d40fc8091747c8dae3be671",
+    "size": 164,
+    "uncompressed_size": 66,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T23:57:01Z VERSION=1.0.1-ls1 PWNDROP_RELEASE=1.0.1 /bin/sh -c printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     53,
+     54
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:72d090aea64e09ec72ee650e38d635882413aa5eb127e00c344d0df72939da27",
+    "diff_id": "sha256:8a837766b5f909eee2e6a127b9553416df9a9da9941bbb3cea654faee08ea54a",
+    "size": 1100,
+    "uncompressed_size": 1043,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     57,
+     57
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d0ad8752aa04f65a21e9c0cb6cfcecea77a69269e84949011151ab18ceb2b059",
+    "diff_id": "sha256:f63e8f85ab228baa47b46453deb31469de4775e0dd5bd3781ccf06a6e35853b2",
+    "size": 7081843,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:48458dfdbada911b12529cbd1c0941efb09e2244bbf3a9f79ce7fb852c8475f4",
+    "diff_id": "sha256:45c4393b32578e3e5c80a9673545c700ddbfa9d0124a070faa8260bb1df37d25",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:df864a3b18bee853ddf3a2dc4f09ec6c9a145d0e5a4efa72e2fa573a567cd8c3",
+    "diff_id": "sha256:3d67ce0e662b1fbb688bf9d9c4e219c2398dc662e52a0f251b98d412d43c3a73",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:80d99f558dab159b941d3804e21b975d22e7234fa8a0015484455c4e4fff2f8d",
+    "diff_id": "sha256:479b7127c8b5ce1f58ee9a8e5754810d4e9dfa18ce1ff7dcacd101e78249aa1e",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:63ae92d622d3c653b330a4df711a56819df47f86fb5aaa3108813a5bfde33be2",
+    "diff_id": "sha256:aeb519a6d022d8ac91b877085000b949d3723611825192294b19b8bbecfb4765",
+    "size": 6318427,
+    "uncompressed_size": 21488923,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:39:06+00:00 VERSION=bc9f8d41-ls16 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:6f46d821e47468346c8a749ae2e40a4abe91907893b3a9a5a97d0349136a4052",
+    "diff_id": "sha256:2b64098bb122043e29464f92b828ec29d9e1678f3f3d103be3e28d236fb384a5",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:539eaddc8ddd646c76c24222f7055069860082f00b06d05e0720f17ea44f4d52",
+    "diff_id": "sha256:52583dd0ed40d3b137f93c3e992e59308f487c32d638bc85f656cfa0f3e346d2",
+    "size": 5925739,
+    "uncompressed_size": 14892839,
+    "created_by": "COPY /app/pwndrop/ /app/pwndrop/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:7a3f4fd92eb8029147661bf4864e483a5ed3a068468380a66a08057e593440b9",
+    "diff_id": "sha256:ab7197bd1fd1aa4aff6a3a4734b526db9b3ce5b62025bdf8fe9fbe35a2edf69d",
+    "size": 165,
+    "uncompressed_size": 66,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-25T23:57:01Z VERSION=1.0.1-ls1 PWNDROP_RELEASE=1.0.1 /bin/sh -c printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     53,
+     54
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:c4e5e70fa3c0d502f35c9ce01daecd363d8026072a457d891bf4d8e5a3691f5c",
+    "diff_id": "sha256:3e4bc2bf28e410c1ac599930f76aeac239c6c8eac4be20320ce1ceee7b80a483",
+    "size": 1099,
+    "uncompressed_size": 1043,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     57,
+     57
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "pwndrop",
+  "tag": "1.0.1-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/pwndrop/builds/1.0.1-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.013,
+    "listening_ports": [
+     "4443/tcp",
+     "8080/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 18792448,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "4443/tcp",
+     "8080/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 14032896,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-pwndrop/releases/download/1.0.1-ls1/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-pwndrop/builds/1.0.1-ls1/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "pwndrop",
+    "tag": "amd64-5f0f648-40246988906",
+    "arch": "amd64",
+    "started": "2026-10-25T23:59:25Z",
+    "finished": "2026-10-25T23:59:40Z",
+    "success": true,
+    "runner": "b667279e7553",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.013,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.013
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "68 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "68 packages: syft JSON 22595 bytes gzipped, SPDX for the image attestation 117180 bytes",
+      "seconds": 0.097
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "243 dirs, 1093 files (43600205 bytes), 1196 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.06s",
+      "seconds": 0.191
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.652
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.072
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8080/pwndrop",
+      "seconds": 10.924
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [4443, 8080], rss 18792448 bytes",
+      "seconds": 0.323
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 18792448,
+     "pids": 13,
+     "listening_tcp": [
+      4443,
+      8080
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-pwndrop"
+     ],
+     "changed_paths": 212
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "pwndrop",
+    "tag": "arm64-5f0f648-40246988906",
+    "arch": "arm64",
+    "started": "2026-10-25T23:58:19Z",
+    "finished": "2026-10-25T23:58:34Z",
+    "success": true,
+    "runner": "537de9cd07fd",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "68 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "68 packages: syft JSON 22616 bytes gzipped, SPDX for the image attestation 117231 bytes",
+      "seconds": 0.092
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "243 dirs, 1092 files (54772041 bytes), 1196 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.03s",
+      "seconds": 0.129
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.751
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.053
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8080/pwndrop",
+      "seconds": 10.931
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [4443, 8080], rss 14032896 bytes",
+      "seconds": 0.202
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 14032896,
+     "pids": 13,
+     "listening_tcp": [
+      4443,
+      8080
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-pwndrop"
+     ],
+     "changed_paths": 212
+    }
+   }
+  }
+ }
+}
