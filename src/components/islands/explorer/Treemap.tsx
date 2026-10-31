@@ -3,6 +3,7 @@ import type { Arch, FileNode } from '@/lib/hub';
 import { buildTree, fmtBytes, fmtMode, kindColor, kindLabel, kindTone, kindTotals, loadFiles, pct, reducedMotion, type TreeNode } from '@/lib/explorer';
 import { ellipsise, fitChars, layoutTiles, MIN_TILE, STRIP, type Tile } from '@/lib/treemap';
 import ArchToggle, { IslandHeader, LoadError, Loading } from './ArchToggle';
+import { useFullscreen } from './Fullscreen';
 
 interface Props {
   image: string;
@@ -34,10 +35,12 @@ function useDark() {
 
 /**
  * Container width, kept current by a ResizeObserver. A callback ref, because the container only exists once
- * the file table has loaded; the map re-lays out whenever the width changes.
+ * the file table has loaded; the map re-lays out whenever the width changes. Full screen, the room below the
+ * container's top edge is measured too, so the map can take the viewport's height.
  */
-function useWidth() {
+function useWidth(fill: boolean) {
   const [width, setWidth] = React.useState(960);
+  const [room, setRoom] = React.useState<number | null>(null);
   const [el, setEl] = React.useState<HTMLDivElement | null>(null);
   const ref = React.useRef<HTMLDivElement | null>(null);
   const attach = React.useCallback((node: HTMLDivElement | null) => {
@@ -46,13 +49,22 @@ function useWidth() {
   }, []);
   React.useEffect(() => {
     if (!el) return;
-    const measure = (w: number) => setWidth(Math.max(240, Math.floor(w)));
-    const ro = new ResizeObserver(([e]) => measure(e.contentRect.width));
+    const measure = () => {
+      const box = el.getBoundingClientRect();
+      setWidth(Math.max(240, Math.floor(box.width)));
+      setRoom(fill ? Math.floor(window.innerHeight - box.top) : null);
+    };
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    measure(el.getBoundingClientRect().width);
-    return () => ro.disconnect();
-  }, [el]);
-  return { ref, attach, width };
+    measure();
+    if (!fill) return () => ro.disconnect();
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [el, fill]);
+  return { ref, attach, width, room };
 }
 
 const isZoomable = (n: TreeNode) => n.kind !== 'file' && !!n.children?.length;
@@ -183,7 +195,8 @@ export default function Treemap({ image, tag, arches, urls, initialArch, compact
   const [tip, setTip] = React.useState<{ i: number; x: number; y: number; keyboard: boolean } | null>(null);
   const [attempt, setAttempt] = React.useState(0);
   const dark = useDark();
-  const { ref, attach, width } = useWidth();
+  const fullscreen = useFullscreen();
+  const { ref, attach, width, room } = useWidth(fullscreen);
   const svgRef = React.useRef<SVGSVGElement>(null);
   const gradientId = React.useId().replace(/:/g, '');
 
@@ -211,8 +224,14 @@ export default function Treemap({ image, tag, arches, urls, initialArch, compact
   let focus = tree;
   for (const p of path) focus = focus?.children?.find((c) => c.path === p) ?? focus;
 
-  const height = compact ? Math.round(Math.min(340, Math.max(220, width * 0.45))) : Math.round(Math.min(640, Math.max(300, width * (width < 640 ? 0.9 : 0.56))));
-  const listed = compact ? 6 : 10;
+  // Full screen, the map takes what is left of the viewport under its top edge, less the live line below it.
+  const height =
+    fullscreen && room !== null
+      ? Math.max(300, room - 56)
+      : compact
+        ? Math.round(Math.min(340, Math.max(220, width * 0.45)))
+        : Math.round(Math.min(640, Math.max(300, width * (width < 640 ? 0.9 : 0.56))));
+  const listed = compact ? 6 : fullscreen ? 20 : 10;
   const tiles = React.useMemo(() => (focus ? layoutTiles(focus, width, height) : []), [focus, width, height]);
 
   const anim = !reducedMotion();

@@ -5,6 +5,7 @@ import { buildUrl } from '@/lib/build-helpers';
 import { initStages, reducedMotion, SOURCE_COLOR } from '@/lib/explorer';
 import { attributeUnits, loadBaseLayers, unresolvedReason, type Attribution, type BaseLayers, type ChainHop, type InitChain } from '@/lib/init-chain';
 import CopyButton from '../CopyButton';
+import FullscreenFrame, { FullscreenButton } from './Fullscreen';
 
 interface Props {
   units: InitUnit[];
@@ -370,288 +371,291 @@ export default function InitGraph({ units, image, base, chain }: Props) {
   };
 
   return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] px-3.5 py-2">
-        <p className="font-mono text-xs text-muted-foreground">{summary}</p>
-        {layers.status === 'ready' && layers.chain.hops.length > 0 && (
-          <p className="order-last basis-full font-mono text-xs text-muted-foreground">
-            base images:{' '}
-            {layers.chain.hops.map((h, i) => (
-              <React.Fragment key={`${h.image}:${h.tag}`}>
-                {i > 0 && ' → '}
-                {hopLink(h, h.ref)}
-                {!h.exact && ' (newest build; this build’s exact base is no longer held)'}
-              </React.Fragment>
-            ))}
-            {layers.chain.end.kind === 'upstream' && ` → ${layers.chain.end.image} (not built here)`}
-            {layers.chain.end.kind === 'missing' && ` → ${layers.chain.end.image} (no build held)`}
-          </p>
-        )}
-        <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-label="Legend">
-          {(['image', 'mod'] as const)
-            .filter((s) => counts[s])
-            .map((s) => (
-              <li key={s} className="inline-flex items-center gap-1.5">
-                <span className="size-2.5 rounded-sm" style={{ background: SOURCE_COLOR[s] }} aria-hidden="true" />
-                {s === 'image' ? 'this image' : 'mod'}
+    <FullscreenFrame title={`${image} · init graph`}>
+      <div>
+        <div className="relative flex flex-wrap items-center justify-between gap-3 border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] px-3.5 py-2 sm:pr-12">
+          <FullscreenButton className="absolute top-1.5 right-2 hidden sm:inline-flex" />
+          <p className="font-mono text-xs text-muted-foreground">{summary}</p>
+          {layers.status === 'ready' && layers.chain.hops.length > 0 && (
+            <p className="order-last basis-full font-mono text-xs text-muted-foreground">
+              base images:{' '}
+              {layers.chain.hops.map((h, i) => (
+                <React.Fragment key={`${h.image}:${h.tag}`}>
+                  {i > 0 && ' → '}
+                  {hopLink(h, h.ref)}
+                  {!h.exact && ' (newest build; this build’s exact base is no longer held)'}
+                </React.Fragment>
+              ))}
+              {layers.chain.end.kind === 'upstream' && ` → ${layers.chain.end.image} (not built here)`}
+              {layers.chain.end.kind === 'missing' && ` → ${layers.chain.end.image} (no build held)`}
+            </p>
+          )}
+          <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground" aria-label="Legend">
+            {(['image', 'mod'] as const)
+              .filter((s) => counts[s])
+              .map((s) => (
+                <li key={s} className="inline-flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-sm" style={{ background: SOURCE_COLOR[s] }} aria-hidden="true" />
+                  {s === 'image' ? 'this image' : 'mod'}
+                </li>
+              ))}
+            {perLayer.map((x, i) => (
+              <li key={x.hop.image} className="inline-flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm" style={{ background: layerColor(hops.indexOf(x.hop)) }} aria-hidden="true" />
+                {x.hop.image}
               </li>
             ))}
-          {perLayer.map((x, i) => (
-            <li key={x.hop.image} className="inline-flex items-center gap-1.5">
-              <span className="size-2.5 rounded-sm" style={{ background: layerColor(hops.indexOf(x.hop)) }} aria-hidden="true" />
-              {x.hop.image}
-            </li>
-          ))}
-          {(unattributed > 0 || (!perLayer.length && counts.base > 0)) && (
+            {(unattributed > 0 || (!perLayer.length && counts.base > 0)) && (
+              <li className="inline-flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm" style={{ background: SOURCE_COLOR.base }} aria-hidden="true" />
+                {perLayer.length ? belowName : 'base image'}
+              </li>
+            )}
             <li className="inline-flex items-center gap-1.5">
-              <span className="size-2.5 rounded-sm" style={{ background: SOURCE_COLOR.base }} aria-hidden="true" />
-              {perLayer.length ? belowName : 'base image'}
+              <TypePill type="oneshot" /> runs once
             </li>
-          )}
-          <li className="inline-flex items-center gap-1.5">
-            <TypePill type="oneshot" /> runs once
-          </li>
-          {markers > 0 && (
+            {markers > 0 && (
+              <li className="inline-flex items-center gap-1.5">
+                <span className="size-2.5 rounded-sm border border-dashed border-[var(--muted-foreground)]" aria-hidden="true" /> marker, runs nothing
+              </li>
+            )}
             <li className="inline-flex items-center gap-1.5">
-              <span className="size-2.5 rounded-sm border border-dashed border-[var(--muted-foreground)]" aria-hidden="true" /> marker, runs nothing
+              <TypePill type="longrun" /> service
             </li>
-          )}
-          <li className="inline-flex items-center gap-1.5">
-            <TypePill type="longrun" /> service
-          </li>
-        </ul>
-      </div>
+          </ul>
+        </div>
 
-      {!reduced && (
-        <div className="hidden overflow-x-auto sm:block" tabIndex={-1}>
-          <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`Init units by stage, left to right; select a unit for details`} className="block font-mono text-[11px]" style={{ maxWidth: columns.length <= 6 ? '100%' : undefined, height: 'auto' }}>
-            <defs>
-              <marker id="ig-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" />
-              </marker>
-              <marker id="ig-arrow-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                <path d="M0,0 L10,5 L0,10 z" fill="var(--primary)" />
-              </marker>
-            </defs>
-            <g aria-hidden="true">
-              {columns.map((c, i) => (
-                <text key={i} x={c.x} y={PAD + 11} fill="var(--muted-foreground)" style={{ fontSize: 10 }}>
-                  {stageLabel(c.stages)}
-                </text>
-              ))}
-            </g>
-            <g aria-hidden="true">
-              {edges.map((e, i) => {
-                const hot = !!sel && (e.a === sel.name || e.b === sel.name);
-                return (
-                  <path
-                    key={i}
-                    d={curve(e)}
-                    fill="none"
-                    stroke={hot ? 'var(--primary)' : 'var(--raft-hair-strong)'}
-                    strokeWidth={hot ? 2 : 1.25}
-                    strokeDasharray={e.dashed && !hot ? '3 3' : undefined}
-                    opacity={sel && !hot ? 0.35 : 1}
-                    markerEnd={`url(#${hot ? 'ig-arrow-hot' : 'ig-arrow'})`}
-                  />
-                );
-              })}
-            </g>
-            {columns.flatMap((col) =>
-              col.items.map((it) => {
-                const r = rects.get(it.key)!;
-                if (it.kind === 'unit') {
-                  const u = it.unit;
-                  const isSel = selected === u.name;
-                  const dim = sel && !related.has(u.name);
-                  const color = SOURCE_COLOR[u.source ?? ''] ?? 'var(--muted-foreground)';
-                  const pillW = u.type.length * PILL_CHAR + 10;
-                  const mk = marker(u);
+        {!reduced && (
+          <div className="hidden overflow-x-auto sm:block" tabIndex={-1}>
+            <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} role="group" aria-label={`Init units by stage, left to right; select a unit for details`} className="block font-mono text-[11px]" style={{ maxWidth: columns.length <= 6 ? '100%' : undefined, height: 'auto' }}>
+              <defs>
+                <marker id="ig-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="var(--muted-foreground)" />
+                </marker>
+                <marker id="ig-arrow-hot" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M0,0 L10,5 L0,10 z" fill="var(--primary)" />
+                </marker>
+              </defs>
+              <g aria-hidden="true">
+                {columns.map((c, i) => (
+                  <text key={i} x={c.x} y={PAD + 11} fill="var(--muted-foreground)" style={{ fontSize: 10 }}>
+                    {stageLabel(c.stages)}
+                  </text>
+                ))}
+              </g>
+              <g aria-hidden="true">
+                {edges.map((e, i) => {
+                  const hot = !!sel && (e.a === sel.name || e.b === sel.name);
                   return (
-                    <g
-                      key={it.key}
-                      role="button"
-                      tabIndex={0}
-                      aria-pressed={isSel}
-                      aria-label={describe(u, `${u.type} ${u.name}`)}
-                      onClick={() => select(u.name)}
-                      onKeyDown={onKey(() => select(u.name))}
-                      className="cursor-pointer outline-none focus-visible:[&>rect:first-of-type]:stroke-[var(--ring)] focus-visible:[&>rect:first-of-type]:stroke-2"
-                      opacity={dim ? 0.65 : mk ? 0.75 : 1}
-                      transform={`translate(${r.x},${r.y})`}
-                    >
-                      <rect width={r.w} height={r.h} rx={6} fill="var(--card)" stroke={isSel ? 'var(--primary)' : color} strokeWidth={isSel ? 2 : 1.25} strokeDasharray={mk && !isSel ? '4 3' : undefined} />
-                      <rect x={0} y={0} width={4} height={r.h} rx={2} fill={color} opacity={mk ? 0.4 : 1} />
-                      <rect x={10} y={(r.h - 14) / 2} width={pillW} height={14} rx={3} fill="var(--muted)" stroke="var(--raft-hair-strong)" />
-                      <text y={r.h / 2 + 4} fill={mk ? 'var(--muted-foreground)' : 'var(--foreground)'} style={{ fontSize: 11, fontWeight: mk ? 400 : 500 }}>
-                        <tspan x={10 + pillW / 2} textAnchor="middle" fill="var(--muted-foreground)" style={{ fontSize: 9.5, fontWeight: 400 }}>
-                          {u.type}
-                        </tspan>{' '}
-                        <tspan x={18 + pillW}>{u.name}</tspan>
-                      </text>
+                    <path
+                      key={i}
+                      d={curve(e)}
+                      fill="none"
+                      stroke={hot ? 'var(--primary)' : 'var(--raft-hair-strong)'}
+                      strokeWidth={hot ? 2 : 1.25}
+                      strokeDasharray={e.dashed && !hot ? '3 3' : undefined}
+                      opacity={sel && !hot ? 0.35 : 1}
+                      markerEnd={`url(#${hot ? 'ig-arrow-hot' : 'ig-arrow'})`}
+                    />
+                  );
+                })}
+              </g>
+              {columns.flatMap((col) =>
+                col.items.map((it) => {
+                  const r = rects.get(it.key)!;
+                  if (it.kind === 'unit') {
+                    const u = it.unit;
+                    const isSel = selected === u.name;
+                    const dim = sel && !related.has(u.name);
+                    const color = SOURCE_COLOR[u.source ?? ''] ?? 'var(--muted-foreground)';
+                    const pillW = u.type.length * PILL_CHAR + 10;
+                    const mk = marker(u);
+                    return (
+                      <g
+                        key={it.key}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isSel}
+                        aria-label={describe(u, `${u.type} ${u.name}`)}
+                        onClick={() => select(u.name)}
+                        onKeyDown={onKey(() => select(u.name))}
+                        className="cursor-pointer outline-none focus-visible:[&>rect:first-of-type]:stroke-[var(--ring)] focus-visible:[&>rect:first-of-type]:stroke-2"
+                        opacity={dim ? 0.65 : mk ? 0.75 : 1}
+                        transform={`translate(${r.x},${r.y})`}
+                      >
+                        <rect width={r.w} height={r.h} rx={6} fill="var(--card)" stroke={isSel ? 'var(--primary)' : color} strokeWidth={isSel ? 2 : 1.25} strokeDasharray={mk && !isSel ? '4 3' : undefined} />
+                        <rect x={0} y={0} width={4} height={r.h} rx={2} fill={color} opacity={mk ? 0.4 : 1} />
+                        <rect x={10} y={(r.h - 14) / 2} width={pillW} height={14} rx={3} fill="var(--muted)" stroke="var(--raft-hair-strong)" />
+                        <text y={r.h / 2 + 4} fill={mk ? 'var(--muted-foreground)' : 'var(--foreground)'} style={{ fontSize: 11, fontWeight: mk ? 400 : 500 }}>
+                          <tspan x={10 + pillW / 2} textAnchor="middle" fill="var(--muted-foreground)" style={{ fontSize: 9.5, fontWeight: 400 }}>
+                            {u.type}
+                          </tspan>{' '}
+                          <tspan x={18 + pillW}>{u.name}</tspan>
+                        </text>
+                      </g>
+                    );
+                  }
+                  const open = expanded.has(it.key);
+                  const ec = groupEdges(it);
+                  return (
+                    <g key={it.key} transform={`translate(${r.x},${r.y})`}>
+                      <rect width={r.w} height={r.h} rx={6} fill="var(--raft-surface)" stroke="var(--raft-hair-strong)" strokeDasharray={open ? undefined : '4 3'} />
+                      <g
+                        role="button"
+                        tabIndex={0}
+                        aria-expanded={open}
+                        aria-label={`${it.label}${it.layer === null ? ' from the base image' : ''}, ${stageLabel(it.stages)}; ${ec.within} dependencies between them, ${ec.into} in, ${ec.out} out. ${open ? 'Collapse' : 'Expand'}`}
+                        onClick={() => toggle(it.key)}
+                        onKeyDown={onKey(() => toggle(it.key))}
+                        className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--ring)] focus-visible:[&>rect]:stroke-2"
+                      >
+                        <title>{`${it.units.map((u) => u.name).join(', ')}\n${ec.within} dependencies between them, ${ec.into} in, ${ec.out} out`}</title>
+                        <rect width={r.w} height={NODE_H} rx={6} fill="transparent" stroke="transparent" />
+                        <rect x={0} y={0} width={4} height={NODE_H} rx={2} fill={layerColor(it.layer)} />
+                        <text y={NODE_H / 2 + 4} fill="var(--foreground)" style={{ fontSize: 11 }}>
+                          <tspan x={12} fill="var(--muted-foreground)">
+                            {open ? '▾' : '▸'}
+                          </tspan>{' '}
+                          <tspan x={24}>{it.label}</tspan>
+                        </text>
+                      </g>
+                      {open &&
+                        it.units.map((u, i) => {
+                          const isSel = selected === u.name;
+                          const dim = sel && !related.has(u.name);
+                          const spans = it.stages[0] !== it.stages[1];
+                          return (
+                            <g
+                              key={u.name}
+                              role="button"
+                              tabIndex={0}
+                              aria-pressed={isSel}
+                              aria-label={describe(u, spans ? `stage ${stageOf.get(u.name)! + 1} ${u.name}` : u.name)}
+                              onClick={() => select(u.name)}
+                              onKeyDown={onKey(() => select(u.name))}
+                              className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--ring)] focus-visible:[&>rect]:stroke-2"
+                              opacity={dim ? 0.65 : 1}
+                              transform={`translate(6,${NODE_H + i * ROW_H})`}
+                            >
+                              <rect width={r.w - 12} height={ROW_H} rx={4} fill={isSel ? 'var(--card)' : 'transparent'} stroke={isSel ? 'var(--primary)' : 'transparent'} strokeWidth={isSel ? 1.5 : 1} />
+                              <text y={ROW_H / 2 + 4} fill={marker(u) ? 'var(--muted-foreground)' : 'var(--foreground)'} style={{ fontSize: 11 }}>
+                                {spans && (
+                                  <>
+                                    <tspan x={8} fill="var(--muted-foreground)" style={{ fontSize: 9.5 }}>
+                                      {stageOf.get(u.name)! + 1}
+                                    </tspan>{' '}
+                                  </>
+                                )}
+                                <tspan x={spans ? 28 : 8}>{u.name}</tspan>
+                              </text>
+                            </g>
+                          );
+                        })}
                     </g>
                   );
-                }
-                const open = expanded.has(it.key);
-                const ec = groupEdges(it);
-                return (
-                  <g key={it.key} transform={`translate(${r.x},${r.y})`}>
-                    <rect width={r.w} height={r.h} rx={6} fill="var(--raft-surface)" stroke="var(--raft-hair-strong)" strokeDasharray={open ? undefined : '4 3'} />
-                    <g
-                      role="button"
-                      tabIndex={0}
-                      aria-expanded={open}
-                      aria-label={`${it.label}${it.layer === null ? ' from the base image' : ''}, ${stageLabel(it.stages)}; ${ec.within} dependencies between them, ${ec.into} in, ${ec.out} out. ${open ? 'Collapse' : 'Expand'}`}
-                      onClick={() => toggle(it.key)}
-                      onKeyDown={onKey(() => toggle(it.key))}
-                      className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--ring)] focus-visible:[&>rect]:stroke-2"
-                    >
-                      <title>{`${it.units.map((u) => u.name).join(', ')}\n${ec.within} dependencies between them, ${ec.into} in, ${ec.out} out`}</title>
-                      <rect width={r.w} height={NODE_H} rx={6} fill="transparent" stroke="transparent" />
-                      <rect x={0} y={0} width={4} height={NODE_H} rx={2} fill={layerColor(it.layer)} />
-                      <text y={NODE_H / 2 + 4} fill="var(--foreground)" style={{ fontSize: 11 }}>
-                        <tspan x={12} fill="var(--muted-foreground)">
-                          {open ? '▾' : '▸'}
-                        </tspan>{' '}
-                        <tspan x={24}>{it.label}</tspan>
-                      </text>
-                    </g>
-                    {open &&
-                      it.units.map((u, i) => {
-                        const isSel = selected === u.name;
-                        const dim = sel && !related.has(u.name);
-                        const spans = it.stages[0] !== it.stages[1];
-                        return (
-                          <g
-                            key={u.name}
-                            role="button"
-                            tabIndex={0}
-                            aria-pressed={isSel}
-                            aria-label={describe(u, spans ? `stage ${stageOf.get(u.name)! + 1} ${u.name}` : u.name)}
-                            onClick={() => select(u.name)}
-                            onKeyDown={onKey(() => select(u.name))}
-                            className="cursor-pointer outline-none focus-visible:[&>rect]:stroke-[var(--ring)] focus-visible:[&>rect]:stroke-2"
-                            opacity={dim ? 0.65 : 1}
-                            transform={`translate(6,${NODE_H + i * ROW_H})`}
-                          >
-                            <rect width={r.w - 12} height={ROW_H} rx={4} fill={isSel ? 'var(--card)' : 'transparent'} stroke={isSel ? 'var(--primary)' : 'transparent'} strokeWidth={isSel ? 1.5 : 1} />
-                            <text y={ROW_H / 2 + 4} fill={marker(u) ? 'var(--muted-foreground)' : 'var(--foreground)'} style={{ fontSize: 11 }}>
-                              {spans && (
-                                <>
-                                  <tspan x={8} fill="var(--muted-foreground)" style={{ fontSize: 9.5 }}>
-                                    {stageOf.get(u.name)! + 1}
-                                  </tspan>{' '}
-                                </>
-                              )}
-                              <tspan x={spans ? 28 : 8}>{u.name}</tspan>
-                            </text>
-                          </g>
-                        );
-                      })}
-                  </g>
-                );
-              })
-            )}
-          </svg>
-        </div>
-      )}
-
-      {sel && (
-        <div className="border-t border-[var(--raft-hair)] p-4 text-sm" role="region" aria-live="polite" aria-label={`Details of ${sel.name}`}>
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h3 className="font-mono text-base font-semibold">{sel.name}</h3>
-            <TypePill type={sel.type} />
-            <span className="font-mono text-xs text-muted-foreground">
-              from {selHop ? hopLink(selHop, selHop.image) : sourceLabel(sel, image)} · stage {stageOf.get(sel.name)! + 1} of {stages.length}
-            </span>
-            <button type="button" onClick={() => setSelected(null)} className="ml-auto font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
-              close
-            </button>
+                })
+              )}
+            </svg>
           </div>
-          <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <div>
-              <dt className="raft-eyebrow">s6-rc.d</dt>
-              <dd className="mt-1 font-mono text-xs break-all">
-                <span className="text-muted-foreground">/etc/s6-overlay/s6-rc.d/</span>
-                {sel.name}/
-                <span className="block text-muted-foreground">type: {sel.type}{sel.type === 'oneshot' ? ' · up: ./run' : sel.type === 'longrun' ? ' · run' : ''}</span>
-              </dd>
+        )}
+
+        {sel && (
+          <div className="border-t border-[var(--raft-hair)] p-4 text-sm" role="region" aria-live="polite" aria-label={`Details of ${sel.name}`}>
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <h3 className="font-mono text-base font-semibold">{sel.name}</h3>
+              <TypePill type={sel.type} />
+              <span className="font-mono text-xs text-muted-foreground">
+                from {selHop ? hopLink(selHop, selHop.image) : sourceLabel(sel, image)} · stage {stageOf.get(sel.name)! + 1} of {stages.length}
+              </span>
+              <button type="button" onClick={() => setSelected(null)} className="ml-auto font-mono text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+                close
+              </button>
             </div>
-            <div>
-              <dt className="raft-eyebrow">Runs after</dt>
-              <dd className="mt-1 flex flex-wrap gap-x-2 gap-y-1 font-mono text-xs">
-                {sel.depends_on.length
-                  ? sel.depends_on.map((d) =>
-                      byName.has(d) ? (
+            <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div>
+                <dt className="raft-eyebrow">s6-rc.d</dt>
+                <dd className="mt-1 font-mono text-xs break-all">
+                  <span className="text-muted-foreground">/etc/s6-overlay/s6-rc.d/</span>
+                  {sel.name}/
+                  <span className="block text-muted-foreground">type: {sel.type}{sel.type === 'oneshot' ? ' · up: ./run' : sel.type === 'longrun' ? ' · run' : ''}</span>
+                </dd>
+              </div>
+              <div>
+                <dt className="raft-eyebrow">Runs after</dt>
+                <dd className="mt-1 flex flex-wrap gap-x-2 gap-y-1 font-mono text-xs">
+                  {sel.depends_on.length
+                    ? sel.depends_on.map((d) =>
+                        byName.has(d) ? (
+                          <button key={d} type="button" onClick={() => setSelected(d)} className="underline decoration-[var(--raft-hair-strong)] underline-offset-4 hover:text-primary hover:decoration-current">
+                            {d}
+                          </button>
+                        ) : (
+                          <span key={d} className="text-muted-foreground" title="Not in this image">
+                            {d}
+                          </span>
+                        )
+                      )
+                    : 'nothing: a root of the graph'}
+                </dd>
+              </div>
+              <div>
+                <dt className="raft-eyebrow">Needed by</dt>
+                <dd className="mt-1 flex flex-wrap gap-x-2 gap-y-1 font-mono text-xs">
+                  {dependents(sel.name).length
+                    ? dependents(sel.name).map((d) => (
                         <button key={d} type="button" onClick={() => setSelected(d)} className="underline decoration-[var(--raft-hair-strong)] underline-offset-4 hover:text-primary hover:decoration-current">
                           {d}
                         </button>
-                      ) : (
-                        <span key={d} className="text-muted-foreground" title="Not in this image">
-                          {d}
-                        </span>
-                      )
-                    )
-                  : 'nothing: a root of the graph'}
-              </dd>
-            </div>
-            <div>
-              <dt className="raft-eyebrow">Needed by</dt>
-              <dd className="mt-1 flex flex-wrap gap-x-2 gap-y-1 font-mono text-xs">
-                {dependents(sel.name).length
-                  ? dependents(sel.name).map((d) => (
-                      <button key={d} type="button" onClick={() => setSelected(d)} className="underline decoration-[var(--raft-hair-strong)] underline-offset-4 hover:text-primary hover:decoration-current">
-                        {d}
-                      </button>
-                    ))
-                  : 'nothing'}
-              </dd>
-            </div>
-          </dl>
-          {sel && marker(sel) && (
-            <p className="mt-3 text-xs text-muted-foreground">A marker: it runs nothing. It exists so other units can order themselves before or after it.</p>
-          )}
-          {script ? (
-            <div className="mt-4">
-              <div className="flex items-center justify-between gap-2">
-                <p className="font-mono text-xs text-muted-foreground">
-                  run · {script.split('\n').length} lines
-                  {selHop && (
-                    <>
-                      {' '}· from {hopLink(selHop, `${selHop.image} ${selHop.tag}`)}
-                      {!selHop.exact && ' (newest build)'}
-                    </>
-                  )}
-                </p>
-                <CopyButton text={script} label={`Copy the run script of ${sel.name}`} showLabel />
+                      ))
+                    : 'nothing'}
+                </dd>
               </div>
-              <pre className="mt-2 max-h-96 overflow-auto rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] p-3 font-mono text-xs leading-relaxed" tabIndex={0} aria-label={`Run script of ${sel.name}`}>
-                <code>
-                  <ShellCode text={script} />
-                </code>
-              </pre>
-            </div>
-          ) : (
-            <p className="mt-4 text-xs text-muted-foreground">{scriptNote(sel)}</p>
-          )}
-        </div>
-      )}
+            </dl>
+            {sel && marker(sel) && (
+              <p className="mt-3 text-xs text-muted-foreground">A marker: it runs nothing. It exists so other units can order themselves before or after it.</p>
+            )}
+            {script ? (
+              <div className="mt-4">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-mono text-xs text-muted-foreground">
+                    run · {script.split('\n').length} lines
+                    {selHop && (
+                      <>
+                        {' '}· from {hopLink(selHop, `${selHop.image} ${selHop.tag}`)}
+                        {!selHop.exact && ' (newest build)'}
+                      </>
+                    )}
+                  </p>
+                  <CopyButton text={script} label={`Copy the run script of ${sel.name}`} showLabel />
+                </div>
+                <pre className="mt-2 max-h-96 overflow-auto rounded-md border border-[var(--raft-hair)] bg-[var(--raft-code-bg)] p-3 font-mono text-xs leading-relaxed" tabIndex={0} aria-label={`Run script of ${sel.name}`}>
+                  <code>
+                    <ShellCode text={script} />
+                  </code>
+                </pre>
+              </div>
+            ) : (
+              <p className="mt-4 text-xs text-muted-foreground">{scriptNote(sel)}</p>
+            )}
+          </div>
+        )}
 
-      <div className={`${reduced ? '' : 'sm:hidden'} border-t border-[var(--raft-hair)] px-4 py-3`}>
-        <p className="mb-3 font-mono text-xs text-muted-foreground">Start order, this image’s units first</p>
-        {list(true)}
+        <div className={`${reduced ? '' : 'sm:hidden'} border-t border-[var(--raft-hair)] px-4 py-3`}>
+          <p className="mb-3 font-mono text-xs text-muted-foreground">Start order, this image’s units first</p>
+          {list(true)}
+        </div>
+        {!reduced && (
+          <details className="hidden border-t border-[var(--raft-hair)] px-4 py-3 sm:block">
+            <summary className="cursor-pointer font-mono text-xs text-muted-foreground hover:text-foreground">Start order as a list</summary>
+            <div className="mt-3">{list(false)}</div>
+          </details>
+        )}
+        {missing.size > 0 && (
+          <p className="border-t border-[var(--raft-hair)] px-4 py-2 font-mono text-[0.6875rem] text-muted-foreground">
+            Dependencies not in this image: {[...missing].join(', ')}
+          </p>
+        )}
       </div>
-      {!reduced && (
-        <details className="hidden border-t border-[var(--raft-hair)] px-4 py-3 sm:block">
-          <summary className="cursor-pointer font-mono text-xs text-muted-foreground hover:text-foreground">Start order as a list</summary>
-          <div className="mt-3">{list(false)}</div>
-        </details>
-      )}
-      {missing.size > 0 && (
-        <p className="border-t border-[var(--raft-hair)] px-4 py-2 font-mono text-[0.6875rem] text-muted-foreground">
-          Dependencies not in this image: {[...missing].join(', ')}
-        </p>
-      )}
-    </div>
+    </FullscreenFrame>
   );
 }
