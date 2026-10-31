@@ -15,6 +15,7 @@ import ContributeCallout from '@/components/ContributeCallout.astro';
 import NewerBuilds from '@/components/islands/NewerBuilds';
 import ImageFleet, { type SnapshotBranch } from '@/components/islands/fleet/ImageFleet';
 import InstallMenu from '@/components/islands/InstallMenu';
+import SupportMenu from '@/components/islands/SupportMenu';
 import ConfigLab from '@/components/islands/ConfigLab';
 import ProxyTabs from '@/components/islands/ProxyTabs';
 import { withBase } from '@/lib/base';
@@ -56,7 +57,6 @@ const kindNote =
 const summary = app || hasRealSummary(image) ? image.summary : kindNote!;
 // The upstream project's donation pages. They do the hard work; the image only packages it, so they lead the page.
 const sponsors = (image.sponsor ?? []).filter((s) => /^https?:\/\//.test(s.url));
-const sponsorHost = (url: string) => new URL(url).hostname.replace(/^www\./, '');
 const related = app ? relatedImages(image, 4) : [];
 const posts = await toPostViews(postsForImage(image.name, await getPosts(), 3));
 const extras = getImageExtras(image.name);
@@ -300,30 +300,16 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
       </div>
       {
         sponsors.length > 0 && (
-          <aside aria-labelledby="support-upstream" class="mt-6 max-w-2xl rounded-[var(--radius)] border border-[var(--raft-hair-strong)] bg-card/80 p-4 shadow-[var(--raft-shadow)]">
-            <p id="support-upstream" class="flex items-center gap-2 font-medium">
-              <Heart className="size-4 text-primary" aria-hidden="true" /> Support the {image.title} project
-            </p>
-            <p class="mt-1 text-sm text-muted-foreground">
-              {image.title} is made by its own developers; this image only packages it. If it is useful to you, support them directly.
-            </p>
-            <ul class="mt-3 flex flex-wrap gap-2" aria-label={`Ways to support ${image.title}`}>
-              {sponsors.map((s) => (
-                <li>
-                  <a
-                    href={s.url}
-                    target="_blank"
-                    rel="noopener"
-                    class="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:brightness-110"
-                  >
-                    {s.name}
-                    <span class="font-normal">{sponsorHost(s.url)}</span>
-                    <ArrowUpRight className="size-3.5" aria-hidden="true" />
-                    <span class="sr-only"> (opens in a new tab)</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <aside aria-labelledby="support-upstream" class="mt-6 flex max-w-2xl items-center gap-4 rounded-[var(--radius)] border border-[var(--raft-hair-strong)] bg-card/80 px-4 py-2.5 shadow-[var(--raft-shadow)]">
+            <div class="min-w-0 flex-1">
+              <p id="support-upstream" class="flex items-center gap-2 font-medium">
+                <Heart className="size-4 text-primary" aria-hidden="true" /> Support the {image.title} project
+              </p>
+              <p class="mt-0.5 text-sm text-muted-foreground">Made by its own developers; this image only packages it.</p>
+            </div>
+            <div class="flex shrink-0 items-center self-stretch">
+              <SupportMenu client:visible title={image.title} sponsors={sponsors} />
+            </div>
           </aside>
         )
       }
