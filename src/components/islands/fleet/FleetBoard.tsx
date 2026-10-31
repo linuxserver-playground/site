@@ -8,7 +8,7 @@
 import * as React from 'react';
 import { repoShort, useControl, type FleetPage, type FleetRow } from '@/lib/control';
 import HelperRepos from './HelperRepos';
-import { ActionButton, BranchActions, DriftPill, Empty, ExtLink, MemberOnly, Offline, Pager, PanelBar, Pill, Rel, Select, Skeleton, SkipControls, StatePill, Table, TD, TH, Toggle, usePaged } from './shared';
+import { ActionButton, BranchActions, DriftPill, Empty, ExtLink, MemberOnly, Offline, Pager, PanelBar, Pill, Rel, Select, Skeleton, SkipControls, SkipFlags, StatePill, Table, TD, TH, Toggle, usePaged } from './shared';
 
 interface Props {
   /** `withBase('/images/')`: image names link to their pages when the site has one. */
@@ -227,11 +227,7 @@ function Row({ r, imagesBase, known, runsBase, reload }: { r: FleetRow; imagesBa
       </TD>
       <TD>
         <span className="flex flex-wrap gap-1">
-          {r.skip.map((s) => (
-            <Pill key={s} tone="warn" dot={false} title={`Skip flag ${s}`}>
-              skip {s === r.image ? 'image' : s.slice(r.image.length + 1)}
-            </Pill>
-          ))}
+          <SkipFlags image={r.image} flags={r.skip} skips={r.skips} />
           {!r.package_check && (
             <Pill tone="muted" dot={false} title="build.package_check: false in image.yml">
               no pkg check

@@ -45,8 +45,10 @@ export interface FleetRow {
   /** The upstream release, commit or package page for `upstream`, else the project's releases page or website. */
   upstream_url?: string | null;
   package_check: boolean;
-  /** Matching skip scopes (`image`, `image/branch`, `image/branch/version`). */
+  /** Matching skip scopes (`image`, `image/branch`, `image/branch/version`), plus `archived`. */
   skip: string[];
+  /** The same flags with their reason, author and time (older control planes leave it out). */
+  skips?: Skip[];
 }
 /** A `docker-*` repo that is not an image (no image.yml on its default branch), with each branch's newest build. */
 export interface HelperRepo {

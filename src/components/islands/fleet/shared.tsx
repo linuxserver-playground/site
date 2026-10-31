@@ -5,7 +5,7 @@
 import * as React from 'react';
 import { Check, CloudOff, Minus, RefreshCw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ago, until, stamp, toneOf, useMe, useStreamState, postAction, ControlError, type ActionName, type ActionResult, type Me, type Tone } from '@/lib/control';
+import { ago, until, stamp, toneOf, useMe, useStreamState, postAction, ControlError, type ActionName, type ActionResult, type Me, type Skip, type Tone } from '@/lib/control';
 
 // ---------------------------------------------------------------- time
 
@@ -414,6 +414,28 @@ export function ActionButton({
         </span>
       )}
     </span>
+  );
+}
+
+/** A row's skip flags as pills, each with the reason it was set under it, so the board says why a branch is held
+ * and not only that it is. `flags` are the scopes (plus `archived`); `skips` carries their reason, author and time. */
+export function SkipFlags({ image, flags, skips = [] }: { image: string; flags: string[]; skips?: Skip[] }) {
+  return (
+    <>
+      {flags.map((s) => {
+        const info = skips.find((k) => k.scope === s);
+        const label = s === 'archived' ? 'archived' : `skip ${s === image ? 'image' : s.slice(image.length + 1)}`;
+        const title = s === 'archived' ? 'The repository is archived' : info ? `Skip flag ${s} · ${info.set_by} · ${stamp(info.set_at)}: ${info.reason ?? 'no reason given'}` : `Skip flag ${s}`;
+        return (
+          <span key={s} className="flex max-w-[18rem] flex-col items-start gap-0.5">
+            <Pill tone="warn" dot={false} title={title}>
+              {label}
+            </Pill>
+            {info?.reason && <span className="text-[0.6875rem] leading-snug text-muted-foreground">{info.reason}</span>}
+          </span>
+        );
+      })}
+    </>
   );
 }
 

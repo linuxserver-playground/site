@@ -5,7 +5,7 @@
  * package-check and skip controls inline.
  */
 import { useControl, type ImagePage } from '@/lib/control';
-import { ActionButton, BranchActions, CookieNotice, DriftPill, ExtLink, LiveDot, MemberOnly, Pill, Rel, SkipControls, StatePill, Table, TD, TH } from './shared';
+import { ActionButton, BranchActions, CookieNotice, DriftPill, ExtLink, LiveDot, MemberOnly, Pill, Rel, SkipControls, SkipFlags, StatePill, Table, TD, TH } from './shared';
 
 export interface SnapshotBranch {
   branch: string;
@@ -135,11 +135,7 @@ export default function ImageFleet({ image, snapshot, runsBase, buildsBase, know
                     </TD>
                     <TD>
                       <span className="flex flex-wrap gap-1">
-                        {r.skip.map((s) => (
-                          <Pill key={s} tone="warn" dot={false} title={`Skip flag ${s}`}>
-                            skip {s === image ? 'image' : s.slice(image.length + 1)}
-                          </Pill>
-                        ))}
+                        <SkipFlags image={image} flags={r.skip} skips={r.skips} />
                         {!r.package_check && (
                           <Pill tone="muted" dot={false}>
                             no pkg check
