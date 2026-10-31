@@ -201,7 +201,6 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
         </section>
         {/* The notes renderer runs at build time only; until the site rebuilds, the notes show as plain text. */}
         <NotesAndData page={page} dataAsOf={{ label: 'Live from the hub', date: new Date() }} />
-        <Vulns url={page.vulnsUrl} summary={page.vulnsSummary} image={image.name} tag={tag} />
         <section aria-labelledby="explorer">
           <AnchorHeading id="explorer">Explore the image</AnchorHeading>
           <p className="mt-2 text-sm text-muted-foreground">Every file and package in the image.</p>
@@ -236,6 +235,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             </div>
           </section>
         )}
+        <Vulns url={page.vulnsUrl} summary={page.vulnsSummary} image={image.name} tag={tag} />
         <section aria-labelledby="dockerfile">
           <AnchorHeading id="dockerfile">Dockerfile, annotated</AnchorHeading>
           <p className="mt-2 text-sm text-muted-foreground">Each instruction shows the compressed and on-disk size of the layer it produced.</p>

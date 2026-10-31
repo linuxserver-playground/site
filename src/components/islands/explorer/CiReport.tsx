@@ -81,7 +81,10 @@ export default function CiReport(props: Props) {
     { title: 'Package diff versus the previous release', url: file('package_diff.txt'), openByDefault: true, emptyText: 'No package changes found.' },
     { title: 'System info', url: file('sysinfo.txt') },
   ];
-  const shot = file('screenshot.png');
+  // The report lists its files; one that names none (a build without test.web skips the screenshot) gets no image
+  // request. A report made before `files` existed is probed, and the image hides itself on a 404.
+  const files = report?.files ?? summary?.files;
+  const shot = files && !files.screenshot ? null : file('screenshot.png');
 
   return (
     <div>
