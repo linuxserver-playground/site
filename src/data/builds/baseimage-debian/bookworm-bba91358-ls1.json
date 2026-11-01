@@ -1,0 +1,773 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "baseimage-debian",
+  "repository": "linuxserver-playground/docker-baseimage-debian",
+  "branch": "bookworm",
+  "mode": "live",
+  "version": {
+   "upstream": "bba91358",
+   "upstream_clean": "bba91358",
+   "ls_build": 1,
+   "tag": "bookworm-bba91358-ls1",
+   "release_tag": "bookworm",
+   "tags": [
+    "bookworm",
+    "bookworm-bba91358-ls1",
+    "bookworm-version-bba91358",
+    "amd64-bookworm",
+    "amd64-bookworm-bba91358-ls1",
+    "amd64-bookworm-version-bba91358",
+    "arm64v8-bookworm",
+    "arm64v8-bookworm-bba91358-ls1",
+    "arm64v8-bookworm-version-bba91358"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "8479da74b29417573fccb5c8ac8fec3effcab9c6",
+  "created": "2026-10-25T20:16:59Z",
+  "reason": "push",
+  "base": {
+   "family": "ubuntu",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:c93d5a2cb495ea5a102ac978df2a2eaeda30ab8fd4c95617a5fef6e2ca2944ce",
+    "size": 51020491,
+    "uncompressed_size": 131079392,
+    "layers": 7,
+    "runner": "Linux-X64",
+    "build_seconds": 27
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:318252bf420ea83a5eae3a07796e0c0cc6bf11169897cc6a5c75c9184c7e6156",
+    "size": 51383019,
+    "uncompressed_size": 160449075,
+    "layers": 7,
+    "runner": "Linux-ARM64",
+    "build_seconds": 36
+   }
+  ],
+  "index_digest": "sha256:707ecc6899df697765849179071c066c8a549d8513d29589c6fe34f324af24a0",
+  "labels": {
+   "build_version": "Linuxserver.io version:- bba91358-ls1 Build-date:- 2026-10-25T20:06:01Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "bookworm",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "bba91358",
+   "maintainer": "TheLamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-25T20:06:01Z",
+   "org.opencontainers.image.description": "baseimage-debian container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-baseimage-debian",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "8479da74b29417573fccb5c8ac8fec3effcab9c6",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-baseimage-debian",
+   "org.opencontainers.image.title": "Baseimage-debian",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-baseimage-debian/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "bba91358-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/root",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 AS rootfs-stage\n\n# environment\nENV REL=bookworm\nENV ARCH=amd64\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    tzdata \\\n    xz\n\n# grab base tarball\nRUN \\\n  mkdir /root-out && \\\n  curl -o \\\n    /rootfs.tar.gz -L \\\n    https://github.com/debuerreotype/docker-debian-artifacts/raw/refs/heads/dist-${ARCH}/${REL}/slim/oci/blobs/rootfs.tar.gz && \\\n  tar xf \\\n    /rootfs.tar.gz -C \\\n    /root-out && \\\n  rm -rf \\\n    /root-out/var/log/*\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"x86_64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    netcat-traditional \\\n    tzdata && \\\n  echo \"**** add all sources ****\" && \\\n  echo \"deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" > /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  rm -f /etc/apt/sources.list.d/debian.sources && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get -y autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/* \\\n    /usr/share/man\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 AS rootfs-stage\n\n# environment\nENV REL=bookworm\nENV ARCH=arm64v8\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    tzdata \\\n    xz\n\n# grab base tarball\nRUN \\\n  mkdir /root-out && \\\n  curl -o \\\n    /rootfs.tar.gz -L \\\n    https://github.com/debuerreotype/docker-debian-artifacts/raw/refs/heads/dist-${ARCH}/${REL}/slim/oci/blobs/rootfs.tar.gz && \\\n  tar xf \\\n    /rootfs.tar.gz -C \\\n    /root-out && \\\n  rm -rf \\\n    /root-out/var/log/*\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"aarch64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    netcat-traditional \\\n    tzdata && \\\n  echo \"**** add all sources ****\" && \\\n  echo \"deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" > /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  rm -f /etc/apt/sources.list.d/debian.sources && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get -y autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/* \\\n    /usr/share/man\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"baseimage-debian:bookworm\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"scratch\"\n}\n\"baseimage-debian:bookworm\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 156,
+    "distro": "Debian GNU/Linux 12 (bookworm)",
+    "hash": "76020d56",
+    "by_type": {
+     "deb": 156
+    }
+   },
+   "arm64": {
+    "count": 156,
+    "distro": "Debian GNU/Linux 12 (bookworm)",
+    "hash": "76020d56",
+    "by_type": {
+     "deb": 156
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-debian/builds/bookworm-bba91358-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-baseimage-debian/commits/bookworm-bba91358-ls1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 44876,
+    "sha256": "b88bf923967b46197824509bf2fade59ccc788f278ce97bdecbc44d6cda89983",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5996,
+    "sha256": "9728bc08c43c176dccb05a81b9a188bc388d0a1c99b8da77c2ec6a1e77ada249",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 52027,
+    "sha256": "1ad48a8a6eaa0d1228902e84affbe99f3ace702c8e6ab2e39bc2dfeade5854a4",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2079,
+    "sha256": "c77eb8b8227e7ad7b69bd664a824c9eee20d445e30466912e13b1f9aafb80c9d",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 8241,
+    "sha256": "df93f776c1851780990d2d8ba9d399589dcbe8e65264c761fd02ac76e2d4eb44",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 9891,
+    "sha256": "da07018d1c4176563bd4e76c5fcb82f872f173be058219c6370ae29b440ecf1e",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 44939,
+    "sha256": "686e02ec5d3783d768dfc9c371d33e4fb7080c6e40cdbaa24cf2c8f896112a86",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5997,
+    "sha256": "3d7c6674c10dcd5f9d6d49be43681941ebc711db70bbde5d6388ff531af57957",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 51421,
+    "sha256": "2e969def6d4d4af3514815c984e96f4e7ae901f7f72621ebe7a0f96ee62c0b85",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2083,
+    "sha256": "f3d850df8d32217233b4f105578e54ec6a303fe5a3424fd7dbcb73d362f0c83b",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 8252,
+    "sha256": "417a6c35fe6848ce1cb308608604311181c73a78581ae443950ad1b9578df385",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 9891,
+    "sha256": "da07018d1c4176563bd4e76c5fcb82f872f173be058219c6370ae29b440ecf1e",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40229119354,
+   "run_url": "https://github.com/linuxserver-playground/docker-baseimage-debian/actions/runs/40229119354",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "baseimage-debian",
+  "branch": "bookworm",
+  "tag": "bookworm-bba91358-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "bba91358",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "ubuntu",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 51020491
+   },
+   "arm64": {
+    "to": 51383019
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LANG",
+     "LANGUAGE",
+     "PATH",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:c77fbed3a4b780f71ccc7a43f0f13b28db62052b4dd0072f0afd07b9ac0b98b1",
+    "diff_id": "sha256:38abea9fcf779a3b1ab7da8fe225f9cb696b265b65a8060842d92daf40f72048",
+    "size": 31574896,
+    "uncompressed_size": 80146287,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:3dac7a1a87f4e058faee2f1f468f4f93d7f2e0168922a26e51bf8b65d5d065e2",
+    "diff_id": "sha256:222b62d5c1c29e1bc4dff27d1b577f32bfa1de130b211b3f08f6d9d4f9ade395",
+    "size": 1365,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:2e5c94ab73e06dd2685d133273c9b248185d54f348a999891def56ad59f05e55",
+    "diff_id": "sha256:0031634ceb80101260adf95aa593c55c216a686c497b6adf2e7a46b1808db277",
+    "size": 704,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:feed771b671b1ee4419630ab4e154dbfd6df69a372f6ea4e22b921f350cf3dcd",
+    "diff_id": "sha256:f668ff8b534797938787f8d70a429a5ee9d69d7fde5c81b9d1d733e00a057088",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:bbc8d0359619fa159a46cd6d743acf549ce7008beb0d01a83399be99b302292b",
+    "diff_id": "sha256:47c9c3417ed2a4eb7408bc4cbe4f3b07918a77c42a993a759ed96100e87427ec",
+    "size": 19432291,
+    "uncompressed_size": 50887439,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-25T20:06:01Z VERSION=bba91358-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-traditional     tzdata &&   echo \"**** add all sources ****\" &&   echo \"deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" > /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   rm -f /etc/apt/sources.list.d/debian.sources &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   apt-get -y autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*     /usr/share/man",
+    "dockerfile_lines": [
+     74,
+     149
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:6b35475b6bf47eaaa7621c5d663b8cb2ec6159eddf905f08e8638e5cfe029763",
+    "diff_id": "sha256:9a6b43e5a45da3c796dd30b81086858ca965ce8eb851566b8997055139de9b9e",
+    "size": 4568,
+    "uncompressed_size": 8872,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     152,
+     152
+    ],
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d8f4b0c7435e5490677fdc004f03b526a9e00c671070a6dd9e9b9f311b33e636",
+    "diff_id": "sha256:91acb07fa818826028bd0ff15038330c0758a6aadd26535a594ffccef5738d7e",
+    "size": 32139961,
+    "uncompressed_size": 107126259,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:8fc4fc916b4b8d8750019cb8c3635faa2d0cf53e03dec0aaec75e5a37a6ef96b",
+    "diff_id": "sha256:827c1805fb4a9c2108cfef73e5fb9d91c5adcf92adec23a5111927b0f22ad50e",
+    "size": 1366,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:fb3bbc7d3814da03b2295e54bae62919ad426ffa5c60be54fbe8a344f061e7ec",
+    "diff_id": "sha256:3e174678a32423bcd1bd47b715b7f9e0c146bd357499fb30b8f91a11b13c0d73",
+    "size": 704,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d6aac6d58e7ebc15b4e596481e842d10066dff2bc4ccdb66c83f5536d732ebeb",
+    "diff_id": "sha256:89fe0b10df983b47f5c74254c04f27458b1512ac21c8d7fe57177002a76b7d33",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:a4e6397cd6f7b9e719ee7380e932ec8178d8fa995e6b12a8d57012d98b5a711d",
+    "diff_id": "sha256:09ec76e4fddb1b5f0da59d9a2e129b85ecb6474aaa522a768ec04cceb2ffca24",
+    "size": 19229753,
+    "uncompressed_size": 53277150,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-25T20:06:01Z VERSION=bba91358-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-traditional     tzdata &&   echo \"**** add all sources ****\" &&   echo \"deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" > /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://security.debian.org/debian-security/ bookworm-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   rm -f /etc/apt/sources.list.d/debian.sources &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   apt-get -y autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*     /usr/share/man",
+    "dockerfile_lines": [
+     74,
+     149
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:ecfd5a0e915ccad8c71aabe186d7e17e0b0f1f1343358c1c6c8a0c568e48b117",
+    "diff_id": "sha256:31803a5db7d0fe0b1f7ebf25951b0e1d6f8c598637947e331a82705f91d2794f",
+    "size": 4568,
+    "uncompressed_size": 8872,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     152,
+     152
+    ],
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "baseimage-debian",
+  "tag": "bookworm-bba91358-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-debian/builds/bookworm-bba91358-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 1.006,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 7155712,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/bookworm-bba91358-ls1/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/bookworm-bba91358-ls1/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 1.007,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 6012928,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/bookworm-bba91358-ls1/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/bookworm-bba91358-ls1/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/bookworm-bba91358-ls1/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "baseimage-debian",
+    "tag": "amd64-8479da7-40229119354",
+    "arch": "amd64",
+    "started": "2026-10-25T20:10:29Z",
+    "finished": "2026-10-25T20:10:32Z",
+    "success": true,
+    "runner": "fde5f3f91110",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.006,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.006
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "156 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "156 packages: syft JSON 44876 bytes gzipped, SPDX for the image attestation 330142 bytes",
+      "seconds": 0.089
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "693 dirs, 4911 files (127675744 bytes), 1500 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.07s, total 0.10s",
+      "seconds": 0.2
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.577
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.04
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 7155712 bytes",
+      "seconds": 0.33
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 7155712,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 191
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "baseimage-debian",
+    "tag": "arm64-8479da7-40229119354",
+    "arch": "arm64",
+    "started": "2026-10-25T20:08:48Z",
+    "finished": "2026-10-25T20:08:53Z",
+    "success": true,
+    "runner": "4c2028b7607f",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.007,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.007
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "156 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "156 packages: syft JSON 44939 bytes gzipped, SPDX for the image attestation 330142 bytes",
+      "seconds": 0.147
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "692 dirs, 4910 files (157045203 bytes), 1497 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.07s",
+      "seconds": 0.198
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.592
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.053
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 6012928 bytes",
+      "seconds": 0.267
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 6012928,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 191
+    }
+   }
+  }
+ }
+}

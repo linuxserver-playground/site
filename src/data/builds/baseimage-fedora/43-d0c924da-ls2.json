@@ -1,0 +1,802 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "baseimage-fedora",
+  "repository": "linuxserver-playground/docker-baseimage-fedora",
+  "branch": "43",
+  "mode": "live",
+  "version": {
+   "upstream": "d0c924da",
+   "upstream_clean": "d0c924da",
+   "ls_build": 2,
+   "tag": "43-d0c924da-ls2",
+   "release_tag": "43",
+   "tags": [
+    "43",
+    "43-d0c924da-ls2",
+    "43-version-d0c924da",
+    "amd64-43",
+    "amd64-43-d0c924da-ls2",
+    "amd64-43-version-d0c924da",
+    "arm64v8-43",
+    "arm64v8-43-d0c924da-ls2",
+    "arm64v8-43-version-d0c924da"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "62f91895ff066d3c994322f3de1ce947e8e258a7",
+  "created": "2026-10-26T22:11:02Z",
+  "reason": "rebuild",
+  "previous": {
+   "tag": "43-d0c924da-ls1",
+   "release_url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/tag/43-d0c924da-ls1"
+  },
+  "base": {
+   "family": "fedora",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:7f0b2930742885d85f7cf456afd2079d2eba53bd0395e218b83e2834e5d08ac9",
+    "size": 74499853,
+    "uncompressed_size": 200230500,
+    "layers": 7,
+    "runner": "Linux-X64",
+    "build_seconds": 43
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:ed3338345b70eebd38a49acbaf42584bd056221e78c796df9bc1d18ca66be37f",
+    "size": 72756808,
+    "uncompressed_size": 217159058,
+    "layers": 7,
+    "runner": "Linux-ARM64",
+    "build_seconds": 34
+   }
+  ],
+  "index_digest": "sha256:9fd91faa24e6b04fd77b8c8a05c689f99b6406201a25c324042276ce6b72b002",
+  "labels": {
+   "build_version": "Linuxserver.io version:- d0c924da-ls2 Build-date:- 2026-10-26T22:05:15Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "43",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "d0c924da",
+   "maintainer": "TheLamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T22:05:15Z",
+   "org.opencontainers.image.description": "baseimage-fedora container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-baseimage-fedora",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "62f91895ff066d3c994322f3de1ce947e8e258a7",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-baseimage-fedora",
+   "org.opencontainers.image.title": "Baseimage-fedora",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "d0c924da-ls2"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 AS rootfs-stage\n\n# environment\nENV ARCH=x86_64\nARG FEDORA_RELEASE=43\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    git \\\n    jq \\\n    tar \\\n    tzdata \\\n    xz\n\n# grab tarball root\nRUN \\\n  mkdir /root-out && \\\n  git clone --depth 1 -b ${FEDORA_RELEASE} https://github.com/fedora-cloud/docker-brew-fedora.git && \\\n  tar xf \\\n    docker-brew-fedora/${ARCH}/fedora-*.tar -C \\\n    /root-out && \\\n  sed -i -e 's/^root::/root:!:/' /root-out/etc/shadow\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"x86_64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# environment variables\nENV PS1=\"$(whoami)@$(hostname):$(pwd)\\\\$ \" \\\n  HOME=\"/root\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** install base packages ****\" && \\\n  dnf -y --setopt=install_weak_deps=False --best install \\\n    busybox \\\n    ca-certificates \\\n    catatonit \\\n    coreutils \\\n    curl \\\n    findutils \\\n    hostname \\\n    jq \\\n    netcat \\\n    procps \\\n    shadow \\\n    tzdata \\\n    which && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  dnf autoremove -y && \\\n  dnf clean all && \\\n  rm -rf \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 AS rootfs-stage\n\n# environment\nENV ARCH=aarch64\nARG FEDORA_RELEASE=43\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    git \\\n    jq \\\n    tar \\\n    tzdata \\\n    xz\n\n# grab tarball root\nRUN \\\n  mkdir /root-out && \\\n  git clone --depth 1 -b ${FEDORA_RELEASE} https://github.com/fedora-cloud/docker-brew-fedora.git && \\\n  tar xf \\\n    docker-brew-fedora/${ARCH}/fedora-*.tar -C \\\n    /root-out && \\\n  sed -i -e 's/^root::/root:!:/' /root-out/etc/shadow\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"aarch64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# environment variables\nENV PS1=\"$(whoami)@$(hostname):$(pwd)\\\\$ \" \\\n  HOME=\"/root\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** install base packages ****\" && \\\n  dnf -y --setopt=install_weak_deps=False --best install \\\n    busybox \\\n    ca-certificates \\\n    catatonit \\\n    coreutils \\\n    curl \\\n    findutils \\\n    hostname \\\n    jq \\\n    netcat \\\n    procps \\\n    shadow \\\n    tzdata \\\n    which && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  dnf autoremove -y && \\\n  dnf clean all && \\\n  rm -rf \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"baseimage-fedora:43\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"scratch\"\n}\n\"baseimage-fedora:43\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 153,
+    "distro": "Fedora Linux 43 (Container Image)",
+    "hash": "62c15054",
+    "by_type": {
+     "rpm": 153
+    }
+   },
+   "arm64": {
+    "count": 153,
+    "distro": "Fedora Linux 43 (Container Image)",
+    "hash": "62c15054",
+    "by_type": {
+     "rpm": 153
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-fedora/builds/43-d0c924da-ls2/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-baseimage-fedora/compare/43-d0c924da-ls1...43-d0c924da-ls2"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 42970,
+    "sha256": "969fef8b68fee4e2bf09d7ea43990ef0b6c6f6384fc41da75f48acadcfe25e5f",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 3310,
+    "sha256": "415d72c47a26ad63d3acc0e3cda945941b2f0b7006d73e75fa25df466cd03605",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 74160,
+    "sha256": "14d8da7c03104b5d4eb47eaf4debf41d83e9d2d7e27437737deb25c5f7e9c1e4",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2397,
+    "sha256": "91e6b4655b32183b6687f3e83a695494b0cfa3f212bb504e0a7da8ab12d36397",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3031,
+    "sha256": "e190f3a8a3d71b15057a4a4cee34631ffb66db078d08521e6ccc46f42ec773a8",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 14322,
+    "sha256": "54d52cc4c62d1f9a71ee2ef23079dbcca9eff9fffe6fe65e9a4ef6fa15453375",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 42039,
+    "sha256": "b9cf210aab0fb6e7a8d6080ae3996702c5742976cf190bc42562965295414ad6",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 3310,
+    "sha256": "b1effb5987fa998a6144467d57361b5da5850dce03aab7cceaa24a2c8ac79a7b",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 73776,
+    "sha256": "17e6b90ef28f25c50d70ba9e990fb7dc34f810d947406c23d11f08016f122e08",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2396,
+    "sha256": "deb7dbc5fe0cf997c440f23a07621e15605cb43bf1e45925b333fb25acda89f1",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3024,
+    "sha256": "0b33f034068884265917b45e355c89183cec179218b7c983e3e18a889e69dfc8",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 14322,
+    "sha256": "54d52cc4c62d1f9a71ee2ef23079dbcca9eff9fffe6fe65e9a4ef6fa15453375",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40409575492,
+   "run_url": "https://github.com/linuxserver-playground/docker-baseimage-fedora/actions/runs/40409575492",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "baseimage-fedora",
+  "branch": "43",
+  "tag": "43-d0c924da-ls2",
+  "previous_tag": "43-d0c924da-ls1",
+  "classification": "none",
+  "reasons": [
+   "nothing observable changed"
+  ],
+  "upstream": {
+   "from": "d0c924da",
+   "to": "d0c924da",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "fedora",
+    "image": "scratch"
+   },
+   "to": {
+    "family": "fedora",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 74500056,
+    "to": 74499853,
+    "delta": -203
+   },
+   "arm64": {
+    "from": 72756842,
+    "to": 72756808,
+    "delta": -34
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:1874bf7b95b4bfaa674eefe24c794313935b7d98e0096364745a408f1ad6a60e",
+    "diff_id": "sha256:22fa1fdc18bbb12698b039d4e38024616420fc763c26d970bdd30276e5275f0f",
+    "size": 70089341,
+    "uncompressed_size": 187085088,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:ff6f60a312479e41fa3912988ebb9a7d5f6e605ef92bbff6c5f082566fee9add",
+    "diff_id": "sha256:4ef04a9b198876efd1666afd01cbebbeff6d918cb762935db3e7fd64a732143c",
+    "size": 1370,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:fef1ac9a24893a560a609ff5750c5dd6ae9569195e48d33e5bfa5016715299f6",
+    "diff_id": "sha256:d146fb717a68a9e1fdeb029226aacaf5ede055e44cfac61fe2f81d9ceb0488d4",
+    "size": 705,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:873d0f6f17fead57fbc5335a1e80c50482821636724a50c83438f5011eb86e8e",
+    "diff_id": "sha256:8e2dc0fa90327cba2679704240ebb9f26c18349cce446ab4ae5da1ad89ab6c94",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:58a2df03aa0b576ef40970b76423b04f557b46cc8824a90ceb2622171a6c6a28",
+    "diff_id": "sha256:1373910983eeda05cd91ffad389f14ffa0ccadf5ad35af2b9aa8e6f8dace0f7b",
+    "size": 4397245,
+    "uncompressed_size": 13099810,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-26T22:05:15Z VERSION=d0c924da-ls2 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install base packages ****\" &&   dnf -y --setopt=install_weak_deps=False --best install     busybox     ca-certificates     catatonit     coreutils     curl     findutils     hostname     jq     netcat     procps     shadow     tzdata     which &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   dnf autoremove -y &&   dnf clean all &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     72,
+     100
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:e5bf87cfefa01404efdd5e96a06bc1184da0e8bc7056a6d42bdfd03f98391011",
+    "diff_id": "sha256:7dc346287e487477b10e8244d55093489a22f07c2bae1227b35c3a0d0765fc4a",
+    "size": 4525,
+    "uncompressed_size": 8808,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     103,
+     103
+    ],
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:0db6cb12a28ee7b4b8d5d73b93e842f6fd6383452472adc923118aee94ce61f5",
+    "diff_id": "sha256:68a3f50397ef1e95cd497905a73deee4e56c8c9b99b5dfc5c4e795eef767145b",
+    "size": 68370773,
+    "uncompressed_size": 203211351,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:22f641f9d4c8ecc9fd92086f5ae0c50a7a738a10acab168111b479da6e47114a",
+    "diff_id": "sha256:af9407bf781ea601f9ea8d91609d68364d7c9c1954a37e81884f93ebaa95809e",
+    "size": 1371,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:da8e899de66ec0133d0ff12c1bffbdb57e98e2d14e12c7baf4f49858ee6d4a2e",
+    "diff_id": "sha256:ce9f9c0b387cec12a0bd6af46a3ba24e25696257f7aa765788fd2e8e9736cbe5",
+    "size": 703,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:43b3b037ece1e8f791291e0243728e8251c4129d452643f1d2bea81f86e7c24c",
+    "diff_id": "sha256:ca433015a698f7f9bdea2926b7b380b937fc0bd84d1e5d009d035e7f275525cc",
+    "size": 426,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:86d018cca2097b0cb7f11445b74d053ec478c5c26ed6f897d7dbd6634cdd3afd",
+    "diff_id": "sha256:365fbb476f5237afc41f0bc7339bf73a389aeeab7da66ce8dbc49df33148e470",
+    "size": 4372772,
+    "uncompressed_size": 13902105,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-26T22:05:15Z VERSION=d0c924da-ls2 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install base packages ****\" &&   dnf -y --setopt=install_weak_deps=False --best install     busybox     ca-certificates     catatonit     coreutils     curl     findutils     hostname     jq     netcat     procps     shadow     tzdata     which &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   dnf autoremove -y &&   dnf clean all &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     72,
+     100
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:d4620c69d78ca1f7fe73b32b482e966b2195ed6a8ca1d4c64a1653ff3703d694",
+    "diff_id": "sha256:30835b43e06f0358003742e31c1a62478dfbaa3d9c7c88dec4671d4a0b6812fa",
+    "size": 4524,
+    "uncompressed_size": 8808,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     103,
+     103
+    ],
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "baseimage-fedora",
+  "tag": "43-d0c924da-ls2",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-fedora/builds/43-d0c924da-ls2/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 8978432,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-fedora/builds/43-d0c924da-ls2/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-fedora/builds/43-d0c924da-ls2/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 8093696,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-fedora/releases/download/43-d0c924da-ls2/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-fedora/builds/43-d0c924da-ls2/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-fedora/builds/43-d0c924da-ls2/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "baseimage-fedora",
+    "tag": "amd64-62f9189-40409575492",
+    "arch": "amd64",
+    "started": "2026-10-26T22:08:44Z",
+    "finished": "2026-10-26T22:09:05Z",
+    "success": true,
+    "runner": "e15b190f5426",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "153 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "153 packages: syft JSON 42970 bytes gzipped, SPDX for the image attestation 341621 bytes",
+      "seconds": 0.159
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2401 dirs, 4207 files (192258147 bytes), 2409 symlinks, 837 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.15s, total 0.23s",
+      "seconds": 0.384
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.826
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.067
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 8978432 bytes",
+      "seconds": 0.617
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 8978432,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 190
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "baseimage-fedora",
+    "tag": "arm64-62f9189-40409575492",
+    "arch": "arm64",
+    "started": "2026-10-26T22:07:49Z",
+    "finished": "2026-10-26T22:08:08Z",
+    "success": true,
+    "runner": "2fe44c99f763",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "153 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "153 packages: syft JSON 42039 bytes gzipped, SPDX for the image attestation 341921 bytes",
+      "seconds": 0.126
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2409 dirs, 4207 files (209246025 bytes), 2409 symlinks, 837 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.10s",
+      "seconds": 0.224
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.383
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.047
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 8093696 bytes",
+      "seconds": 0.34
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 8093696,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 190
+    }
+   }
+  }
+ }
+}
