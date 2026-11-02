@@ -8,8 +8,10 @@ export const LABS = import.meta.env.PUBLIC_SITE_MODE === 'labs';
 export const MAIN_SITE_URL = 'https://linuxserver-playground.github.io/site/';
 export const LABS_SITE_URL = 'https://linuxserverlabs-playground.github.io/site/';
 const ORG = LABS ? 'linuxserverlabs-playground' : 'linuxserver-playground';
+/** The Labs proposals repository: anyone files a proposal there, through its structured issue form. */
+export const LABS_PROPOSALS_REPO = 'linuxserverlabs-playground/proposals';
 /** Where Labs proposals are filed: the structured issue form in the Labs proposals repository. */
-export const LABS_PROPOSE_URL = 'https://github.com/linuxserverlabs-playground/proposals/issues/new/choose';
+export const LABS_PROPOSE_URL = `https://github.com/${LABS_PROPOSALS_REPO}/issues/new/choose`;
 
 /** Site-wide settings. Everything that used to live in the Grav theme YAML. */
 

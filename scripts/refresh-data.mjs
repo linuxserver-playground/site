@@ -15,6 +15,8 @@
  *   fleet.json            base images and staleness
  *   packages.json         the package index (name, slug, types, image count)
  *   team.json             public members of the GitHub org
+ *   pending.json          Labs mode only: the org's repositories pending approval (topic labs-pending), each with
+ *                         its first open pull request
  *   backers.json          Open Collective totals
  *   stats.json            the headline numbers shown around the site
  *
@@ -29,7 +31,8 @@
  *   --local       read dist/ (the API) and out/ (stores, build reports) from a hub checkout on disk.
  *   GITHUB_ORG    org whose public members are the team (default linuxserver-playground).
  *   GITHUB_TOKEN  avoids GitHub rate limits.
- *   --skip-github keep the existing team.json and avatars.
+ *   --skip-github keep the existing team.json and avatars (and in Labs mode pending.json).
+ *   PUBLIC_SITE_MODE=labs  the Labs site (src/lib/site.ts): also reads the repositories pending approval.
  *   REFRESH_ALL=1 refetch every retained build. Otherwise a build already in builds/ is kept while the hub lists
  *   the same build (`created`; a rebuilt head republishes under its tag with a newer one): a
  *                 released build's documents do not change, and refetching thousands of them on every run hit
@@ -54,6 +57,7 @@ const skipGithub = args.includes('--skip-github');
 export const DEFAULT_HUB_URL = 'https://linuxserver-playground.github.io/hub';
 const HUB_URL = (process.env.HUB_URL ?? DEFAULT_HUB_URL).replace(/\/+$/, '');
 const GITHUB_ORG = process.env.GITHUB_ORG ?? 'linuxserver-playground';
+const LABS = process.env.PUBLIC_SITE_MODE === 'labs';
 const CONTROL_URL = (process.env.PUBLIC_CONTROL_URL || 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
 const UA = { 'User-Agent': 'linuxserver-playground-site-build (+https://linuxserver-playground.github.io/site/)' };
 
@@ -354,6 +358,44 @@ if (!skipGithub) {
   }
 }
 write('team.json', team);
+
+// ---------------------------------------------------------------- Labs: pending approval
+// The Labs site lists the repositories a member has elevated from a proposal (workspace docs/labs.md): the
+// repositories with the `labs-pending` topic, each with its first open pull request, where the image is reviewed.
+// The org's repository list, not the search API: its topics are current the moment a member adds one.
+if (LABS) {
+  let pending = existsSync(out('pending.json')) ? JSON.parse(readFileSync(out('pending.json'), 'utf8')) : [];
+  if (!skipGithub) {
+    console.log(`api.github.com (${GITHUB_ORG}, labs-pending) …`);
+    const ghHeaders = { Accept: 'application/vnd.github+json', ...(process.env.GITHUB_TOKEN ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` } : {}) };
+    try {
+      const repos = [];
+      for (let page = 1; ; page++) {
+        const batch = await getJSON(`https://api.github.com/orgs/${GITHUB_ORG}/repos?type=public&per_page=100&page=${page}`, { headers: ghHeaders, retries: 3 });
+        repos.push(...batch);
+        if (batch.length < 100) break;
+      }
+      pending = await pool(
+        repos.filter((r) => !r.archived && (r.topics ?? []).includes('labs-pending')).sort((a, b) => a.name.localeCompare(b.name)),
+        4,
+        async (r) => {
+          const pulls = await getJSON(`https://api.github.com/repos/${r.full_name}/pulls?state=open&sort=created&direction=asc&per_page=1`, { headers: ghHeaders, retries: 3 });
+          const pr = pulls[0];
+          return {
+            repo: r.full_name,
+            name: r.name.replace(/^docker-/, ''),
+            description: r.description || null,
+            url: r.html_url,
+            pull: pr ? { number: pr.number, title: pr.title, url: pr.html_url, author: pr.user?.login ?? null, created_at: pr.created_at } : null,
+          };
+        },
+      );
+    } catch (e) {
+      console.warn(`  ! pending: ${e.message} (keeping the previous pending.json)`);
+    }
+  }
+  write('pending.json', pending);
+}
 
 // ---------------------------------------------------------------- Open Collective
 console.log('opencollective.com …');

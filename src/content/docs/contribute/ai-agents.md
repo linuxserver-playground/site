@@ -3,7 +3,7 @@ title: Contributing with an AI agent
 description: The harness gives an AI coding agent everything it needs to know about LinuxServer.io, so you can fix images, make mods and review pull requests without learning the whole system first.
 section: contribute
 order: 1
-updated: 2026-10-27
+updated: 2026-11-02
 tags: [ai, agent, harness, claude, codex, contribute, pull request]
 ---
 LinuxServer.io is a lot of system: a dozen infrastructure repositories, hundreds of image repositories, a manifest format, generated files, a build pipeline and a decade of conventions. A newcomer used to need weeks to find their way around before making a useful change. An AI coding agent can read all of it in minutes, if it knows where to look and what the rules are.
@@ -57,7 +57,9 @@ See [Making a mod](/docs/contribute/making-a-mod/).
 
 ### New images
 
-* "I'd like LinuxServer to ship an image for `<app>`. Check it fits and draft the proposal."
+* "I'd like `<app>` in LinuxServer Labs. Check it meets the bar and draft the proposal."
+
+New applications start in [LinuxServer Labs](https://linuxserverlabs-playground.github.io/site/).
 
 See [Proposing an image](/docs/contribute/proposing-an-image/).
 
@@ -86,7 +88,7 @@ A review you run for yourself teaches you the system faster than anything else. 
 | Understand anything: builds, issues, the fleet, the data | yes | yes |
 | Fix an image, a mod, docs or infrastructure | a fork and a pull request | a branch and a pull request |
 | A new mod | a working mod in your fork, and an issue asking for its branch | a new branch |
-| A new image | a [proposal](/docs/contribute/proposing-an-image/) | a new repository, reviewed by pull request |
+| A new image | a [proposal](/docs/contribute/proposing-an-image/) in Labs | a new Labs repository, reviewed by pull request |
 | Blog posts | suggest a topic in an issue | yes |
 | Rerun, dispatch, skip builds | ask on the pull request | yes |
 

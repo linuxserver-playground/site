@@ -4,10 +4,12 @@
  * ContributeCallout read from here, so a renamed command or a new path is one change.
  */
 
+import { LABS_PROPOSE_URL } from './site';
+
 export const HARNESS_REPO = 'https://github.com/linuxserver-playground/harness';
 
-/** Where proposals go until the labs org exists (the harness's propose-image playbook does the same). */
-export const PROPOSALS_URL = `${HARNESS_REPO}/issues/new?title=${encodeURIComponent('Proposal: ')}`;
+/** New applications start in LinuxServer Labs: a proposal is the structured issue form in the Labs proposals repository. */
+export const PROPOSALS_URL = LABS_PROPOSE_URL;
 
 /** The harness's three commands, as its README gives them. */
 export const HARNESS_START = [
@@ -46,8 +48,8 @@ export const CONTRIBUTE_PATHS: ContributePath[] = [
   {
     id: 'propose',
     title: 'Bring an app you want',
-    body: 'Want an image we do not ship? The agent checks it fits, writes the proposal from real data, and can build a working scaffold in your own account to show it running.',
-    prompt: "I'd like LinuxServer to ship an image for <app>. Check it fits and draft the proposal.",
+    body: 'New applications start in LinuxServer Labs. The agent checks the app meets the Labs bar and fills in the proposal form from real data, for you to read before it is filed.',
+    prompt: "I'd like <app> in LinuxServer Labs. Check it meets the bar and draft the proposal.",
     href: '/docs/contribute/proposing-an-image/',
   },
   {

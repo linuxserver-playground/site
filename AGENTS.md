@@ -23,7 +23,7 @@ in the browser. Data producers: the hub (`linuxserver-playground/hub`), the cont
 | `src/components/` | Astro components (`FleetShell` for the fleet section, `AnchorHeading` for linkable sections, `DocsShell` for the documentation, a thin wrapper of `article/DocsLayout`); `article/` the post and docs layouts as React (`PostArticle`, `DocsLayout`, `Crumbs`), rendered at build time by `blog/[slug].astro` and `DocsShell` and in the browser by the editor's Preview, so a change to either layout goes there; `islands/` React islands (`ConfigLab`, `ProxyTabs` with `ProxyLab` for SWAG and the hub's Caddy and Traefik references, `HeroScreenshot` the latest build's CI screenshot in an image page's header, catalogue, search…); `ContributeCallout` the "help with this" panel on image, mod, fleet, docs and PRoot Apps pages, fed by `src/lib/contribute.ts` (the harness commands, the ways in and the suggested prompts); `islands/fleet/` the live fleet panels, sign-in and the shared pills, states and action buttons; `islands/editor/` the website editor (`Editor` the gate and new-entry form, `Workspace` the details form, split pane, Insert menu and Preview, `CodeEditor` CodeMirror; on the pages, for people who can edit, `EntryBar` (Edit, Delete, a page's open edits), `NewBar` (New post, New page, what is not published yet) and `EditLink`; `hooks.ts` reads the editor status and open edits once per page); `islands/explorer/` the explorer views, `CiReport` and `Vulns` (`Fullscreen` lets the explorer and the init graph take the whole viewport from a button in their header: an Exit button, Escape and the browser's Back all leave it, and the view stays mounted so nothing reloads); `ui/` shadcn components (do not edit). |
 | `src/content/` | Blog posts, authors, `spotlight.yaml`, and `docs/<section>/<slug>.md` (the documentation; schema in `src/content.config.ts`). `imagedocs/` and `moddocs/` are written by `npm run data` from the hub; never edit them. |
 | `src/styles/globals.css` | Design tokens and utilities (Raft). |
-| `scripts/` | `refresh-data.mjs`, `snapshot.sh` (restore and publish the snapshots), `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `fleet-check.mjs`, `editor-check.mjs`, `new-post.mjs`, `new-doc.mjs`. |
+| `scripts/` | `refresh-data.mjs`, `snapshot.sh` (restore and publish the snapshots), `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `fleet-check.mjs`, `editor-check.mjs`, `labs-check.mjs`, `new-post.mjs`, `new-doc.mjs`. |
 | `.github/workflows/` | `deploy.yml` (push, daily, `repository_dispatch: hub-updated`, manual), `check.yml` (pull requests). |
 
 ## What you may edit
@@ -93,6 +93,7 @@ node scripts/test-search.mjs http://localhost:4321/site
 node scripts/overflow.mjs http://localhost:4321/site/<page>/   # 390px, scroll width must be 390
 node scripts/fleet-check.mjs http://localhost:4321/site      # fleet islands against the live control plane (replays its answers with CORS)
 node scripts/editor-check.mjs http://localhost:4321/site     # the editor and the pages' editing bars against a fake control plane: axe, 390px
+node scripts/labs-check.mjs http://localhost:4321/site       # Labs-mode build only: the home page's member-only proposals against a fake control plane
 ```
 
 CI runs `check`, `build`, `a11y.mjs` and `test-search.mjs` on every pull request (`check.yml`). The build

@@ -1,18 +1,24 @@
 ---
 /**
- * The Labs site's home page (workspace docs/labs.md): what Labs is, what qualifies, how an application gets in and
- * out, and every image in Labs. Rendered by pages/index.astro in Labs mode only.
+ * The Labs site's home page (workspace docs/labs.md): what Labs is, every image in Labs, the images pending approval
+ * (public), the open proposals (signed-in team members only, live from Labs control), what qualifies and how an
+ * application gets in. Rendered by pages/index.astro in Labs mode only.
  */
 import Layout from '@/layouts/Layout.astro';
 import ImageTile from '@/components/ImageTile.astro';
+import Proposals from '@/components/islands/Proposals';
 import SectionHead from '@/components/SectionHead.astro';
 import { withBase } from '@/lib/base';
 import { HARNESS_REPO } from '@/lib/contribute';
 import { getImages } from '@/lib/images';
-import { LABS_PROPOSE_URL, MAIN_SITE_URL, SITE } from '@/lib/site';
+import { getPending } from '@/lib/pending';
+import { CONTROL_URL } from '@/lib/control';
+import { formatDate } from '@/lib/format';
+import { LABS_PROPOSALS_REPO, LABS_PROPOSE_URL, MAIN_SITE_URL, SITE } from '@/lib/site';
 import { ArrowRight, ArrowUpRight, FlaskConical, GitPullRequest, ShieldAlert, Sprout } from 'lucide-react';
 
 const images = getImages();
+const pending = getPending();
 
 const bar = [
   ['Owned by an organisation', 'The upstream project lives under an organisation on GitHub or any git host, never a personal account.'],
@@ -106,6 +112,51 @@ const steps = [
       )
     }
   </section>
+
+  <section class="raft-container pt-20" aria-labelledby="pending">
+    <SectionHead
+      eyebrow="Pending approval"
+      title={pending.length === 0 ? 'Images in review' : pending.length === 1 ? 'One image in review' : `${pending.length} images in review`}
+      id="pending"
+      description="A team member tried each of these from its proposal and put it forward. Its first pull request holds the image, with the build's test report and screenshots for the team to review."
+    />
+    {
+      pending.length ? (
+        <ul class="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2">
+          {pending.map((p) => (
+            <li class="raft-panel flex flex-col gap-3 p-5">
+              <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+                <p class="font-mono text-base font-semibold">{p.name}</p>
+                <span class="rounded-md border border-[var(--raft-amber)]/35 px-1.5 font-mono text-[0.6875rem] text-[var(--raft-amber)]">in review</span>
+              </div>
+              {p.description && <p class="text-sm text-muted-foreground">{p.description}</p>}
+              {p.pull ? (
+                <p class="text-sm">
+                  <a href={p.pull.url} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 font-medium underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:decoration-current">
+                    <GitPullRequest className="size-4 shrink-0" aria-hidden="true" />
+                    <span class="[overflow-wrap:anywhere]">#{p.pull.number} {p.pull.title}</span>
+                    <span class="sr-only"> (opens in a new tab)</span>
+                  </a>
+                  <span class="mt-1 block font-mono text-[0.6875rem] text-muted-foreground">
+                    {p.pull.author ? `by ${p.pull.author}, ` : ''}opened <time datetime={p.pull.created_at}>{formatDate(p.pull.created_at)}</time>
+                  </span>
+                </p>
+              ) : (
+                <p class="text-sm text-muted-foreground">The pull request with the image is not open yet.</p>
+              )}
+              <a href={p.url} target="_blank" rel="noopener" class="mt-auto inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+                {p.repo.split('/').pop()} on GitHub <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="mt-8 text-muted-foreground">Nothing is in review right now.</p>
+      )
+    }
+  </section>
+
+  <Proposals client:idle repo={LABS_PROPOSALS_REPO} fallback={`${CONTROL_URL}/issues`} />
 
   <section class="raft-container pt-20" aria-labelledby="bar">
     <SectionHead eyebrow="The bar" title="What qualifies" id="bar" description="Lower than the main fleet's, and checked before anyone spends time on a proposal." />

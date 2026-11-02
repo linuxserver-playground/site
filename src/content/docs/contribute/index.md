@@ -3,7 +3,7 @@ title: Contributing to LinuxServer.io
 description: LinuxServer.io is a community project that needs people more than money. The ways to help, how to start without knowing the system, and what we ask of every contribution.
 section: contribute
 order: 0
-updated: 2026-10-27
+updated: 2026-11-02
 tags: [contribute, get involved, volunteer, pull request, ai, agent, harness]
 ---
 LinuxServer.io has been run by volunteers for over a decade. Every image, mod and page on this site is kept up by people giving their free time, and today that is a small group looking after a large fleet. Donations pay for hosting. What keeps the images alive is people: someone who fixes the image they run, writes the mod they need or brings the app they want.
@@ -16,7 +16,7 @@ That used to mean learning a lot first. The fleet is built by a pipeline spread 
 | --- | --- |
 | Fix a bug, add a package or a setting to an image you use | [Contributing an image](/docs/contribute/contributing-an-image/) |
 | Add something only some users need (a tool, a driver, a plugin) | [Making a mod](/docs/contribute/making-a-mod/) |
-| See an app we do not ship yet | [Proposing an image](/docs/contribute/proposing-an-image/) |
+| See an app we do not ship yet | [Proposing an image](/docs/contribute/proposing-an-image/), in LinuxServer Labs |
 | Fix or add a docs page | [Improve the docs](#improve-the-docs), below |
 | Add a desktop app to [PRoot Apps](/proot-apps/) | The [proot-apps repository](https://github.com/linuxserver-playground/proot-apps) |
 | Work out why a build is red, or what an issue means | [Contributing with an AI agent](/docs/contribute/ai-agents/) |
