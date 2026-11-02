@@ -83,6 +83,9 @@ export interface ImageDetail {
   title: string;
   /** The upstream project's donation pages (`upstream.sponsor` in the manifest), up to 3. Older snapshots omit it. */
   sponsor?: { name: string; url: string }[];
+  /** GitHub logins of the image's maintainers (`maintainers` in the manifest): credit, never access. Labs images always
+   * name them; most main-org images do not. Older snapshots omit it. */
+  maintainers?: string[];
   /** `app` for an application; `base` for a base image, `tool` for a run-once or helper image. Older snapshots omit it. */
   kind?: ImageKind;
   categories: string[];

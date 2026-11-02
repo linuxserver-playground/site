@@ -57,6 +57,8 @@ const kindNote =
 const summary = app || hasRealSummary(image) ? image.summary : kindNote!;
 // The upstream project's donation pages. They do the hard work; the image only packages it, so they lead the page.
 const sponsors = (image.sponsor ?? []).filter((s) => /^https?:\/\//.test(s.url));
+// Who looks after the image: credit and who gets mentioned, never access (image.yml `maintainers`).
+const maintainers = (image.maintainers ?? []).filter((login) => /^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(login));
 const related = app ? relatedImages(image, 4) : [];
 const posts = await toPostViews(postsForImage(image.name, await getPosts(), 3));
 const extras = getImageExtras(image.name);
@@ -290,6 +292,33 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
                   </li>
                 ))}
               </ul>
+            )
+          }
+          {
+            maintainers.length > 0 && (
+              <div class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-muted-foreground">
+                <span id="maintained-by">Maintained by</span>
+                <ul class="flex flex-wrap items-center gap-2" aria-labelledby="maintained-by">
+                  {maintainers.map((login) => (
+                    <li>
+                      <a
+                        href={`https://github.com/${login}`}
+                        class="inline-flex items-center gap-1.5 rounded-full border border-[var(--raft-hair)] bg-background/50 py-0.5 pr-2.5 pl-0.5 text-foreground hover:border-[var(--raft-hair-strong)]"
+                      >
+                        <img
+                          src={`https://github.com/${login}.png?size=40`}
+                          alt={`Avatar of ${login}`}
+                          width="20"
+                          height="20"
+                          loading="lazy"
+                          class="size-5 rounded-full bg-muted"
+                        />
+                        <span class="font-mono text-xs">{login}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )
           }
         </div>
