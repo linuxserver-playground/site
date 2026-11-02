@@ -1,9 +1,22 @@
+/**
+ * LinuxServer Labs (workspace docs/labs.md) is the same site built a second time, for the Labs organisation: the
+ * Deploy of `linuxserverlabs-playground/site` builds this code with PUBLIC_SITE_MODE=labs and HUB_URL set to the Labs
+ * hub, with its own data snapshots and Pages. Labs mode changes the layout, never the data layer.
+ */
+export const LABS = import.meta.env.PUBLIC_SITE_MODE === 'labs';
+/** The two sites link to each other. */
+export const MAIN_SITE_URL = 'https://linuxserver-playground.github.io/site/';
+export const LABS_SITE_URL = 'https://linuxserverlabs-playground.github.io/site/';
+const ORG = LABS ? 'linuxserverlabs-playground' : 'linuxserver-playground';
+/** Where Labs proposals are filed: the structured issue form in the Labs proposals repository. */
+export const LABS_PROPOSE_URL = 'https://github.com/linuxserverlabs-playground/proposals/issues/new/choose';
+
 /** Site-wide settings. Everything that used to live in the Grav theme YAML. */
 
 export const SITE = {
-  name: 'LinuxServer.io',
-  url: 'https://linuxserver-playground.github.io/site/',
-  title: 'LinuxServer.io: community Docker images',
+  name: LABS ? 'LinuxServer Labs' : 'LinuxServer.io',
+  url: LABS ? LABS_SITE_URL : MAIN_SITE_URL,
+  title: LABS ? 'LinuxServer Labs: community images of newer software' : 'LinuxServer.io: community Docker images',
   description:
     'Community Docker images on one curated base, rebuilt when upstream moves, with every build\'s layers, files, packages and tests published.',
   tagline: 'Building community images, transparently',
@@ -12,7 +25,7 @@ export const SITE = {
   postsPerPage: 12,
   feedItems: 20,
   fediverse: '@linuxserver@linuxserver.io',
-  registry: 'ghcr.io/linuxserver-playground',
+  registry: `ghcr.io/${ORG}`,
 };
 
 export interface NavItem {
@@ -23,7 +36,7 @@ export interface NavItem {
 }
 
 /** Primary navigation. The fleet pages render the control plane's live data; the docs live here under /docs/. */
-export const NAV: NavItem[] = [
+const MAIN_NAV: NavItem[] = [
   { label: 'Images', href: '/images/', description: 'Browse every container we maintain' },
   { label: 'Docs', href: '/docs/', description: 'How to run our containers, Selkies, policies and the FAQ' },
   { label: 'Fleet', href: '/fleet/', description: 'Live board, runs, queue, builds, scheduler and the base images' },
@@ -35,7 +48,17 @@ export const NAV: NavItem[] = [
   { label: 'About', href: '/about/', description: 'Who we are and how we work' },
 ];
 
-export const NAV_SECONDARY: NavItem[] = [
+/** Labs has no docs, blog, mods, PRoot Apps or stores of its own: those are the main site's. */
+const LABS_NAV: NavItem[] = [
+  { label: 'Images', href: '/images/', description: 'Every image in Labs' },
+  { label: 'Fleet', href: '/fleet/', description: 'Live board, runs, queue and builds of the Labs images' },
+  { label: 'Propose', href: '/#propose', description: 'Get your application published in Labs' },
+  { label: 'LinuxServer.io', href: MAIN_SITE_URL, external: true, description: 'The main fleet, docs and blog' },
+];
+
+export const NAV: NavItem[] = LABS ? LABS_NAV : MAIN_NAV;
+
+export const NAV_SECONDARY: NavItem[] = LABS ? [] : [
   { label: 'Packages', href: '/packages/', description: 'Which image ships which package' },
   { label: 'Live runs', href: '/fleet/runs/', description: 'Every workflow run, as it happens' },
   { label: 'Scheduler', href: '/fleet/scheduler/', description: 'Upstream checks, decisions and skip flags' },
@@ -59,18 +82,18 @@ export const FLEET_PAGES: { id: FleetPageId; label: string; href: string; api: s
 export const DONATE_URL = 'https://opencollective.com/linuxserver/donate';
 
 export const LINKS = {
-  github: 'https://github.com/linuxserver-playground',
+  github: `https://github.com/${ORG}`,
   discord: 'https://discord.gg/YWrKVTn',
   discussions: 'https://github.com/orgs/linuxserver/discussions',
   /** The control plane: its JSON API drives the fleet pages; its own HTML pages are the fallback. */
-  control: 'https://ci.thelamer.duckdns.org:8443',
+  control: (import.meta.env.PUBLIC_CONTROL_URL as string | undefined) || 'https://ci.thelamer.duckdns.org:8443',
   /** The hub: the static API every number on this site comes from. */
-  hub: 'https://linuxserver-playground.github.io/hub/',
+  hub: LABS ? 'https://linuxserverlabs-playground.github.io/hub/' : 'https://linuxserver-playground.github.io/hub/',
   conventions: 'https://github.com/linuxserver-playground/builder/blob/main/CONVENTIONS.md',
   mastodon: 'https://mastodon.linuxserver.io/@linuxserver',
   bluesky: 'https://bsky.app/profile/linuxserver.io',
   opencollective: 'https://opencollective.com/linuxserver',
-  team: 'https://github.com/orgs/linuxserver-playground/people',
+  team: `https://github.com/orgs/${ORG}/people`,
   /** Where posts and docs are edited ("Edit on GitHub" links). */
   repo: 'https://github.com/linuxserver-playground/site',
 };
@@ -86,7 +109,8 @@ export const SOCIAL: Social[] = [
   { name: 'Discord', href: LINKS.discord, icon: 'discord' },
   { name: 'Mastodon', href: LINKS.mastodon, icon: 'mastodon' },
   { name: 'Bluesky', href: LINKS.bluesky, icon: 'bluesky' },
-  { name: 'RSS feed', href: '/blog/rss.xml', icon: 'rss' },
+  // The blog is the main site's: the Labs site has no feed.
+  ...(LABS ? [] : [{ name: 'RSS feed', href: '/blog/rss.xml', icon: 'rss' } as Social]),
 ];
 
 export interface SupportChannel {

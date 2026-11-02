@@ -9,7 +9,7 @@
 import * as React from 'react';
 
 /** The control plane's origin, without a trailing slash. `PUBLIC_CONTROL_URL` at build time. */
-export const CONTROL_URL: string = ((import.meta.env?.PUBLIC_CONTROL_URL as string | undefined) ?? 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
+export const CONTROL_URL: string = ((import.meta.env?.PUBLIC_CONTROL_URL as string | undefined) || 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
 
 export const controlApi = (path: string) => `${CONTROL_URL}/api/${path.replace(/^\/+/, '')}`;
 /** The control plane's own HTML page for an image. */

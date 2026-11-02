@@ -1,0 +1,148 @@
+---
+/**
+ * The Labs site's home page (workspace docs/labs.md): what Labs is, what qualifies, how an application gets in and
+ * out, and every image in Labs. Rendered by pages/index.astro in Labs mode only.
+ */
+import Layout from '@/layouts/Layout.astro';
+import ImageTile from '@/components/ImageTile.astro';
+import SectionHead from '@/components/SectionHead.astro';
+import { withBase } from '@/lib/base';
+import { HARNESS_REPO } from '@/lib/contribute';
+import { getImages } from '@/lib/images';
+import { LABS_PROPOSE_URL, MAIN_SITE_URL, SITE } from '@/lib/site';
+import { ArrowRight, ArrowUpRight, FlaskConical, GitPullRequest, ShieldAlert, Sprout } from 'lucide-react';
+
+const images = getImages();
+
+const bar = [
+  ['Owned by an organisation', 'The upstream project lives under an organisation on GitHub or any git host, never a personal account.'],
+  ['Open source', 'An approved open-source licence.'],
+  ['Stable releases we can ingest', 'Versioned stable releases, with release assets the image downloads (preferred) or a source release it builds, and asset names that stay the same.'],
+  ['A self-hosted web application', 'Built on a LinuxServer base image the LinuxServer way: s6, PUID and PGID, state under /config, a web interface on a port.'],
+  ['Works with just the container', 'An embedded database must be an option. No companion containers required.'],
+  ['No paywalled shells', 'Not a front end to a vendor\'s paid service. Calling a hosted API is fine when the endpoint is configurable.'],
+] as const;
+
+const steps = [
+  ['Propose it', 'Fill in the proposal form: what the application is, where its releases are, how to run it and how to tell it works. An AI agent with the LinuxServer harness can fill it in with you.'],
+  ['First check', 'A workflow checks the proposal against the real upstream (owner, licence, releases, asset names) and says what is missing.'],
+  ['A team member tries it', 'They build the image from your proposal and run it in a sandbox. Software that is not really self-hosted stops here.'],
+  ['Pending approval', 'The team member creates the repository and opens its first pull request. Its build posts the test report and screenshots for the team to review.'],
+  ['Published', 'Once merged, the image builds on every upstream release and is published to GitHub\'s registry under Labs.'],
+] as const;
+---
+
+<Layout section="home" title={SITE.title} description="LinuxServer Labs publishes newer, less proven self-hosted software on the LinuxServer.io pipeline, outside the main fleet.">
+  <section class="relative overflow-hidden border-b border-[var(--raft-hair)]" aria-labelledby="hero-title">
+    <div class="raft-aurora pointer-events-none absolute inset-0" aria-hidden="true"></div>
+    <div class="raft-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
+    <div class="raft-container relative py-16 md:py-24">
+      <p class="raft-eyebrow"><span class="text-primary" aria-hidden="true">//</span> LinuxServer Labs</p>
+      <h1 id="hero-title" class="mt-4 max-w-3xl text-[2.3rem] leading-[1.05] font-semibold tracking-[-0.04em] sm:text-6xl">
+        New self-hosted software, on the LinuxServer pipeline.
+      </h1>
+      <p class="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+        Labs is where applications too new or too small for the main LinuxServer.io fleet get a proper container: the same base images, build pipeline and
+        tests, published so people can use them and get to know them. The good, popular and maintained ones graduate to the main fleet.
+      </p>
+      <div class="mt-8 flex flex-wrap gap-3">
+        <a href={withBase('/images/')} class="inline-flex h-10 items-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90">
+          Browse the images <ArrowRight className="size-4" aria-hidden="true" />
+        </a>
+        <a href={withBase('/#propose')} class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] px-4 text-sm font-medium hover:bg-muted">
+          Propose an application
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="raft-container pt-20" aria-labelledby="what">
+    <SectionHead eyebrow="What Labs is" title="Reviewed builds of unaudited software" id="what" />
+    <div class="mt-8 grid gap-4 md:grid-cols-3">
+      <div class="raft-panel p-5">
+        <FlaskConical className="size-5 text-primary" aria-hidden="true" />
+        <h3 class="mt-3 font-semibold">The same pipeline</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          Every Labs image is built, tested and released by the workflows the main fleet uses, on the LinuxServer base images, with every build's layers, files,
+          packages and tests published here.
+        </p>
+      </div>
+      <div class="raft-panel p-5">
+        <ShieldAlert className="size-5 text-primary" aria-hidden="true" />
+        <h3 class="mt-3 font-semibold">Not security reviewed</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          The LinuxServer team reviews every change to a Labs repository, but not the application: its code and the release files the image downloads are used
+          as upstream publishes them. Understand what an application does before you run it, and protect it before you expose it.
+        </p>
+      </div>
+      <div class="raft-panel p-5">
+        <Sprout className="size-5 text-primary" aria-hidden="true" />
+        <h3 class="mt-3 font-semibold">A path to the main fleet</h3>
+        <p class="mt-2 text-sm text-muted-foreground">
+          An image that proves itself, used, maintained and building cleanly, can move to the{' '}
+          <a href={MAIN_SITE_URL} class="underline underline-offset-4" target="_blank" rel="noopener">main fleet<span class="sr-only"> (opens in a new tab)</span></a>. One that stops
+          working is archived.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section class="raft-container pt-20" aria-labelledby="images">
+    <SectionHead
+      eyebrow="Images"
+      title={images.length === 1 ? 'One image in Labs' : `${images.length} images in Labs`}
+      id="images"
+      link={{ label: 'All images', href: withBase('/images/') }}
+    />
+    {
+      images.length ? (
+        <div class="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {images.map((image) => (
+            <ImageTile image={image} />
+          ))}
+        </div>
+      ) : (
+        <p class="mt-8 text-muted-foreground">No image has been published in Labs yet.</p>
+      )
+    }
+  </section>
+
+  <section class="raft-container pt-20" aria-labelledby="bar">
+    <SectionHead eyebrow="The bar" title="What qualifies" id="bar" description="Lower than the main fleet's, and checked before anyone spends time on a proposal." />
+    <ul class="mt-8 grid gap-3 md:grid-cols-2">
+      {
+        bar.map(([title, text]) => (
+          <li class="raft-panel p-4">
+            <p class="font-medium">{title}</p>
+            <p class="mt-1 text-sm text-muted-foreground">{text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="raft-container pt-20" aria-labelledby="propose">
+    <SectionHead eyebrow="Get in" title="Propose an application" id="propose" description="You propose and contribute by pull request; the team creates the repository and decides what goes live." />
+    <ol class="mt-8 grid gap-3">
+      {
+        steps.map(([title, text], i) => (
+          <li class="raft-panel flex gap-4 p-4">
+            <span class="grid size-7 shrink-0 place-items-center rounded-full border border-[var(--raft-hair-strong)] font-mono text-xs">{i + 1}</span>
+            <div>
+              <p class="font-medium">{title}</p>
+              <p class="mt-1 text-sm text-muted-foreground">{text}</p>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+    <div class="mt-8 flex flex-wrap gap-3">
+      <a href={LABS_PROPOSE_URL} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90">
+        <GitPullRequest className="size-4" aria-hidden="true" /> Open the proposal form <span class="sr-only">(opens in a new tab)</span>
+      </a>
+      <a href={HARNESS_REPO} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] px-4 text-sm font-medium hover:bg-muted">
+        Propose with an AI agent <ArrowUpRight className="size-4" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
+      </a>
+    </div>
+  </section>
+</Layout>

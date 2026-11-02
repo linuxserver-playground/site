@@ -22,6 +22,9 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 branch=data
+# The repository whose data branch holds the snapshots: origin, or SNAPSHOT_REMOTE when the code was checked out from
+# another repository (the Labs site builds this repository's code and keeps its own snapshots).
+remote=${SNAPSHOT_REMOTE:-origin}
 base_ref=refs/snapshot/base # the commit restore laid down: publish's lease and merge base
 # Every path the refresh writes. imagedocs/ also holds a hand-written README.md, which stays on main.
 paths=(src/data src/assets/logos src/assets/team src/assets/proot-apps src/content/moddocs)
@@ -45,16 +48,16 @@ keep() {
   local day cutoff ref
   day=$(date -u +%F)
   cutoff=$(date -u -d '7 days ago' +%F)
-  git ls-remote --exit-code origin "refs/data-history/$day" >/dev/null && return
-  git push --quiet origin "$1:refs/data-history/$day"
-  git ls-remote origin 'refs/data-history/*' | while read -r _ ref; do
-    if [[ "${ref##*/}" < "$cutoff" ]]; then git push --quiet origin ":$ref"; fi
+  git ls-remote --exit-code "$remote" "refs/data-history/$day" >/dev/null && return
+  git push --quiet "$remote" "$1:refs/data-history/$day"
+  git ls-remote "$remote" 'refs/data-history/*' | while read -r _ ref; do
+    if [[ "${ref##*/}" < "$cutoff" ]]; then git push --quiet "$remote" ":$ref"; fi
   done
 }
 
 restore() {
   # In the workflows' partial clone (`filter: blob:none`) the files arrive with `git archive` below, in one batch.
-  git fetch --quiet origin "+refs/heads/$branch:$base_ref"
+  git fetch --quiet "$remote" "+refs/heads/$branch:$base_ref"
   # Clear what an earlier restore or refresh left, so a file the snapshot no longer has does not linger.
   rm -rf "${paths[@]}"
   find "$imagedocs" -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
@@ -78,7 +81,7 @@ publish() {
   ours=$(git commit-tree "$tree" -m "Refresh data snapshots")
   for attempt in 1 2 3; do
     guard "$base" "$ours"
-    if git push --force-with-lease="$branch:$base" origin "$ours:refs/heads/$branch"; then
+    if git push --force-with-lease="$branch:$base" "$remote" "$ours:refs/heads/$branch"; then
       git update-ref "$base_ref" "$ours"
       keep "$ours" || echo "::warning::snapshots: could not keep today's copy in refs/data-history/"
       return
@@ -88,7 +91,7 @@ publish() {
       exit 1
     fi
     sleep $((attempt * 3))
-    git fetch --quiet origin "$branch"
+    git fetch --quiet "$remote" "$branch"
     theirs=$(git rev-parse FETCH_HEAD)
     if ! merged=$(git merge-tree --write-tree --merge-base="$base" "$ours" "$theirs"); then
       echo "::error::snapshots: another publish changed the same files"

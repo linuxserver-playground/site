@@ -19,7 +19,7 @@ if (!base) {
   console.error('usage: node scripts/fleet-check.mjs <baseUrl> [outDir]');
   process.exit(1);
 }
-const CONTROL = (process.env.PUBLIC_CONTROL_URL ?? 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
+const CONTROL = (process.env.PUBLIC_CONTROL_URL || 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
 mkdirSync(outDir, { recursive: true });
 
 const browser = await chromium.launch();

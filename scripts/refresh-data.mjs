@@ -54,7 +54,7 @@ const skipGithub = args.includes('--skip-github');
 export const DEFAULT_HUB_URL = 'https://linuxserver-playground.github.io/hub';
 const HUB_URL = (process.env.HUB_URL ?? DEFAULT_HUB_URL).replace(/\/+$/, '');
 const GITHUB_ORG = process.env.GITHUB_ORG ?? 'linuxserver-playground';
-const CONTROL_URL = (process.env.PUBLIC_CONTROL_URL ?? 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
+const CONTROL_URL = (process.env.PUBLIC_CONTROL_URL || 'https://ci.thelamer.duckdns.org:8443').replace(/\/+$/, '');
 const UA = { 'User-Agent': 'linuxserver-playground-site-build (+https://linuxserver-playground.github.io/site/)' };
 
 const dataDir = new URL('../src/data/', import.meta.url);

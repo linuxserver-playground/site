@@ -13,9 +13,9 @@ import { HUB_URL } from '@/lib/hub';
 import { SNAPSHOT_DATE } from '@/lib/images';
 import type { SeoProps } from '@/lib/seo';
 import { HARNESS_REPO } from '@/lib/contribute';
-import { LINKS, NAV, NAV_SECONDARY, SOCIAL } from '@/lib/site';
+import { LABS, LABS_SITE_URL, LINKS, MAIN_SITE_URL, NAV, NAV_SECONDARY, SOCIAL } from '@/lib/site';
 import { stat } from '@/lib/stats';
-import { ArrowUpRight, TriangleAlert } from 'lucide-react';
+import { ArrowUpRight, FlaskConical, TriangleAlert } from 'lucide-react';
 
 interface Props extends SeoProps {
   /** Top-level section, for aria-current in the nav. */
@@ -27,7 +27,7 @@ const href = (h: string) => (h.startsWith('/') ? withBase(h) : h);
 const isCurrent = (h: string) => h.startsWith('/') && section !== 'none' && h.startsWith(`/${section}`);
 const year = new Date().getUTCFullYear();
 
-const footerCols = [
+const mainFooterCols = [
   {
     title: 'Fleet',
     links: [
@@ -38,6 +38,7 @@ const footerCols = [
       { label: 'Mods', href: '/mods/' },
       { label: 'PRoot Apps', href: '/proot-apps/' },
       { label: 'App stores', href: '/stores/' },
+      { label: 'Labs', href: LABS_SITE_URL, external: true },
     ],
   },
   {
@@ -76,6 +77,45 @@ const footerCols = [
     ],
   },
 ];
+const labsFooterCols = [
+  {
+    title: 'Labs',
+    links: [
+      { label: 'All images', href: '/images/' },
+      { label: 'Recently built', href: '/images/?sort=updated' },
+      { label: 'Fleet', href: '/fleet/' },
+      { label: 'Live runs', href: '/fleet/runs/' },
+      { label: 'Hub API', href: HUB_URL + '/', external: true },
+    ],
+  },
+  {
+    title: 'Get in',
+    links: [
+      { label: 'What Labs is', href: '/#what' },
+      { label: 'The bar', href: '/#bar' },
+      { label: 'Propose an application', href: '/#propose' },
+      { label: 'The harness', href: HARNESS_REPO, external: true },
+    ],
+  },
+  {
+    title: 'LinuxServer.io',
+    links: [
+      { label: 'The main fleet', href: `${MAIN_SITE_URL}images/`, external: true },
+      { label: 'Documentation', href: `${MAIN_SITE_URL}docs/`, external: true },
+      { label: 'Support', href: `${MAIN_SITE_URL}support/`, external: true },
+      { label: 'Discord', href: LINKS.discord, external: true },
+    ],
+  },
+  {
+    title: 'Source',
+    links: [
+      { label: 'Labs on GitHub', href: LINKS.github, external: true },
+      { label: 'Conventions', href: LINKS.conventions, external: true },
+    ],
+  },
+];
+const footerCols = LABS ? labsFooterCols : mainFooterCols;
+
 ---
 
 <!doctype html>
@@ -94,6 +134,20 @@ const footerCols = [
       </p>
     </aside>
 
+    {
+      LABS && (
+        <aside aria-label="Labs notice" class="labs-banner">
+          <p class="raft-container flex min-h-9 items-center justify-center gap-2 py-1.5 text-center text-sm">
+            <FlaskConical className="size-4 shrink-0" aria-hidden="true" />
+            <span>
+              <strong class="font-semibold">LinuxServer Labs:</strong> newer, less proven software, outside the main LinuxServer.io fleet. The applications are
+              not security reviewed. <a href={withBase('/#what')} class="underline underline-offset-4">What Labs is</a>
+            </span>
+          </p>
+        </aside>
+      )
+    }
+
     <aside aria-label="Fleet status" class="border-b border-[var(--raft-hair)] bg-[var(--raft-surface)] text-xs">
       <div class="raft-container flex h-8 items-center justify-between gap-4 font-mono text-muted-foreground">
         <p class="flex min-w-0 items-center gap-2">
@@ -109,8 +163,9 @@ const footerCols = [
 
     <header class="sticky top-0 z-40 border-b border-[var(--raft-hair)] bg-background/80 backdrop-blur-xl">
       <div class="raft-container flex h-14 items-center gap-3">
-        <a href={withBase('/')} class="flex shrink-0 items-center rounded-md text-foreground" aria-label="LinuxServer.io home">
+        <a href={withBase('/')} class="flex shrink-0 items-center rounded-md text-foreground" aria-label={LABS ? "LinuxServer Labs home" : "LinuxServer.io home"}>
           <Logo variant="full" class="h-[1.4rem] w-auto" title="" />
+          {LABS && <span class="labs-badge ml-2">Labs</span>}
         </a>
 
         <nav aria-label="Main" class="ml-5 hidden lg:block">
@@ -160,18 +215,18 @@ const footerCols = [
           <ThemeToggle client:idle />
           <SignIn client:idle />
           <a
-            href={withBase('/contribute/')}
-            aria-current={section === 'contribute' ? 'page' : undefined}
+            href={withBase(LABS ? '/#propose' : '/contribute/')}
+            aria-current={!LABS && section === 'contribute' ? 'page' : undefined}
             class="ml-1 hidden h-8 items-center rounded-md bg-foreground px-3 text-sm font-medium text-background transition-opacity hover:opacity-90 sm:inline-flex"
           >
-            Contribute
+            {LABS ? 'Propose' : 'Contribute'}
           </a>
           <MobileNav
             client:idle
             className="lg:hidden"
             items={NAV.map((n) => ({ ...n, href: href(n.href), current: isCurrent(n.href) }))}
-            secondary={[...NAV_SECONDARY, { label: 'Donate', href: withBase('/donate/') }]}
-            cta={{ label: 'Contribute', href: withBase('/contribute/') }}
+            secondary={LABS ? NAV_SECONDARY : [...NAV_SECONDARY, { label: 'Donate', href: withBase('/donate/') }]}
+            cta={LABS ? { label: 'Propose', href: withBase('/#propose') } : { label: 'Contribute', href: withBase('/contribute/') }}
           />
         </div>
       </div>
@@ -210,10 +265,17 @@ const footerCols = [
       <div class="raft-container grid grid-cols-1 gap-12 py-14 md:grid-cols-[1.1fr_2fr]">
         <div>
           <Logo variant="full" class="h-6 w-auto" title="LinuxServer.io" />
+          {LABS ? (
+            <p class="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              LinuxServer Labs publishes newer, less proven self-hosted software on the LinuxServer.io pipeline, so it can be used and known before it earns a place
+              in the main fleet. Reviewed by the team, not security audited.
+            </p>
+          ) : (
           <p class="mt-5 max-w-xs text-sm leading-relaxed text-muted-foreground">
             Volunteers building and maintaining the largest collection of community Docker images. Free and open source, always, and open to anyone who
             wants to help: <a href={withBase('/contribute/')} class="text-foreground underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:decoration-current">bring an agent and pull up a chair</a>.
           </p>
+          )}
           <ul class="mt-6 flex gap-1" aria-label="LinuxServer.io elsewhere">
             {
               SOCIAL.map((s) => (

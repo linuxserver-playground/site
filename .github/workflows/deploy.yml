@@ -29,65 +29,8 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-env:
-  SITE_URL: https://linuxserver-playground.github.io
-  BASE_PATH: /site/
-  HUB_URL: ${{ vars.HUB_URL || 'https://linuxserver-playground.github.io/hub' }}
-  GITHUB_ORG: linuxserver-playground
-
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0 # posts and docs are dated from git history (src/lib/git-dates.ts)
-          filter: blob:none # which needs commits and paths only: old files (post images, mostly) stay on GitHub
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: npm
-
-      - run: npm ci
-
-      - name: Restore the data snapshots
-        # The refresh is incremental: it fetches only the builds the snapshot lacks.
-        run: scripts/snapshot.sh restore
-
-      - name: Refresh data snapshots from the hub
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Only the daily run refetches every retained build; the others fetch the builds the snapshot lacks.
-          REFRESH_ALL: ${{ github.event_name == 'schedule' && '1' || '' }}
-        run: npm run data
-
-      - name: Publish the refreshed snapshots
-        env:
-          ALLOW_SHRINK: ${{ vars.DATA_ALLOW_SHRINK }} # lets one intended big drop in files through
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          scripts/snapshot.sh publish
-
-      - name: Cache optimised images
-        uses: actions/cache@v6
-        with:
-          path: node_modules/.astro
-          key: astro-${{ hashFiles('src/content/**', 'src/assets/**', 'package-lock.json') }}
-          restore-keys: astro-
-
-      - name: Build
-        run: npm run build
-
-      - uses: actions/configure-pages@v6
-
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
-
-      - id: deployment
-        uses: actions/deploy-pages@v5
+    # The job is deploy-run.yml, which the Labs site calls too. Calling it adds no runner job.
+    uses: ./.github/workflows/deploy-run.yml
+    secrets: inherit

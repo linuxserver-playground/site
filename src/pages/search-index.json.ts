@@ -2,7 +2,7 @@
 import { docUrl, getDocs, getSections } from '@/lib/docs';
 import { getAllImages } from '@/lib/images';
 import { getPosts, postUrl } from '@/lib/posts';
-import { LINKS, NAV, NAV_SECONDARY } from '@/lib/site';
+import { LABS, LINKS, NAV, NAV_SECONDARY } from '@/lib/site';
 import { withBase } from '@/lib/base';
 import { toCards } from '@/lib/views';
 
@@ -18,9 +18,15 @@ export async function GET() {
       c: c.categories,
       p: c.stars,
     })),
-    posts: (await getPosts()).map((p) => ({ t: p.data.title, u: postUrl(p), y: p.data.date.getUTCFullYear(), g: p.data.tags })),
-    docs: (await getDocs()).map((d) => ({ t: d.data.title, u: docUrl(d), s: sectionTitle.get(d.data.section) ?? d.data.section, k: [...d.data.tags, d.data.group ?? ''].filter(Boolean).join(' ') })),
-    pages: [
+    // The Labs site has no blog or docs of its own (they are the main site's).
+    posts: LABS ? [] : (await getPosts()).map((p) => ({ t: p.data.title, u: postUrl(p), y: p.data.date.getUTCFullYear(), g: p.data.tags })),
+    docs: LABS ? [] : (await getDocs()).map((d) => ({ t: d.data.title, u: docUrl(d), s: sectionTitle.get(d.data.section) ?? d.data.section, k: [...d.data.tags, d.data.group ?? ''].filter(Boolean).join(' ') })),
+    pages: LABS ? [
+      { t: 'Home', u: withBase('/') },
+      ...NAV.map((n) => ({ t: n.label, u: n.external ? n.href : withBase(n.href), k: n.description })),
+      { t: 'Full-text search', u: withBase('/search/') },
+      { t: 'Hub API', u: LINKS.hub, k: 'json api data openapi' },
+    ] : [
       { t: 'Home', u: withBase('/') },
       ...[...NAV, ...NAV_SECONDARY].map((n) => ({ t: n.label, u: n.external ? n.href : withBase(n.href), k: n.description })),
       { t: 'Contribute', u: withBase('/contribute/'), k: 'get involved help volunteer pull request ai agent harness mod propose image labs' },
