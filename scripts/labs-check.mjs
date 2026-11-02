@@ -9,8 +9,10 @@
  * signed-in states can be reached before Labs control has a sign-in: signed out and signed in as a non-member (the
  * section must not exist), a member (the proposals repository's open issues only, axe in light and dark, 390px
  * overflow), a member with no open proposal, and a member whose control plane is down (the offline state). The
- * public "in review" list is on the page in every state, and the home page carries no proposals for anyone. A
- * screenshot of each state goes to outDir. Exits non-zero on any failure.
+ * team's guide, "Managing proposals" (src/components/labs/ManagingProposals.tsx), follows the same rule: absent signed
+ * out and for a non-member, and nowhere in the page's HTML; present for a member, with its sections and copy buttons,
+ * even when the issues cannot be read. The public "in review" list is on the page in every state, and the home page
+ * carries no proposals for anyone. A screenshot of each state goes to outDir. Exits non-zero on any failure.
  */
 import { mkdirSync } from 'node:fs';
 import { chromium } from 'playwright';
@@ -85,6 +87,23 @@ async function audit(page, name, scheme) {
 }
 
 const section = (page) => page.locator('section[aria-labelledby="proposals"]');
+const guide = (page) => page.locator('section[aria-labelledby="managing-proposals"]');
+const GUIDE_HEADINGS = [
+  'The lifecycle at a glance',
+  'When a proposal falls short',
+  'Recommended: the harness with an AI agent',
+  'By hand, step by step',
+  'Reviewing the first pull request',
+];
+/** The guide is loaded on demand, after `/api/me`; false when it never appears. */
+async function guideShown(page) {
+  try {
+    await guide(page).getByRole('heading', { name: 'Reviewing the first pull request' }).waitFor({ timeout: 5000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
 const shot = async (page, name) => {
   const s = section(page);
   if (await s.count()) await s.screenshot({ path: `${outDir}/${name}.png` });
@@ -97,7 +116,21 @@ for (const [name, me] of [['signed-out', ANON], ['non-member', signedIn(false)]]
   if (!(await page.locator('section[aria-labelledby="pending"]').count())) fail(`${name}: the in-review section is missing`);
   if (await section(page).count()) fail(`${name}: the proposals section is shown`);
   if (await page.getByText('Open proposals').count()) fail(`${name}: proposal text is shown`);
+  if (await guide(page).count()) fail(`${name}: the managing proposals guide is shown`);
+  if (await page.getByText('Managing proposals').count()) fail(`${name}: guide text is shown`);
+  if (await page.locator('[data-team-only]').count()) fail(`${name}: the team-only area is shown`);
   else console.log(`ok ${name}: nothing shown`);
+  await ctx.close();
+}
+
+// The page as served carries nothing of the team-only area: it is rendered in the browser, for members only.
+{
+  const { ctx, page } = await open('light', ANON, [200, ISSUES]);
+  const html = await (await page.request.get(`${base.replace(/\/$/, '')}/proposals/`)).text();
+  for (const text of ['Managing proposals', 'Team only', 'accept.sh', 'labs-pending topic']) {
+    if (html.includes(text)) fail(`served HTML contains "${text}"`);
+  }
+  console.log('ok served HTML: no team-only text');
   await ctx.close();
 }
 
@@ -125,9 +158,16 @@ for (const scheme of ['light', 'dark']) {
   if (items !== 2) fail(`member (${scheme}): ${items} items listed, expected 2`);
   if (await section(page).getByText('Not a proposal').count()) fail(`member (${scheme}): an issue from another repository is listed`);
   if (!(await section(page).getByText('meets the bar').count())) fail(`member (${scheme}): the meets-bar label is missing`);
+  if (!(await guideShown(page))) fail(`member (${scheme}): the managing proposals guide is missing`);
+  for (const h of GUIDE_HEADINGS) {
+    if (!(await guide(page).getByRole('heading', { name: h, exact: true }).count())) fail(`member (${scheme}): guide heading "${h}" is missing`);
+  }
+  const copies = await guide(page).getByRole('button', { name: /^Copy: / }).count();
+  if (copies < 10) fail(`member (${scheme}): ${copies} copy buttons in the guide, expected at least 10`);
   await audit(page, 'member', scheme);
   await shot(page, `member-${scheme}`);
-  console.log(`ok member (${scheme}): ${items} proposals`);
+  if (await guide(page).count()) await page.locator('[data-team-only]').screenshot({ path: `${outDir}/team-${scheme}.png` });
+  console.log(`ok member (${scheme}): ${items} proposals, the guide with ${copies} copy buttons`);
   await ctx.close();
 }
 
@@ -143,8 +183,20 @@ for (const scheme of ['light', 'dark']) {
   const { ctx, page } = await open('light', signedIn(true), [503, { detail: 'down' }]);
   if (!(await section(page).getByRole('alert').count())) fail('member, control down: no offline state');
   else console.log('ok member, control down: offline state');
+  if (!(await guideShown(page))) fail('member, control down: the guide is missing');
   await audit(page, 'offline', 'light');
   await shot(page, 'member-offline');
+  await ctx.close();
+}
+
+// The team area at phone width.
+{
+  const { ctx, page } = await open('light', signedIn(true), [200, ISSUES]);
+  await page.setViewportSize({ width: 390, height: 844 });
+  if (await guideShown(page)) await page.locator('[data-team-only]').screenshot({ path: `${outDir}/team-390.png` });
+  const scroll = await page.evaluate(() => document.documentElement.scrollWidth);
+  if (scroll > 390) fail(`member at 390px: scroll width ${scroll}`);
+  else console.log('ok member at 390px: no overflow');
   await ctx.close();
 }
 
