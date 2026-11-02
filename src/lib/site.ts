@@ -12,6 +12,10 @@ const ORG = LABS ? 'linuxserverlabs-playground' : 'linuxserver-playground';
 export const LABS_PROPOSALS_REPO = 'linuxserverlabs-playground/proposals';
 /** Where Labs proposals are filed: the structured issue form in the Labs proposals repository. */
 export const LABS_PROPOSE_URL = `https://github.com/${LABS_PROPOSALS_REPO}/issues/new/choose`;
+/** The Labs site's guide to proposing an app, which the main site's contribute pages link to. */
+export const LABS_GUIDE_URL = `${LABS_SITE_URL}propose/`;
+/** The Labs site's images in review. */
+export const LABS_PROPOSALS_URL = `${LABS_SITE_URL}proposals/`;
 
 /** Site-wide settings. Everything that used to live in the Grav theme YAML. */
 
@@ -53,8 +57,9 @@ const MAIN_NAV: NavItem[] = [
 /** Labs has no docs, blog, mods, PRoot Apps or stores of its own: those are the main site's. */
 const LABS_NAV: NavItem[] = [
   { label: 'Images', href: '/images/', description: 'Every image in Labs' },
+  { label: 'Proposals', href: '/proposals/', description: 'The images in review, and the open proposals for team members' },
+  { label: 'Propose an app', href: '/propose/', description: 'What qualifies, building it locally, the harness and the proposal form' },
   { label: 'Fleet', href: '/fleet/', description: 'Live board, runs, queue and builds of the Labs images' },
-  { label: 'Propose', href: '/#propose', description: 'Get your application published in Labs' },
   { label: 'LinuxServer.io', href: MAIN_SITE_URL, external: true, description: 'The main fleet, docs and blog' },
 ];
 

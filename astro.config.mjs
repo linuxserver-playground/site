@@ -33,30 +33,35 @@ const codeDark = { ...githubDark, name: 'lsio-dark' };
 
 /**
  * LinuxServer Labs (PUBLIC_SITE_MODE=labs, src/lib/site.ts) is this site built for the Labs organisation. Labs has no
- * docs, blog, mods, PRoot Apps or stores of its own, so those sections are removed from the build before Pagefind
- * indexes it, and each section's top level redirects to the main site's.
+ * docs, blog, mods, PRoot Apps or stores of its own, and the main site has no Labs proposals pages, so each build
+ * removes the other site's sections before Pagefind indexes it, and puts a redirect to the other site's page in their
+ * place: links between the two sites then work from either one.
  */
 const LABS = process.env.PUBLIC_SITE_MODE === 'labs';
 const MAIN_SITE_URL = 'https://linuxserver-playground.github.io/site/';
+const LABS_SITE_URL = 'https://linuxserverlabs-playground.github.io/site/';
 const MAIN_ONLY = ['about', 'blog', 'contribute', 'docs', 'donate', 'edit', 'mods', 'packages', 'proot-apps', 'stores', 'support'];
+const LABS_ONLY = ['proposals', 'propose'];
+/** The sections this build leaves to the other site, and that site's address. */
+const [elsewhere, otherSite, otherName] = LABS ? [MAIN_ONLY, MAIN_SITE_URL, 'the main LinuxServer.io site'] : [LABS_ONLY, LABS_SITE_URL, 'LinuxServer Labs'];
 /** @param {string} page */
-const mainOnly = (page) => MAIN_ONLY.some((s) => page.includes(`${base}${s}/`));
+const notHere = (page) => elsewhere.some((s) => page.includes(`${base}${s}/`));
 /** @type {import('astro').AstroIntegration} */
-const labsTrim = {
-  name: 'labs-trim',
+const trim = {
+  name: 'other-site-trim',
   hooks: {
     'astro:build:done': ({ dir }) => {
       const out = fileURLToPath(dir);
-      for (const section of MAIN_ONLY) {
+      for (const section of elsewhere) {
         rmSync(join(out, section), { recursive: true, force: true });
-        const target = `${MAIN_SITE_URL}${section}/`;
+        const target = `${otherSite}${section}/`;
         mkdirSync(join(out, section), { recursive: true });
         writeFileSync(
           join(out, section, 'index.html'),
-          `<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>LinuxServer.io</title><meta http-equiv="refresh" content="0; url=${target}"><link rel="canonical" href="${target}"><p>This is on the main LinuxServer.io site: <a href="${target}">${target}</a></p>\n`,
+          `<!doctype html><meta charset="utf-8"><meta name="robots" content="noindex"><title>${LABS ? 'LinuxServer.io' : 'LinuxServer Labs'}</title><meta http-equiv="refresh" content="0; url=${target}"><link rel="canonical" href="${target}"><p>This is on ${otherName}: <a href="${target}">${target}</a></p>\n`,
         );
       }
-      for (const feed of ['blog.atom', 'blog.rss']) rmSync(join(out, feed), { force: true });
+      if (LABS) for (const feed of ['blog.atom', 'blog.rss']) rmSync(join(out, feed), { force: true });
     },
   },
 };
@@ -70,8 +75,8 @@ export default defineConfig({
   image: { responsiveStyles: true },
   integrations: [
     react(),
-    sitemap({ filter: (page) => !page.includes('/search/') && !page.includes('/edit/') && !(LABS && mainOnly(page)) }),
-    ...(LABS ? [labsTrim] : []),
+    sitemap({ filter: (page) => !page.includes('/search/') && !page.includes('/edit/') && !notHere(page) }),
+    trim,
   ],
   vite: {
     plugins: [tailwindcss()],

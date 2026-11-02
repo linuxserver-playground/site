@@ -3,7 +3,8 @@
  * plane's `builds`, `runs`, `manifests`, `skips` and `scheduler_decisions` events. Filters: failures
  * first, drift, one image, free text. Members get dispatch, package check and skip controls per row.
  * Helper repos (docker-* repos that are not images, such as docker-mods) and the batch projects follow in their
- * own section (`HelperRepos`) and never link an image page.
+ * own section (`HelperRepos`) and never link an image page. The Labs site leaves that section out (`helpers`
+ * false): a Labs `docker-*` repo without an image.yml is an image pending approval, listed on its /proposals/ page.
  */
 import * as React from 'react';
 import { repoShort, useControl, type FleetPage, type FleetRow } from '@/lib/control';
@@ -24,11 +25,13 @@ interface Props {
   fallback: string;
   /** The control plane's batch page, for the helper section's offline state. */
   batchFallback: string;
+  /** Whether to show the helper repos and batch projects below the board (false on the Labs site). */
+  helpers?: boolean;
 }
 
 const severity = (r: FleetRow) => (r.result === 'failure' ? 0 : r.result === 'cancelled' ? 1 : r.result === null ? 2 : r.drift === 'ahead' ? 3 : 4);
 
-export default function FleetBoard({ imagesBase, known, runsBase, modsBase, prootBase, fallback, batchFallback }: Props) {
+export default function FleetBoard({ imagesBase, known, runsBase, modsBase, prootBase, fallback, batchFallback, helpers = true }: Props) {
   const { data, error, loading, at, reload } = useControl<FleetPage>('fleet.json', ['builds', 'runs', 'manifests', 'skips', 'scheduler_decisions', 'repos']);
   const [redFirst, setRedFirst] = React.useState(true);
   const [drift, setDrift] = React.useState('all');
@@ -132,7 +135,7 @@ export default function FleetBoard({ imagesBase, known, runsBase, modsBase, proo
           </>
         )}
       </div>
-      <HelperRepos helpers={data ? (data.helpers ?? []) : undefined} modsBase={modsBase} prootBase={prootBase} runsBase={runsBase} fallback={batchFallback} />
+      {helpers && <HelperRepos helpers={data ? (data.helpers ?? []) : undefined} modsBase={modsBase} prootBase={prootBase} runsBase={runsBase} fallback={batchFallback} />}
     </>
   );
 }

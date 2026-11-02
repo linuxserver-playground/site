@@ -1,5 +1,5 @@
 /**
- * The open Labs proposals, on the Labs home page, for signed-in team members only (workspace docs/labs.md: anyone can
+ * The open Labs proposals, on the Labs site's /proposals/ page, for signed-in team members only (workspace docs/labs.md: anyone can
  * file a proposal, so the site does not advertise them; hiding them is presentation only, the issues are public on
  * GitHub). Reads `/api/me` and then the control plane's public `/api/issues.json`, filtered to the proposals
  * repository. Signed out, or before `/api/me` answers, it renders nothing at all: the header's sign-in is the only
@@ -31,7 +31,7 @@ export default function Proposals({ repo, fallback }: { repo: string; fallback: 
   if (!member) return null;
 
   return (
-    <section ref={top} className="raft-container scroll-mt-24 pt-20" aria-labelledby="proposals">
+    <section ref={top} className="raft-container scroll-mt-24 pt-16" aria-labelledby="proposals">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="max-w-2xl">
           <p className="raft-eyebrow">

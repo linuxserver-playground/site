@@ -1,41 +1,20 @@
 ---
 /**
- * The Labs site's home page (workspace docs/labs.md): what Labs is, every image in Labs, the images pending approval
- * (public), the open proposals (signed-in team members only, live from Labs control), what qualifies and how an
- * application gets in. Rendered by pages/index.astro in Labs mode only.
+ * The Labs site's home page (workspace docs/labs.md): what Labs is, every image in Labs, and a pointer to how an app
+ * gets in (/propose/, the full guide) and what is on its way (/proposals/: the images in review and, for team members,
+ * the open proposals). Rendered by pages/index.astro in Labs mode only.
  */
 import Layout from '@/layouts/Layout.astro';
 import ImageTile from '@/components/ImageTile.astro';
-import Proposals from '@/components/islands/Proposals';
 import SectionHead from '@/components/SectionHead.astro';
 import { withBase } from '@/lib/base';
-import { HARNESS_REPO } from '@/lib/contribute';
 import { getImages } from '@/lib/images';
 import { getPending } from '@/lib/pending';
-import { CONTROL_URL } from '@/lib/control';
-import { formatDate } from '@/lib/format';
-import { LABS_PROPOSALS_REPO, LABS_PROPOSE_URL, MAIN_SITE_URL, SITE } from '@/lib/site';
-import { ArrowRight, ArrowUpRight, FlaskConical, GitPullRequest, ShieldAlert, Sprout } from 'lucide-react';
+import { MAIN_SITE_URL, SITE } from '@/lib/site';
+import { ArrowRight, FlaskConical, ShieldAlert, Sprout } from 'lucide-react';
 
 const images = getImages();
 const pending = getPending();
-
-const bar = [
-  ['Owned by an organisation', 'The upstream project lives under an organisation on GitHub or any git host, never a personal account.'],
-  ['Open source', 'An approved open-source licence.'],
-  ['Stable releases we can ingest', 'Versioned stable releases, with release assets the image downloads (preferred) or a source release it builds, and asset names that stay the same.'],
-  ['A self-hosted web application', 'Built on a LinuxServer base image the LinuxServer way: s6, PUID and PGID, state under /config, a web interface on a port.'],
-  ['Works with just the container', 'An embedded database must be an option. No companion containers required.'],
-  ['No paywalled shells', 'Not a front end to a vendor\'s paid service. Calling a hosted API is fine when the endpoint is configurable.'],
-] as const;
-
-const steps = [
-  ['Propose it', 'Fill in the proposal form: what the application is, where its releases are, how to run it and how to tell it works. An AI agent with the LinuxServer harness can fill it in with you.'],
-  ['First check', 'A workflow checks the proposal against the real upstream (owner, licence, releases, asset names) and says what is missing.'],
-  ['A team member tries it', 'They build the image from your proposal and run it in a sandbox. Software that is not really self-hosted stops here.'],
-  ['Pending approval', 'The team member creates the repository and opens its first pull request. Its build posts the test report and screenshots for the team to review.'],
-  ['Published', 'Once merged, the image builds on every upstream release and is published to GitHub\'s registry under Labs.'],
-] as const;
 ---
 
 <Layout section="home" title={SITE.title} description="LinuxServer Labs publishes newer, less proven self-hosted software on the LinuxServer.io pipeline, outside the main fleet.">
@@ -55,7 +34,7 @@ const steps = [
         <a href={withBase('/images/')} class="inline-flex h-10 items-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90">
           Browse the images <ArrowRight className="size-4" aria-hidden="true" />
         </a>
-        <a href={withBase('/#propose')} class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] px-4 text-sm font-medium hover:bg-muted">
+        <a href={withBase('/propose/')} class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] px-4 text-sm font-medium hover:bg-muted">
           Propose an application
         </a>
       </div>
@@ -113,87 +92,28 @@ const steps = [
     }
   </section>
 
-  <section class="raft-container pt-20" aria-labelledby="pending">
-    <SectionHead
-      eyebrow="Pending approval"
-      title={pending.length === 0 ? 'Images in review' : pending.length === 1 ? 'One image in review' : `${pending.length} images in review`}
-      id="pending"
-      description="A team member tried each of these from its proposal and put it forward. Its first pull request holds the image, with the build's test report and screenshots for the team to review."
-    />
-    {
-      pending.length ? (
-        <ul class="mt-8 grid grid-cols-1 gap-3 md:grid-cols-2">
-          {pending.map((p) => (
-            <li class="raft-panel flex flex-col gap-3 p-5">
-              <div class="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                <p class="font-mono text-base font-semibold">{p.name}</p>
-                <span class="rounded-md border border-[var(--raft-amber)]/35 px-1.5 font-mono text-[0.6875rem] text-[var(--raft-amber)]">in review</span>
-              </div>
-              {p.description && <p class="text-sm text-muted-foreground">{p.description}</p>}
-              {p.pull ? (
-                <p class="text-sm">
-                  <a href={p.pull.url} target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 font-medium underline underline-offset-4 decoration-[var(--raft-hair-strong)] hover:decoration-current">
-                    <GitPullRequest className="size-4 shrink-0" aria-hidden="true" />
-                    <span class="[overflow-wrap:anywhere]">#{p.pull.number} {p.pull.title}</span>
-                    <span class="sr-only"> (opens in a new tab)</span>
-                  </a>
-                  <span class="mt-1 block font-mono text-[0.6875rem] text-muted-foreground">
-                    {p.pull.author ? `by ${p.pull.author}, ` : ''}opened <time datetime={p.pull.created_at}>{formatDate(p.pull.created_at)}</time>
-                  </span>
-                </p>
-              ) : (
-                <p class="text-sm text-muted-foreground">The pull request with the image is not open yet.</p>
-              )}
-              <a href={p.url} target="_blank" rel="noopener" class="mt-auto inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
-                {p.repo.split('/').pop()} on GitHub <ArrowUpRight className="size-3.5" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p class="mt-8 text-muted-foreground">Nothing is in review right now.</p>
-      )
-    }
-  </section>
-
-  <Proposals client:idle repo={LABS_PROPOSALS_REPO} fallback={`${CONTROL_URL}/issues`} />
-
-  <section class="raft-container pt-20" aria-labelledby="bar">
-    <SectionHead eyebrow="The bar" title="What qualifies" id="bar" description="Lower than the main fleet's, and checked before anyone spends time on a proposal." />
-    <ul class="mt-8 grid gap-3 md:grid-cols-2">
-      {
-        bar.map(([title, text]) => (
-          <li class="raft-panel p-4">
-            <p class="font-medium">{title}</p>
-            <p class="mt-1 text-sm text-muted-foreground">{text}</p>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <section class="raft-container pt-20" aria-labelledby="propose">
-    <SectionHead eyebrow="Get in" title="Propose an application" id="propose" description="You propose and contribute by pull request; the team creates the repository and decides what goes live." />
-    <ol class="mt-8 grid gap-3">
-      {
-        steps.map(([title, text], i) => (
-          <li class="raft-panel flex gap-4 p-4">
-            <span class="grid size-7 shrink-0 place-items-center rounded-full border border-[var(--raft-hair-strong)] font-mono text-xs">{i + 1}</span>
-            <div>
-              <p class="font-medium">{title}</p>
-              <p class="mt-1 text-sm text-muted-foreground">{text}</p>
-            </div>
-          </li>
-        ))
-      }
-    </ol>
-    <div class="mt-8 flex flex-wrap gap-3">
-      <a href={LABS_PROPOSE_URL} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90">
-        <GitPullRequest className="size-4" aria-hidden="true" /> Open the proposal form <span class="sr-only">(opens in a new tab)</span>
-      </a>
-      <a href={HARNESS_REPO} target="_blank" rel="noopener" class="inline-flex h-10 items-center gap-2 rounded-md border border-[var(--raft-hair-strong)] px-4 text-sm font-medium hover:bg-muted">
-        Propose with an AI agent <ArrowUpRight className="size-4" aria-hidden="true" /><span class="sr-only">(opens in a new tab)</span>
-      </a>
+  <section class="raft-container pt-20" aria-labelledby="get-in">
+    <div class="raft-panel relative overflow-hidden p-8 md:p-10">
+      <div class="raft-aurora pointer-events-none absolute inset-0 opacity-60" aria-hidden="true"></div>
+      <div class="relative grid grid-cols-1 gap-8 md:grid-cols-[1fr_auto] md:items-center">
+        <div class="max-w-2xl">
+          <p class="raft-eyebrow"><span class="text-primary" aria-hidden="true">//</span> Get in</p>
+          <h2 id="get-in" class="mt-2 text-2xl font-semibold tracking-tight md:text-[2rem] md:leading-tight">Get your app in Labs</h2>
+          <p class="mt-3 text-muted-foreground">
+            Open source, self-hosted, released from an organisation's repository and able to run with just its own container: propose it with a form, or let an
+            AI agent with the LinuxServer harness check the bar and fill it in with you. The guide covers what qualifies and why, how to build and run the image
+            on your own machine first, and every step from the proposal to a published image.
+          </p>
+        </div>
+        <div class="flex shrink-0 flex-col gap-2 sm:flex-row md:flex-col">
+          <a href={withBase('/propose/')} class="inline-flex h-11 items-center justify-center gap-2 rounded-md bg-foreground px-5 font-medium text-background hover:opacity-90">
+            How to propose an app <ArrowRight className="size-4" aria-hidden="true" />
+          </a>
+          <a href={withBase('/proposals/')} class="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-[var(--raft-hair-strong)] px-5 font-medium hover:bg-muted">
+            {pending.length === 1 ? 'One image in review' : pending.length ? `${pending.length} images in review` : 'Images in review'}
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 </Layout>

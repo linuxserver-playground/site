@@ -4,12 +4,15 @@
  * ContributeCallout read from here, so a renamed command or a new path is one change.
  */
 
-import { LABS_PROPOSE_URL } from './site';
+import { LABS_GUIDE_URL } from './site';
 
 export const HARNESS_REPO = 'https://github.com/linuxserver-playground/harness';
 
-/** New applications start in LinuxServer Labs: a proposal is the structured issue form in the Labs proposals repository. */
-export const PROPOSALS_URL = LABS_PROPOSE_URL;
+/**
+ * New applications start in LinuxServer Labs. The full guide to proposing one is on the Labs site: what qualifies,
+ * building it locally, the harness, the proposal form (the structured issue form in the Labs proposals repository).
+ */
+export const PROPOSE_GUIDE_URL = LABS_GUIDE_URL;
 
 /** The harness's three commands, as its README gives them. */
 export const HARNESS_START = [
@@ -25,7 +28,7 @@ export interface ContributePath {
   body: string;
   /** What to say to the agent. Angle brackets are the person's to fill in. */
   prompt: string;
-  /** The docs page that explains it without an agent. */
+  /** The docs page that explains it without an agent (an absolute URL when the guide is on the Labs site). */
   href: string;
 }
 
@@ -48,9 +51,9 @@ export const CONTRIBUTE_PATHS: ContributePath[] = [
   {
     id: 'propose',
     title: 'Bring an app you want',
-    body: 'New applications start in LinuxServer Labs. The agent checks the app meets the Labs bar and fills in the proposal form from real data, for you to read before it is filed.',
+    body: 'New applications start in LinuxServer Labs. Build and run your app\'s image locally from the Labs template, or let the agent check the bar and fill in the proposal form from real data, for you to read before it is filed.',
     prompt: "I'd like <app> in LinuxServer Labs. Check it meets the bar and draft the proposal.",
-    href: '/docs/contribute/proposing-an-image/',
+    href: LABS_GUIDE_URL,
   },
   {
     id: 'docs',

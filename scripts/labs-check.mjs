@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 /**
- * Checks the Labs home page's live part, the open proposals (src/components/islands/Proposals.tsx), against a fake
- * control plane, from a local preview of a Labs-mode build (PUBLIC_SITE_MODE=labs):
+ * Checks the Labs site's live part, the open proposals on /proposals/ (src/components/islands/Proposals.tsx), against
+ * a fake control plane, from a local preview of a Labs-mode build (PUBLIC_SITE_MODE=labs):
  *
  *   node scripts/labs-check.mjs http://localhost:4321/site [outDir]
  *
  * `/api/me` and `/api/issues.json` are answered here, on whatever host the build's PUBLIC_CONTROL_URL names, so the
  * signed-in states can be reached before Labs control has a sign-in: signed out and signed in as a non-member (the
  * section must not exist), a member (the proposals repository's open issues only, axe in light and dark, 390px
- * overflow), a member with no open proposal, and a member whose control plane is down (the offline state). A
+ * overflow), a member with no open proposal, and a member whose control plane is down (the offline state). The
+ * public "in review" list is on the page in every state, and the home page carries no proposals for anyone. A
  * screenshot of each state goes to outDir. Exits non-zero on any failure.
  */
 import { mkdirSync } from 'node:fs';
@@ -56,7 +57,7 @@ const fail = (m) => {
 const browser = await chromium.launch();
 
 /** A page whose control plane answers `me` and `issues` (a status and body each). */
-async function open(scheme, me, issues) {
+async function open(scheme, me, issues, path = '/proposals/') {
   const ctx = await browser.newContext({ colorScheme: scheme, viewport: { width: 1280, height: 900 } });
   await ctx.addInitScript((t) => localStorage.setItem('theme', t), scheme);
   await ctx.route(/\/api\/(me|issues\.json|stream)(\?.*)?$/, (route) => {
@@ -70,7 +71,7 @@ async function open(scheme, me, issues) {
   await ctx.route('https://avatars.githubusercontent.com/**', (route) => route.fulfill({ status: 200, contentType: 'image/png', body: PNG }));
   const page = await ctx.newPage();
   page.on('pageerror', (e) => fail(`page error: ${e.message}`));
-  await page.goto(`${base.replace(/\/$/, '')}/`, { waitUntil: 'networkidle' });
+  await page.goto(`${base.replace(/\/$/, '')}${path}`, { waitUntil: 'networkidle' });
   return { ctx, page };
 }
 
@@ -89,13 +90,26 @@ const shot = async (page, name) => {
   if (await s.count()) await s.screenshot({ path: `${outDir}/${name}.png` });
 };
 
-// Nothing at all for anyone who is not a signed-in member.
+// Nothing at all for anyone who is not a signed-in member; the images in review are public.
 for (const [name, me] of [['signed-out', ANON], ['non-member', signedIn(false)]]) {
   const { ctx, page } = await open('light', me, [200, ISSUES]);
   await page.waitForTimeout(500);
+  if (!(await page.locator('section[aria-labelledby="pending"]').count())) fail(`${name}: the in-review section is missing`);
   if (await section(page).count()) fail(`${name}: the proposals section is shown`);
   if (await page.getByText('Open proposals').count()) fail(`${name}: proposal text is shown`);
   else console.log(`ok ${name}: nothing shown`);
+  await ctx.close();
+}
+
+// The home page links to the proposals page and carries neither list, signed in or not.
+{
+  const { ctx, page } = await open('light', signedIn(true), [200, ISSUES], '/');
+  await page.waitForTimeout(500);
+  if (await section(page).count()) fail('home, member: the proposals section is on the home page');
+  if (await page.locator('section[aria-labelledby="pending"]').count()) fail('home: the in-review section is on the home page');
+  if (!(await page.locator('main a[href$="/proposals/"]').count())) fail('home: no link to /proposals/');
+  if (!(await page.locator('main a[href$="/propose/"]').count())) fail('home: no link to /propose/');
+  else console.log('ok home: links to /proposals/ and /propose/, no lists');
   await ctx.close();
 }
 
