@@ -1,9 +1,8 @@
 import * as React from 'react';
 import type { BuildBase, InitUnit } from '@/lib/hub';
 import { withBase } from '@/lib/base';
-import { buildUrl } from '@/lib/build-helpers';
 import { initStages, reducedMotion, SOURCE_COLOR } from '@/lib/explorer';
-import { attributeUnits, loadBaseLayers, unresolvedReason, type Attribution, type BaseLayers, type ChainHop, type InitChain } from '@/lib/init-chain';
+import { attributeUnits, loadBaseLayers, unresolvedReason, type Attribution, type BaseLayers, type ChainHop, type InitChain, baseBuildUrl } from '@/lib/init-chain';
 import CopyButton from '../CopyButton';
 import FullscreenFrame, { FullscreenButton } from './Fullscreen';
 
@@ -303,7 +302,7 @@ export default function InitGraph({ units, image, base, chain }: Props) {
     }
   };
   const hopLink = (h: InitChain['hops'][number], text: string) => (
-    <a href={withBase(`${buildUrl(h.image, h.tag)}#init`)} className={LINK}>
+    <a href={withBase(`${baseBuildUrl(h.image, h.tag)}#init`)} className={LINK}>
       {text}
     </a>
   );

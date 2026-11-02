@@ -13,7 +13,7 @@ import { buildPage, type BuildPageImage } from '@/lib/build-page';
 import type { BuildRecord } from '@/lib/builds';
 import { hubApi, hubTestsUrl, type Bundle, type BuildsData, type Diff, type HistoryEntry, type Layer, type TestsData } from '@/lib/hub';
 import { AnchorHeading, BuildHeader, BuildRecordSection, CiHeading, NotesAndData, WhyThisBuild } from '@/components/build/BuildParts';
-import { matchBaseBuild, parseBaseRef } from '@/lib/init-chain';
+import { baseBuildUrl, baseHubApi, matchBaseBuild, parseBaseRef } from '@/lib/init-chain';
 import { baseBuildsBetween, baseRefOf, explainBuild, type BaseBuilds } from '@/lib/why';
 import CopyButton from '@/components/islands/CopyButton';
 import CiReport from '@/components/islands/explorer/CiReport';
@@ -44,8 +44,8 @@ export function buildPath(pathname: string): { name: string; tag: string } | nul
   return m ? { name: decodeURIComponent(m[1]), tag: decodeURIComponent(m[2]) } : null;
 }
 
-async function hubJSON<T>(path: string, signal: AbortSignal): Promise<T | null> {
-  const res = await fetch(hubApi(path), { signal, mode: 'cors' });
+async function hubJSON<T>(path: string, signal: AbortSignal, api: (path: string) => string = hubApi): Promise<T | null> {
+  const res = await fetch(api(path), { signal, mode: 'cors' });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`${res.status} for ${path}`);
   return ((await res.json()) as { data: T }).data;
@@ -56,12 +56,13 @@ async function hubJSON<T>(path: string, signal: AbortSignal): Promise<T | null> 
 async function baseBuildOf(b: Bundle, diff: Diff | null, since: string | null, signal: AbortSignal): Promise<BaseBuilds | null> {
   const ref = diff?.base.changed ? parseBaseRef(b.base.image) : null;
   if (!ref) return null;
-  const builds = await hubJSON<BuildsData>(`catalog/${ref.name}/builds.json`, signal).catch(() => null);
+  // A base image is the pipeline org's: the main hub has it, also on the Labs site (baseHubApi).
+  const builds = await hubJSON<BuildsData>(`catalog/${ref.name}/builds.json`, signal, baseHubApi).catch(() => null);
   const match = builds?.builds.length ? matchBaseBuild(builds.builds, b.base) : null;
   if (!match?.exact) return null;
   const between = baseBuildsBetween(builds!.builds, diff?.base.from?.digest, match.build, since);
-  const diffs = await Promise.all(between.map((s) => hubJSON<{ diff: Diff }>(`catalog/${ref.name}/builds/${s.tag}/diff.json`, signal).then((d) => d?.diff ?? null).catch(() => null)));
-  return { image: ref.name, tag: match.build.tag, url: buildUrl(ref.name, match.build.tag), diffs };
+  const diffs = await Promise.all(between.map((s) => hubJSON<{ diff: Diff }>(`catalog/${ref.name}/builds/${s.tag}/diff.json`, signal, baseHubApi).then((d) => d?.diff ?? null).catch(() => null)));
+  return { image: ref.name, tag: match.build.tag, url: baseBuildUrl(ref.name, match.build.tag), diffs };
 }
 
 function Logo({ image }: { image: LiveImage }) {

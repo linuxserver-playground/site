@@ -8,9 +8,19 @@
  * per branch rotate), the newest build the base's floating tag points at stands in, marked inexact: init scripts
  * change rarely, and the label says so. A base outside the playground, or a build without a recorded base, ends
  * the chain.
+ *
+ * Base images belong to the shared pipeline org, so on the Labs site (whose own hub holds only Labs images) they are
+ * read from the main hub and linked on the main site.
  */
+import { buildUrl } from './build-helpers';
 import type { BuildBase, BuildSummary, Bundle, InitUnit } from './hub';
 import { hubApi } from './hub';
+import { LABS, MAIN_HUB_URL, MAIN_SITE_URL } from './site';
+
+/** A base image's hub document URL: the site's own hub, or the main hub on the Labs site. */
+export const baseHubApi = (path: string) => (LABS ? `${MAIN_HUB_URL}/api/v1/${path.replace(/^\/+/, '')}` : hubApi(path));
+/** A base image build's page: a site path (for withBase), or the main site's absolute URL on the Labs site. */
+export const baseBuildUrl = (image: string, tag: string) => (LABS ? `${MAIN_SITE_URL.replace(/\/$/, '')}${buildUrl(image, tag)}` : buildUrl(image, tag));
 
 export interface ChainHop {
   /** The base image's name in the catalogue (`baseimage-selkies`). */
@@ -82,7 +92,7 @@ export async function resolveChain(base: BuildBase | null | undefined, lookup: B
 
 /** A hub document's `data`, null on 404 (every hub response is an envelope: `status`, `last_updated`, `data`). */
 async function hubJSON<T>(path: string): Promise<T | null> {
-  const res = await fetch(hubApi(path), { mode: 'cors' });
+  const res = await fetch(baseHubApi(path), { mode: 'cors' });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`${res.status} for ${path}`);
   return ((await res.json()) as { data: T }).data;

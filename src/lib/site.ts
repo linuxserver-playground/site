@@ -7,6 +7,8 @@ export const LABS = import.meta.env.PUBLIC_SITE_MODE === 'labs';
 /** The two sites link to each other. */
 export const MAIN_SITE_URL = 'https://linuxserver-playground.github.io/site/';
 export const LABS_SITE_URL = 'https://linuxserverlabs-playground.github.io/site/';
+/** The main hub: base images are the shared pipeline org's, so the Labs site reads them from here (init-chain.ts). */
+export const MAIN_HUB_URL = 'https://linuxserver-playground.github.io/hub';
 const ORG = LABS ? 'linuxserverlabs-playground' : 'linuxserver-playground';
 /** The Labs proposals repository: anyone files a proposal there, through its structured issue form. */
 export const LABS_PROPOSALS_REPO = 'linuxserverlabs-playground/proposals';

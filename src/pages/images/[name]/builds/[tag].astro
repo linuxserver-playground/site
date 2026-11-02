@@ -24,6 +24,7 @@ import { matchBaseBuild, parseBaseRef, resolveChain } from '@/lib/init-chain';
 import { baseBuildsBetween, baseRefOf, explainBuild } from '@/lib/why';
 import { getImage, SNAPSHOT_DATE, type Image } from '@/lib/images';
 import { githubRepo, renderNotes } from '@/lib/markdown/notes';
+import { LABS } from '@/lib/site';
 
 export function getStaticPaths() {
   return allBuildRecords()
@@ -61,8 +62,10 @@ const why = explainBuild(b, record.diff, baseBuild);
 // The chain of base images under this build, from the snapshots: the island reads each base's build from the hub for
 // the inherited units' scripts only when someone opens them. The index digest comes from the base build's own record
 // when the builds list predates the field.
+// On the Labs site the snapshots hold no base images (they are the main hub's), so the island resolves the chain in
+// the browser from the main hub instead (init-chain.ts, baseHubApi).
 const chain =
-  units.length > 0
+  units.length > 0 && !LABS
     ? await resolveChain(b.base, (name) => {
         const builds = getBuilds(name);
         return builds.length ? builds.map((s) => ({ ...s, index_digest: s.index_digest ?? getBuildRecord(name, s.tag)?.build.index_digest ?? null })) : null;
