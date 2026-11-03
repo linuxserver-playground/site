@@ -1,0 +1,781 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "python",
+  "repository": "linuxserver-playground/docker-python",
+  "branch": "ha",
+  "mode": "live",
+  "version": {
+   "upstream": "alpine324-3.14.10",
+   "upstream_clean": "alpine324-3.14.10",
+   "semver": "3.14.10",
+   "ls_build": 2,
+   "tag": "ha-alpine324-3.14.10-ls2",
+   "release_tag": "ha",
+   "tags": [
+    "ha",
+    "ha-alpine324-3.14.10-ls2",
+    "ha-version-alpine324-3.14.10",
+    "ha-3.14.10",
+    "amd64-ha",
+    "amd64-ha-alpine324-3.14.10-ls2",
+    "amd64-ha-version-alpine324-3.14.10",
+    "amd64-ha-3.14.10",
+    "arm64v8-ha",
+    "arm64v8-ha-alpine324-3.14.10-ls2",
+    "arm64v8-ha-version-alpine324-3.14.10",
+    "arm64v8-ha-3.14.10"
+   ],
+   "source": "command",
+   "source_url": "command"
+  },
+  "commit": "287069ad91905597537bbe06f9864fafc0eb7b1e",
+  "created": "2026-11-02T23:12:41Z",
+  "reason": "rebuild",
+  "previous": {
+   "tag": "ha-alpine324-3.14.9-ls1",
+   "release_url": "https://github.com/linuxserver-playground/docker-python/releases/tag/ha-alpine324-3.14.9-ls1"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:d92c90aeb5668aa7fd7d6d9d13be9570d8766f1668b7a198db50ec6d40fa683c",
+    "size": 26457653,
+    "uncompressed_size": 82055041,
+    "layers": 1,
+    "runner": "Linux-X64",
+    "build_seconds": 811
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:e19d43f020d0cb721a8cf7aa0b9023fd2178d7187e5bffd228b074b787287772",
+    "size": 26353938,
+    "uncompressed_size": 84612876,
+    "layers": 1,
+    "runner": "Linux-ARM64",
+    "build_seconds": 727
+   }
+  ],
+  "index_digest": "sha256:3f1cce4a93c3d609d790bc16478ef2d4732d67ed35fd9683db4a822712d57cef",
+  "labels": {
+   "build_version": "Linuxserver.io version:- alpine324-3.14.10-ls2 Build-date:- 2026-11-02T22:55:33Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "ha",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "alpine324-3.14.10",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-02T22:55:33Z",
+   "org.opencontainers.image.description": "python container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-python",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "287069ad91905597537bbe06f9864fafc0eb7b1e",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-python",
+   "org.opencontainers.image.title": "Python",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-python/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "alpine324-3.14.10-ls2"
+  },
+  "config": {
+   "env": [
+    "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG OS_PYTHON_VERSION\n\nENV MAKEFLAGS=\"-j4\"\n\nCOPY patches/* /patches/\n\nRUN \\\n  echo \"**** install build dependencies ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    patch \\\n    bluez-dev \\\n    bzip2-dev \\\n    coreutils \\\n    dpkg-dev dpkg \\\n    expat-dev \\\n    findutils \\\n    build-base \\\n    gdbm-dev \\\n    libc-dev \\\n    libffi-dev \\\n    libnsl-dev \\\n    openssl \\\n    openssl-dev \\\n    libtirpc-dev \\\n    linux-headers \\\n    make \\\n    mpdecimal-dev \\\n    ncurses-dev \\\n    pax-utils \\\n    readline-dev \\\n    sqlite-dev \\\n    tcl-dev \\\n    tk \\\n    tk-dev \\\n    xz-dev \\\n    zlib-dev && \\\n  echo \"**** compile python ****\" && \\\n  IMAGE_ALPINE_VER=$(cat /etc/os-release | grep PRETTY_NAME | sed 's|.*Linux v||' | sed 's|\"||' | sed 's|\\.||') && \\\n  HA_ALPINE_VER=$(echo \"${OS_PYTHON_VERSION}\" | sed -E 's|alpine([0-9]+)-.*|\\1|') && \\\n  if [ \"${IMAGE_ALPINE_VER}\" != \"${HA_ALPINE_VER}\" ]; then \\\n    echo -e \"**** Incorrect OS version detected, canceling build ****\\n**** Upstream expected OS: ${HA_ALPINE_VER} ****\\n**** Detected OS: ${IMAGE_ALPINE_VER}****\"; \\\n    exit 1; \\\n  fi && \\\n  PYTHON_VERSION=\"${OS_PYTHON_VERSION##*-}\" && \\\n  mkdir -p \\\n    /tmp/python \\\n    /pythoncompiled && \\\n  curl -o \\\n    /tmp/python.tar.xz -L \\\n    \"https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz\" && \\\n  tar xf \\\n    /tmp/python.tar.xz -C \\\n    /tmp/python --strip-components=1 && \\\n  for patch in /patches/*.patch; do \\\n    patch -d /tmp/python -p 1 < \"${patch}\"; \\\n  done && \\\n  cd /tmp/python && \\\n  sed -i -E 's|\\$\\(LLVM_PROF_FILE\\) \\$\\(RUNSHARED\\) \\./\\$\\(BUILDPYTHON\\) \\$\\(PROFILE_TASK\\)$|$(LLVM_PROF_FILE) $(RUNSHARED) ./$(BUILDPYTHON) $(PROFILE_TASK) \\|\\| true|g' Makefile.pre.in && \\\n  ./configure \\\n    --build=\"x86_64-linux-musl\" \\\n    --enable-loadable-sqlite-extensions \\\n    --enable-optimizations \\\n    --enable-option-checking=fatal \\\n    --enable-shared \\\n    --prefix=/pythoncompiled \\\n    --with-lto \\\n    --with-system-libmpdec \\\n    --with-system-expat \\\n    --without-ensurepip \\\n    --without-static-libpython && \\\n  make \\\n    LDFLAGS=\"-Wl,--strip-all\" \\\n    CFLAGS=\"-fno-semantic-interposition -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free\" \\\n    EXTRA_CFLAGS=\"-DTHREAD_STACK_SIZE=0x100000\" && \\\n  make install && \\\n  find /pythoncompiled -type f -executable -not \\( -name '*tkinter*' \\) -exec scanelf --needed --nobanner --format '%n#p' '{}' ';' \\\n    | tr ',' '\\n' \\\n    | sort -u \\\n    | awk 'system(\"[ -e /pythoncompiled/lib/\" $1 \" ]\") == 0 { next } { print \"so:\" $1 }' \\\n    | xargs -rt echo > /pythoncompiled/python-deps.txt && \\\n  find /pythoncompiled -depth \\\n    \\( \\\n      -type d -a \\( -name test -o -name tests \\) \\\n    \\) -exec rm -rf '{}' + && \\\n  cd /pythoncompiled/bin && \\\n  ln -s idle3 idle && \\\n  ln -s pydoc3 pydoc && \\\n  ln -s python3 python && \\\n  ln -s python3-config python-config && \\\n  curl -o \\\n    /tmp/get-pip.py -L \\\n    \"https://bootstrap.pypa.io/get-pip.py\" && \\\n  LD_LIBRARY_PATH=/pythoncompiled/lib /pythoncompiled/bin/python3 /tmp/get-pip.py \\\n    --prefix=/pythoncompiled \\\n    --disable-pip-version-check \\\n    --no-cache-dir \\\n    pip && \\\n  find /pythoncompiled -depth \\\n    \\( \\\n      -type d -a \\( -name test -o -name tests \\) \\\n    \\) -exec rm -rf '{}' + && \\\n  find /pythoncompiled/bin -type f -not \\( -name 'python*' \\) -exec sed -i 's|pythoncompiled|usr/local|' '{}' '+' && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root/.cache \\\n    /tmp/*\n\n# Storage layer consumed downstream\nFROM scratch\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# Add files from buildstage\nCOPY --from=buildstage /pythoncompiled/ /usr/local/\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG OS_PYTHON_VERSION\n\nENV MAKEFLAGS=\"-j4\"\n\nCOPY patches/* /patches/\n\nRUN \\\n  echo \"**** install build dependencies ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    patch \\\n    bluez-dev \\\n    bzip2-dev \\\n    coreutils \\\n    dpkg-dev dpkg \\\n    expat-dev \\\n    findutils \\\n    build-base \\\n    gdbm-dev \\\n    libc-dev \\\n    libffi-dev \\\n    libnsl-dev \\\n    openssl \\\n    openssl-dev \\\n    libtirpc-dev \\\n    linux-headers \\\n    make \\\n    mpdecimal-dev \\\n    ncurses-dev \\\n    pax-utils \\\n    readline-dev \\\n    sqlite-dev \\\n    tcl-dev \\\n    tk \\\n    tk-dev \\\n    xz-dev \\\n    zlib-dev && \\\n  echo \"**** compile python ****\" && \\\n  IMAGE_ALPINE_VER=$(cat /etc/os-release | grep PRETTY_NAME | sed 's|.*Linux v||' | sed 's|\"||' | sed 's|\\.||') && \\\n  HA_ALPINE_VER=$(echo \"${OS_PYTHON_VERSION}\" | sed -E 's|alpine([0-9]+)-.*|\\1|') && \\\n  if [ \"${IMAGE_ALPINE_VER}\" != \"${HA_ALPINE_VER}\" ]; then \\\n    echo -e \"**** Incorrect OS version detected, canceling build ****\\n**** Upstream expected OS: ${HA_ALPINE_VER} ****\\n**** Detected OS: ${IMAGE_ALPINE_VER}****\"; \\\n    exit 1; \\\n  fi && \\\n  PYTHON_VERSION=\"${OS_PYTHON_VERSION##*-}\" && \\\n  mkdir -p \\\n    /tmp/python \\\n    /pythoncompiled && \\\n  curl -o \\\n    /tmp/python.tar.xz -L \\\n    \"https://www.python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz\" && \\\n  tar xf \\\n    /tmp/python.tar.xz -C \\\n    /tmp/python --strip-components=1 && \\\n  for patch in /patches/*.patch; do \\\n    patch -d /tmp/python -p 1 < \"${patch}\"; \\\n  done && \\\n  cd /tmp/python && \\\n  sed -i -E 's|\\$\\(LLVM_PROF_FILE\\) \\$\\(RUNSHARED\\) \\./\\$\\(BUILDPYTHON\\) \\$\\(PROFILE_TASK\\)$|$(LLVM_PROF_FILE) $(RUNSHARED) ./$(BUILDPYTHON) $(PROFILE_TASK) \\|\\| true|g' Makefile.pre.in && \\\n  ./configure \\\n    --build=\"x86_64-linux-musl\" \\\n    --enable-loadable-sqlite-extensions \\\n    --enable-optimizations \\\n    --enable-option-checking=fatal \\\n    --enable-shared \\\n    --prefix=/pythoncompiled \\\n    --with-lto \\\n    --with-system-libmpdec \\\n    --with-system-expat \\\n    --without-ensurepip \\\n    --without-static-libpython && \\\n  make \\\n    LDFLAGS=\"-Wl,--strip-all\" \\\n    CFLAGS=\"-fno-semantic-interposition -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free\" \\\n    EXTRA_CFLAGS=\"-DTHREAD_STACK_SIZE=0x100000\" && \\\n  make install && \\\n  find /pythoncompiled -type f -executable -not \\( -name '*tkinter*' \\) -exec scanelf --needed --nobanner --format '%n#p' '{}' ';' \\\n    | tr ',' '\\n' \\\n    | sort -u \\\n    | awk 'system(\"[ -e /pythoncompiled/lib/\" $1 \" ]\") == 0 { next } { print \"so:\" $1 }' \\\n    | xargs -rt echo > /pythoncompiled/python-deps.txt && \\\n  find /pythoncompiled -depth \\\n    \\( \\\n      -type d -a \\( -name test -o -name tests \\) \\\n    \\) -exec rm -rf '{}' + && \\\n  cd /pythoncompiled/bin && \\\n  ln -s idle3 idle && \\\n  ln -s pydoc3 pydoc && \\\n  ln -s python3 python && \\\n  ln -s python3-config python-config && \\\n  curl -o \\\n    /tmp/get-pip.py -L \\\n    \"https://bootstrap.pypa.io/get-pip.py\" && \\\n  LD_LIBRARY_PATH=/pythoncompiled/lib /pythoncompiled/bin/python3 /tmp/get-pip.py \\\n    --prefix=/pythoncompiled \\\n    --disable-pip-version-check \\\n    --no-cache-dir \\\n    pip && \\\n  find /pythoncompiled -depth \\\n    \\( \\\n      -type d -a \\( -name test -o -name tests \\) \\\n    \\) -exec rm -rf '{}' + && \\\n  find /pythoncompiled/bin -type f -not \\( -name 'python*' \\) -exec sed -i 's|pythoncompiled|usr/local|' '{}' '+' && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root/.cache \\\n    /tmp/*\n\n# Storage layer consumed downstream\nFROM scratch\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# Add files from buildstage\nCOPY --from=buildstage /pythoncompiled/ /usr/local/\n"
+  },
+  "packages": {
+   "amd64": {
+    "count": 27,
+    "distro": "unknown",
+    "hash": "40e5c4f6",
+    "by_type": {
+     "python": 19,
+     "binary": 7,
+     "UnknownPackage": 1
+    }
+   },
+   "arm64": {
+    "count": 27,
+    "distro": "unknown",
+    "hash": "40e5c4f6",
+    "by_type": {
+     "python": 19,
+     "binary": 7,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/python/builds/ha-alpine324-3.14.10-ls2/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-python/compare/ha-alpine324-3.14.9-ls1...ha-alpine324-3.14.10-ls2"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 6703,
+    "sha256": "47080a24c1c48e0316cd5c1aacf2c78352a3901f6b47918c9568ce9f59782c56",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 338,
+    "sha256": "43b908f966505329af1ac5ce8a5347884285dfd104bfe8c3f0ccbc782d636465",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 29971,
+    "sha256": "139e7d0e0afdd9056bc13d0d28840588b18f2eabf8c7f5a539e597349022df29",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1924,
+    "sha256": "ba7bb04706074f730792f8f85500aa16247b6c34c2465af83f7beb0dbaff3602",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 434,
+    "sha256": "d1b83fd69faef31dd9e6491c307316a3f43d679f35ac84220686cf15b6dc00c0",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 1449,
+    "sha256": "91f0dd61a865a6b28d37ac8037296301f3fb862019cfdd6d95b752059a8906d2",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 6708,
+    "sha256": "b588f30ffac5296b20dd8f4b4a7819764996f065ec6f2be93303fe4ff078c4b4",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 338,
+    "sha256": "e06942f139bf56403d0e9f9169160926b55c58f24ac5f4d52c20cbde6851c8b4",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 29926,
+    "sha256": "72eaccdcf2f68fa2f9139a2f4b9485b525a6efab0d992351d478095b7c3a9026",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1926,
+    "sha256": "5519d896689353b9a969b3aef96380c5aadfbcbf1a938457e0138545e2aafd32",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 435,
+    "sha256": "661d926a07b1635be3d0f2f32119a72887966871312f419c51246e3bf36265a2",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 1449,
+    "sha256": "91f0dd61a865a6b28d37ac8037296301f3fb862019cfdd6d95b752059a8906d2",
+    "url": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41541229699,
+   "run_url": "https://github.com/linuxserver-playground/docker-python/actions/runs/41541229699",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/python",
+   "tags": [
+    "ha",
+    "ha-alpine324-3.14.10-ls2",
+    "ha-version-alpine324-3.14.10",
+    "ha-3.14.10",
+    "amd64-ha",
+    "amd64-ha-alpine324-3.14.10-ls2",
+    "amd64-ha-version-alpine324-3.14.10",
+    "amd64-ha-3.14.10",
+    "arm64v8-ha",
+    "arm64v8-ha-alpine324-3.14.10-ls2",
+    "arm64v8-ha-version-alpine324-3.14.10",
+    "arm64v8-ha-3.14.10"
+   ]
+  }
+ },
+ "diff": {
+  "image": "python",
+  "branch": "ha",
+  "tag": "ha-alpine324-3.14.10-ls2",
+  "previous_tag": "ha-alpine324-3.14.9-ls1",
+  "classification": "mixed",
+  "reasons": [
+   "upstream version changed",
+   "repository files that reach the image changed (image.yml or root/)",
+   "packages changed",
+   "5 commits (c1763eb → 287069a): changed image.yml, generated files, the package table"
+  ],
+  "upstream": {
+   "from": "alpine324-3.14.9",
+   "to": "alpine324-3.14.10",
+   "changed": true
+  },
+  "commit": {
+   "from": "c1763ebf8372145e147557a82c9f35dc30e60603",
+   "to": "287069ad91905597537bbe06f9864fafc0eb7b1e",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-python/compare/c1763ebf8372145e147557a82c9f35dc30e60603...287069ad91905597537bbe06f9864fafc0eb7b1e",
+   "commits": [
+    {
+     "sha": "5a63c18e3bb06a62367d64d86f970b779ff43a61",
+     "subject": "Mark the image as an internal tool",
+     "author": {
+      "name": "thelamer",
+      "login": "thelamer"
+     },
+     "date": "2026-10-26T12:33:28Z",
+     "url": "https://github.com/linuxserver-playground/docker-python/commit/5a63c18e3bb06a62367d64d86f970b779ff43a61",
+     "bot": false
+    },
+    {
+     "sha": "3d62e38136dd09a5d8ddae33b9fb7311c36d1e29",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "thelamer",
+      "login": "thelamer"
+     },
+     "date": "2026-10-28T14:50:26Z",
+     "url": "https://github.com/linuxserver-playground/docker-python/commit/3d62e38136dd09a5d8ddae33b9fb7311c36d1e29",
+     "bot": true
+    },
+    {
+     "sha": "b8b614a62a6f8af9d74e4a921225bd811323dcef",
+     "subject": "Update package versions",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-29T21:08:34Z",
+     "url": "https://github.com/linuxserver-playground/docker-python/commit/b8b614a62a6f8af9d74e4a921225bd811323dcef",
+     "bot": true
+    },
+    {
+     "sha": "7cf3ed8942a2b16182ece752b3be80aab91eb14e",
+     "subject": "Add the upstream donation links",
+     "author": {
+      "name": "thelamer",
+      "login": "thelamer"
+     },
+     "date": "2026-10-30T19:37:59Z",
+     "url": "https://github.com/linuxserver-playground/docker-python/commit/7cf3ed8942a2b16182ece752b3be80aab91eb14e",
+     "bot": false
+    },
+    {
+     "sha": "287069ad91905597537bbe06f9864fafc0eb7b1e",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-30T19:55:32Z",
+     "url": "https://github.com/linuxserver-playground/docker-python/commit/287069ad91905597537bbe06f9864fafc0eb7b1e",
+     "bot": true
+    }
+   ],
+   "count": 5,
+   "truncated": false,
+   "areas": {
+    "manifest": 1,
+    "generated": 4,
+    "packages": 1
+   }
+  },
+  "trigger": "rebuild",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "scratch"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 26219324,
+    "to": 26457653,
+    "delta": 238329
+   },
+   "arm64": {
+    "from": 26114284,
+    "to": 26353938,
+    "delta": 239654
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "binary": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "python",
+       "from": "3.14.9",
+       "to": "3.14.10",
+       "purl": "pkg:generic/python@3.14.10"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "certifi",
+       "from": "2026.10.19",
+       "to": "2026.10.23",
+       "purl": "pkg:pypi/certifi@2026.10.23"
+      },
+      {
+       "name": "distlib",
+       "from": "0.4.2",
+       "to": "0.4.4",
+       "purl": "pkg:pypi/distlib@0.4.4"
+      },
+      {
+       "name": "idna",
+       "from": "3.18",
+       "to": "3.20",
+       "purl": "pkg:pypi/idna@3.20"
+      },
+      {
+       "name": "msgpack",
+       "from": "1.1.2",
+       "to": "1.2.4",
+       "purl": "pkg:pypi/msgpack@1.2.4"
+      },
+      {
+       "name": "packaging",
+       "from": "26.2",
+       "to": "26.3",
+       "purl": "pkg:pypi/packaging@26.3"
+      },
+      {
+       "name": "pip",
+       "from": "26.2.2",
+       "to": "26.3",
+       "purl": "pkg:pypi/pip@26.3"
+      },
+      {
+       "name": "platformdirs",
+       "from": "4.10.0",
+       "to": "4.12.4",
+       "purl": "pkg:pypi/platformdirs@4.12.4"
+      },
+      {
+       "name": "pygments",
+       "from": "2.20.0",
+       "to": "2.21.0",
+       "purl": "pkg:pypi/pygments@2.21.0"
+      },
+      {
+       "name": "pyproject-hooks",
+       "from": "1.2.0",
+       "to": "1.3.3",
+       "purl": "pkg:pypi/pyproject-hooks@1.3.3"
+      },
+      {
+       "name": "rich",
+       "from": "14.2.0",
+       "to": "15.0.0",
+       "purl": "pkg:pypi/rich@15.0.0"
+      },
+      {
+       "name": "truststore",
+       "from": "0.10.4",
+       "to": "0.10.5",
+       "purl": "pkg:pypi/truststore@0.10.5"
+      },
+      {
+       "name": "urllib3",
+       "from": "2.7.0",
+       "to": "2.8.0",
+       "purl": "pkg:pypi/urllib3@2.8.0"
+      }
+     ],
+     "downgraded": [
+      {
+       "name": "tomli",
+       "from": "2.4.1",
+       "to": "2.3.2",
+       "purl": "pkg:pypi/tomli@2.3.2"
+      }
+     ]
+    }
+   },
+   "arm64": {
+    "binary": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "python",
+       "from": "3.14.9",
+       "to": "3.14.10",
+       "purl": "pkg:generic/python@3.14.10"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "certifi",
+       "from": "2026.10.19",
+       "to": "2026.10.23",
+       "purl": "pkg:pypi/certifi@2026.10.23"
+      },
+      {
+       "name": "distlib",
+       "from": "0.4.2",
+       "to": "0.4.4",
+       "purl": "pkg:pypi/distlib@0.4.4"
+      },
+      {
+       "name": "idna",
+       "from": "3.18",
+       "to": "3.20",
+       "purl": "pkg:pypi/idna@3.20"
+      },
+      {
+       "name": "msgpack",
+       "from": "1.1.2",
+       "to": "1.2.4",
+       "purl": "pkg:pypi/msgpack@1.2.4"
+      },
+      {
+       "name": "packaging",
+       "from": "26.2",
+       "to": "26.3",
+       "purl": "pkg:pypi/packaging@26.3"
+      },
+      {
+       "name": "pip",
+       "from": "26.2.2",
+       "to": "26.3",
+       "purl": "pkg:pypi/pip@26.3"
+      },
+      {
+       "name": "platformdirs",
+       "from": "4.10.0",
+       "to": "4.12.4",
+       "purl": "pkg:pypi/platformdirs@4.12.4"
+      },
+      {
+       "name": "pygments",
+       "from": "2.20.0",
+       "to": "2.21.0",
+       "purl": "pkg:pypi/pygments@2.21.0"
+      },
+      {
+       "name": "pyproject-hooks",
+       "from": "1.2.0",
+       "to": "1.3.3",
+       "purl": "pkg:pypi/pyproject-hooks@1.3.3"
+      },
+      {
+       "name": "rich",
+       "from": "14.2.0",
+       "to": "15.0.0",
+       "purl": "pkg:pypi/rich@15.0.0"
+      },
+      {
+       "name": "truststore",
+       "from": "0.10.4",
+       "to": "0.10.5",
+       "purl": "pkg:pypi/truststore@0.10.5"
+      },
+      {
+       "name": "urllib3",
+       "from": "2.7.0",
+       "to": "2.8.0",
+       "purl": "pkg:pypi/urllib3@2.8.0"
+      }
+     ],
+     "downgraded": [
+      {
+       "name": "tomli",
+       "from": "2.4.1",
+       "to": "2.3.2",
+       "purl": "pkg:pypi/tomli@2.3.2"
+      }
+     ]
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 26,
+   "downgraded": 2
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:64925e430a45490334047dd50e76fce514edaa1a5e3640782fb43eed4da6d0fd",
+    "diff_id": "sha256:14108d4706b497ccda032239811933b72a48e979c96b99b1e3209d69a0dfe24f",
+    "size": 26457653,
+    "uncompressed_size": 82055041,
+    "created_by": "COPY /pythoncompiled/ /usr/local/",
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:c0f75abfba85a287fe062141a8b5f877ebe7a4ea0f6c8552697f53d0842b3d64",
+    "diff_id": "sha256:4cfceaa3a83fdb3429e173ed13c05834d069eb101be0309f865c571a425c0826",
+    "size": 26353938,
+    "uncompressed_size": 84612876,
+    "created_by": "COPY /pythoncompiled/ /usr/local/",
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "python",
+  "tag": "ha-alpine324-3.14.10-ls2",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/python/builds/ha-alpine324-3.14.10-ls2/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 4,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/test.amd64.tar.gz",
+    "files": {}
+   },
+   "arm64": {
+    "success": true,
+    "passed": 4,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-python/releases/download/ha-alpine324-3.14.10-ls2/test.arm64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "python",
+    "tag": "amd64-287069a-41541229699",
+    "arch": "amd64",
+    "started": "2026-11-02T23:11:31Z",
+    "finished": "2026-11-02T23:11:35Z",
+    "success": true,
+    "runner": "cff09bd67182",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "27 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "27 packages: syft JSON 6703 bytes gzipped, SPDX for the image attestation 55847 bytes",
+      "seconds": 0.093
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "262 dirs, 4267 files (82055041 bytes), 13 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.09s",
+      "seconds": 0.242
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "1 layers, 0 from base, compressed sizes from registry",
+      "seconds": 1.1
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.002
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "python",
+    "tag": "arm64-287069a-41541229699",
+    "arch": "arm64",
+    "started": "2026-11-02T23:08:52Z",
+    "finished": "2026-11-02T23:08:56Z",
+    "success": true,
+    "runner": "62a3d375ea54",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "27 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "27 packages: syft JSON 6708 bytes gzipped, SPDX for the image attestation 55847 bytes",
+      "seconds": 0.085
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "262 dirs, 4267 files (84612876 bytes), 13 symlinks, 0 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.05s",
+      "seconds": 0.171
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "1 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.921
+     },
+     {
+      "name": "Init graph",
+      "status": "SKIP",
+      "message": "not an s6 image: no /etc/s6-overlay/s6-rc.d",
+      "seconds": 0.001
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}
