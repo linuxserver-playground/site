@@ -1,0 +1,874 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "rsnapshot",
+  "repository": "linuxserver-playground/docker-rsnapshot",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "1.4.5-r0",
+   "upstream_clean": "1.4.5-r0",
+   "semver": "1.4.5",
+   "ls_build": 2,
+   "tag": "1.4.5-r0-ls2",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "1.4.5-r0-ls2",
+    "version-1.4.5-r0",
+    "1.4.5",
+    "amd64-latest",
+    "amd64-1.4.5-r0-ls2",
+    "amd64-version-1.4.5-r0",
+    "amd64-1.4.5",
+    "arm64v8-latest",
+    "arm64v8-1.4.5-r0-ls2",
+    "arm64v8-version-1.4.5-r0",
+    "arm64v8-1.4.5"
+   ],
+   "source": "alpine_apk",
+   "source_url": "http://dl-cdn.alpinelinux.org/alpine/v3.21/main/"
+  },
+  "commit": "7ad63607a64470a4b169a501dc661833e1a301cf",
+  "created": "2026-10-26T02:43:58Z",
+  "reason": "push",
+  "previous": {
+   "tag": "1.4.5-r0-ls1",
+   "release_url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/tag/1.4.5-r0-ls1"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+   "digest": "sha256:d11d6e3bc055f5304a8453ffabf7c6093e4dbdff1f5a268e1e50249b8f791ab2"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:80a7d66f6f64b7fb440406bdaf63908fd6a42011d1815409d3abddb4b980b43b",
+    "size": 24622600,
+    "uncompressed_size": 72270611,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 10
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:d4e86f6cb3ed18eda2f841619428b074cb6b48a182c7a55e716544e972ed47d2",
+    "size": 25574887,
+    "uncompressed_size": 86135361,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 10
+   }
+  ],
+  "index_digest": "sha256:98b7ac0f6b12fe1b99b05f3a877608b7134ef707af716d7c08f8299e36d83faa",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 1.4.5-r0-ls2 Build-date:- 2026-10-26T01:56:37Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21@sha256:d11d6e3bc055f5304a8453ffabf7c6093e4dbdff1f5a268e1e50249b8f791ab2",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "1.4.5-r0",
+   "maintainer": "nemchik",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T01:56:37Z",
+   "org.opencontainers.image.description": "Rsnapshot is a filesystem snapshot utility based on rsync.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-rsnapshot",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "7ad63607a64470a4b169a501dc661833e1a301cf",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-rsnapshot",
+   "org.opencontainers.image.title": "Rsnapshot",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-rsnapshot/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "1.4.5-r0-ls2"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.21\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG RSNAPSHOT_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  if [ -z ${RSNAPSHOT_VERSION+x} ]; then \\\n    RSNAPSHOT_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:rsnapshot$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache \\\n    openssh \\\n    rsnapshot==${RSNAPSHOT_VERSION} \\\n    rsync && \\\n  rm -rf /etc/rsnapshot.conf && \\\n  ln -s /config/rsnapshot.conf /etc/rsnapshot.conf && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.21\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG RSNAPSHOT_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  if [ -z ${RSNAPSHOT_VERSION+x} ]; then \\\n    RSNAPSHOT_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp \\\n    && awk '/^P:rsnapshot$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://'); \\\n  fi && \\\n  apk add --no-cache \\\n    openssh \\\n    rsnapshot==${RSNAPSHOT_VERSION} \\\n    rsync && \\\n  rm -rf /etc/rsnapshot.conf && \\\n  ln -s /config/rsnapshot.conf /etc/rsnapshot.conf && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"rsnapshot:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-rsnapshot-test -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-rsnapshot-config\n  init-rsnapshot-upgrade -> init-rsnapshot-test\n  init-rsnapshot-config -> init-rsnapshot-upgrade\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.21\"\n}\n\"rsnapshot:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-rsnapshot-test"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-rsnapshot-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make our folders and links\nmkdir -p \\\n    /data\n\nif [[ ! -f /config/rsnapshot.conf ]]; then\n    cp /etc/rsnapshot.conf.default /config/rsnapshot.conf\n\n    # adjust default config\n    sed -i -E 's@^#cmd_cp\t\t/bin/cp$@cmd_cp\t\t/bin/cp@g' /config/rsnapshot.conf\n    sed -i -E 's@^#cmd_ssh\t/usr/bin/ssh$@cmd_ssh\t/usr/bin/ssh@g' /config/rsnapshot.conf\n    sed -i -E 's@^#cmd_du\t\t/usr/bin/du$@cmd_du\t\t/usr/bin/du@g' /config/rsnapshot.conf\n    sed -i -E 's@^#cmd_rsnapshot_diff\t/usr/local/bin/rsnapshot-diff$@cmd_rsnapshot_diff\t/usr/bin/rsnapshot-diff@g' /config/rsnapshot.conf\n    sed -i -E 's@^#logfile\t/var/log/rsnapshot$@logfile\t/config/rsnapshot.log@g' /config/rsnapshot.conf\n    sed -i -E 's@^lockfile\t/var/run/rsnapshot.pid$@lockfile\t/config/rsnapshot.pid@g' /config/rsnapshot.conf\n    sed -i -E 's@^#link_dest\t0$@link_dest\t1@g' /config/rsnapshot.conf\n    sed -i -E 's@^backup\t/home/\t\tlocalhost/$@backup\t/data/\t\tlocalhost/\\n#backup\t/home/\t\tlocalhost/@g' /config/rsnapshot.conf\n    sed -i -E 's@^backup\t/etc/\t\tlocalhost/$@#backup\t/etc/\t\tlocalhost/@g' /config/rsnapshot.conf\n    sed -i -E 's@^backup\t/usr/local/\tlocalhost/$@#backup\t/usr/local/\tlocalhost/@g' /config/rsnapshot.conf\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "init-rsnapshot-test",
+     "type": "oneshot",
+     "depends_on": [
+      "init-rsnapshot-upgrade"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\necho \"***** Validating config file *****\"\n\nrsnapshot configtest\n"
+    },
+    {
+     "name": "init-rsnapshot-upgrade",
+     "type": "oneshot",
+     "depends_on": [
+      "init-rsnapshot-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\necho \"***** Upgrading config file if required *****\"\n\nrsnapshot upgrade-config-file\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 65,
+    "distro": "Alpine Linux v3.21",
+    "hash": "af19d67b",
+    "by_type": {
+     "apk": 65
+    }
+   },
+   "arm64": {
+    "count": 65,
+    "distro": "Alpine Linux v3.21",
+    "hash": "af19d67b",
+    "by_type": {
+     "apk": 65
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/rsnapshot/builds/1.4.5-r0-ls2/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-rsnapshot/compare/1.4.5-r0-ls1...1.4.5-r0-ls2"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 23706,
+    "sha256": "acd91dda3aec1ebf0d203184f0f8df781b91d4c03328d332a7d156b3e00b42ed",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4812,
+    "sha256": "306fd4a4c2f9dcbb2ccf50b8d2f190d369d0185294d26d4239d275bdc75131aa",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 35624,
+    "sha256": "a66a7597e14528b97b787aa59b61f2f83ceee0b7580851918955f0787359923d",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2072,
+    "sha256": "46cd16b1a7f88b9232eb2f380e89d9b2bb30f0a83c4ca5af621a8bae80ae4d77",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 7578,
+    "sha256": "ef924a76c1f6ff77b6d423b1e9ab867de0522d01213801bd0dd9690f4ecd56b9",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 3234,
+    "sha256": "2ccf470fcf92d302470b4a742bf092d919c446ae7b994765bf0aeadfe9d84ac1",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 23630,
+    "sha256": "9dfd44d16d590fb449289ef53a8724010598405e8672aa23ecc68a3e1addf9c3",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4812,
+    "sha256": "ee99414cecba93985489f31988e6a2a520ce5f27bab7866b3ebdd32c5f932d23",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 35295,
+    "sha256": "aa8cd7460e9a54b6435672e17b304db46f7ac0356fee44b321eec1f05cba9068",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2074,
+    "sha256": "ca3778e7727c6a2e85e3e5e17e7243a1410c5eabfbfe69fa9c4f3963045fb864",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 7559,
+    "sha256": "4e910f5be6dadb8ff96c52e95a7a193d0c7d01487650e00fad80f10dd43959e1",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 3234,
+    "sha256": "2ccf470fcf92d302470b4a742bf092d919c446ae7b994765bf0aeadfe9d84ac1",
+    "url": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40256316954,
+   "run_url": "https://github.com/linuxserver-playground/docker-rsnapshot/actions/runs/40256316954",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "rsnapshot",
+  "branch": "master",
+  "tag": "1.4.5-r0-ls2",
+  "previous_tag": "1.4.5-r0-ls1",
+  "classification": "mixed",
+  "reasons": [
+   "Dockerfile changed",
+   "base image digest changed"
+  ],
+  "upstream": {
+   "from": "1.4.5-r0",
+   "to": "1.4.5-r0",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.21",
+    "digest": "sha256:1bec2d57ba13498c29b37227358e37782b12c358f5760c9a98fd4483827b58a8"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+    "digest": "sha256:d11d6e3bc055f5304a8453ffabf7c6093e4dbdff1f5a268e1e50249b8f791ab2"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 24622603,
+    "to": 24622600,
+    "delta": -3
+   },
+   "arm64": {
+    "from": 25574658,
+    "to": 25574887,
+    "delta": 229
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "--- a/Dockerfile\n+++ b/Dockerfile\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:3.21\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:3.21\n \n ENV LSIO_FIRST_PARTY=true\n \n",
+   "arm64": "--- a/Dockerfile.aarch64\n+++ b/Dockerfile.aarch64\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.21\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.21\n \n ENV LSIO_FIRST_PARTY=true\n \n"
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:04800b4cd9ee8d0ab3256a13fdec6fd034b58df1e5544820cea962863edff8c9",
+    "diff_id": "sha256:987c2eaa1a32468d520897801d72de0fb7d226637746f2a58ce5f11a5b3fed61",
+    "size": 6037280,
+    "uncompressed_size": 13073351,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:7ec8c8bdbd62b536b3d9d98d47587f5132ef777ccd947160ce550e23ea373339",
+    "diff_id": "sha256:76fdf415fb5966501a981e2ca630d87064e471006a65c1886097d88c3fe14867",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:09bbf32d5aff306ace717486c9a8b412c4c17522372b75ed9546817c67253591",
+    "diff_id": "sha256:68e036991bb3a08f0f1649c249e6a2ed7b48ee83fcef7b0ceb54fd1ee50f595a",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:824f991fc2e43e6df8bb7f653d142a4b383a5ffe15d32393dd14d6084a4bd835",
+    "diff_id": "sha256:05c10e6a87ef97014d2813fd50c4214c33db6ff2fc7aefb313d198a5cbc7d5ea",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5e18c7e794ac74a3d11237252dd2a73e8ac0cb02253dc72b556f0113c253aa36",
+    "diff_id": "sha256:7bb14424017f05a819961ceb23c7fe74db84253f4cd4c25a9b4f71024d6a736b",
+    "size": 5931879,
+    "uncompressed_size": 13959455,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-25T20:05:24Z VERSION=d221b02c-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:e12a6823e711965a549567413413a5e0782953b7b0f944540816bb03aafa96c8",
+    "diff_id": "sha256:6b97d44702449386ed22330f93a7b20b480d785565116ea89bf94f4c447ffdf0",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:a6c4cd67558e21e230febd8bfebcd4cec9388fb624f2e87104e1b9279d0c5758",
+    "diff_id": "sha256:806f5df5f73a25100833de244e6407783a5c71e2cb67d9074d3a0c30b82eb2d4",
+    "size": 12638758,
+    "uncompressed_size": 45189361,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T01:56:37Z VERSION=1.4.5-r0-ls2 RSNAPSHOT_VERSION=1.4.5-r0 /bin/sh -c echo \"**** install runtime packages ****\" &&   if [ -z ${RSNAPSHOT_VERSION+x} ]; then     RSNAPSHOT_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:rsnapshot$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache     openssh     rsnapshot==${RSNAPSHOT_VERSION}     rsync &&   rm -rf /etc/rsnapshot.conf &&   ln -s /config/rsnapshot.conf /etc/rsnapshot.conf &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     14,
+     30
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:6e70b2f299c5b49634e72a381e9021b6870d61f8f8868ee370f2d6b08a9ba35f",
+    "diff_id": "sha256:f59dc761f67791f7d653f2c5902c327244ec7fb8d855dc915c6c11d21e889a9b",
+    "size": 1323,
+    "uncompressed_size": 2228,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     33,
+     33
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:0be1a61b892d0c38853a7e5604c86aa071ac5fac5d5ff5bda4d9ea877cb38433",
+    "diff_id": "sha256:3003c9f7237fcd19e48039d2d0a0c51fc9464c392d5445030147baeb321616c4",
+    "size": 6865467,
+    "uncompressed_size": 18015128,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:3f060fc9203f196b1fb5f3644c2451bdcbf18aa6be233a01f00d6ab47c5b5803",
+    "diff_id": "sha256:4d3a962aa149a2e41e6269c66363aa2a0f880235134f2454aef692da51ef098c",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:96ab1d63745fbc4b3d0eeb0e28246e1fda5d8f37dc92ecb0a77a1e6668d834b7",
+    "diff_id": "sha256:ad7d5583288791cef7d3c53a91fe380f1cbf3784ee2545fe13cc195c5a72fef6",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:bb547ddddb676e6e4784db39f0974c10634839a463d1d864f215eb22ffea436a",
+    "diff_id": "sha256:ebcd445ead5cac81de9407961c7b77249965cdc673b58711204189963f29e6da",
+    "size": 426,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5a2baeccc5a96cb6023f9f4b7c9bf3628a94372de4cded640f06b469d52f22e6",
+    "diff_id": "sha256:528647c58ba2fd9088fe9d6cc3cd320192abec33b87ff9b42ceb5224db740fca",
+    "size": 6135064,
+    "uncompressed_size": 20693191,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-25T20:05:24Z VERSION=d221b02c-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:01a9ea89cc1b625a6667c310a2f4469cea6418c58a833895b96b511b27a5352f",
+    "diff_id": "sha256:e636153f9a7e1960f39416469fc89c8b1ef5cf661d3d31f2d3ffe4684d8c90dd",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:002a3d78e7b9d211319695f6d72c7e64330800e3d752a0ed3df34792efa6cbef",
+    "diff_id": "sha256:f56826ba1e10a9fb5ba1eb9680a0948dacc683e7b28cdbfdc170f899c5833a7b",
+    "size": 12559676,
+    "uncompressed_size": 47378598,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T01:56:37Z VERSION=1.4.5-r0-ls2 RSNAPSHOT_VERSION=1.4.5-r0 /bin/sh -c echo \"**** install runtime packages ****\" &&   if [ -z ${RSNAPSHOT_VERSION+x} ]; then     RSNAPSHOT_VERSION=$(curl -sL \"http://dl-cdn.alpinelinux.org/alpine/v3.21/main/x86_64/APKINDEX.tar.gz\" | tar -xz -C /tmp     && awk '/^P:rsnapshot$/,/V:/' /tmp/APKINDEX | sed -n 2p | sed 's/^V://');   fi &&   apk add --no-cache     openssh     rsnapshot==${RSNAPSHOT_VERSION}     rsync &&   rm -rf /etc/rsnapshot.conf &&   ln -s /config/rsnapshot.conf /etc/rsnapshot.conf &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     14,
+     30
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:124caf3de8000e842fc696cd3a0aee9b576254ff2338d2427722167dea998004",
+    "diff_id": "sha256:2e89e2abc4c5f804dd1d9220551313d0fda65560e19da8ce172be23db5f693ad",
+    "size": 1323,
+    "uncompressed_size": 2228,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     33,
+     33
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "rsnapshot",
+  "tag": "1.4.5-r0-ls2",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/rsnapshot/builds/1.4.5-r0-ls2/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 1.01,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 2658304,
+    "pids": 11,
+    "tarball": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-rsnapshot/builds/1.4.5-r0-ls2/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-rsnapshot/builds/1.4.5-r0-ls2/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 2543616,
+    "pids": 11,
+    "tarball": "https://github.com/linuxserver-playground/docker-rsnapshot/releases/download/1.4.5-r0-ls2/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-rsnapshot/builds/1.4.5-r0-ls2/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-rsnapshot/builds/1.4.5-r0-ls2/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "rsnapshot",
+    "tag": "amd64-7ad6360-40256316954",
+    "arch": "amd64",
+    "started": "2026-10-26T02:42:44Z",
+    "finished": "2026-10-26T02:42:48Z",
+    "success": true,
+    "runner": "e3718a921dd9",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.01,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.01
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "65 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "65 packages: syft JSON 23706 bytes gzipped, SPDX for the image attestation 129858 bytes",
+      "seconds": 0.099
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "573 dirs, 2539 files (71960625 bytes), 1205 symlinks, 255 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.10s",
+      "seconds": 0.23
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.321
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, base units assumed",
+      "seconds": 0.078
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "11 pids, tcp [], rss 2658304 bytes",
+      "seconds": 0.389
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 2658304,
+     "pids": 11,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 195
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "rsnapshot",
+    "tag": "arm64-7ad6360-40256316954",
+    "arch": "arm64",
+    "started": "2026-10-26T02:23:44Z",
+    "finished": "2026-10-26T02:23:47Z",
+    "success": true,
+    "runner": "2f914d194ee3",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "65 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "65 packages: syft JSON 23630 bytes gzipped, SPDX for the image attestation 129923 bytes",
+      "seconds": 0.098
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "573 dirs, 2539 files (85825254 bytes), 1205 symlinks, 255 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.05s",
+      "seconds": 0.17
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.351
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, base units assumed",
+      "seconds": 0.064
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "11 pids, tcp [], rss 2543616 bytes",
+      "seconds": 0.236
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 2543616,
+     "pids": 11,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 195
+    }
+   }
+  }
+ }
+}
