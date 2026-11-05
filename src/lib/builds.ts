@@ -22,13 +22,6 @@ export interface BuildRecord {
   tests?: TestsData | null;
 }
 
-/** Every workflow run id the hub's build records name, for the pre-rendered /fleet/runs/<id>/ pages. */
-export function knownRunIds(): number[] {
-  const ids = new Set<number>();
-  for (const { record } of allBuildRecords()) if (record.build.workflow?.run_id) ids.add(record.build.workflow.run_id);
-  return [...ids];
-}
-
 /** The build tags the site has a page for, per image, so live lists can link to them. */
 export function knownBuildTags(): Record<string, string[]> {
   const out: Record<string, string[]> = {};
@@ -66,7 +59,7 @@ export function allBuilds(): BuildRef[] {
   return list.sort((a, b) => b.summary.created.localeCompare(a.summary.created));
 }
 
-/** Every (image, tag) pair that has a full record, for getStaticPaths. */
+/** Every (image, tag) pair that has a full record. */
 export function allBuildRecords(): { image: string; tag: string; record: BuildRecord }[] {
   return Object.entries(records).map(([path, mod]) => {
     const m = path.match(/\/builds\/([^/]+)\/(.+)\.json$/)!;

@@ -1,10 +1,8 @@
 /**
- * A build page for a build newer than the site, rendered in the browser from the hub's API. GitHub Pages
- * answers an unknown /images/<name>/builds/<tag>/ with the site's 404 page, which mounts this: when the path is a
- * build of an image the site knows, it reads the build's documents from the hub and renders the same parts the
- * static build page renders (components/build/BuildParts.tsx), so a release is on the website as soon as the
- * hub has it, without waiting for the site to rebuild. The next site build makes it a static page, with its release
- * notes rendered (here they are plain text: the renderer and its sanitiser run at build time only).
+ * The build page, rendered in the browser from the hub's API. The site emits no file per build: GitHub Pages answers
+ * /images/<name>/builds/<tag>/ with the site's 404 page, which mounts this for a build of an image the site knows. It
+ * reads the build's documents from the hub, the heavy files from the image repository's own Pages, and renders the
+ * parts in components/build/BuildParts.tsx.
  */
 import * as React from 'react';
 import { withBase, BASE } from '@/lib/base';
@@ -15,6 +13,7 @@ import { hubApi, hubTestsUrl, type Bundle, type BuildsData, type Diff, type Hist
 import { AnchorHeading, BuildHeader, BuildRecordSection, CiHeading, NotesAndData, WhyThisBuild } from '@/components/build/BuildParts';
 import { baseBuildUrl, baseHubApi, matchBaseBuild, parseBaseRef } from '@/lib/init-chain';
 import { baseBuildsBetween, baseRefOf, explainBuild, type BaseBuilds } from '@/lib/why';
+import { githubRepo, renderNotes } from '@/lib/markdown/notes';
 import CopyButton from '@/components/islands/CopyButton';
 import CiReport from '@/components/islands/explorer/CiReport';
 import DiffViewer from '@/components/islands/explorer/DiffViewer';
@@ -208,6 +207,11 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
   const { b, tag, prev, arches } = page;
   const units = b.init_graph?.units ?? [];
   const why = explainBuild(b, record.diff, baseBuild);
+  const upstreamRepo = githubRepo(b.notes?.upstream_url);
+  const notesHtml = {
+    linuxserver: b.notes?.linuxserver ? renderNotes(b.notes.linuxserver, { github: true, repo: githubRepo(image.github_url) }) : '',
+    upstream: b.notes?.upstream ? renderNotes(b.notes.upstream, { github: !!upstreamRepo, repo: upstreamRepo }) : '',
+  };
   return (
     <>
       <BuildHeader page={page} now={new Date()} logo={<Logo image={image} />} copy={<CopyButton text={page.pull} label="Copy docker pull command" variant="secondary" />} />
@@ -220,8 +224,7 @@ export default function LiveBuildPage({ images, notFoundId }: { images: Record<s
             <CiReport image={image.name} tag={tag} tests={record.tests ?? null} testEnabled={b.test.enabled} reportDir={page.reportDir} runJson={page.runJson} logsZip={page.logsZip} testsUrl={hubTestsUrl(image.name, tag)} runUrl={b.workflow.run_url} controlUrl={page.controlBuild} />
           </div>
         </section>
-        {/* The notes renderer runs at build time only; until the site rebuilds, the notes show as plain text. */}
-        <NotesAndData page={page} dataAsOf={{ label: 'Live from the hub', date: new Date() }} />
+        <NotesAndData page={page} notesHtml={notesHtml} dataAsOf={{ label: 'Live from the hub', date: new Date() }} />
         <section aria-labelledby="explorer">
           <AnchorHeading id="explorer">Explore the image</AnchorHeading>
           <p className="mt-2 text-sm text-muted-foreground">Every file and package in the image.</p>

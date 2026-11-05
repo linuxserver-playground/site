@@ -1,8 +1,6 @@
 /**
- * The non-interactive parts of a build page, as React so they render in two places from one source: at build
- * time on images/[name]/builds/[tag].astro (server-rendered, no JavaScript) for the builds the site was built
- * with, and in the browser on the 404 fallback (LiveBuildPage) for a build the hub has and the site does not yet.
- * Interactive pieces (copy button, logo) come in as slots so each page supplies its own.
+ * The non-interactive parts of a build page, rendered in the browser by LiveBuildPage. Interactive pieces (copy
+ * button, logo) come in as slots.
  */
 import * as React from 'react';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Check, Minus, X } from 'lucide-react';
@@ -400,7 +398,7 @@ const NOTES_PROSE =
  */
 export function NotesAndData({ page, notesHtml, dataAsOf }: { page: BuildPage; notesHtml?: { linuxserver: string; upstream: string }; dataAsOf: { label: string; date: Date } }) {
   const { b, upstreamSource } = page;
-  // Without rendered notes (the live page: the renderer only runs at build time) the Markdown is shown as text.
+  // Without rendered notes the Markdown is shown as text.
   const notes = (html: string | undefined, text: string, className: string) =>
     html !== undefined ? <div className={cn(NOTES_PROSE, className)} dangerouslySetInnerHTML={{ __html: html }} /> : <p className={cn('text-sm break-words whitespace-pre-wrap text-muted-foreground', className)}>{text}</p>;
   return (

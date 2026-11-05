@@ -12,8 +12,8 @@ import { getAllImages, recentlyUpdated, SNAPSHOT_DATE } from '@/lib/images';
 const popular = recentlyUpdated(6);
 // Old documentation URLs (/general/<slug>/, /selkies/..., /FAQ/) -> their page here, from the docs' `aliases`.
 const redirects = docRedirects(await getDocs());
-// A build newer than this site is rendered from the hub in the browser (LiveBuildPage); these are the images it can
-// render a build of, with what the page header needs.
+// Build pages are rendered from the hub in the browser (LiveBuildPage); these are the images it can render a build
+// of, with what the page header needs.
 const liveImages: Record<string, LiveImage> = Object.fromEntries(
   getAllImages().map((i) => [i.name, { name: i.name, url: i.url, ref: i.ref, github_url: i.github_url, logo: i.logo?.src ?? null }]),
 );
@@ -26,13 +26,20 @@ const liveNames = Object.keys(liveImages);
   if (base && path.indexOf(base + '/') === 0) path = path.slice(base.length);
   var to = redirects[path.toLowerCase()];
   if (to) location.replace(base + to + location.search + location.hash);
-  // A run page the site has not pre-rendered yet: the runs page renders it live from the control plane.
+  // A run page: the runs page renders it live from the control plane.
   var run = path.match(/^\/fleet\/runs\/(\d+)\/$/);
   if (run) location.replace(base + '/fleet/runs/?run=' + run[1]);
-  // A build of a known image that this site predates: LiveBuildPage renders it from the hub, so the not-found
-  // content is hidden before it paints.
+  // A build of a known image: LiveBuildPage renders it from the hub, so the not-found content is hidden before it
+  // paints, and the main navigation marks Images as the current section.
   var build = path.match(/^\/images\/([^/]+)\/builds\/[^/]+\/$/);
-  if (build && liveNames.indexOf(decodeURIComponent(build[1])) !== -1) document.documentElement.setAttribute('data-live-build', '');
+  if (build && liveNames.indexOf(decodeURIComponent(build[1])) !== -1) {
+    document.documentElement.setAttribute('data-live-build', '');
+    document.addEventListener('DOMContentLoaded', function () {
+      document.querySelectorAll('nav[aria-label="Main"] a[href="' + base + '/images/"]').forEach(function (a) {
+        a.setAttribute('aria-current', 'page');
+      });
+    });
+  }
 </script>
 <style is:global>
   html[data-live-build] #not-found {

@@ -2,7 +2,7 @@
 import Layout from '@/layouts/Layout.astro';
 import FleetShell from '@/components/FleetShell.astro';
 import RunsLive, { RunFromQuery } from '@/components/islands/fleet/Runs';
-import { withBase } from '@/lib/base';
+import { BASE, withBase } from '@/lib/base';
 import { knownBuildTags } from '@/lib/builds';
 import { CONTROL_URL } from '@/lib/control';
 
@@ -16,7 +16,51 @@ const known = knownBuildTags();
 <Layout section="fleet" title="Runs" description="Active and recent LinuxServer.io workflow runs." breadcrumbs={crumbs}>
   <FleetShell current="runs" title="Runs" lede="Active and recent workflow runs." crumbs={crumbs} controlPath="/runs">
     <RunFromQuery client:load runsBase={withBase('/fleet/runs/')} buildsBase={withBase('/images/')} known={known} controlUrl={CONTROL_URL} />
-    <RunsLive client:load runsBase={withBase('/fleet/runs/')} buildsBase={withBase('/images/')} known={known} fallback={`${CONTROL_URL}/runs`} />
+    <div id="runs-list">
+      <RunsLive client:load runsBase={withBase('/fleet/runs/')} buildsBase={withBase('/images/')} known={known} fallback={`${CONTROL_URL}/runs`} />
+    </div>
   </FleetShell>
 </Layout>
 
+<script is:inline define:vars={{ base: BASE, controlUrl: CONTROL_URL }}>
+  // One run (/fleet/runs/<id>/, sent here as ?run=<id> by the 404 page): the page becomes that run's page, with its
+  // header, breadcrumb and control-plane link, without the list, and the address bar shows the run's own URL.
+  (function () {
+    var id = new URL(location.href).searchParams.get('run');
+    if (!id || !/^\d+$/.test(id)) return;
+    document.title = document.title.replace(/^Runs/, 'Run ' + id);
+    var h1 = document.querySelector('main h1, h1');
+    if (h1) {
+      h1.textContent = 'Run #' + id;
+      var lede = h1.nextElementSibling;
+      if (lede && lede.tagName === 'P') lede.textContent = 'Jobs, steps and the build this run produced.';
+    }
+    var trail = document.querySelector('nav[aria-label="Breadcrumb"] ol');
+    var last = trail && trail.lastElementChild;
+    var current = last && last.querySelector('[aria-current="page"]');
+    if (current) {
+      var link = document.createElement('a');
+      link.href = base + '/fleet/runs/';
+      link.className = 'hover:text-foreground';
+      link.textContent = current.textContent;
+      current.replaceWith(link);
+      var item = last.cloneNode(false);
+      var sep = document.createElement('span');
+      sep.setAttribute('aria-hidden', 'true');
+      sep.textContent = '/';
+      var here = document.createElement('span');
+      here.setAttribute('aria-current', 'page');
+      here.className = 'text-foreground';
+      here.textContent = '#' + id;
+      item.append(sep, here);
+      trail.append(item);
+    }
+    document.querySelectorAll('a[href="' + controlUrl + '/runs"]').forEach(function (a) {
+      a.href = controlUrl + '/runs/' + id;
+      a.firstChild.textContent = controlUrl.replace(/^https?:\/\//, '') + '/runs/' + id + ' ';
+    });
+    var list = document.getElementById('runs-list');
+    if (list) list.hidden = true;
+    history.replaceState(null, '', base + '/fleet/runs/' + id + '/' + location.hash);
+  })();
+</script>

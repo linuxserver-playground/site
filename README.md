@@ -37,7 +37,6 @@ src/
     catalog.json     every image in full (ImageDetail)
     images/<name>.json   builds and history, proxy conf, kubernetes manifest, quadlet
     builds/<image>/<tag>.json   the bundle record, its diff, its layer tables and its tests.json
-    control.json     the control plane's URL and the run ids it knew, for the pre-rendered /fleet/runs/<id>/ pages
   assets/logos/    image logos, copied locally and optimised to WebP at build time
   assets/team/     team avatars, likewise
   content/
@@ -83,7 +82,7 @@ whose public members are the team (default `linuxserver-playground`).
 | `catalog.json` | hub `/api/v1/catalog.json` | catalogue, image pages, quick start snippets, version tags, release channels |
 | `images/<name>.json` | hub `/api/v1/catalog/<name>/builds.json`, `proxy.json`, `kubernetes.yaml`, `quadlet.container` | builds table and history, SWAG sample, Kubernetes and quadlet tabs, "Install on…" |
 | `../content/imagedocs/<name>/*.md` | hub `/api/v1/catalog/<name>/docs.json` (the README builder renders, split at `##`) | the image page's documentation: application setup, read-only and non-root operation, environment variables from files, umask, user and group identifiers, support, updating, building locally |
-| `builds/<image>/<tag>.json` | hub `/api/v1/catalog/<name>/builds/<tag>.json`, `/diff.json`, `/layers.<arch>.json`, `/tests.json` | build pages: record, diff, annotated Dockerfile with its layer sizes, init graph, the CI report's summary and test table |
+| `builds/<image>/<tag>.json` | hub `/api/v1/catalog/<name>/builds/<tag>.json`, `/diff.json`, `/layers.<arch>.json`, `/tests.json` | the image page's latest-build panel, and which builds the fleet lists link to a build page |
 | `categories.json` | hub `/api/v1/categories.json` | catalogue filters |
 | `mods.json` | hub `/api/v1/mods.json` | mods page, mods on image pages |
 | `stores.json` | hub `/api/v1/stores/index.json` | stores page, "Install on…" buttons |
@@ -93,15 +92,14 @@ whose public members are the team (default `linuxserver-playground`).
 | `team.json` | GitHub org public members | About page |
 | `backers.json` | Open Collective | backer count |
 | `stats.json` | hub `/api/v1/stats.json` plus the above | headline numbers |
-| `control.json` | control `/api/runs.json` (ids only) | which `/fleet/runs/<id>/` pages to pre-render; kept from the previous run when the control plane is down |
 
 There are no pull counts anywhere: the playground publishes to GHCR only and the hub has no download
 statistics, so the tiles that used to show Docker Hub and Scarf numbers are gone rather than faked.
 
 ### How the explorer loads data
 
-Everything on a build page is static from the snapshot except two heavy tables, which the islands fetch
-in the browser, only when their tab is opened, with a loading state and a retry. The heavy files of a build are
+A build page is rendered in the browser from the hub's API (`LiveBuildPage`; the site emits no file per build).
+Two heavy tables are fetched only when their tab is opened, with a loading state and a retry. The heavy files of a build are
 on its image repository's own GitHub Pages (`https://<owner>.github.io/<repo>/builds/<tag>/`, the newest five
 builds per branch, deployed by the image's build), whose URLs the hub gives in `links` (`pages`, `files`, `sbom`);
 the site never derives them, and never fetches a GitHub Release asset, which sends no CORS headers: Release assets
@@ -149,10 +147,9 @@ Two more views are static from the snapshot:
 
 The build page is the canonical CI results page: release notes and the Discord embeds link to
 `${SITE_URL}/images/<name>/builds/<tag>/` (CONVENTIONS.md §10). Its "CI report" section (`#ci`) is the
-`CiReport` island, server-rendered from the snapshot's `tests.json` (`/api/v1/catalog/<name>/builds/<tag>/tests.json`:
-the harness's `test.<arch>.json` per arch plus a summary) so the per-arch result pills, the test table
-(name, status, message, seconds), startup seconds, listening ports, warnings, memory and PIDs are in the HTML
-without JavaScript. A build the snapshot has no report for fetches `tests.json` in the browser. The files
+`CiReport` island, rendered from the hub's `tests.json` (`/api/v1/catalog/<name>/builds/<tag>/tests.json`:
+the harness's `test.<arch>.json` per arch plus a summary): the per-arch result pills, the test table
+(name, status, message, seconds), startup seconds, listening ports, warnings, memory and PIDs. The files
 of `test.<arch>.tar.gz`, unpacked on the repository's Pages under `<links.pages><arch>/`, are loaded on demand:
 `screenshot.png` inline with a lightbox, `container.log`, `browser.log`, `sysinfo.txt` and `package_diff.txt`
 (the diff against the previous release, open by default) as collapsibles that fetch when opened, monospace,
@@ -189,10 +186,9 @@ control plane's own page when it cannot be reached. Relative times are the visit
 | `/fleet/actions/` | `/api/actions.json` | actions |
 | image page, "In the fleet" (`#fleet`) | `/api/images/{name}.json` | as the board |
 
-`/fleet/runs/<id>/` is pre-rendered for every id in `control.json` and every `workflow.run_id` in the hub's
-build records; any other id lands on the 404 page, which sends it to `/fleet/runs/?run=<id>`, where the same
-island renders it. Build summaries link to the site's build page when the snapshot has one, else to the
-release. Image rows link to the image page's fleet panel, which server-renders the hub's view of each live
+`/fleet/runs/<id>/` is not a file: the 404 page sends it to `/fleet/runs/?run=<id>`, which renders the run,
+lays itself out as the run's page and shows `/fleet/runs/<id>/` again. Build summaries link to the site's build
+page when the snapshot lists the build, else to the release. Image rows link to the image page's fleet panel, which server-renders the hub's view of each live
 branch (released tag, upstream version, last result) and replaces it with the control plane's rows (drift,
 next check, skip flags) when they arrive.
 

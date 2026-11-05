@@ -1,12 +1,12 @@
 /**
  * Release notes: the LinuxServer section (GitHub's generated notes) and the upstream section, which is whatever the
- * project publishes, GitHub-flavoured Markdown with raw HTML mixed in or HTML from a feed. Rendered at build time with
- * satteri (GFM: tables, nested lists, bare-URL autolinks) and then sanitised to an allowlist: no scripts, styles,
+ * project publishes, GitHub-flavoured Markdown with raw HTML mixed in or HTML from a feed. Rendered in the browser with
+ * marked (GFM: tables, nested lists, bare-URL autolinks) and then sanitised to an allowlist: no scripts, styles,
  * frames, forms, event handlers or non-http(s) URLs survive. GitHub's own references (`@user`, `#123`) are linked
  * when the notes come from a GitHub repository, and bare GitHub issue and pull URLs are shortened the way GitHub
  * shows them. Headings start at h4: the page owns the outline above them.
  */
-import { markdownToHtml } from 'satteri';
+import { Marked } from 'marked';
 import sanitizeHtml from 'sanitize-html';
 
 export interface NotesSource {
@@ -50,11 +50,13 @@ function shortGithubText(href: string, text: string, repo: string | null | undef
   return text;
 }
 
+const markdown = new Marked({ gfm: true, breaks: false });
+
 // transformTags runs before the allowlist, so h1-h3 are renamed first and then need not be allowed.
 const heading = (level: number) => () => ({ tagName: `h${level}`, attribs: {} });
 
 export function renderNotes(text: string, source: NotesSource = {}): string {
-  const html = markdownToHtml(linkReferences(text.replace(/\r\n/g, '\n'), source)).html;
+  const html = markdown.parse(linkReferences(text.replace(/\r\n/g, '\n'), source), { async: false });
   return sanitizeHtml(html, {
     allowedTags: [
       ...sanitizeHtml.defaults.allowedTags.filter((t) => !['h1', 'h2', 'h3'].includes(t)),

@@ -134,6 +134,9 @@ const Tiles = React.memo(function Tiles({ tiles, dark, total, gradientId }: Tile
           caption = chars >= 2 ? ellipsise(text, chars) : null;
           if (caption && h >= 26 && w >= 54) caption2 = size;
         }
+        // The accessible name starts with the tile's visible text, as drawn (shortened or with its size).
+        const shown = [caption, caption2].filter(Boolean).join(' ');
+        const name = shown && !label.startsWith(shown) ? `${shown}; ${label}` : label;
         if (t.thin) {
           // A sliver: its bytes are already in the parent's description.
           return <rect key={i} data-i={i} x={t.x0} y={t.y0} width={w} height={h} fill={tone.fill} aria-hidden="true" className={isZoomable(n) ? 'cursor-pointer' : undefined} />;
@@ -144,7 +147,7 @@ const Tiles = React.memo(function Tiles({ tiles, dark, total, gradientId }: Tile
             data-i={i}
             role={zoomable ? 'button' : 'img'}
             tabIndex={zoomable ? 0 : -1}
-            aria-label={label}
+            aria-label={name}
             className={`group outline-none ${zoomable ? 'cursor-pointer' : ''}`}
           >
             <rect x={t.x0} y={t.y0} width={w} height={h} fill={tone.fill} />
@@ -418,10 +421,10 @@ export default function Treemap({ image, tag, arches, urls, initialArch, compact
                     onClick={() => zoomTo(c)}
                     disabled={!isZoomable(c)}
                     className="group flex w-full items-center gap-2 rounded px-1 py-0.5 text-left hover:bg-muted disabled:cursor-default disabled:hover:bg-transparent"
-                    aria-label={`${c.name}, ${c.kind === 'file' ? 'file' : 'directory'}, ${fmtBytes(c.size)}, ${c.kind === 'file' ? kindLabel(c.cat) : `${c.files.toLocaleString('en-GB')} files`}${isZoomable(c) ? ', zoom in' : ''}`}
+                    aria-label={`${c.name} ${fmtBytes(c.size, 0)}, ${c.kind === 'file' ? 'file' : 'directory'}, ${c.kind === 'file' ? kindLabel(c.cat) : `${c.files.toLocaleString('en-GB')} files`}${isZoomable(c) ? ', zoom in' : ''}`}
                   >
                     <span className="size-2.5 shrink-0 rounded-sm" style={{ background: kindColor(c.cat, { dark }) }} aria-hidden="true" />
-                    <span className="min-w-0 flex-1 truncate font-mono text-xs">{c.name}</span>
+                    <span className="min-w-0 flex-1 truncate font-mono text-xs">{c.name}</span>{' '}
                     <span className="shrink-0 font-mono text-xs text-muted-foreground tabular-nums">{fmtBytes(c.size, 0)}</span>
                   </button>
                 </li>

@@ -1,8 +1,6 @@
 /**
  * Everything a build page shows, derived from one build's record (bundle, diff, layers, tests) and the image's
- * retained builds. Browser-safe: the static page computes it at build time from the snapshots, and the live page
- * (a build newer than the site, rendered from the hub's API by the 404 fallback) computes it in the browser from
- * the same documents fetched from the hub, so both render the same thing.
+ * retained builds, as fetched from the hub by LiveBuildPage. Browser-safe.
  */
 import { buildResult, buildUrl, reasonLabel } from './build-helpers';
 import type { BuildRecord } from './builds';

@@ -374,18 +374,14 @@ function StepState({ s }: { s: Step }) {
 }
 
 
-/** `/fleet/runs/?run=<id>`: the detail of a run the site has no pre-rendered page for (the 404 page sends them here). */
+/** A run's detail on the runs page, for `?run=<id>` or `/fleet/runs/<id>/` (the 404 page sends a run's URL here). */
 export function RunFromQuery({ runsBase, buildsBase, known, controlUrl }: { runsBase: string; buildsBase: string; known: Record<string, string[]>; controlUrl: string }) {
   const [id, setId] = React.useState<string | null>(null);
   React.useEffect(() => {
-    const v = new URL(location.href).searchParams.get('run');
+    // `?run=<id>`, or the run's own URL the page shows in its place.
+    const v = new URL(location.href).searchParams.get('run') ?? location.pathname.match(/\/fleet\/runs\/(\d+)\/?$/)?.[1];
     if (v && /^\d+$/.test(v)) setId(v);
   }, []);
   if (!id) return null;
-  return (
-    <div className="mb-8">
-      <h2 className="mb-3 text-xl font-semibold tracking-tight">Run #{id}</h2>
-      <RunDetail id={id} runsBase={runsBase} buildsBase={buildsBase} known={known} fallback={`${controlUrl}/runs/${id}`} />
-    </div>
-  );
+  return <RunDetail id={id} runsBase={runsBase} buildsBase={buildsBase} known={known} fallback={`${controlUrl}/runs/${id}`} />;
 }
