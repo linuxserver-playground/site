@@ -1,0 +1,29 @@
+---
+image: "mame"
+section: "support-info"
+title: "Support Info"
+order: 8
+---
+* Shell access whilst the container is running:
+
+    ```bash
+    docker exec -it mame /bin/bash
+    ```
+
+* To monitor the logs of the container in realtime:
+
+    ```bash
+    docker logs -f mame
+    ```
+
+* Container version number:
+
+    ```bash
+    docker inspect -f '{{ index .Config.Labels "build_version" }}' mame
+    ```
+
+* Image version number:
+
+    ```bash
+    docker inspect -f '{{ index .Config.Labels "build_version" }}' ghcr.io/linuxserver-playground/mame:latest
+    ```
