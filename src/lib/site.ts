@@ -53,7 +53,8 @@ const MAIN_NAV: NavItem[] = [
   { label: 'Stores', href: '/stores/', description: 'Unraid, Portainer, CasaOS, Umbrel and more' },
   { label: 'Blog', href: '/blog/', description: 'News, guides and release notes' },
   { label: 'Support', href: '/support/', description: 'Discord, forum and GitHub' },
-  { label: 'About', href: '/about/', description: 'Who we are and how we work' },
+  // Hidden from the top menu for now; the page and the footer's links stay. Uncomment to bring it back.
+  // { label: 'About', href: '/about/', description: 'Who we are and how we work' },
 ];
 
 /** Labs has no docs, blog, mods, PRoot Apps or stores of its own: those are the main site's. */
