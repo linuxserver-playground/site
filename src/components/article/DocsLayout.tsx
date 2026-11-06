@@ -105,9 +105,9 @@ export default function DocsLayout(props: DocsLayoutProps) {
   const { section, title, description, crumbs, toc, updated, hasDoc, prev, next, children, bar, footer, after } = props;
   const rail = toc.filter((h) => h.depth === 2 || h.depth === 3);
   return (
-    <div className="raft-container pt-8 lg:pt-10">
+    <div className="raft-container max-w-[108rem] pt-8 lg:pt-10">
       <Crumbs crumbs={crumbs} />
-      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] xl:grid-cols-[14rem_minmax(0,1fr)_13rem] xl:gap-14">
+      <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-[14rem_minmax(0,1fr)] 2xl:grid-cols-[14rem_minmax(0,1fr)_13rem]">
         <details className="raft-panel group p-2 lg:hidden">
           <summary className="cursor-pointer list-none rounded-md px-2.5 py-1.5 text-sm font-medium marker:content-none [&::-webkit-details-marker]:hidden">
             <span className="inline-flex items-center gap-2">
@@ -124,7 +124,7 @@ export default function DocsLayout(props: DocsLayoutProps) {
         </aside>
 
         <div className="min-w-0">
-          <article className="w-full max-w-[46rem] min-w-0">
+          <article className="article-content w-full min-w-0">
             <header>
               <p className="raft-eyebrow">
                 <span className="text-primary" aria-hidden="true">
@@ -181,7 +181,7 @@ export default function DocsLayout(props: DocsLayoutProps) {
           )}
         </div>
 
-        <aside aria-label="On this page" className="hidden xl:block xl:sticky xl:top-20 xl:max-h-[calc(100dvh-6rem)] xl:self-start xl:overflow-y-auto">
+        <aside aria-label="On this page" className="hidden 2xl:block 2xl:sticky 2xl:top-20 2xl:max-h-[calc(100dvh-6rem)] 2xl:self-start 2xl:overflow-y-auto">
           {rail.length > 1 && (
             <nav aria-labelledby="toc-title">
               <h2 id="toc-title" className="raft-eyebrow">

@@ -60,7 +60,7 @@ export default function PostArticle({ title, crumbs, tags, byline, date, updated
       <header className="relative overflow-hidden">
         <div className="raft-aurora pointer-events-none absolute inset-0 opacity-60" aria-hidden="true"></div>
         <div className="raft-grid pointer-events-none absolute inset-0" aria-hidden="true"></div>
-        <div className="raft-container relative pt-10 pb-10 md:pt-14">
+        <div className="raft-container relative max-w-[93rem] pt-10 pb-10 md:pt-14">
           <Crumbs crumbs={crumbs} />
           <div className="mx-auto mt-10 max-w-3xl text-center">
             {tags.length > 0 && (
@@ -103,7 +103,7 @@ export default function PostArticle({ title, crumbs, tags, byline, date, updated
             </p>
           </div>
           {hero && (
-            <div className="raft-panel mx-auto mt-10 max-w-5xl overflow-hidden">
+            <div className="raft-panel mx-auto mt-10 overflow-hidden">
               <img
                 src={hero.src}
                 srcSet={hero.srcSet}
@@ -121,10 +121,10 @@ export default function PostArticle({ title, crumbs, tags, byline, date, updated
         </div>
       </header>
 
-      {/* Same width as the hero: text aligned to its left edge, contents in a right rail. */}
-      <div className="raft-container">
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 pt-8 lg:grid-cols-[minmax(0,1fr)_14rem] xl:gap-16">
-          <div className="w-full max-w-[46rem] min-w-0">
+      {/* Tables, code and media use the hero's width beside the rail; prose keeps its reading measure. */}
+      <div className="raft-container max-w-[93rem]">
+        <div className="grid grid-cols-1 gap-10 pt-8 lg:grid-cols-[minmax(0,1fr)_14rem]">
+          <div className="article-content w-full min-w-0">
             {bar}
             {children}
             <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--raft-hair)] pt-6 text-sm text-muted-foreground">
