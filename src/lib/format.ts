@@ -76,7 +76,7 @@ export function formatDateLong(d: Date | string): string {
 
 export const isoDate = (d: Date | string) => (typeof d === 'string' ? new Date(d) : d).toISOString().slice(0, 10);
 
-/** "3 days ago", relative to `now` (the data snapshot time, not the visitor's clock). */
+/** "3 days ago", relative to `now`. Pages show past moments with Ago.astro, which calls this in the browser. */
 export function relative(d: Date | string, now: Date): string {
   const date = typeof d === 'string' ? new Date(d) : d;
   const s = Math.max(0, (now.getTime() - date.getTime()) / 1000);

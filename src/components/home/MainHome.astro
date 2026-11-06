@@ -12,7 +12,7 @@ import Otter from '@/components/Otter.astro';
 import CopyButton from '@/components/islands/CopyButton';
 import { Kbd } from '@/components/ui/kbd';
 import { withBase } from '@/lib/base';
-import { compact, formatDate, relative } from '@/lib/format';
+import { compact, formatDate } from '@/lib/format';
 import { allBuilds } from '@/lib/builds';
 import { HUB_URL } from '@/lib/hub';
 import { composeSnippet, getSpotlight, mostStarred, newest, recentlyUpdated, SNAPSHOT_DATE, type Image } from '@/lib/images';
@@ -33,13 +33,13 @@ const compose = composeSnippet(s, { optional: false });
 const composeLines = compose.split('\n');
 const pull = `docker pull ${SITE.registry}/${s.name}:latest`;
 
-const toRows = async (images: Image[], metric: (i: Image) => [string, string]) =>
+const toRows = async (images: Image[], metric: (i: Image) => [string, string], date?: (i: Image) => string) =>
   (await toCards(images, 56)).map((c, idx) => {
     const [value, label] = metric(images[idx]);
-    return { name: c.name, url: withBase(c.url), logo: c.logo, summary: c.summary, metric: value, metricLabel: label };
+    return { name: c.name, url: withBase(c.url), logo: c.logo, summary: c.summary, metric: value, metricDate: date?.(images[idx]), metricLabel: label };
   });
 const lists = [
-  { key: 'updated', label: 'Just rebuilt', rows: await toRows(recentlyUpdated(8), (i) => [relative(i.version_timestamp.replace(' ', 'T'), SNAPSHOT_DATE), i.version.split('-ls')[0].slice(0, 14)]) },
+  { key: 'updated', label: 'Just rebuilt', rows: await toRows(recentlyUpdated(8), (i) => ['', i.version.split('-ls')[0].slice(0, 14)], (i) => i.version_timestamp.replace(' ', 'T')) },
   { key: 'starred', label: 'Most starred', rows: await toRows(mostStarred(8), (i) => [compact(i.stars), 'stars']) },
   { key: 'newest', label: 'Newest', rows: await toRows(newest(8), (i) => [formatDate(i.initial_date!), 'added']) },
 ];

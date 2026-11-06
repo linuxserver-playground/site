@@ -21,7 +21,8 @@ import ProxyTabs from '@/components/islands/ProxyTabs';
 import { withBase } from '@/lib/base';
 import { buildResult, buildUrl, getBuildRecord, getBuilds, getHistory, getImageExtras, reasonLabel } from '@/lib/builds';
 import { dependents, installOptions, modPath, modsForImage } from '@/lib/fleet';
-import { bytes, formatDate, grouped, isoDate, relative, shortSha } from '@/lib/format';
+import Ago from '@/components/Ago.astro';
+import { bytes, formatDate, grouped, isoDate, shortSha } from '@/lib/format';
 import { CONTROL_URL, controlImageUrl } from '@/lib/control';
 import { hubApi, HUB_URL, reportFileUrl, type Arch } from '@/lib/hub';
 import { getAllImages, hasRealSummary, hubDate, IMAGE_KINDS, relatedImages, SNAPSHOT_DATE, type Image } from '@/lib/images';
@@ -109,7 +110,7 @@ const heroShot =
         buildUrl: withBase(`${buildUrl(image.name, latest.tag)}#ci`),
       }
     : null;
-const latestFacts: { label: string; value: string; mono?: boolean; title?: string }[] = latest
+const latestFacts: { label: string; value: string; mono?: boolean; title?: string; date?: string }[] = latest
   ? [
       { label: 'Base image', value: latest.base.image.replace('ghcr.io/linuxserver/', ''), mono: true, title: latest.base.image },
       { label: 'Upstream version', value: latest.upstream_version, mono: true },
@@ -118,7 +119,7 @@ const latestFacts: { label: string; value: string; mono?: boolean; title?: strin
         .map((p) => ({ label: `${p.arch} compressed`, value: `${bytes(p.size)}${p.layers ? ` · ${p.layers} layers` : ''}`, mono: true })),
       ...Object.entries(latestRecord?.build.packages ?? {}).map(([a, s]) => ({ label: `${a} packages`, value: `${grouped(s.count)} · ${s.distro}`, mono: true })),
       { label: 'Tests', value: latest.test_success === null || latest.test_success === undefined ? 'not run' : latest.test_success ? 'passed' : 'failed' },
-      { label: 'Built', value: relative(latest.created, SNAPSHOT_DATE), title: formatDate(latest.created) },
+      { label: 'Built', value: formatDate(latest.created), date: latest.created },
       { label: 'Reason', value: reasonLabel(latest.reason) },
     ]
   : [];
@@ -207,10 +208,10 @@ const tagRows = image.tags.map((t) => {
 
 // The upstream release the latest build packages, when its notes came from a page we can link (not a command).
 const upstreamUrl = /^https?:\/\//.test(latestRecord?.build.notes?.upstream_url ?? '') ? latestRecord!.build.notes!.upstream_url! : undefined;
-const facts: { label: string; value: string; title?: string; href?: string; external?: string }[] = [
+const facts: { label: string; value: string; title?: string; href?: string; external?: string; date?: Date | string }[] = [
   ...(image.upstream_version ? [{ label: 'Upstream version', value: image.upstream_version, external: upstreamUrl }] : []),
   { label: 'GitHub stars', value: grouped(image.stars) },
-  { label: 'Last build', value: relative(built, SNAPSHOT_DATE), title: formatDate(built) },
+  { label: 'Last build', value: formatDate(built), date: built },
   ...(image.initial_date ? [{ label: 'First build', value: formatDate(image.initial_date) }] : []),
   ...(image.base ? [{ label: 'Base', value: image.base, href: '/fleet/' }] : []),
   { label: 'Release channels', value: String(image.releases.length) },
@@ -533,7 +534,7 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
                   <div class="min-w-0">
                     <dt class="font-mono text-[0.6875rem] text-muted-foreground uppercase">{f.label}</dt>
                     <dd class:list={['mt-0.5 truncate', f.mono ? 'font-mono text-xs' : '', f.label === 'Tests' ? (latestResult === 'success' ? 'text-[var(--raft-ok)]' : latestResult === 'failure' ? 'text-destructive' : '') : '']} title={f.title}>
-                      {f.value}
+                      {f.date ? <Ago date={f.date} /> : f.value}
                     </dd>
                   </div>
                 ))}
@@ -949,6 +950,8 @@ const pageNav: { id: string; label: string; sub?: boolean }[] = [
                     </a>
                   ) : f.href ? (
                     <a href={withBase(f.href)} class="underline-offset-4 hover:text-primary hover:underline">{f.value}</a>
+                  ) : f.date ? (
+                    <Ago date={f.date} />
                   ) : (
                     f.value
                   )}

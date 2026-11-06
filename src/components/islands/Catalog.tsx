@@ -8,15 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { SORTS, short, useCatalog, type SortKey } from '@/lib/catalog';
-import { relative } from '@/lib/format';
+import Ago from '@/components/islands/Ago';
 import type { ImageCard } from '@/lib/images';
 import { cn } from '@/lib/utils';
 
 interface Props {
   cards: ImageCard[];
   categories: { name: string; count: number }[];
-  /** ISO string of the data snapshot, the "now" for relative dates. */
-  snapshot: string;
   /** Base path prefix for links (cards carry root-relative urls). */
   base: string;
 }
@@ -33,11 +31,10 @@ function Logo({ card, size }: { card: ImageCard; size: number }) {
   );
 }
 
-export default function Catalog({ cards, categories, snapshot, base }: Props) {
+export default function Catalog({ cards, categories, base }: Props) {
   const { state, set, reset, results, active, total } = useCatalog(cards);
   const [view, setView] = React.useState<'grid' | 'list'>('grid');
   const search = React.useRef<HTMLInputElement>(null);
-  const now = React.useMemo(() => new Date(snapshot), [snapshot]);
   const deprecatedCount = cards.filter((c) => c.deprecated).length;
 
   React.useEffect(() => {
@@ -248,7 +245,7 @@ export default function Catalog({ cards, categories, snapshot, base }: Props) {
                       </span>
                     </span>
                     <span className="hidden truncate font-mono text-xs text-muted-foreground md:block">{c.version}</span>
-                    <span className="hidden font-mono text-xs text-muted-foreground md:block">{relative(c.updated.replace(' ', 'T'), now)}</span>
+                    <Ago date={c.updated.replace(' ', 'T')} className="hidden font-mono text-xs text-muted-foreground md:block" />
                     <span className="hidden truncate text-right font-mono text-xs text-muted-foreground md:block">{c.base ?? ''}</span>
                     <span className="text-right font-mono text-sm tabular-nums">
                       {short(c.stars)}

@@ -1,3 +1,4 @@
+import Ago from '@/components/islands/Ago';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export interface RankRow {
@@ -6,6 +7,8 @@ export interface RankRow {
   logo?: string;
   summary: string;
   metric: string;
+  /** A past moment as the metric (an ISO date), shown as how long ago it was. */
+  metricDate?: string;
   metricLabel: string;
 }
 
@@ -54,7 +57,7 @@ export default function RankTabs({ lists }: Props) {
                     <span className="block truncate text-[0.8125rem] text-muted-foreground">{r.summary}</span>
                   </span>
                   <span className="shrink-0 text-right font-mono text-sm text-foreground tabular-nums">
-                    {r.metric}
+                    {r.metricDate ? <Ago date={r.metricDate} /> : r.metric}
                     <span className="block text-[0.6875rem] text-muted-foreground">{r.metricLabel}</span>
                   </span>
                 </a>
