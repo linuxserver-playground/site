@@ -138,7 +138,7 @@ export default function DocsLayout(props: DocsLayoutProps) {
             {bar}
             <div className="mt-8 border-t border-[var(--raft-hair)] pt-8">{children}</div>
             {hasDoc && (
-              <div className="mx-auto mt-12 flex max-w-[46rem] flex-wrap items-center justify-between gap-4 border-t border-[var(--raft-hair)] pt-6 text-sm text-muted-foreground">
+              <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--raft-hair)] pt-6 text-sm text-muted-foreground">
                 <p className="font-mono text-xs">
                   {updated ? (
                     <>
@@ -153,10 +153,10 @@ export default function DocsLayout(props: DocsLayoutProps) {
             )}
           </article>
 
-          {after && <div className="mx-auto max-w-[46rem]">{after}</div>}
+          {after}
 
           {(prev || next) && (
-            <nav aria-label="Previous and next page" className="mx-auto mt-12 max-w-[46rem]">
+            <nav aria-label="Previous and next page" className="mt-12">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 {prev ? (
                   <a href={prev.url} rel="prev" className="raft-panel group flex flex-col gap-1 p-4 hover:bg-muted/40">

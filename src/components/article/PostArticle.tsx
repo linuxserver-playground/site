@@ -121,13 +121,13 @@ export default function PostArticle({ title, crumbs, tags, byline, date, updated
         </div>
       </header>
 
-      {/* Tables, code and media use the hero's width beside the rail; prose keeps its reading measure. */}
+      {/* Text, tables, code and media all use the hero's width beside the rail. */}
       <div className="raft-container max-w-[93rem]">
         <div className="grid grid-cols-1 gap-10 pt-8 lg:grid-cols-[minmax(0,1fr)_14rem]">
           <div className="article-content w-full min-w-0">
             {bar}
             {children}
-            <div className="mx-auto mt-12 flex max-w-[46rem] flex-wrap items-center justify-between gap-4 border-t border-[var(--raft-hair)] pt-6 text-sm text-muted-foreground">
+            <div className="mt-12 flex flex-wrap items-center justify-between gap-4 border-t border-[var(--raft-hair)] pt-6 text-sm text-muted-foreground">
               <p className="font-mono text-xs">
                 {updated ? (
                   <>
