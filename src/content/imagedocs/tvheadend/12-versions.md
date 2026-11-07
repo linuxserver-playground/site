@@ -1,0 +1,58 @@
+---
+image: "tvheadend"
+section: "versions"
+title: "Versions"
+order: 12
+---
+* **2024-06-25:** - Rebase to Alpine 3.20.
+* **2024-03-20:** - Rebase to Alpine 3.19.
+* **2023-10-16:** - Add mesa-va-gallium package for AMD transcoding.
+* **2023-09-20:** - Add perl-json-xs package.
+* **2023-05-18:** - Install XMLTV from Alpine repos.
+* **2023-05-18:** - Rebase to Alpine 3.18.
+* **2023-03-17:** - Extract picons during build instead of init.
+* **2023-02-23:** - Rebase to Alpine 3.17, migrate to s6v3, drop armhf support.
+* **2022-08-31:** - Update sample env vars and how RUN_OPTS are handled.
+* **2022-08-19:** - Switch to new picons builder.
+* **2022-04-16:** - Added URL XMLTV grabber.
+* **2022-01-05:** - Rebase to Alpine 3.15. Disable execinfo to fix builds. Update xmltv.
+* **2021-05-11:** - Added Intel iHD driver support.
+* **2020-06-02:** - Update to Alpine 3.12.
+* **2019-12-27:** - Add requests and perl-json-xs package.
+* **2019-12-27:** - Update to Alpine 3.11.
+* **2019-10-02:** - Improve permission fixing on render & dvb devices.
+* **2019-08-18:** - Add AMD drivers.
+* **2019-08-02:** - Attempt to automatically fix permissions on /dev/dri and /dev/dvb.
+* **2019-06-28:** - Rebasing to alpine 3.10.
+* **2019-03-27:** - Rebase to Alpine 3.9, fix init logic to only chown once.
+* **2019-03-23:** - Switching to new Base images, shift to arm32v7 tag.
+* **2019-03-01:** - Bump xmltv to 0.6.1.
+* **2019-02-28:** - add perl-lwp-useragent-determined.
+* **2019-02-17:** - Bump xmltv to 5.70, ensure version tagging works by cloning tvheadend.
+* **2019-02-14:** - Add picons path to config.
+* **2019-01-15:** - Add pipeline logic and multi arch.
+* **2018-09-12:** - Rebase to alpine 3.8 and use buildstage type build.
+* **2018-04-21:** - Add JSON::XS Perl package for grab_tv_huro.
+* **2018-03-24:** - Add dvbcsa package.
+* **2018-03-04:** - Use sourceforge master rather than mirror for xmltv.
+* **2018-02-22:** - Add lost libva-intel-driver.
+* **2018-02-21:** - Fix wrong version of iconv used.
+* **2018-02-18:** - Add vaapi support, some cleanup and dropping of deprecated options.
+* **2018-01-04:** - Deprecate cpu_core routine lack of scaling.
+* **2017-12-11:** - Rebase to alpine 3.7, linting fixes.
+* **2017-09-02:** - Add codec dependencies.
+* **2017-07-13:** - Increase uniformity across all archs.
+* **2017-07-08:** - Update README with full path for comskip.
+* **2017-07-02:** - Move to one branch for all 4.2 releases.
+* **2017-05-27:** - Rebase to alpine 3.6.
+* **2017-05-01:** - Update to tvheadend 4.2.1 stable.
+* **2017-04-18:** - Use repo version of gnu-libiconv rather than compiling.
+* **2017-04-09:** - Chain cpanm installs in one block and use --installdeps.
+* **2017-02-09:** - Perl changes, add picons file to gitignore and update XMLTV to 0.5.69.
+* **2017-02-07:** - Add variable to add additional runtime paramters.
+* **2017-02-05:** - Update to alpine 3.5 and change dvb-apps to only compile needed libs.
+* **2016-11-14:** - Add picons from picons.xyz to /picons folder and add info to README.
+* **2016-09-22:** - Fix broken tv_grab_wg, libs for xmltv and update README.
+* **2016-09-18:** - Update XMLTV to 0.5.68 and update README.
+* **2016-09-10:** - Add layer badges to README.
+* **2016-09-05:** - Initial Release.
