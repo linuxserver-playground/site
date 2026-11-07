@@ -1,0 +1,909 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "sickgear",
+  "repository": "linuxserver-playground/docker-sickgear",
+  "branch": "develop",
+  "mode": "live",
+  "version": {
+   "upstream": "75fd8dc8",
+   "upstream_clean": "75fd8dc8",
+   "ls_build": 1,
+   "tag": "develop-75fd8dc8-ls1",
+   "release_tag": "develop",
+   "tags": [
+    "develop",
+    "develop-75fd8dc8-ls1",
+    "develop-version-75fd8dc8",
+    "amd64-develop",
+    "amd64-develop-75fd8dc8-ls1",
+    "amd64-develop-version-75fd8dc8",
+    "arm64v8-develop",
+    "arm64v8-develop-75fd8dc8-ls1",
+    "arm64v8-develop-version-75fd8dc8"
+   ],
+   "source": "github_commit",
+   "source_url": "https://github.com/sickgear/sickgear/commit/75fd8dc8835042ec85423b84eb94002b5697a52a"
+  },
+  "commit": "505317f8499687d3a830133680d3a04dd51468d4",
+  "created": "2026-10-26T00:15:39Z",
+  "reason": "push",
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+   "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:07ef7a26a4b4f09ed6c3624776585cb9e1bae70ab6abdc02ed19fd502e0592b0",
+    "size": 72215953,
+    "uncompressed_size": 199781532,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 41
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:b4606ded721bfd095881acf1024f6acac25d687410addf1e75f0d1930d07044b",
+    "size": 71083796,
+    "uncompressed_size": 207423834,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 39
+   }
+  ],
+  "index_digest": "sha256:638addc33ba0068f7d0adaed0af24ef752e3e2ac12215535bc194898503513bb",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 75fd8dc8-ls1 Build-date:- 2026-10-26T00:03:13Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver/baseimage-alpine:3.22@sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354",
+   "io.linuxserver.image.branch": "develop",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "75fd8dc8",
+   "maintainer": "xe, homerr",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T00:03:13Z",
+   "org.opencontainers.image.description": "SickGear provides management of TV shows and/or Anime, it detects new episodes, links downloader apps, and more..",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-sickgear",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.ref.name": "491c3b965a8ad044cc1140ad2651edc6f1ce0293",
+   "org.opencontainers.image.revision": "505317f8499687d3a830133680d3a04dd51468d4",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-sickgear",
+   "org.opencontainers.image.title": "Sickgear",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-sickgear/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "75fd8dc8-ls1"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "PYTHONIOENCODING=UTF-8"
+   ],
+   "exposed_ports": [
+    "8081/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SICKGEAR_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"xe, homerr\"\n\n# set python to use utf-8 rather than ascii.\nENV PYTHONIOENCODING=\"UTF-8\"\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base && \\\n  apk add --no-cache \\\n    python3 && \\\n  echo \"**** install app ****\" && \\\n  mkdir -p \\\n    /app/sickgear/ && \\\n  if [ -z ${SICKGEAR_RELEASE+x} ]; then \\\n    SICKGEAR_RELEASE=$(curl -sX GET \"https://api.github.com/repos/sickgear/sickgear/commits/dev\" \\\n    | awk '/sha/{print $4;exit}' FS='[\"\"]'); \\\n  fi && \\\n  curl -o \\\n    /tmp/sickgear.tar.gz -L \\\n    \"https://github.com/sickgear/sickgear/archive/${SICKGEAR_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/sickgear.tar.gz -C \\\n    /app/sickgear/ --strip-components=1 && \\\n  cd /app/sickgear && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r requirements.txt && \\\n  pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r recommended.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    /root/.cache\n\n# copy local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 8081\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver/unrar:arm64v8-latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SICKGEAR_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"xe, homerr\"\n\n# set python to use utf-8 rather than ascii.\nENV PYTHONIOENCODING=\"UTF-8\"\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base && \\\n  apk add --no-cache \\\n    python3 && \\\n  echo \"**** install app ****\" && \\\n  mkdir -p \\\n    /app/sickgear/ && \\\n  if [ -z ${SICKGEAR_RELEASE+x} ]; then \\\n    SICKGEAR_RELEASE=$(curl -sX GET \"https://api.github.com/repos/sickgear/sickgear/commits/dev\" \\\n    | awk '/sha/{print $4;exit}' FS='[\"\"]'); \\\n  fi && \\\n  curl -o \\\n    /tmp/sickgear.tar.gz -L \\\n    \"https://github.com/sickgear/sickgear/archive/${SICKGEAR_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/sickgear.tar.gz -C \\\n    /app/sickgear/ --strip-components=1 && \\\n  cd /app/sickgear && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r requirements.txt && \\\n  pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r recommended.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    /root/.cache\n\n# copy local files\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nEXPOSE 8081\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"sickgear:develop\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-sickgear-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-sickgear-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-sickgear\n  svc-sickgear -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"sickgear:develop\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-sickgear-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-sickgear-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# If needed add dafault config\nif [[ ! -f /config/config.ini ]]; then\n    cp /defaults/config.ini /config/config.ini\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-sickgear",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8081\" \\\n        s6-setuidgid abc python3 /app/sickgear/sickgear.py --datadir /config\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 128,
+    "distro": "Alpine Linux v3.22",
+    "hash": "ca4acf9e",
+    "by_type": {
+     "python": 45,
+     "binary": 15,
+     "apk": 67,
+     "UnknownPackage": 1
+    }
+   },
+   "arm64": {
+    "count": 129,
+    "distro": "Alpine Linux v3.22",
+    "hash": "c5ac147f",
+    "by_type": {
+     "python": 45,
+     "binary": 15,
+     "apk": 68,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/sickgear/builds/develop-75fd8dc8-ls1/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-sickgear/commits/develop-75fd8dc8-ls1",
+   "upstream": "Merge branch 'feature/ChangePAProviders' into dev",
+   "upstream_url": "https://github.com/SickGear/SickGear/commit/75fd8dc8835042ec85423b84eb94002b5697a52a"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 37145,
+    "sha256": "35ee00731cb8dbe6d08180ebe04a9ab7feb1e7a4ba708f114f3ba6ecc6a231df",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5691,
+    "sha256": "d3c66ccf763d101284b6c3699581e3e6251e67b8815e9803dba1628dce60c861",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 97248,
+    "sha256": "80f1a488c883695f76bae7e35eacdaacaec1e0fcb5b2d0c395ee8510d1212e72",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2246,
+    "sha256": "c3c939effb1fcf1dc7341388e121c213d28d44301eb9972893f81ee7ed986bac",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 159528,
+    "sha256": "24a3855fcba2048b5e7584268ba512594c93b28ed4ae88a302664f4464f206fe",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 9044,
+    "sha256": "26e13943bdd263fa0941c5011e4e02fea4b51873aaa5bd975c03afb581c9af65",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 37203,
+    "sha256": "25c770f1210d053cac48dc783f709f2cc1fcf8d7672e05c390bd832e2e7bbccc",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5691,
+    "sha256": "aefe2a3e8c56a6bdc845e6aff792b3fd43d9f7b519976dc1b12cf3bd085c2e33",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 96939,
+    "sha256": "e5837b29528f50a97d82432ca54c276a60518a6addfd5f8e7c87e9df2ee63f99",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2249,
+    "sha256": "46df05f7b17437e8fa23f5b2517a2dedc42dd28a144e459592ae1da8912f02ec",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 160866,
+    "sha256": "83b7b4a0ca0726469c7b454b02e60c254908b59f25e3ea48931ea63bb41d8263",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 9044,
+    "sha256": "f2154b068a23924b86edf887817ad1a252469a29fde277854c64c88ad47a25ca",
+    "url": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40247119815,
+   "run_url": "https://github.com/linuxserver-playground/docker-sickgear/actions/runs/40247119815",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "sickgear",
+  "branch": "develop",
+  "tag": "develop-75fd8dc8-ls1",
+  "classification": "initial",
+  "reasons": [
+   "first build of this branch in the hub"
+  ],
+  "upstream": {
+   "to": "75fd8dc8",
+   "changed": false
+  },
+  "base": {
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+    "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "to": 72215953
+   },
+   "arm64": {
+    "to": 71083796
+   }
+  },
+  "config": {
+   "env": {
+    "added": [
+     "HOME",
+     "LSIO_FIRST_PARTY",
+     "PATH",
+     "PS1",
+     "PYTHONIOENCODING",
+     "S6_CMD_WAIT_FOR_SERVICES_MAXTIME",
+     "S6_STAGE2_HOOK",
+     "S6_VERBOSITY",
+     "TERM",
+     "VIRTUAL_ENV"
+    ],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [
+     "8081/tcp"
+    ],
+    "removed": []
+   },
+   "volumes": {
+    "added": [
+     "/config"
+    ],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:c10a8d4755c919b58303aec2ac917dbe11b34a5d209f880be5198408a96d975a",
+    "diff_id": "sha256:f860a16f1e96206b437f9868e485cd03045a7c57be1eabbc83f765a47e472a0b",
+    "size": 6205981,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:9dd90c2c20fec58f43aae9d6531d19a6f87fc0c64c97eabdec6160e4f3d794a2",
+    "diff_id": "sha256:1a7dd45a0c6161785a463caf85b31be9f25dbcd4c978ba3b8aa91c06ed9c442f",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:ae636f090219e4de94ef412de50171b64ac2ee394727d21fbdabe57782946a7a",
+    "diff_id": "sha256:c21b5dfc22f2a4bb9326a5676bdb0e06644e3c75761543690a0ad17462abd1b7",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:2e65cbf9630bbdcb8a79e30fa6df683f859f6fc0d95dc501532b73aed6534291",
+    "diff_id": "sha256:85ecbd6edad29298448740659004ac4b41bbbee545d9a07a8650aa3819c8f224",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:d9d46c85684a52c62b6debeba5395ab8a9a3f4e588264eb63c5c290ff10e62ca",
+    "diff_id": "sha256:a6229eaf3301e773efcae00176b17e9735f7a46b6bd0cacbb80d8ad902192ae4",
+    "size": 5894959,
+    "uncompressed_size": 13967197,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:00+00:00 VERSION=eac05398-ls34 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:57d5bc31944c79616f1d8ace5be1eb5e9b924bf1d99c4042a8a8c034082e9995",
+    "diff_id": "sha256:52afd5a0d7995802effa0b44a646e78dcda30cb58060fe9bd00d9c3a1b2e6116",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:161c6856fe16ebea9574c4c0cfc41a5127ecd2e51f1cdecb9ed72e7f8dfb6574",
+    "diff_id": "sha256:9a70f41f48f63115a01556e8fb958249f75299b35ddac1bd234ffaed5589702c",
+    "size": 59746106,
+    "uncompressed_size": 171453766,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T00:03:13Z VERSION=75fd8dc8-ls1 SICKGEAR_RELEASE=75fd8dc8 /bin/sh -c echo \"**** install packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base &&   apk add --no-cache     python3 &&   echo \"**** install app ****\" &&   mkdir -p     /app/sickgear/ &&   if [ -z ${SICKGEAR_RELEASE+x} ]; then     SICKGEAR_RELEASE=$(curl -sX GET \"https://api.github.com/repos/sickgear/sickgear/commits/dev\"     | awk '/sha/{print $4;exit}' FS='[\"\"]');   fi &&   curl -o     /tmp/sickgear.tar.gz -L     \"https://github.com/sickgear/sickgear/archive/${SICKGEAR_RELEASE}.tar.gz\" &&   tar xf     /tmp/sickgear.tar.gz -C     /app/sickgear/ --strip-components=1 &&   cd /app/sickgear &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r requirements.txt &&   pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r recommended.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     /root/.cache",
+    "dockerfile_lines": [
+     21,
+     53
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:bcfeaa61b6e9b64220eeb0cb3732815e3219f6c08b984a30ff3b49bff4099c4a",
+    "diff_id": "sha256:ec9bdcc9ad93354b063f9c94365a4d1153821a789477d0f2635bfad473fd4009",
+    "size": 898,
+    "uncompressed_size": 587,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     56,
+     56
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:dcdeccb24bce2969fa5706804a97362719e3f8030a8106385d7e339b215f0476",
+    "diff_id": "sha256:a912ecddb6aa99c7ca975c3394038811b409cec7e49ecb6422c4535ad04c2bd1",
+    "size": 354649,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:7c1a12c04ebf8d8f75933dea5416a1f8176ff5ef5f27d64d474fbcc98d748912",
+    "diff_id": "sha256:7a79da10dadcae646c1f0e9d792db22875a0073bb51b1803fb068c92fd9a625e",
+    "size": 7020028,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:22685909c4d2a15a1fdd8727cb0d9faf49fdf89cc6e557e628b5343ad7aa7fb0",
+    "diff_id": "sha256:0ae8096293da622b14f4baba38df0776086245bd25468710836f8ec271c3a6f6",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:fd63569d171b3f4e336ea958a96ccf052e5905f513c93fc1587eaf1eaa8cbc93",
+    "diff_id": "sha256:5707a5e1ca04bfcf4f1a26a70b16c34f4c6e2a1703157ba38e4d0a9d27299914",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7cd069a9d6646d5693d76554ff4db39446a48b1d9fa8d7f6120c29731412b7d0",
+    "diff_id": "sha256:86549d453560321defe69345c6173dbc2290e2b4f4106f9328df62943ec17878",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:131b23cd04243350b218a023a3d334f83fdd270df92e99c65efb1b6cd30b97d5",
+    "diff_id": "sha256:5ad6d31d93f5c08ab3f4804d89d8aa13af469ce090d35789595b11e077fe2508",
+    "size": 6110453,
+    "uncompressed_size": 20893504,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-24T16:38:00+00:00 VERSION=eac05398-ls34 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b8667a920a12dbb0e6a31dce507cf26ff0e3a31564a0572c3b2097dc3773b353",
+    "diff_id": "sha256:05b212c0429573bc4c1a0e764e004c125c3c30899441d0136c3f6a638dacf929",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:dd84d6b74db9cb9bc81a1d85322e73a7f05840612bd87c390c5fd7689bd9bc30",
+    "diff_id": "sha256:0602eb26230836e12af4f2384c7a19ff079ac08b7aa7631ed73b900add4cfa74",
+    "size": 57591813,
+    "uncompressed_size": 167337677,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T00:03:13Z VERSION=75fd8dc8-ls1 SICKGEAR_RELEASE=75fd8dc8 /bin/sh -c echo \"**** install packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base &&   apk add --no-cache     python3 &&   echo \"**** install app ****\" &&   mkdir -p     /app/sickgear/ &&   if [ -z ${SICKGEAR_RELEASE+x} ]; then     SICKGEAR_RELEASE=$(curl -sX GET \"https://api.github.com/repos/sickgear/sickgear/commits/dev\"     | awk '/sha/{print $4;exit}' FS='[\"\"]');   fi &&   curl -o     /tmp/sickgear.tar.gz -L     \"https://github.com/sickgear/sickgear/archive/${SICKGEAR_RELEASE}.tar.gz\" &&   tar xf     /tmp/sickgear.tar.gz -C     /app/sickgear/ --strip-components=1 &&   cd /app/sickgear &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r requirements.txt &&   pip install --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.22/ -r recommended.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     /root/.cache",
+    "dockerfile_lines": [
+     21,
+     53
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:bf3e4dfba7abcfea62c11bc96bf0f149f5396c5f035d4cdcc3a5e1f2864861f3",
+    "diff_id": "sha256:498a3d4e449357846c2369d0b8119fd72d4d134cf39b875084a6151d31071ba8",
+    "size": 898,
+    "uncompressed_size": 587,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     56,
+     56
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:db1aeddf91e0f1b55f6ee30b9f619f38222ac9b2b2a7f7ef6dbb2dfedecfdaed",
+    "diff_id": "sha256:e00669fa448f499ac59a848c872075e5171a16ae380b1de470959913d0b660e9",
+    "size": 347245,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "sickgear",
+  "tag": "develop-75fd8dc8-ls1",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/sickgear/builds/develop-75fd8dc8-ls1/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 6.03,
+    "listening_ports": [
+     "8081/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 147087360,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 5.025,
+    "listening_ports": [
+     "8081/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 147308544,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-sickgear/releases/download/develop-75fd8dc8-ls1/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-sickgear/builds/develop-75fd8dc8-ls1/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "sickgear",
+    "tag": "amd64-505317f-40247119815",
+    "arch": "amd64",
+    "started": "2026-10-26T00:14:02Z",
+    "finished": "2026-10-26T00:14:23Z",
+    "success": true,
+    "runner": "e702b453464c",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 6.03,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 6.0s",
+      "seconds": 6.03
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "128 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "128 packages: syft JSON 37145 bytes gzipped, SPDX for the image attestation 332594 bytes",
+      "seconds": 0.128
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "958 dirs, 8865 files (199470636 bytes), 1217 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.13s, total 0.23s",
+      "seconds": 0.386
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.884
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.07
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8081/home/view-changes",
+      "seconds": 10.668
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8081], rss 147087360 bytes",
+      "seconds": 0.619
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 147087360,
+     "pids": 13,
+     "listening_tcp": [
+      8081
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-sickgear"
+     ],
+     "changed_paths": 208
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "sickgear",
+    "tag": "arm64-505317f-40247119815",
+    "arch": "arm64",
+    "started": "2026-10-26T00:09:03Z",
+    "finished": "2026-10-26T00:09:21Z",
+    "success": true,
+    "runner": "17b08b151b25",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 5.025,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 5.0s",
+      "seconds": 5.025
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": "not a .NET application"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "129 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "129 packages: syft JSON 37203 bytes gzipped, SPDX for the image attestation 333630 bytes",
+      "seconds": 0.122
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "958 dirs, 8862 files (207112811 bytes), 1217 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.11s",
+      "seconds": 0.264
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.662
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.062
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8081/home/view-changes",
+      "seconds": 10.689
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8081], rss 147308544 bytes",
+      "seconds": 0.341
+     }
+    ],
+    "files": {
+     "html": "index.html",
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 147308544,
+     "pids": 13,
+     "listening_tcp": [
+      8081
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-sickgear"
+     ],
+     "changed_paths": 208
+    }
+   }
+  }
+ }
+}

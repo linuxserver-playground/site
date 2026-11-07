@@ -1,0 +1,1012 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "raneto",
+  "repository": "linuxserver-playground/docker-raneto",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "0.18.1",
+   "upstream_clean": "0.18.1",
+   "semver": "0.18.1",
+   "ls_build": 4,
+   "tag": "0.18.1-ls4",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "0.18.1-ls4",
+    "version-0.18.1",
+    "0.18.1",
+    "amd64-latest",
+    "amd64-0.18.1-ls4",
+    "amd64-version-0.18.1",
+    "amd64-0.18.1",
+    "arm64v8-latest",
+    "arm64v8-0.18.1-ls4",
+    "arm64v8-version-0.18.1",
+    "arm64v8-0.18.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/ryanlelek/Raneto/releases/tag/0.18.1"
+  },
+  "commit": "9bda87e110697475f6646497f1acf8579bd84a48",
+  "created": "2026-11-07T08:52:23Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "0.18.1-ls3",
+   "release_url": "https://github.com/linuxserver-playground/docker-raneto/releases/tag/0.18.1-ls3"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+   "digest": "sha256:471536f3a3e33e66a1b18d94f6157fc1d57012dd097177aa3b5f4cd741296ae5"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:10906a89935327df7aff49248bbfa39467b3c76a4b382634daab46a82dc44b5d",
+    "size": 47446870,
+    "uncompressed_size": 137481184,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 19
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:826446e7e15115a81c1dc106dda64e293528ab2ecd5f1af89ad1fa006d86acf5",
+    "size": 47676621,
+    "uncompressed_size": 144983954,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 21
+   }
+  ],
+  "index_digest": "sha256:192ebd2981d2661850d1e92454a5e514b9c1d6e60914130af9d6e97853886019",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 0.18.1-ls4 Build-date:- 2026-11-07T08:48:03Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22@sha256:471536f3a3e33e66a1b18d94f6157fc1d57012dd097177aa3b5f4cd741296ae5",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "0.18.1",
+   "maintainer": "thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-07T08:48:03Z",
+   "org.opencontainers.image.description": "Raneto - is an open source Knowledgebase platform that uses static Markdown files to power your Knowledgebase.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-raneto",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "9bda87e110697475f6646497f1acf8579bd84a48",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-raneto",
+   "org.opencontainers.image.title": "Raneto",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-raneto/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "0.18.1-ls4"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "PORT=3000"
+   ],
+   "exposed_ports": [
+    "3000/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG RANETO_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\nENV PORT=3000 \n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    libsass-dev \\\n    npm && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    nodejs && \\\n  echo \"**** install raneto ****\" && \\\n  mkdir -p \\\n    /app/raneto && \\\n  if [ -z ${RANETO_RELEASE+x} ]; then \\\n    RANETO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/ryanlelek/Raneto/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/raneto-src.tar.gz -L \\\n    \"https://github.com/ryanlelek/Raneto/archive/${RANETO_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/raneto-src.tar.gz -C \\\n    /app/raneto --strip-components=1 && \\\n  echo \"**** install raneto node dev modules and build ****\" && \\\n  cd /app/raneto && \\\n  sed -i \\\n    's/upgradeInsecureRequests: \\[\\]/upgradeInsecureRequests: null/g' \\\n    app/index.js && \\\n  npm install --omit=dev && \\\n  mkdir sessions && \\\n  rm -f config/config.js && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.npm \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG RANETO_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\nENV PORT=3000\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    libsass-dev \\\n    npm && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    nodejs && \\\n  echo \"**** install raneto ****\" && \\\n  mkdir -p \\\n    /app/raneto && \\\n  if [ -z ${RANETO_RELEASE+x} ]; then \\\n    RANETO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/ryanlelek/Raneto/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/raneto-src.tar.gz -L \\\n    \"https://github.com/ryanlelek/Raneto/archive/${RANETO_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/raneto-src.tar.gz -C \\\n    /app/raneto --strip-components=1 && \\\n  echo \"**** install raneto node dev modules and build ****\" && \\\n  cd /app/raneto && \\\n  sed -i \\\n    's/upgradeInsecureRequests: \\[\\]/upgradeInsecureRequests: null/g' \\\n    app/index.js && \\\n  npm install --omit=dev && \\\n  mkdir sessions && \\\n  rm -f config/config.js && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.npm \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"raneto:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-raneto-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-raneto-config\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-raneto\n  svc-raneto -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"raneto:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-raneto-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-raneto-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nfolders=(\n    /app/raneto/node_modules/@raneto/theme-default/dist/public/images\n    /app/raneto/content\n    /app/raneto/config\n    /app/raneto/sessions\n)\n\nfor i in \"${folders[@]}\"; do\n    if [[ -e \"$i\" && ! -L \"$i\" && -e /config/\"$(basename \"$i\")\" ]]; then\n        rm -Rf \"$i\" && \\\n        ln -s /config/\"$(basename \"$i\")\" \"$i\"\n    fi\n\n    if [[ -e \"$i\" && ! -L \"$i\" ]]; then\n        mv \"$i\" /config/\"$(basename \"$i\")\" && \\\n        ln -s /config/\"$(basename \"$i\")\" \"$i\"\n    fi\ndone\n\n# upgrade support\nif [[ -f /config/config.default.js ]]; then\n  mv /config/config.default.js /config/config/config.js\nfi\n\n# copy default config\nif [[ ! -f /config/config/config.js ]]; then\n    cp /defaults/config.js /config/config/config.js\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config \n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-raneto",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nHOST=0.0.0.0 exec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 3000\" \\\n        cd /app/raneto s6-setuidgid abc node server.js\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 263,
+    "distro": "Alpine Linux v3.22",
+    "hash": "45360611",
+    "by_type": {
+     "npm": 203,
+     "apk": 60
+    }
+   },
+   "arm64": {
+    "count": 263,
+    "distro": "Alpine Linux v3.22",
+    "hash": "45360611",
+    "by_type": {
+     "npm": 203,
+     "apk": 60
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/raneto/builds/0.18.1-ls4/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-raneto/compare/0.18.1-ls3...0.18.1-ls4",
+   "upstream": "## 2026.03.10 / v0.18.1\r\n\r\n- **[BREAKING]** Minimum Node.js is v24.x LTS\r\n- **[Fix]** Filepath location for language translations\r\n- **[Fix]** Path traversal vulnerability\r\n- **[Fix]** Sitemap string escaping\r\n- **[Fix]** Better escaping and sanitization for markdown rendering\r\n- **[Fix]** GitHub Actions repository permissions: read-only\r\n- **[Fix]** Search ReDoS with lunr\r\n- **[Fix]** Login password comparison\r\n- **[Fix]** Path traversal outside of content directory\r\n- **[Fix]** Authentication redirect continues with flow\r\n- **[Fix]** Prevent error details leakage\r\n- **[Fix]** Editor escaping Markdown content and base_url\r\n- **[Fix]** Ensure redirect \"return\" is relative path only\r\n- **[Fix]** Using callback for logout\r\n- **[Fix]** Explicitly specify \"Lax\" for cookies\r\n- **[Add]** Rate Limiting (200 req/min)\r\n- **[Add]** Configuration verification function\r\n- **[Add]** CSP Nonce with res.locals.csp_nonce\r\n- **[Edit]** Refactoring (simplify, use native functions)\r\n- **[Deps]** Upgrading marked from v16.4.2 to v17.0.2\r\n",
+   "upstream_url": "https://github.com/ryanlelek/Raneto/releases/tag/0.18.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 56695,
+    "sha256": "0e68eb50e136490ae855c403b1e159f449a0deb07c4b88d1c7b2bbd74c6b9595",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5350,
+    "sha256": "fb4361c418978c98115300875226f980c37af690f66f20fb65101e3bbe0cc6e0",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 58616,
+    "sha256": "4f8a5c2e5b584b9203fbcd9742cc339297eda0cfb5b76c373fd3be3ae992914f",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2571,
+    "sha256": "2bdb564895d6c6bad34db5d90b6d2be9943aafaa85f2500524c7a2c966469e38",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 80017,
+    "sha256": "e7db2d3c449bb153b6b2e43604a2915234d5327471e133ed8701abbdccfa80dc",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 17226,
+    "sha256": "ce6e62448122cfcdff13c0f510e36dc10508bf8f558146045d701abfd03f64c2",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 56638,
+    "sha256": "9bfadace1f38a050559e36a9eeb14f6087992058a22431399da4aca5c50f6409",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5350,
+    "sha256": "cad023168c863bf6e153ee6a9a91bf412c045604869fb3453189bf5706a66a18",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 58362,
+    "sha256": "4a4cd67539d322603a8edd3404fa5d2320714b67e5c07a89173190585059d404",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2572,
+    "sha256": "330f18f6fe5498f2259305a05fcceeb333a4aa5dc1272d0e3e7ce93a553c5046",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 78286,
+    "sha256": "63ceac924f798481425499531fa50fa43f5136119bf78c8c675f8f09431cb0b3",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 17226,
+    "sha256": "ce6e62448122cfcdff13c0f510e36dc10508bf8f558146045d701abfd03f64c2",
+    "url": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 42356975034,
+   "run_url": "https://github.com/linuxserver-playground/docker-raneto/actions/runs/42356975034",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/raneto",
+   "tags": [
+    "latest",
+    "0.18.1-ls4",
+    "version-0.18.1",
+    "0.18.1",
+    "amd64-latest",
+    "amd64-0.18.1-ls4",
+    "amd64-version-0.18.1",
+    "amd64-0.18.1",
+    "arm64v8-latest",
+    "arm64v8-0.18.1-ls4",
+    "arm64v8-version-0.18.1",
+    "arm64v8-0.18.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "raneto",
+  "branch": "master",
+  "tag": "0.18.1-ls4",
+  "previous_tag": "0.18.1-ls3",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (4132034 → 9bda87e): the pipeline's own generated files"
+  ],
+  "upstream": {
+   "from": "0.18.1",
+   "to": "0.18.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "4132034cd525ee63247bfc590ab813e3d3915b2c",
+   "to": "9bda87e110697475f6646497f1acf8579bd84a48",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-raneto/compare/4132034cd525ee63247bfc590ab813e3d3915b2c...9bda87e110697475f6646497f1acf8579bd84a48",
+   "commits": [
+    {
+     "sha": "9bda87e110697475f6646497f1acf8579bd84a48",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-04T12:48:31Z",
+     "url": "https://github.com/linuxserver-playground/docker-raneto/commit/9bda87e110697475f6646497f1acf8579bd84a48",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "generated": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:1ad91f856c8d9d443357d6e4c0a0c3515e5bc1ef830874f0defdb5d64b49f077"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:471536f3a3e33e66a1b18d94f6157fc1d57012dd097177aa3b5f4cd741296ae5"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 47447465,
+    "to": 47446870,
+    "delta": -595
+   },
+   "arm64": {
+    "from": 47676744,
+    "to": 47676621,
+    "delta": -123
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "apk-tools",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/apk-tools@2.14.13-r0?arch=x86_64&distro=alpine-3.22.7"
+      },
+      {
+       "name": "libapk2",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/libapk2@2.14.13-r0?arch=x86_64&distro=alpine-3.22.7&upstream=apk-tools"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=x86_64&distro=alpine-3.22.7"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "apk-tools",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/apk-tools@2.14.13-r0?arch=aarch64&distro=alpine-3.22.7"
+      },
+      {
+       "name": "libapk2",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/libapk2@2.14.13-r0?arch=aarch64&distro=alpine-3.22.7&upstream=apk-tools"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=aarch64&distro=alpine-3.22.7"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 6,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:7150baf033fff9aba214d01090515f8b0debe6ae80dd20420f1080cfee17e2f4",
+    "diff_id": "sha256:813132e2f92f45d020fd42504e09b974049526e3aa3b576df57d9890d98803e2",
+    "size": 6205943,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:e457763628122b2674d645df1aabe17459c1bafca62a31ecc1a1620babbe23a4",
+    "diff_id": "sha256:078e213e6b5fe3026dfdda3303047e62cfc0009ab26ef08bc9e1de6d99e2db42",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:b24f11e72d0b30bd81a65bdc7c5f77abe46847eacf8c53d918fab44466123688",
+    "diff_id": "sha256:816117335d7b9aa625f5d8245c3abfe3d5fecc5a1b81f065895277a26f66c730",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7713ae9b028988c72027f051711052a9628581675810da2d7395ebefb5a17365",
+    "diff_id": "sha256:3754d94b1f45cc462a86c96ca887d2ff72c219c866ffedfb4647bc51838f299b",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:f34e34a4e68b018e60e3090bd227f9f40b5551169fbf860c9ab8a46eb183e687",
+    "diff_id": "sha256:64ced7b4d23aa81d4a669dcf5816a09cb1c3cbdc75b22b7ed07578a87d35ac8e",
+    "size": 5894945,
+    "uncompressed_size": 13967169,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-04T21:15:57Z VERSION=eac05398-ls5 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:e5a234ac2b59a95a11cb98d4b956c784a6571b9465b6240fb1df61a4b57381e0",
+    "diff_id": "sha256:0d4c143e64f2c563e01bd774146794b222d66bfb8769ba84d4d1611cced2de76",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:938ffbe1708906229e8a6b56bbb6a993557e38f91b0a5560e923fd46c6e2aa8a",
+    "diff_id": "sha256:d47106a6e5f8564b812feb6b0968d3a0aba0b1e730933608766c6db75dce4dd0",
+    "size": 35329473,
+    "uncompressed_size": 109880584,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-07T08:48:03Z VERSION=0.18.1-ls4 RANETO_RELEASE=0.18.1 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     libsass-dev     npm &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     nodejs &&   echo \"**** install raneto ****\" &&   mkdir -p     /app/raneto &&   if [ -z ${RANETO_RELEASE+x} ]; then     RANETO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/ryanlelek/Raneto/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/raneto-src.tar.gz -L     \"https://github.com/ryanlelek/Raneto/archive/${RANETO_RELEASE}.tar.gz\" &&   tar xf     /tmp/raneto-src.tar.gz -C     /app/raneto --strip-components=1 &&   echo \"**** install raneto node dev modules and build ****\" &&   cd /app/raneto &&   sed -i     's/upgradeInsecureRequests: \\[\\]/upgradeInsecureRequests: null/g'     app/index.js &&   npm install --omit=dev &&   mkdir sessions &&   rm -f config/config.js &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.npm     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     52
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:7e1212655db4841275259063311c0763efd5377e74c2e4e839d97a66bc99c67a",
+    "diff_id": "sha256:8c7d20142afbcdb6ded44275dd1aa87c831ab4ead4201a04401537e14cb226c9",
+    "size": 3151,
+    "uncompressed_size": 6297,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     55,
+     55
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:73476f63a083d70cd4a8be4fbfc622f5c945c79359b40ac74d42e6b0a39c1aa0",
+    "diff_id": "sha256:1ea962326c3e82f1b99d8a5c93dbd218de2075a9539e638ea1eba9851fbce9f7",
+    "size": 7019859,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:afb113c0dea9eb881d3924a3a83bc9e9ec6b48aaa3a309c6562753098ebfda0e",
+    "diff_id": "sha256:62b17f5c8946de0300c4cf449bfc040602862a4bf66cda77943de159e9102096",
+    "size": 1357,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:d1255c98794da0998393559ce7a59a9f551d1cc68b25564f5452589be1faa92c",
+    "diff_id": "sha256:5fbaf0fd8a0caf2cf5b2b128cf5bab86721d8e8dc4e890865450541813f10271",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:ce05da8718e3852f5f490546e06f6ad47f1dac68969256e767223aa8c9cdec69",
+    "diff_id": "sha256:7958db3978f0c579dc0a756cf6536529215eef5d8120bae2e83b45dc67399c57",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:fd722b3682b6f6d5b97af09a32b42f3c03ffd1dc9daa34ae91fd91d26985f29e",
+    "diff_id": "sha256:6c5286fd150c5902630f581918b655382e78b02ceb7bb4443c15d2bde0c22670",
+    "size": 6110452,
+    "uncompressed_size": 20893476,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-04T21:15:57Z VERSION=eac05398-ls5 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:91b61b827313838e7c5ecdf9a76fe1c2fee907c64ef6ad21fabc2c99ddabdac9",
+    "diff_id": "sha256:ef1d80c94db94abf9fdb2e8970d9097ecc338b66be8d12360703be89b3bca3ea",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b187f5ced2a7deec730353360cd066bfbb6eb4bb2fff12428c17d5c604dc6371",
+    "diff_id": "sha256:e258f55fa9eb7a4e054c8420be5b91cbcb079ba4d0147b134d8c3c41efb604de",
+    "size": 34529802,
+    "uncompressed_size": 105616611,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-07T08:48:03Z VERSION=0.18.1-ls4 RANETO_RELEASE=0.18.1 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     libsass-dev     npm &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     nodejs &&   echo \"**** install raneto ****\" &&   mkdir -p     /app/raneto &&   if [ -z ${RANETO_RELEASE+x} ]; then     RANETO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/ryanlelek/Raneto/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/raneto-src.tar.gz -L     \"https://github.com/ryanlelek/Raneto/archive/${RANETO_RELEASE}.tar.gz\" &&   tar xf     /tmp/raneto-src.tar.gz -C     /app/raneto --strip-components=1 &&   echo \"**** install raneto node dev modules and build ****\" &&   cd /app/raneto &&   sed -i     's/upgradeInsecureRequests: \\[\\]/upgradeInsecureRequests: null/g'     app/index.js &&   npm install --omit=dev &&   mkdir sessions &&   rm -f config/config.js &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.npm     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     52
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:6f5234be4391b9fef1cd72d02c6ca0d5d761da8a1a016b7b557e8dbdbc68fd3c",
+    "diff_id": "sha256:376c18348561071640f64919e1cbdedd30e311611e51888899838f5960f903d9",
+    "size": 3151,
+    "uncompressed_size": 6297,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     55,
+     55
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "raneto",
+  "tag": "0.18.1-ls4",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/raneto/builds/0.18.1-ls4/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.009,
+    "listening_ports": [
+     "3000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 93868032,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.016,
+    "listening_ports": [
+     "3000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 90767360,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-raneto/releases/download/0.18.1-ls4/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-raneto/builds/0.18.1-ls4/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "raneto",
+    "tag": "amd64-9bda87e-42356975034",
+    "arch": "amd64",
+    "started": "2026-11-07T08:51:07Z",
+    "finished": "2026-11-07T08:51:27Z",
+    "success": true,
+    "runner": "c3254cdcafc8",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-raneto",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.052
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 0.0s",
+      "seconds": 0.034
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "263 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "263 packages: syft JSON 56695 bytes gzipped, SPDX for the image attestation 432567 bytes",
+      "seconds": 0.095
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "871 dirs, 6341 files (137170288 bytes), 1217 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.08s, total 0.12s",
+      "seconds": 0.24
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.648
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.045
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 10.622
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [3000], rss 93868032 bytes",
+      "seconds": 0.411
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 93868032,
+     "pids": 13,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-raneto"
+     ],
+     "changed_paths": 212
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "raneto",
+    "tag": "arm64-9bda87e-42356975034",
+    "arch": "arm64",
+    "started": "2026-11-07T08:49:46Z",
+    "finished": "2026-11-07T08:50:07Z",
+    "success": true,
+    "runner": "7db92bc414c3",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.016,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.016
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-raneto",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.055
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 0.0s",
+      "seconds": 0.047
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "263 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "263 packages: syft JSON 56638 bytes gzipped, SPDX for the image attestation 432627 bytes",
+      "seconds": 0.147
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "871 dirs, 6341 files (144672931 bytes), 1217 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.09s",
+      "seconds": 0.231
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.626
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.065
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 10.953
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [3000], rss 90767360 bytes",
+      "seconds": 0.362
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 90767360,
+     "pids": 13,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-raneto"
+     ],
+     "changed_paths": 212
+    }
+   }
+  }
+ }
+}
