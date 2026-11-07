@@ -1,29 +1,29 @@
-# Builds the site and publishes it to GitHub Pages: on every push to main, daily, when the hub tells us it
-# has new data (repository_dispatch type `hub-updated`, relayed by the control plane after each successful hub
-# Deploy), and on demand.
+# Builds the site and publishes it to GitHub Pages from the gh-pages branch. Only the control plane starts it, on its
+# slots (control's deploys.py: at most nine an hour, half a slot after the hub's, and only when something changed:
+# the hub published new data, main moved, merged website edits included), and once a day with `refresh_all`.
+# Dispatching it by hand works, but every run outside control's slots counts against Pages' ten builds an hour.
 #
 # Every run restores the data snapshots from the `data` branch, refreshes them from the hub (HUB_URL), GitHub and
 # Open Collective, and publishes them back as that branch's one commit (scripts/snapshot.sh), so the build is
-# reproducible from the repository alone and main's history holds only what people write.
+# reproducible from the repository alone and main's history holds only what people write. A build the same as what
+# gh-pages holds is not pushed (scripts/pages_publish.sh).
 #
-# One job: the Pages deploy is a step, not a job of its own, because every job waits separately for one of the
+# One job: the Pages publish is a step, not a job of its own, because every job waits separately for one of the
 # organisation's 20 runner slots, and during a burst of image builds that second wait was up to 12 minutes for
 # 20 seconds of work.
 name: Deploy
 
 on:
-  push:
-    branches: [main]
-  schedule:
-    - cron: '17 4 * * *'
-  repository_dispatch:
-    types: [hub-updated]
   workflow_dispatch:
+    inputs:
+      refresh_all:
+        description: Refetch every retained build from the hub
+        type: boolean
+        default: false
 
 permissions:
   contents: write
   pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -33,4 +33,6 @@ jobs:
   deploy:
     # The job is deploy-run.yml, which the Labs site calls too. Calling it adds no runner job.
     uses: ./.github/workflows/deploy-run.yml
+    with:
+      refresh_all: ${{ inputs.refresh_all }}
     secrets: inherit

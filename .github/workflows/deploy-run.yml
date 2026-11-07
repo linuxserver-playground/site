@@ -10,6 +10,10 @@ on:
         description: Empty for the main site, labs for the Labs site (PUBLIC_SITE_MODE, src/lib/site.ts)
         type: string
         default: ''
+      refresh_all:
+        description: Refetch every retained build from the hub, not only the ones the snapshot lacks
+        type: boolean
+        default: false
 
 env:
   SITE_URL: https://${{ github.repository_owner }}.github.io
@@ -24,9 +28,6 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -52,8 +53,8 @@ jobs:
       - name: Refresh data snapshots from the hub
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Only the daily run refetches every retained build; the others fetch the builds the snapshot lacks.
-          REFRESH_ALL: ${{ github.event_name == 'schedule' && '1' || '' }}
+          # Only control's daily run refetches every retained build; the others fetch the builds the snapshot lacks.
+          REFRESH_ALL: ${{ inputs.refresh_all && '1' || '' }}
         run: npm run data
 
       - name: Publish the refreshed snapshots
@@ -74,11 +75,19 @@ jobs:
       - name: Build
         run: npm run build
 
-      - uses: actions/configure-pages@v6
+      # deploy.json names this run and digests the rest: a build the same as what gh-pages holds is not pushed, and
+      # Pages does not build it again. A Pages build that reports success is not trusted: the check asks the site for
+      # the stamp and fails when it never shows, which control heals (recover.py, DEPLOY_PAGES_STEPS: keep the step
+      # names in step).
+      - name: Stamp the deploy
+        run: scripts/pages_publish.sh stamp dist
 
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: dist
+      - name: Publish to Pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/pages_publish.sh publish dist
 
-      - id: deployment
-        uses: actions/deploy-pages@v5
+      - name: Check that Pages serves the deploy
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: scripts/pages_publish.sh check

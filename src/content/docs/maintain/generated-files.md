@@ -87,7 +87,7 @@ The hub never reads a repository's README. For each release it ingests it keeps 
 - `transform.build_image` calls `build_context` for the same derived values (title, platforms, tags, deprecation, setup) and `snippets` for the compose and run text.
 - `generate/docs.py` renders `.builder-out/docs.md` per image, the mkdocs page, into the hub's generated artefacts, and `generate/<store>.py`, `proxy.py`, `kubernetes.py`, `quadlet.py` read the manifest directly for the install artefacts.
 
-The hub installs `lsio-builder` from `builder@main` when its workflow runs, so a template change reaches the API on the next hub Deploy (hourly at the latest) and the site on the `hub-updated` dispatch that follows.
+The hub installs `lsio-builder` from `builder@main` when its workflow runs, so a template change reaches the API on the next hub Deploy (within the hour) and the site at its next deploy slot after that.
 
 ## The other generated files
 

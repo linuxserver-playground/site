@@ -54,8 +54,7 @@ The hub does not read the README. It loads the manifest from each release and re
 - **builder** on push to `main` publishes `ghcr.io/linuxserver-playground/builder:latest`. The build of every image runs `builder check` and `builder render` from that image, and the hub and control install the `lsio-builder` package from `builder@main` when they build. So a template change shows up in an image repo on its next live build, in the hub API on its next Deploy (hourly at most), and the site follows the hub.
 - **workflows** is called as `image-build.yml@v1`; the floating `v1` tag has to be moved by hand after a push. A change that breaks the inputs, outputs or the ci interface is a new major tag.
 - **control** deploys itself: Publish runs the checks, pushes `:latest`, and the server pulls it within five minutes. A red `main` ships nothing.
-- **hub** redeploys Pages on every push and ingests on every Deploy; `gh workflow run deploy.yml -R linuxserver-playground/hub` forces one.
-- **site** rebuilds on push and on the `hub-updated` dispatch control sends after every hub Deploy.
+- **hub** and **site** deploy only when control dispatches them, on fixed slots at most nine times an hour each and only when something changed (a release, a push to `main`, the hub's refreshed data; for the site, a hub deploy that published something new). Each publishes to its `gh-pages` branch, and pushes nothing when the build matches what is there. A push to `main` goes out at the next slot; control's `/api/status.json` (`deploys`) shows what is waiting.
 
 Generated data never lands on `main`: the hub's `data/` and the site's snapshots are each the single commit of their repository's `data` branch.
 

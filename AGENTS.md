@@ -24,7 +24,7 @@ in the browser. Data producers: the hub (`linuxserver-playground/hub`), the cont
 | `src/content/` | Blog posts, authors, `spotlight.yaml`, and `docs/<section>/<slug>.md` (the documentation; schema in `src/content.config.ts`). `imagedocs/` and `moddocs/` are written by `npm run data` from the hub; never edit them. |
 | `src/styles/globals.css` | Design tokens and utilities (Raft). |
 | `scripts/` | `refresh-data.mjs`, `snapshot.sh` (restore and publish the snapshots), `a11y.mjs`, `overflow.mjs`, `shot.mjs`, `test-search.mjs`, `fleet-check.mjs`, `editor-check.mjs`, `labs-check.mjs`, `new-post.mjs`, `new-doc.mjs`. |
-| `.github/workflows/` | `deploy.yml` (push, daily, `repository_dispatch: hub-updated`, manual), `check.yml` (pull requests). |
+| `.github/workflows/` | `deploy.yml` (dispatched by control on its slots: after the hub publishes, when `main` moves, daily with `refresh_all`; publishes to `gh-pages`), `check.yml` (pull requests). |
 
 ## What you may edit
 
