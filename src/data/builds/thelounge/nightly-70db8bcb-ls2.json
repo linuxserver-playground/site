@@ -1,0 +1,887 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "thelounge",
+  "repository": "linuxserver-playground/docker-thelounge",
+  "branch": "nightly",
+  "mode": "live",
+  "version": {
+   "upstream": "70db8bcb",
+   "upstream_clean": "70db8bcb",
+   "ls_build": 2,
+   "tag": "nightly-70db8bcb-ls2",
+   "release_tag": "nightly",
+   "tags": [
+    "nightly",
+    "nightly-70db8bcb-ls2",
+    "nightly-version-70db8bcb",
+    "amd64-nightly",
+    "amd64-nightly-70db8bcb-ls2",
+    "amd64-nightly-version-70db8bcb",
+    "arm64v8-nightly",
+    "arm64v8-nightly-70db8bcb-ls2",
+    "arm64v8-nightly-version-70db8bcb"
+   ],
+   "source": "github_commit",
+   "source_url": "https://github.com/thelounge/thelounge/commit/70db8bcb6faf98e9c2a09018e26c28ae3eaa0b09"
+  },
+  "commit": "5520489b130b782b57ac9c14049fcfb06898c406",
+  "created": "2026-10-26T20:57:04Z",
+  "reason": "push",
+  "previous": {
+   "tag": "nightly-70db8bcb-ls1",
+   "release_url": "https://github.com/linuxserver-playground/docker-thelounge/releases/tag/nightly-70db8bcb-ls1"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+   "digest": "sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:a9e66cbfb794b58d3790adfc3ed9e6226af1e49637719cc06d33c66d1836806b",
+    "size": 126121042,
+    "uncompressed_size": 442173567,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 68
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:c256712dd89353d31e06ec021b15d0bd9ee8d899b1e14d3cab667ac3e07f7d4c",
+    "size": 124637951,
+    "uncompressed_size": 442602880,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 54
+   }
+  ],
+  "index_digest": "sha256:de6a06ef6b4fed112003706ec679ec51ce0e95e8fefb174802f106c6e8218649",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 70db8bcb-ls2 Build-date:- 2026-10-26T19:52:34Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22@sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4",
+   "io.linuxserver.image.branch": "nightly",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "70db8bcb",
+   "maintainer": "aptalca,nemchik",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-26T19:52:34Z",
+   "org.opencontainers.image.description": "Thelounge (a fork of shoutIRC) is a web IRC client that you host on your own server.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-thelounge",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "5520489b130b782b57ac9c14049fcfb06898c406",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-thelounge",
+   "org.opencontainers.image.title": "Thelounge",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-thelounge/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "70db8bcb-ls2"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "THELOUNGE_HOME=/config"
+   ],
+   "exposed_ports": [
+    "9000/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG THELOUNGE_COMMIT\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca,nemchik\"\n\n# environment settings\nENV THELOUNGE_HOME=\"/config\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    git \\\n    py3-setuptools \\\n    python3-dev && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    yarn && \\\n  echo \"**** download thelounge ****\" && \\\n  if [ -z ${THELOUNGE_COMMIT+x} ]; then \\\n    THELOUNGE_COMMIT=$(curl -sX GET \"https://api.github.com/repos/thelounge/thelounge/commits/master\" | jq -r '. | .sha' | cut -c1-8); \\\n  fi && \\\n  mkdir -p \\\n    /app/thelounge && \\\n  curl -o \\\n    /tmp/thelounge.tar.gz -L \\\n    \"https://github.com/thelounge/thelounge/archive/${THELOUNGE_COMMIT}.tar.gz\" && \\\n  tar xf \\\n    /tmp/thelounge.tar.gz -C \\\n    /app/thelounge --strip-components=1 && \\\n  cd /app/thelounge && \\\n  echo \"**** modify thelounge source ****\" && \\\n  sed -i \"s/public: false,/public: true,/g\" defaults/config.js && \\\n  echo \"**** install thelounge ****\" && \\\n  yarn install && \\\n  NODE_ENV=production yarn build && \\\n  yarn link && \\\n  yarn --non-interactive cache clean && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root \\\n    /tmp/* && \\\n  mkdir -p / \\\n    /root\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 9000\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG THELOUNGE_COMMIT\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca,nemchik\"\n\n# environment settings\nENV THELOUNGE_HOME=\"/config\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    git \\\n    py3-setuptools \\\n    python3-dev && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    yarn && \\\n  echo \"**** download thelounge ****\" && \\\n  if [ -z ${THELOUNGE_COMMIT+x} ]; then \\\n    THELOUNGE_COMMIT=$(curl -sX GET \"https://api.github.com/repos/thelounge/thelounge/commits/master\" | jq -r '. | .sha' | cut -c1-8); \\\n  fi && \\\n  mkdir -p \\\n    /app/thelounge && \\\n  curl -o \\\n    /tmp/thelounge.tar.gz -L \\\n    \"https://github.com/thelounge/thelounge/archive/${THELOUNGE_COMMIT}.tar.gz\" && \\\n  tar xf \\\n    /tmp/thelounge.tar.gz -C \\\n    /app/thelounge --strip-components=1 && \\\n  cd /app/thelounge && \\\n  echo \"**** modify thelounge source ****\" && \\\n  sed -i \"s/public: false,/public: true,/g\" defaults/config.js && \\\n  echo \"**** install thelounge ****\" && \\\n  yarn install && \\\n  NODE_ENV=production yarn build && \\\n  yarn link && \\\n  yarn --non-interactive cache clean && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root \\\n    /tmp/* && \\\n  mkdir -p / \\\n    /root\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 9000\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"thelounge:nightly\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-thelounge-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-thelounge-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-thelounge\n  svc-thelounge -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"thelounge:nightly\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-thelounge-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-thelounge-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-thelounge",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 9000\" \\\n    s6-setuidgid abc thelounge start\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 1028,
+    "distro": "Alpine Linux v3.22",
+    "hash": "313eb094",
+    "by_type": {
+     "npm": 967,
+     "apk": 61
+    }
+   },
+   "arm64": {
+    "count": 1028,
+    "distro": "Alpine Linux v3.22",
+    "hash": "6a376812",
+    "by_type": {
+     "npm": 967,
+     "apk": 61
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/thelounge/builds/nightly-70db8bcb-ls2/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-thelounge/compare/nightly-70db8bcb-ls1...nightly-70db8bcb-ls2",
+   "upstream": "release: drop registry-url, setup-node v7 removed the dummy token yarn needed",
+   "upstream_url": "https://github.com/thelounge/thelounge/commit/70db8bcb6faf98e9c2a09018e26c28ae3eaa0b09"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 158891,
+    "sha256": "3301594d720ba2f3e60f5555ea3e22ecee2df4b0e9ec53b04e4de883e0c39214",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5400,
+    "sha256": "6e17dab639c1e45c0d9193ca9d4e8dd7ade2f5b5b0bdd6ab715b8d5f223371ce",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 217491,
+    "sha256": "55cb05c5d54c588f92e45072207f895750894608c074b006f3c43c38ef2bebdd",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2245,
+    "sha256": "5457d8da83302dedf2fc74de91f6ba108e139ca9d5ab6c4f2b5ceafef131bc1e",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 58922,
+    "sha256": "799d2275b520b17b0ba658c78c1b52db3fcead97a827998f5b5315009aecc688",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 87308,
+    "sha256": "cf7032a84b0f712c701a064c156f01d9689b64b270642bb4a842eb71ee96555f",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 158970,
+    "sha256": "3027d9cfc2a4e6f6ff9e973fbcf705cd51dd23c66a6ded6ba198d93ce2b0d84a",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5400,
+    "sha256": "0e390a1126a32bfa4e8802944a9e40a9354e98e5cd449d40d4d6d6627ac7b4b4",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 217253,
+    "sha256": "ba53f3d7d3937973bb231790c97f820186da89b1a6e5ee9cf88753ff0f4ddb60",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2242,
+    "sha256": "123b0a9b4d140447cd467a08f967355fbd44fed983ca42f4e30d21ae4b722d5e",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 58112,
+    "sha256": "c45a77517a2e40439b5e0987d8acb8041e5ac104ecfde64e9a1e73b807cbb091",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 87308,
+    "sha256": "6a413f51a2472e7aaf234a9ae15eb0d33888dd4d16c036b4c4bb43f947488b2b",
+    "url": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40387676831,
+   "run_url": "https://github.com/linuxserver-playground/docker-thelounge/actions/runs/40387676831",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "thelounge",
+  "branch": "nightly",
+  "tag": "nightly-70db8bcb-ls2",
+  "previous_tag": "nightly-70db8bcb-ls1",
+  "classification": "mixed",
+  "reasons": [
+   "Dockerfile changed",
+   "base image digest changed"
+  ],
+  "upstream": {
+   "from": "70db8bcb",
+   "to": "70db8bcb",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.22",
+    "digest": "sha256:334f316218c800cf2374258a6e79ba831221a25a04f1ca1c74c993ee38ade354"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 126118244,
+    "to": 126121042,
+    "delta": 2798
+   },
+   "arm64": {
+    "from": 124637600,
+    "to": 124637951,
+    "delta": 351
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "--- a/Dockerfile\n+++ b/Dockerfile\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:3.22\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n \n ENV LSIO_FIRST_PARTY=true\n \n",
+   "arm64": "--- a/Dockerfile.aarch64\n+++ b/Dockerfile.aarch64\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.22\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n \n ENV LSIO_FIRST_PARTY=true\n \n"
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:50941534e8ec337348733c7ae752f7d1f210ae8ea16d12f62753fa05ec09ec5e",
+    "diff_id": "sha256:4745b454a5c7d99b773225398de4efc22d0584c11a434614e1337886c25929e1",
+    "size": 6205935,
+    "uncompressed_size": 13580918,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2296c5a6da23beec69dbcb13b0b1e223f27acebf165d9ee1408c77a48b58761c",
+    "diff_id": "sha256:5bd43313ffdeefc43dd58bd3d56b0ab0d98930636c189407082f23c4c88e762d",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:7549b0e9b1ec9c290ef8524124abc60bb702e1d8df5325daf5f201421e2a3c39",
+    "diff_id": "sha256:acadb2531ec3274d08bc827f603be34984fbb7dbbd2e893df7a4962685d82e4c",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:19ca47c01d6752cc903b2da165558c51835b77a2f4c2ae2336597ca2459df8f9",
+    "diff_id": "sha256:66f4bcd41ec6a6c9f380501c9df1d67a772c10250480dad14379c74e4dbd4ea3",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5ba9ed2b4f7b93c41c6f7178c514bc4ae0f2211626741c5a7bc6579cda2ce863",
+    "diff_id": "sha256:f16ba025204c705b2e552cc3ac0d42ed0c8770382942aa56656e82d95d891f15",
+    "size": 5894936,
+    "uncompressed_size": 13967197,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-25T20:18:38Z VERSION=eac05398-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:4350699b4ff402ba546fea71086ac1258f8454523b4704362c28c4100554c749",
+    "diff_id": "sha256:6341de3156483d23896bb7b94f0c82218a75ff48569f7ec62f3280a060680f6b",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:a25f7505928f0c5438e29dd5f41f8f9ea6d868a39ededd9a8e3e695f7f9e81de",
+    "diff_id": "sha256:49d8e7a56bba94f5f04c8457dc312cdbc1ec70d41d6189909d20b1ab7c80b731",
+    "size": 114006105,
+    "uncompressed_size": 414578902,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T19:52:34Z VERSION=70db8bcb-ls2 THELOUNGE_COMMIT=70db8bcb /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     git     py3-setuptools     python3-dev &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     yarn &&   echo \"**** download thelounge ****\" &&   if [ -z ${THELOUNGE_COMMIT+x} ]; then     THELOUNGE_COMMIT=$(curl -sX GET \"https://api.github.com/repos/thelounge/thelounge/commits/master\" | jq -r '. | .sha' | cut -c1-8);   fi &&   mkdir -p     /app/thelounge &&   curl -o     /tmp/thelounge.tar.gz -L     \"https://github.com/thelounge/thelounge/archive/${THELOUNGE_COMMIT}.tar.gz\" &&   tar xf     /tmp/thelounge.tar.gz -C     /app/thelounge --strip-components=1 &&   cd /app/thelounge &&   echo \"**** modify thelounge source ****\" &&   sed -i \"s/public: false,/public: true,/g\" defaults/config.js &&   echo \"**** install thelounge ****\" &&   yarn install &&   NODE_ENV=production yarn build &&   yarn link &&   yarn --non-interactive cache clean &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /root     /tmp/* &&   mkdir -p /     /root",
+    "dockerfile_lines": [
+     17,
+     55
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:913c57c5391e6c1f225c470b413106e29cacea863f616eedfecd7f7284bf1f5d",
+    "diff_id": "sha256:defedf7a0c8c1de66197066bdf93bdb6f5405ec1a6b517c2ab25d815f17ce2f8",
+    "size": 706,
+    "uncompressed_size": 334,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     58,
+     58
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d77674232f0c47cbb040cba73ff72799dba09aec91d1318e8189e6df3852dcd6",
+    "diff_id": "sha256:d92c25ce199a3e6219318e93bcb3f8e1e4e0285dea78b85215ad5615885313aa",
+    "size": 7020019,
+    "uncompressed_size": 18421354,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:9d5b315da99cfe0ad0076049628c3866051b1829a4757526a2e6e6eb28f3eb6e",
+    "diff_id": "sha256:b216aa3b96b6207ce53f87c3000182aaa2c22950280408dfb970d71acaffca65",
+    "size": 1357,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:607e25ad2c61b59f2e556efeb18df513832d9e2d38b039251507f7c7dc079274",
+    "diff_id": "sha256:06a8030eaf087ea95b4b1395744e495e26bb8587869b5858a02206e3e1a1e1e8",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:19a4e67d57fd6b5e2282a2a3308677d576422b169a14dd4e8f1ee7dc003d73fe",
+    "diff_id": "sha256:09d7c10c531ec5ceacf13de18f5b33642d86850e087eee46e8d828d2a8bff827",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:6f2c4b6581d3c881202606acfd9a27a429fa51cffe5d372ccf9c2a79103e6526",
+    "diff_id": "sha256:ead62eec1755aeaf04e242afff809e2b8932c144475f219c711d0b9ee379fe28",
+    "size": 6110414,
+    "uncompressed_size": 20893504,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-25T20:18:38Z VERSION=eac05398-ls1 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:fd9a5d1991b6cf60466fdc9929f3e1a084ad55b1719b4124b06a04cdd1cffa88",
+    "diff_id": "sha256:89ae97d41a411209eb4a7ef2341bd967db2d571cea31b33d326d4c23d593a637",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:fb50d0c41c05a754c5ac58de24c2e992a99a682cf4e9f927eebdad95e662ece5",
+    "diff_id": "sha256:46f1883daf25abf583b9eb9c203c23a79cce7ef4a713e32f451b57fa06beb85a",
+    "size": 111493456,
+    "uncompressed_size": 403241472,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-26T19:52:34Z VERSION=70db8bcb-ls2 THELOUNGE_COMMIT=70db8bcb /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     git     py3-setuptools     python3-dev &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     yarn &&   echo \"**** download thelounge ****\" &&   if [ -z ${THELOUNGE_COMMIT+x} ]; then     THELOUNGE_COMMIT=$(curl -sX GET \"https://api.github.com/repos/thelounge/thelounge/commits/master\" | jq -r '. | .sha' | cut -c1-8);   fi &&   mkdir -p     /app/thelounge &&   curl -o     /tmp/thelounge.tar.gz -L     \"https://github.com/thelounge/thelounge/archive/${THELOUNGE_COMMIT}.tar.gz\" &&   tar xf     /tmp/thelounge.tar.gz -C     /app/thelounge --strip-components=1 &&   cd /app/thelounge &&   echo \"**** modify thelounge source ****\" &&   sed -i \"s/public: false,/public: true,/g\" defaults/config.js &&   echo \"**** install thelounge ****\" &&   yarn install &&   NODE_ENV=production yarn build &&   yarn link &&   yarn --non-interactive cache clean &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /root     /tmp/* &&   mkdir -p /     /root",
+    "dockerfile_lines": [
+     17,
+     55
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:289f6477751363e5ad61d94f8a81b1f1d020baa95e03582403b3fb84d1a4ab81",
+    "diff_id": "sha256:6c5f0ce4b8e2a447e4999626cdc698cc5c5b02e1f8ece46787cb4f1f51945e9a",
+    "size": 707,
+    "uncompressed_size": 334,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     58,
+     58
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "thelounge",
+  "tag": "nightly-70db8bcb-ls2",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/thelounge/builds/nightly-70db8bcb-ls2/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.013,
+    "listening_ports": [
+     "9000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 100429824,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 10,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "9000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 97460224,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-thelounge/releases/download/nightly-70db8bcb-ls2/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-thelounge/builds/nightly-70db8bcb-ls2/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "thelounge",
+    "tag": "amd64-5520489-40387676831",
+    "arch": "amd64",
+    "started": "2026-10-26T20:55:36Z",
+    "finished": "2026-10-26T20:55:59Z",
+    "success": true,
+    "runner": "66e82293386c",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.013,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.013
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": ".NET application detected, no runtime errors in the log"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "1028 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "1028 packages: syft JSON 158891 bytes gzipped, SPDX for the image attestation 1815933 bytes",
+      "seconds": 0.374
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "4047 dirs, 30133 files (441862671 bytes), 1370 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.42s, total 0.70s",
+      "seconds": 0.912
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.54
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.075
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:9000/",
+      "seconds": 10.853
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [9000], rss 100429824 bytes",
+      "seconds": 1.543
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 100429824,
+     "pids": 13,
+     "listening_tcp": [
+      9000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-thelounge"
+     ],
+     "changed_paths": 208
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "thelounge",
+    "tag": "arm64-5520489-40387676831",
+    "arch": "arm64",
+    "started": "2026-10-26T20:54:23Z",
+    "finished": "2026-10-26T20:54:44Z",
+    "success": true,
+    "runner": "2902d58aff89",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Dotnet check",
+      "status": "PASS",
+      "message": ".NET application detected, no runtime errors in the log"
+     },
+     {
+      "name": "uwsgi check",
+      "status": "PASS",
+      "message": "image does not use uWSGI"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "1028 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "1028 packages: syft JSON 158970 bytes gzipped, SPDX for the image attestation 1816252 bytes",
+      "seconds": 0.317
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "4047 dirs, 30133 files (442291857 bytes), 1370 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.19s, total 0.33s",
+      "seconds": 0.484
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.322
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.051
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:9000/",
+      "seconds": 10.742
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [9000], rss 97460224 bytes",
+      "seconds": 0.8
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 97460224,
+     "pids": 12,
+     "listening_tcp": [
+      9000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-thelounge"
+     ],
+     "changed_paths": 208
+    }
+   }
+  }
+ }
+}

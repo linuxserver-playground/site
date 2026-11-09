@@ -1,0 +1,12 @@
+---
+branch: "code-server-bat"
+---
+Bat is a cat(1) clone with syntax highlighting and Git integration.
+
+### Bat-extras and Ripgrep
+
+This mod also includes [bat-extras](https://github.com/eth-p/bat-extras) which has a dependency of [ripgrep](https://github.com/BurntSushi/ripgrep). Ripgrep has also been included because it is a requirment of bat-extras.
+
+### Aliases
+
+This mod includes aliases for `bat` in `bash` and `zsh`. Under Ubuntu `bat` gets installed as `batcat` to avoid a name collision. So, for convenience, an alias to set `bat="batcat"` is included for both `bash` and `zsh`.
