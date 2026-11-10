@@ -1,0 +1,987 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "kimai",
+  "repository": "linuxserver-playground/docker-kimai",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "2.71.0",
+   "upstream_clean": "2.71.0",
+   "semver": "2.71.0",
+   "ls_build": 4,
+   "tag": "2.71.0-ls4",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "2.71.0-ls4",
+    "version-2.71.0",
+    "2.71.0",
+    "amd64-latest",
+    "amd64-2.71.0-ls4",
+    "amd64-version-2.71.0",
+    "amd64-2.71.0",
+    "arm64v8-latest",
+    "arm64v8-2.71.0-ls4",
+    "arm64v8-version-2.71.0",
+    "arm64v8-2.71.0"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/kimai/kimai/releases/tag/2.71.0"
+  },
+  "commit": "cdefc91d2938cce7254f75042b7ac551a5796541",
+  "created": "2026-10-30T20:36:40Z",
+  "reason": "push",
+  "previous": {
+   "tag": "2.71.0-ls3",
+   "release_url": "https://github.com/linuxserver-playground/docker-kimai/releases/tag/2.71.0-ls3"
+  },
+  "base": {
+   "family": "alpine-nginx",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+   "digest": "sha256:df6a63d8627d7f06e292f4e4cff695743d92f8735617ff755470962e58fd75f5"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:4a8450294315c0f7c3bc2156c19db24287c00b6dc8ce1b4044d5b780e4896263",
+    "size": 133847647,
+    "uncompressed_size": 405265192,
+    "layers": 11,
+    "runner": "Linux-X64",
+    "build_seconds": 68
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:894072201453cd83a99d521ad16ab329fb1a333971fa0bf0a30ed18d03f90772",
+    "size": 134462531,
+    "uncompressed_size": 407784086,
+    "layers": 11,
+    "runner": "Linux-ARM64",
+    "build_seconds": 49
+   }
+  ],
+  "index_digest": "sha256:9ae7166c253c3b42f29846a2d2daeb1f092de911f7558fb495824edc5d4b1965",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 2.71.0-ls4 Build-date:- 2026-10-30T19:50:33Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24@sha256:df6a63d8627d7f06e292f4e4cff695743d92f8735617ff755470962e58fd75f5",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "2.71.0",
+   "maintainer": "nemchik",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-30T19:50:33Z",
+   "org.opencontainers.image.description": "Kimai is a professional grade time-tracking application, free and open-source.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-kimai",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "cdefc91d2938cce7254f75042b7ac551a5796541",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-kimai",
+   "org.opencontainers.image.title": "Kimai",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-kimai/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "2.71.0-ls4"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "PHP_INI_SCAN_DIR=:/config/php",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "443/tcp",
+    "80/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KIMAI_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    php85-gd \\\n    php85-intl \\\n    php85-ldap \\\n    php85-pdo_mysql \\\n    php85-pecl-redis \\\n    php85-tokenizer \\\n    php85-xmlreader \\\n    php85-xsl && \\\n  echo \"**** configure php-fpm to pass env vars ****\" && \\\n  sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf && \\\n  if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi && \\\n  echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf && \\\n  echo \"**** install kimai ****\" && \\\n  mkdir -p\\\n    /app/www && \\\n  if [ -z ${KIMAI_RELEASE+x} ]; then \\\n    KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/kimai.tar.gz -L \\\n    \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/kimai.tar.gz -C \\\n    /app/www --strip-components=1 && \\\n  echo \"**** install composer dependencies ****\" && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap && \\\n  /usr/bin/composer clearcache -d /app/www/ && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache \\\n    $HOME/.composer\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine-nginx:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KIMAI_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    php85-gd \\\n    php85-intl \\\n    php85-ldap \\\n    php85-pdo_mysql \\\n    php85-pecl-redis \\\n    php85-tokenizer \\\n    php85-xmlreader \\\n    php85-xsl && \\\n  echo \"**** configure php-fpm to pass env vars ****\" && \\\n  sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf && \\\n  if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi && \\\n  echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf && \\\n  echo \"**** install kimai ****\" && \\\n  mkdir -p\\\n    /app/www && \\\n  if [ -z ${KIMAI_RELEASE+x} ]; then \\\n    KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/kimai.tar.gz -L \\\n    \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/kimai.tar.gz -C \\\n    /app/www --strip-components=1 && \\\n  echo \"**** install composer dependencies ****\" && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap && \\\n  /usr/bin/composer clearcache -d /app/www/ && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache \\\n    $HOME/.composer\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"kimai:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-nginx-end -> init-config\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-kimai-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-os-end -> init-folders\n  init-php -> init-keygen\n  init-nginx-end -> init-kimai-config\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-samples -> init-nginx\n  init-version-checks -> init-nginx-end\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-keygen -> init-permissions\n  init-nginx -> init-php\n  init-folders -> init-samples\n  init-custom-files -> init-services\n  init-permissions -> init-version-checks\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-nginx\n  svc-nginx -> legacy-services\n  init-services -> svc-php-fpm\n  svc-php-fpm -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine-nginx:3.24\"\n}\n\"kimai:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end",
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-kimai-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-folders",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# make folders\nmkdir -p \\\n    /config/{keys,php,www} \\\n    /config/log/{nginx,php} \\\n    /config/nginx/site-confs \\\n"
+    },
+    {
+     "name": "init-keygen",
+     "type": "oneshot",
+     "depends_on": [
+      "init-php"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nSUBJECT=\"/C=US/ST=CA/L=Carlsbad/O=Linuxserver.io/OU=LSIO Server/CN=*\"\nif [[ -f /config/keys/cert.key && -f /config/keys/cert.crt ]]; then\n    echo \"using keys found in /config/keys\"\nelse\n    echo \"generating self-signed keys in /config/keys, you can replace these with your own keys if required\"\n    rm -f \\\n        /config/keys/cert.key \\\n        /config/keys/cert.crt || true\n    openssl req -new -x509 -days 3650 -nodes -out /config/keys/cert.crt -keyout /config/keys/cert.key -subj \"$SUBJECT\" -addext \"subjectAltName = DNS:localhost\"\nfi\n"
+    },
+    {
+     "name": "init-kimai-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nDB_VALID=$(php -r 'echo filter_var(getenv(\"DATABASE_URL\"), FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED);')\n\nif [[ ${DATABASE_URL+x} == \"\" ]] || [[ ${DB_VALID+x} == \"NULL\" ]]; then\n    cat <<-EOF\n    ********************************************************\n    ********************************************************\n    *                                                      *\n    *                         !!!!                         *\n    *     DATABASE_URL environment variable is not set     *\n    *                          OR                          *\n    *    DATABASE_URL environment variable is not valid    *\n    *                                                      *\n    *              Please refer to the README              *\n    *                                                      *\n    *                                                      *\n    ********************************************************\n    ********************************************************\nEOF\n    sleep infinity\nfi\n\n# make our folders\nmkdir -p \\\n    /config/www/var/{cache,data,log,packages,plugins,sessions}\n\nrm -rf /app/www/var\nln -s /config/www/var /app/www/var\ncp /app/www/config/packages/kimai.yaml /config/kimai.yaml.sample\nif [[ ! -f /config/local.yaml ]]; then\n    echo '# See https://www.kimai.org/documentation/local-yaml.html' > /config/local.yaml\nfi\nif [[ ! -L /app/www/config/packages/local.yaml ]]; then\n    ln -s /config/local.yaml /app/www/config/packages/local.yaml\nfi\n\n# Clear cache on image upgade\nif [[ ! -f /dbwait.lock ]];then\n    rm -rf /config/www/var/cache/*\nfi\n\nDB_HOST=$(php -r 'echo parse_url(getenv(\"DATABASE_URL\"), PHP_URL_HOST);')\nDB_PORT=$(php -r 'echo parse_url(getenv(\"DATABASE_URL\"), PHP_URL_PORT) ?? 3306;')\n\n# check for the mysql endpoint\necho \"Waiting for DB to be available\"\nEND=$((SECONDS + 30))\nwhile [[ ${SECONDS} -lt ${END} ]]; do\n    if [[ $(/usr/bin/nc -w1 \"${DB_HOST}\" \"${DB_PORT}\" | tr -d '\\0') ]]; then\n        if [[ -n \"${RUN}\" ]]; then\n            break\n        fi\n        RUN=\"RAN\"\n        # we sleep here again due to first run init on DB containers\n        if [[ ! -f /dbwait.lock ]]; then\n            sleep 5\n        fi\n    else\n        sleep 1\n    fi\ndone\n# set lockfile to avoid DB waits for this specific container\ntouch /dbwait.lock\n\nlsiown -R abc:abc \\\n    /config/www\n\nconsole kimai:install -n\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-nginx",
+     "type": "oneshot",
+     "depends_on": [
+      "init-samples"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# precreate log files\nfor file in /config/log/nginx/access.log /config/log/nginx/error.log; do\n    if [[ ! -f \"${file}\" ]]; then\n        touch \"${file}\"\n    fi\ndone\n\n# copy default config files if they don't exist\nif [[ ! -f /config/nginx/nginx.conf ]]; then\n    cp /defaults/nginx/nginx.conf.sample /config/nginx/nginx.conf\nfi\nif [[ ! -f /config/nginx/ssl.conf ]]; then\n    cp /defaults/nginx/ssl.conf.sample /config/nginx/ssl.conf\nfi\nif [[ ! -f /config/nginx/site-confs/default.conf ]]; then\n    cp /defaults/nginx/site-confs/default.conf.sample /config/nginx/site-confs/default.conf\nfi\n\n# force nginx.conf to include site-confs/*.conf instead of site-confs/*\nsed -i -E \"s#^(\\s*)include /config/nginx/site-confs/\\*;#\\1include /config/nginx/site-confs/\\*.conf;#\" /config/nginx/nginx.conf\n\n# copy index.html if no index file exists\nINDEX_EXISTS=false\nfor file in /config/www/index.*; do\n    if [[ -e \"${file}\" ]]; then\n        INDEX_EXISTS=true\n        break\n    fi\ndone\nif [[ ${INDEX_EXISTS} == false ]] && grep -Eq '^\\s*index[^#]*index\\.html' /config/nginx/**/*.conf; then\n    cp /defaults/www/index.html /config/www/index.html\nfi\n\n# Set resolver, ignore ipv6 addresses\ntouch /config/nginx/resolver.conf\nif ! grep -q 'resolver' /config/nginx/resolver.conf; then\n    RESOLVERRAW=$(awk 'BEGIN{ORS=\" \"} $1==\"nameserver\" {print $2}' /etc/resolv.conf)\n    for i in ${RESOLVERRAW}; do\n        if [[ \"${i}\" =~ ^[0-9]{1,3}(\\.[0-9]{1,3}){3}$ ]]; then\n            RESOLVER=\"${RESOLVER} ${i}\"\n        fi\n    done\n    if [[ -z \"${RESOLVER}\" ]]; then\n        RESOLVER=\"127.0.0.11\"\n    fi\n    echo \"Setting resolver to ${RESOLVER}\"\n    RESOLVEROUTPUT=\"# This file is auto-generated only on first start, based on the container's /etc/resolv.conf file. Feel free to modify it as you wish.\\n\\nresolver ${RESOLVER} valid=30s;\"\n    echo -e \"${RESOLVEROUTPUT}\" >/config/nginx/resolver.conf\nfi\n\n# Set worker_processes\ntouch /config/nginx/worker_processes.conf\nif ! grep -q 'worker_processes' /config/nginx/worker_processes.conf; then\n    WORKER_PROCESSES=$(nproc)\n    echo \"Setting worker_processes to ${WORKER_PROCESSES}\"\n    echo -e \"# This file is auto-generated only on first start, based on the cpu cores detected. Feel free to change it to any other number or to auto to let nginx handle it automatically.\\n\\nworker_processes ${WORKER_PROCESSES};\" >/config/nginx/worker_processes.conf\nfi\n"
+    },
+    {
+     "name": "init-nginx-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-version-checks"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the nginx base init process\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-permissions",
+     "type": "oneshot",
+     "depends_on": [
+      "init-keygen"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_READ_ONLY_FS} ]] && [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # permissions\n    lsiown -R abc:abc \\\n        /var/lib/nginx\n\n    chmod -R 644 /etc/logrotate.d\nfi\n\nif [[ -f \"/config/log/logrotate.status\" ]]; then\n    chmod 600 /config/log/logrotate.status\nfi\n\nchmod -R g+w \\\n    /config/nginx\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    lsiown -R abc:abc \\\n        /config/keys \\\n        /config/log \\\n        /config/nginx \\\n        /config/php\n\n    lsiown abc:abc \\\n        /config/www\nfi\n"
+    },
+    {
+     "name": "init-php",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# precreate log files\nif [[ ! -f /config/log/php/error.log ]]; then\n    touch /config/log/php/error.log\nfi\n\n# create local php.ini if it doesn't exist, set local timezone\nif [[ ! -f /config/php/php-local.ini ]]; then\n    printf \"; Edit this file to override php.ini directives\\\\n\\\\n\" >/config/php/php-local.ini\n    # set default timezone\n    printf \"date.timezone = %s\\\\n\" \"${TZ:-UTC}\" >>/config/php/php-local.ini\nfi\n\n# create override for www.conf if it doesn't exist\nif [[ ! -f /config/php/www2.conf ]]; then\n    printf \"; Edit this file to override www.conf and php-fpm.conf directives and restart the container\\\\n\\\\n; Pool name\\\\n[www]\\\\n\\\\n\" >/config/php/www2.conf\nfi\n"
+    },
+    {
+     "name": "init-samples",
+     "type": "oneshot",
+     "depends_on": [
+      "init-folders"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# remove old samples\nfind /config/nginx/ \\\n    -name \"*.conf.sample\" \\\n    -type f \\\n    -delete\n\n# copy new samples\nfind /defaults/nginx/ \\\n    -maxdepth 1 \\\n    -name \"*.conf.sample\" \\\n    -type f \\\n    -exec cp \"{}\" /config/nginx/ \\;\n\nfind /defaults/nginx/site-confs/ \\\n    -maxdepth 1 \\\n    -name \"*.conf.sample\" \\\n    -type f \\\n    -exec cp \"{}\" /config/nginx/site-confs/ \\;\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-version-checks",
+     "type": "oneshot",
+     "depends_on": [
+      "init-permissions"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# detect nginx configs with dates not matching the provided sample files\nactive_confs=$(find /config/nginx/ -name \"*.conf\" -type f 2>/dev/null)\n\nfor i in ${active_confs}; do\n    if [ -f \"${i}.sample\" ]; then\n        if [ \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}\")\" != \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}.sample\")\" ]; then\n            active_confs_changed=\"│ $(printf '%10s' \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}\" | tr / -)\") │ $(printf '%10s' \"$(sed -nE 's|^## Version ([0-9]{4}\\/[0-9]{2}\\/[0-9]{2}).*|\\1|p' \"${i}.sample\" | tr / -)\") │ $(printf '%-70s' \"${i}\") │\\n${active_confs_changed}\"\n        fi\n    fi\ndone\n\nif [ -n \"${active_confs_changed}\" ]; then\n    echo \"**** The following active confs have different version dates than the samples that are shipped. ****\"\n    echo \"**** This may be due to user customization or an update to the samples. ****\"\n    echo \"**** You should compare the following files to the samples in the same folder and update them. ****\"\n    echo \"**** Use the link at the top of the file to view the changelog. ****\"\n    echo \"┌────────────┬────────────┬────────────────────────────────────────────────────────────────────────┐\"\n    echo \"│  old date  │  new date  │ path                                                                   │\"\n    echo \"├────────────┼────────────┼────────────────────────────────────────────────────────────────────────┤\"\n    echo -e \"${active_confs_changed%%\\\\n}\"\n    echo \"└────────────┴────────────┴────────────────────────────────────────────────────────────────────────┘\"\nfi\n\n# detect site-confs with wrong extension\nsite_confs_wrong_ext=$(find /config/nginx/site-confs/ -type f -not -name \"*.conf\" -not -name \"*.conf.sample\" 2>/dev/null)\n\nif [ -n \"${site_confs_wrong_ext}\" ]; then\n    echo \"**** The following site-confs have extensions other than .conf ****\"\n    echo \"**** This may be due to user customization. ****\"\n    echo \"**** You should review the files and rename them to use the .conf extension or remove them. ****\"\n    echo \"**** nginx.conf will only include site-confs with the .conf extension. ****\"\n    echo -e \"${site_confs_wrong_ext}\"\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-nginx",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif pgrep -f \"[n]ginx:\" >/dev/null; then\n    echo \"Zombie nginx processes detected, sending SIGTERM\"\n    pkill -ef [n]ginx:\n    sleep 1\nfi\n\nif pgrep -f \"[n]ginx:\" >/dev/null; then\n    echo \"Zombie nginx processes still active, sending SIGKILL\"\n    pkill -9 -ef [n]ginx:\n    sleep 1\nfi\n\nexec /usr/sbin/nginx -e stderr\n"
+    },
+    {
+     "name": "svc-php-fpm",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec /usr/sbin/php-fpm85 -F\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 273,
+    "distro": "Alpine Linux v3.24",
+    "hash": "e849e172",
+    "by_type": {
+     "binary": 1,
+     "apk": 126,
+     "php-composer": 145,
+     "npm": 1
+    }
+   },
+   "arm64": {
+    "count": 273,
+    "distro": "Alpine Linux v3.24",
+    "hash": "e849e172",
+    "by_type": {
+     "binary": 1,
+     "apk": 126,
+     "php-composer": 145,
+     "npm": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/kimai/builds/2.71.0-ls4/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-kimai/compare/2.71.0-ls3...2.71.0-ls4",
+   "upstream": "**Compatible with PHP 8.2 to 8.5**\r\n\r\n## Changes\r\n\r\n- Remove API password from user profile screen (#6277)\r\n- Deactivate API passwords (#6267) - thanks @haxxordan\r\n\r\n## Bugfixes\r\n\r\n- Check if API is allowed to set begin (#6275) - thanks @Deniiz23\r\n- Use edit permission to check if times can be set via API (#6276) - thanks @Deniiz23\r\n\r\n## Maintenance\r\n\r\n- Convert user roles from deprecated Types::ARRAY to Types::JSON (#6278)\r\n- Translations update from Hosted Weblate (#6258)\r\n- Dependency updates (#6272)\r\n\r\nYou can read more about all security reports [here](https://www.kimai.org/documentation/bughunter.html#published-vulnerabilities) or grab this [RSS feed](https://www.kimai.org/security.xml) to get notified about new published advisories.\r\n\r\nInvolved in this release: @kevinpapst, @haxxordan, @Deniiz23, Olaf Nielsen and yurisatori0312\r\n",
+   "upstream_url": "https://github.com/kimai/kimai/releases/tag/2.71.0"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 86182,
+    "sha256": "bd6da61b9b53eba16c4e87ce761506261a85aa492bbec83d6c8a20dcaf0105fc",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 9319,
+    "sha256": "1daa8a8d40afae8de202de2fe99802766c5b6df16d6a38da71120d793c9160ff",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 179778,
+    "sha256": "31d88377a4caf73985d6817828a7ddaafcb6de834286733ceb0de58b57f2fd88",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1941,
+    "sha256": "fb12ad1201b3e089a564fc909f94ff83afb99f4d116935e57d610bd956329984",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 220,
+    "sha256": "9d51fa779e70426b2ae672ad922e21524499f94f83eb868f1dea01b967b81cb6",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 19180,
+    "sha256": "3dcb283e54f50cc195d24a5c4caf7a1f2a006f8cd37a033c80199c1b66301548",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 85928,
+    "sha256": "c331e725f5e1c8f263879c1a55ec2fccf62595c77e7517a53690b41a5c4c3564",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 9319,
+    "sha256": "a2fa0c17d510c2dbb2f670e0516f3fe2c6efeb5080f50bf8071d860596c789b3",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 179415,
+    "sha256": "c206cb8ae00243f7886aac5778c3da52623631615b615d0a1847eed8ee348950",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1942,
+    "sha256": "dbde8d7b4e7e5a5d5d984e9db24b3fe583e6032b9ababed717e46d6cba1357f7",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 217,
+    "sha256": "d73eb609574c2078875964996e8157329ae0bb5216402b272a5b2c646c93d260",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 19180,
+    "sha256": "3dcb283e54f50cc195d24a5c4caf7a1f2a006f8cd37a033c80199c1b66301548",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41116732014,
+   "run_url": "https://github.com/linuxserver-playground/docker-kimai/actions/runs/41116732014",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/kimai",
+   "tags": [
+    "latest",
+    "2.71.0-ls4",
+    "version-2.71.0",
+    "2.71.0",
+    "amd64-latest",
+    "amd64-2.71.0-ls4",
+    "amd64-version-2.71.0",
+    "amd64-2.71.0",
+    "arm64v8-latest",
+    "arm64v8-2.71.0-ls4",
+    "arm64v8-version-2.71.0",
+    "arm64v8-2.71.0"
+   ]
+  }
+ },
+ "diff": {
+  "image": "kimai",
+  "branch": "main",
+  "tag": "2.71.0-ls4",
+  "previous_tag": "2.71.0-ls3",
+  "classification": "linuxserver",
+  "reasons": [
+   "built from a push with the same upstream and base (root/ or build settings changed)"
+  ],
+  "upstream": {
+   "from": "2.71.0",
+   "to": "2.71.0",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine-nginx",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+    "digest": "sha256:df6a63d8627d7f06e292f4e4cff695743d92f8735617ff755470962e58fd75f5"
+   },
+   "to": {
+    "family": "alpine-nginx",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+    "digest": "sha256:df6a63d8627d7f06e292f4e4cff695743d92f8735617ff755470962e58fd75f5"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 133847071,
+    "to": 133847647,
+    "delta": 576
+   },
+   "arm64": {
+    "from": 134462405,
+    "to": 134462531,
+    "delta": 126
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:589803e87188fe95e3165a8e9187c6731e15603dd7a74dc6534f5f95b84e7ed1",
+    "diff_id": "sha256:0b99ea0c13ad1a760422d7e1f69f2c3d13e525d4c088a216d5662c6292139cc3",
+    "size": 6265106,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dd3c4763431fc043f72fc92f11325e747aa19f0b7f4ffd80517b5fa481ba041f",
+    "diff_id": "sha256:1e91ca23263f0d3a483cf7c05ec39d0d57c50778ffd8616345ba1286c41c06de",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:249f35cba001ff3d0ddf7581471f6edb98d9dbb361c67b26fb2fa5ab692b6660",
+    "diff_id": "sha256:3559f1f3d49deb06085010b784908957b88928276ec7558d8ad77dbbf9a89fdd",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:b7d1faa21c64f4326523fab2a06c795639fe1376a23ff0d181572d53ca5586f4",
+    "diff_id": "sha256:2d06e6867adf71ae6a4ef4870814b2c2292f68ce890dafef59a1dca3440a3898",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:a861600f1bf8431781e397e10f319d78ead8d622c2aa8b91d2a6b5249a4030c6",
+    "diff_id": "sha256:6292ce65870e4f1a225a829ee83f814667a6397e7cbe48c7e52f267943b945f2",
+    "size": 6091115,
+    "uncompressed_size": 14407494,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:06:22Z VERSION=bc9f8d41-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:0df303fa4d766b7825d742864244937b74ee6bf523fb7b6572deee90009e0c12",
+    "diff_id": "sha256:a33689d0fe508cb641cfba678a9a95904dc7ce37322a5b05290a69df700f2c6d",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:697796159c88cfc4ed9dbafcc0e19991d7c6edb51de8904f4b52f78f1f3b9a07",
+    "diff_id": "sha256:638ca27e53f4e515e45a905203f81b739fbb3a4e86bac4ad82cbf3200a2e28eb",
+    "size": 16223594,
+    "uncompressed_size": 60594487,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-30T05:22:42Z VERSION=1.30.6-r0_8.5.12-r0-ls6 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php85     php85-ctype     php85-curl     php85-fileinfo     php85-fpm     php85-iconv     php85-json     php85-mbstring     php85-openssl     php85-phar     php85-session     php85-simplexml     php85-xml     php85-xmlwriter     php85-zip     php85-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php85\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php85 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php85/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php85/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php85/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php85/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:44304d468316ef82701ce364c616954d2da54b5953dad684eef148f223989b1e",
+    "diff_id": "sha256:010d64e4d778e9adfac94b00a506052dd0bc19aba52ecd9bdfa2a2ff76f3405b",
+    "size": 7735,
+    "uncompressed_size": 17446,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:76a16ee1e50284b451a34742812d2bff6f49144a86c2814a48502f160e4ebbc1",
+    "diff_id": "sha256:05a1f87b6bfe8042e1a2217644a65e15e0bec788cb9b497badd4fb6cac5064e8",
+    "size": 105245239,
+    "uncompressed_size": 316489686,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T19:50:33Z VERSION=2.71.0-ls4 KIMAI_RELEASE=2.71.0 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     php85-gd     php85-intl     php85-ldap     php85-pdo_mysql     php85-pecl-redis     php85-tokenizer     php85-xmlreader     php85-xsl &&   echo \"**** configure php-fpm to pass env vars ****\" &&   sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf &&   if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi &&   echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf &&   echo \"**** install kimai ****\" &&   mkdir -p    /app/www &&   if [ -z ${KIMAI_RELEASE+x} ]; then     KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/kimai.tar.gz -L     \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" &&   tar xf     /tmp/kimai.tar.gz -C     /app/www --strip-components=1 &&   echo \"**** install composer dependencies ****\" &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap &&   /usr/bin/composer clearcache -d /app/www/ &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache     $HOME/.composer",
+    "dockerfile_lines": [
+     14,
+     51
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:6a0102fd44350357932a2ed74a827e7b57da6a4fbaa02d13988c622a5a82ad0f",
+    "diff_id": "sha256:52f91a70def2f073e5a3b768018c780044aa81ed06b416fc518a7e98c617afb9",
+    "size": 1499,
+    "uncompressed_size": 2759,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     54,
+     54
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:1cd35515ce1a5bc0117474968b266414e9a91ef99075a268adde897972d892b2",
+    "diff_id": "sha256:3415d3b1946bed135e557eff27451a76bdeaabe3fde8b52a1d7844fcd4126ae9",
+    "size": 7081730,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dee64e5694572850ee9673269eeb89465be67dae5fcee1e29c9aa56ad728a5b5",
+    "diff_id": "sha256:5323a65059c682158a782051cf4e13d726a8932c2e2affcf2e76ac5d3c7b461a",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:4af5a54b292f879fc2302386da26ef76c5ed3db24532819f961c11ceb9829d23",
+    "diff_id": "sha256:626e29f4e2488ba06ebde8f123b299add5c55e9c5227cab90006c8d31d48c88c",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:2fbd35a78b7ee61742257273cab91ba4a6225edd4bc1730ad8a3f21864d490e8",
+    "diff_id": "sha256:f25d5fb1cb94efa44855da1ddaff8563c657115135bc19d1864c72aab3d2863c",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:e7671b4018139e055361ffac46bbc0238dd938e07984e1536f9c7ead2f14ec5f",
+    "diff_id": "sha256:615f3472d38777c86fc2dee4e742e1c1065581d04133040630ca69842aadb668",
+    "size": 6326020,
+    "uncompressed_size": 21489258,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:06:22Z VERSION=bc9f8d41-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:a41e0be880b2df1376ffe0adef1b0158277abc81fa0186cf5b9de51a938a08da",
+    "diff_id": "sha256:08b597c734c6b5e3650735d97cbf8eeb882cc4b519ddecee888f5666a384eb69",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:5d243e10958b79bb20d3c84e37da8787c99c7268f2a68c354f97b95c2d3c4537",
+    "diff_id": "sha256:4df921e41ca9e54c50f1b1873f45c70ffe362e75328fe3f896b8ea3774652a89",
+    "size": 15977463,
+    "uncompressed_size": 52052075,
+    "created_by": "RUN |2 BUILD_DATE=2026-10-30T05:22:42Z VERSION=1.30.6-r0_8.5.12-r0-ls6 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php85     php85-ctype     php85-curl     php85-fileinfo     php85-fpm     php85-iconv     php85-json     php85-mbstring     php85-openssl     php85-phar     php85-session     php85-simplexml     php85-xml     php85-xmlwriter     php85-zip     php85-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php85\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php85 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php85/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php85/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php85/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php85/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:857137142fddb52e1ce63150bfd2229ba843a18acc94b8bad7debc48ee44ac2a",
+    "diff_id": "sha256:c516c6893925064692e9e8fa559f00ce3f4f02d4a86107119358c624b423bd3f",
+    "size": 7737,
+    "uncompressed_size": 17446,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:0eabf8e2c205bd6e6facb32e434dbb970df50048a5a8030bf22ae4c432eb4601",
+    "diff_id": "sha256:ef7f3e7f1229fee484bb74abd974e0ecd95a872f367e18533288950ffdb58d97",
+    "size": 105054727,
+    "uncompressed_size": 315633741,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T19:50:33Z VERSION=2.71.0-ls4 KIMAI_RELEASE=2.71.0 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     php85-gd     php85-intl     php85-ldap     php85-pdo_mysql     php85-pecl-redis     php85-tokenizer     php85-xmlreader     php85-xsl &&   echo \"**** configure php-fpm to pass env vars ****\" &&   sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf &&   if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi &&   echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf &&   echo \"**** install kimai ****\" &&   mkdir -p    /app/www &&   if [ -z ${KIMAI_RELEASE+x} ]; then     KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/kimai.tar.gz -L     \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" &&   tar xf     /tmp/kimai.tar.gz -C     /app/www --strip-components=1 &&   echo \"**** install composer dependencies ****\" &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap &&   /usr/bin/composer clearcache -d /app/www/ &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache     $HOME/.composer",
+    "dockerfile_lines": [
+     14,
+     51
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:37092a01ab716685eb887872c79cd8516f167bd2901e4ef69775ac1031eda0e4",
+    "diff_id": "sha256:1da4251af395198c26a480a8de69ee1d08dff2e8f7dcc19a6be2123eda06624b",
+    "size": 1500,
+    "uncompressed_size": 2759,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     54,
+     54
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "kimai",
+  "tag": "2.71.0-ls4",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/kimai/builds/2.71.0-ls4/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/test.amd64.tar.gz",
+    "files": {}
+   },
+   "arm64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.71.0-ls4/test.arm64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "kimai",
+    "tag": "amd64-cdefc91-41116732014",
+    "arch": "amd64",
+    "started": "2026-10-30T20:21:40Z",
+    "finished": "2026-10-30T20:21:49Z",
+    "success": true,
+    "runner": "025a63445aa6",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "273 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "273 packages: syft JSON 86182 bytes gzipped, SPDX for the image attestation 563708 bytes",
+      "seconds": 0.21
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2922 dirs, 18260 files (404809774 bytes), 1429 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.29s, total 0.48s",
+      "seconds": 0.681
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.948
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 11 from this image, base units assumed",
+      "seconds": 0.101
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "kimai",
+    "tag": "arm64-cdefc91-41116732014",
+    "arch": "arm64",
+    "started": "2026-10-30T20:02:18Z",
+    "finished": "2026-10-30T20:02:26Z",
+    "success": true,
+    "runner": "51d46c55a984",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "273 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "273 packages: syft JSON 85928 bytes gzipped, SPDX for the image attestation 563834 bytes",
+      "seconds": 0.177
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2922 dirs, 18259 files (407328629 bytes), 1429 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.14s, total 0.25s",
+      "seconds": 0.399
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.591
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 11 from this image, base units assumed",
+      "seconds": 0.075
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}
