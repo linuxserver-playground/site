@@ -1,0 +1,988 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "audiosilo",
+  "repository": "linuxserver-playground/docker-audiosilo",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "v2.6.0",
+   "upstream_clean": "v2.6.0",
+   "semver": "2.6.0",
+   "ls_build": 9,
+   "tag": "v2.6.0-ls9",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v2.6.0-ls9",
+    "version-v2.6.0",
+    "2.6.0",
+    "amd64-latest",
+    "amd64-v2.6.0-ls9",
+    "amd64-version-v2.6.0",
+    "amd64-2.6.0",
+    "arm64v8-latest",
+    "arm64v8-v2.6.0-ls9",
+    "arm64v8-version-v2.6.0",
+    "arm64v8-2.6.0"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/KodeStar/audiosilo-server/releases/tag/v2.6.0"
+  },
+  "commit": "eeb2c1fb806364fc5b95f6723e7e3425fa3811bf",
+  "created": "2026-11-10T12:31:01Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v2.6.0-ls8",
+   "release_url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/tag/v2.6.0-ls8"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:792c8cfac02ebc2f3f62c5e89c8eb08cfdcb07604092d556249b649cbf3945bb",
+    "size": 78210093,
+    "uncompressed_size": 200163784,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 17
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:bf933b930bffbfd159ae1570637a26d572bff4e3237ea389a7e294e578826a11",
+    "size": 75449693,
+    "uncompressed_size": 185705335,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 13
+   }
+  ],
+  "index_digest": "sha256:6243220fe8e40482e1ea302f498aeb7935b1804b7f398ffd841899514e48efa5",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v2.6.0-ls9 Build-date:- 2026-11-10T12:26:27Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v2.6.0",
+   "maintainer": "KodeStar",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-10T12:26:27Z",
+   "org.opencontainers.image.description": "AudioSilo is a self-hosted audiobook server.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-audiosilo",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "eeb2c1fb806364fc5b95f6723e7e3425fa3811bf",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-audiosilo",
+   "org.opencontainers.image.title": "Audiosilo",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-audiosilo/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v2.6.0-ls9"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "8080/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG AUDIOSILO_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"KodeStar\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    ffmpeg && \\\n  echo \"**** install audiosilo ****\" && \\\n  if [ -z ${AUDIOSILO_RELEASE+x} ]; then \\\n    AUDIOSILO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/KodeStar/audiosilo-server/releases/latest\" \\\n    | jq -r .tag_name); \\\n  fi && \\\n  AUDIOSILO_VER=${AUDIOSILO_RELEASE#v} && \\\n  mkdir -p \\\n    /app/audiosilo && \\\n  curl -fsSL -o \\\n    /tmp/audiosilo.tar.gz \\\n    \"https://github.com/KodeStar/audiosilo-server/releases/download/v${AUDIOSILO_VER}/audiosilo_${AUDIOSILO_VER}_linux_amd64.tar.gz\" && \\\n  tar xzf \\\n    /tmp/audiosilo.tar.gz -C \\\n    /app/audiosilo \\\n    --no-same-owner \\\n    audiosilo && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8080\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG AUDIOSILO_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"KodeStar\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    ffmpeg && \\\n  echo \"**** install audiosilo ****\" && \\\n  if [ -z ${AUDIOSILO_RELEASE+x} ]; then \\\n    AUDIOSILO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/KodeStar/audiosilo-server/releases/latest\" \\\n    | jq -r .tag_name); \\\n  fi && \\\n  AUDIOSILO_VER=${AUDIOSILO_RELEASE#v} && \\\n  mkdir -p \\\n    /app/audiosilo && \\\n  curl -fsSL -o \\\n    /tmp/audiosilo.tar.gz \\\n    \"https://github.com/KodeStar/audiosilo-server/releases/download/v${AUDIOSILO_VER}/audiosilo_${AUDIOSILO_VER}_linux_arm64.tar.gz\" && \\\n  tar xzf \\\n    /tmp/audiosilo.tar.gz -C \\\n    /app/audiosilo \\\n    --no-same-owner \\\n    audiosilo && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8080\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"audiosilo:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-config -> init-audiosilo-config\n  init-os-end -> init-config\n  init-audiosilo-config -> init-config-end\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-audiosilo\n  svc-audiosilo -> legacy-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"audiosilo:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-audiosilo-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # permissions\n    lsiown -R abc:abc \\\n        /config\nfi\n"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-audiosilo-config",
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-audiosilo",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# readiness check follows the configured port (AUDIOSILO_BIND wins over config.yaml)\nBIND=${AUDIOSILO_BIND:-$(awk '/^bind:/ {print $2}' /config/config.yaml 2>/dev/null)}\nPORT=${BIND##*:}\nPORT=${PORT//[^0-9]/}\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost ${PORT:-8080}\" \\\n            s6-setuidgid abc /app/audiosilo/audiosilo --data /config\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost ${PORT:-8080}\" \\\n            /app/audiosilo/audiosilo --data /config\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 270,
+    "distro": "Alpine Linux v3.24",
+    "hash": "52957396",
+    "by_type": {
+     "apk": 154,
+     "rust-crate": 97,
+     "go-module": 19
+    }
+   },
+   "arm64": {
+    "count": 269,
+    "distro": "Alpine Linux v3.24",
+    "hash": "e92e90d2",
+    "by_type": {
+     "apk": 153,
+     "rust-crate": 97,
+     "go-module": 19
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/audiosilo/builds/v2.6.0-ls9/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-audiosilo/compare/v2.6.0-ls8...v2.6.0-ls9",
+   "upstream": "## Highlights\n\n### Upcoming releases, in the player and your calendar\n\n- **See what's coming in the series you listen to.** Home has a **Coming up in your series** shelf, and **Upcoming** lists preorders, recent releases and the volumes your server is missing. Series pages show release dates on the books you don't have yet. Covers come through your server, so your device doesn't contact the sites they came from.\n- **Add release days to your calendar.** Upcoming gives you a private subscription link for Apple Calendar, Google Calendar, Outlook and other calendar apps. Books with an exact release day appear as all-day events; a changed date moves the event, and adding the book to your server removes it. Keep the link private: anyone with it can read that feed. Resetting it stops the old link.\n- Your server checks the community catalogue daily, for series it already holds. Dates are the earliest audiobook release the catalogue knows, which can differ from your local store. A cloud calendar needs to reach your server at a public HTTPS address with a trusted certificate. Kids' accounts don't see Upcoming or its calendar.\n\nSee [Upcoming releases](https://docs.audiosilo.app/users/listening/upcoming).\n\n### Sync v2: listening across devices and offline\n\n- **Your devices now send what you listened to, rather than just a position.** Listening waits on the device while it's offline and joins up when the server is reachable again. History, the Journal and stats count it on the day you listened, and a repeated upload is counted once.\n- **Choose where to carry on.** When two devices listened without seeing each other's place, the server keeps the place further on and remembers the other. The player offers **Jump** or **Stay**, naming the device, rather than silently moving you back. A finished book stays finished until you deliberately start it again.\n- **See what has reached your server.** Home and your account page show listening waiting to sync. The account page lists anything the server couldn't accept, with its reason. For books in several files, listening also records the file and the position within it, so an older download's file order can be reconciled with the server's.\n\nThese changes need the 2.6.0 player. Older apps keep saving their place as before.\n\n### Apple Watch support, with app availability to follow\n\n- **The Apple Watch companion is implemented for the 2.6.0 iPhone update.** It plays books downloaded to the watch without the phone, and sends its listening directly to your server when it can connect. Set it up from your iPhone, use **Send to watch** on a book, and see or remove its books in the iPhone's **Downloads**. The watch also offers downloads from **Continue listening**.\n- The watch needs watchOS 11 or later, the 2.6.0 iPhone app, and server 2.6.0 with ffmpeg. The server prepares smaller audio copies for it. It holds one account and plays books; podcasts and library browsing stay on your other devices.\n- **This server release does not announce App Store availability.** The production watch checks and store release are separate gates. Watch availability will be announced after those are complete.\n\nSee [Apple Watch](https://docs.audiosilo.app/users/listening/apple-watch).\n\n### Audible on the Bridge: accounts, backups and listening places\n\n- **Sign in on the Bridge's Accounts tab.** Each Audible account belongs to a person on your server and a books library. The server's **Settings > Audible** lists its titles, which are already here, why others weren't matched, and where a backup would go. Amazon credentials stay sealed on the Bridge.\n- **Back up books you bought into your library.** Choose a title, **Back up everything**, or a policy for future purchases: every new book, or new books in series you already have. The Bridge saves an M4B without re-encoding the audio, keeps its chapters and asks the server to index it. Placement can follow your existing series folders, a template or a destination you choose. It never replaces an existing file. Automatic policies cover new purchases; use **Back up everything** for the books the account already had.\n- **Places can travel both ways.** Turn on **Sync listening places with Audible** for an account. The Bridge checks Audible about every 15 minutes and brings forward a place further on. After your AudioSilo place has stayed still for three minutes, it can send it back to Audible. **Don't sync** excludes an individual title. This moves places only: Audible listening adds nothing to AudioSilo's history or stats.\n- **A known limitation:** the Audible app can still resume at an older place after the Bridge reports a successful push. Reasserting a place after Audible overwrites it is still deferred ([Bridge #51](https://github.com/KodeStar/audiosilo-bridge/issues/51)).\n\nAudible needs **Bridge v0.6.0 and server 2.6.0 together**, with the Audible module enabled. Backups also need a mapped, writable library. See [Audible](https://docs.audiosilo.app/users/admin/audible).\n\n### Follow the narration in the player\n\n- **The player's Text tab follows the ebook sentence by sentence**, highlighting what you hear and turning the pages. Tap a sentence to seek there; turn away to browse and **Back to narration** brings you back. The full-screen ebook reader has **Follow narration** too.\n- A downloaded book keeps its read-along with its ebook for offline use. Following doesn't move your separate reading place. A missing or out-of-date read-along isn't offered to listeners; an admin can make one from the player with a suitable Bridge.\n- Making a read-along still needs **Bridge v0.5.0 or later** and the matching EPUB. Following it needs the 2.6.0 player; use server 2.6.0 for this release's player features.\n\nSee [Text in the player](https://docs.audiosilo.app/users/listening/companion#text).\n\n### Smarter matching, with less waiting\n\n- **Better use of the facts your files already have.** Matching uses narrator, language, series position and running time alongside title and author. ASIN and ISBN tags are hints to check, so a stray identifier in a file doesn't mark it matched on its own. A decisive identifier hit whose recording fits no longer gets stuck behind an almost-equal runner-up, while very weak guesses stay out of the review pile.\n- **Cleaner titles without losing your edits.** **Fill in what's missing** can remove a series label, book number or edition clutter from a confidently matched title. Your own edits stay locked, and matching doesn't rewrite your audio tags.\n- **Online match runs make fewer requests.** With an updated community service, the match and its details arrive together instead of needing several round trips per book. Runs check six books at once, pace their requests and retry temporary rate-limit or busy responses.\n- **Further edition and series safeguards.** A number in a title is distinguished from a stated series position; a well-supported series position can settle a messy title. Recording choice takes more care with running time and dramatizations, and a library's clearly dominant tagged language can help when a book has none. A recording up to 20% different in length can fit when the book's named narrator reads that recording.\n- **Books without an ASIN or ISBN can be matched too.** A confident store-listing match can apply automatically when the full author and series position agree and both running times are known and within 2%. The candidate must still meet the confidence score and lead clearly over alternatives.\n- **A community match is remembered per book.** Accepting or automatically applying a match records its community work and recording, even without an ASIN or ISBN. It counts as **Matched**, survives scans and index rebuilds, and later match runs skip it. Refresh can look up an identifier-free match by its recorded work. For those identifier-free matches, the console's **Community** card shows what it is matched to, how and when; **Unlink** removes the match and its community-supplied values and cover, preserving your own edits.\n\n- **A known limitation:** reverting a community ASIN on a matched book does not reject the match, and a later refresh can write the ASIN back. **Unlink first** to remove the recorded match ([server #330](https://github.com/KodeStar/audiosilo-server/issues/330)).\n\n### Help fill gaps in the community catalogue, if you choose\n\n- **Help complete the community database** is a new, **off-by-default** switch in **Settings > Community metadata**. Once enabled, a daily job checks ASINs from your books and reports the ones the community catalogue doesn't know.\n- The report contains **ASINs only**, without filenames, paths, people, listening history or a server identifier. It uses HTTPS outside loopback; the receiving service can still see the request's IP address. Reports also work in mirror mode, where the checks stay local and only the unknown-ASIN report goes out.\n\n### Faster database work on Linux\n\n- **The Docker image and native Linux downloads now use the native SQLite engine**, with prepared statements reused across requests and a faster matching path. macOS and Windows downloads keep the pure-Go engine. The database format is the same, and Linux builds retain the pure-Go engine as a fallback.\n\n### Folder names that state their series\n\n- **A book named `Author; Series; Book 02; Title` supplies its series and number.** The scanner reads that information from the book's own folder or filename when tags leave it out. Ranges such as `Book 01-03` are supported; `Book XX` and `Book 00` supply the series without a position.\n- **An album tag that's only the series name no longer hides the book's title.** The scanner uses the title tag or the title from the path instead. Existing affected books are picked up by the next scan, with admin edits preserved.\n\n## Fixes\n\n- **Changing an existing password ends the other sessions**, while keeping the device that changed it signed in. Admin password resets and **Sign out everywhere** also end the relevant sessions and pairing/recovery codes. Setting a first password doesn't sign other devices out. Personal API keys and calendar links keep working.\n- **Android: very long single-file M4B/M4A books no longer exhaust memory at chapter changes.** Files too large for chapter clipping play as a whole-file item in the system player; chapter navigation inside AudioSilo still works.\n- **Listening sync** keeps a device's chain of listening across separate uploads, protects a cold resume from overwriting a newer place, and keeps deliberate backward seeks from native lock-screen and headphone controls.\n- **Offline read-alongs keep the map belonging to the downloaded ebook**, rather than pairing that ebook with a newer map from the server.\n- **Characters and recaps follow your copy's chapters.** Community positions are mapped onto the book's own chapter list; unknown offsets aren't treated as the end, and an appearance past the last chapter reads **Near the end**.\n- **Dramatized recordings are chosen more carefully.** Matching checks production hints, narrator and running time. When a work has only dramatizations, a very close running time can identify the production; unresolved edition choices stay for review.\n- **Community matches are safer to remove and refresh.** **Unlink** is refused while a match run is matching or applying, so the run cannot write the match back after you remove it. Match requests with a missing, null or whitespace-only work ID are rejected; only an explicitly empty work ID unlinks a book. If the community catalogue does not know a matched book's ASIN or ISBN, refresh can use its recorded work and follow a retired work's redirect, while skipping that fallback for identifiers you edited yourself.\n- **Audible matches handle competing titles more carefully**, including series numbers, and show the contested book and planned destination. Placeholder release dates far in the future no longer make an old purchase look like a preorder. The Bridge uses Audible's current device profile and redacts sensitive details from errors.\n\n## After updating\n\n- **Eleven database migrations run on first start after v2.5.1.** Before they run, the server copies the database into the backups folder; the newest three upgrade copies are kept:\n\n  - **0059:** upcoming series, releases and notification bookkeeping.\n  - **0060:** one active calendar-feed token per person.\n  - **0061:** listening events and the other-device place.\n  - **0062:** a device's listening chain across sync uploads.\n  - **0063:** Audible accounts and their titles.\n  - **0064:** Audible backup policies, placement templates and pending preorders.\n  - **0065:** planned backup destinations and contested matches.\n  - **0066:** Audible place sync and reliable ordering of changed places. Audible sync starts off for every account.\n  - **0067:** ASIN, ISBN and language tag hints for matching.\n  - **0068:** bookkeeping for the optional unknown-ASIN report.\n  - **0069:** remembered community work and recording matches, including books without an ASIN or ISBN.\n- **New defaults:** Upcoming checks are on while community metadata is on, with a 90-day recent-release window. The first full check normally runs about an hour after start. The console's **Check for upcoming releases** switch applies live (`upcoming.enabled` in configuration); changing `upcoming.window_days` is configuration-only and needs a restart. The unknown-ASIN report (`metadata.report_unknown`) is off, the Audible module starts off, and Audible place sync needs enabling separately for each account.\n- **Linux database engine:** Docker and native Linux builds select native SQLite automatically. Set `AUDIOSILO_SQLITE=modernc` and restart to use the pure-Go fallback on the same database. Docker needs **20.10.10 or newer**; older Docker can stop the new binary at startup. The glibc source and relinking information is in [NOTICE](https://github.com/KodeStar/audiosilo-server/blob/main/NOTICE).\n- **Run a scan** to pick up tag hints, the corrected title rule and series information from `Author; Series; Book 02; Title` names on existing books. You don't need to rebuild the library index.\n- **Update the Bridge to v0.6.0 alongside the server** for Audible. The new Audible job parameters and progress feed need both versions; don't mix versions for that work. Older Bridges retain their previous jobs, and making read-alongs still has v0.5.0 as its Bridge minimum. Accounts created with an older Audible device profile may need **Sign in again** on the Bridge, then another **Back up** for failed titles.\n- **Minimum app version is unchanged for existing listening.** Older iOS and Android apps keep working. Upcoming, Sync v2 and following read-alongs need app **2.6.0** or the bundled web player. Apple Watch also needs the 2.6.0 iPhone update and its separate store/device gates; a server update doesn't install it.\n- **If you host your own metaserve**, deploy **v0.25.5 or later** as well as refreshing its data. Remote matching needs that service code for the numbered-title and series-position rules; refreshing a catalogue artifact alone doesn't update the matcher. In mirror mode, server 2.6.0 includes those rules through its audiosilo-meta **v0.25.5** dependency.\n\nEvery change to the player API is additive, so existing iOS, Android and web players keep working. New: Upcoming, calendar management and its feed and covers under `/me/upcoming`; `POST /me/listening/sync` and additional progress fields; watch rendition preparation/status and `?rendition=watch` streams; and their capability flags in `/server`. Existing progress routes remain supported.\n\nBundled web player 2.6.0:\n\n- Upcoming releases and calendar subscriptions, Sync v2 with other-device place choices and offline listening history, the Text tab and Follow narration with offline read-alongs, clearer password-change results, and corrected character/recap positions.\n\n---\nNative builds embed the web player; ffmpeg/ffprobe are found locally or\nauto-downloaded on first use. Prefer Docker for advanced / multi-user\nsetups: `ghcr.io/kodestar/audiosilo-server`.\n\nAudioSilo server is licensed under AGPL-3.0 (see\n[LICENSE](https://github.com/KodeStar/audiosilo-server/blob/main/LICENSE)).\n\nThe Linux binaries and the Docker image use the native SQLite engine, a\nstatic binary linked against the GNU C Library (LGPL-2.1-or-later; source and\nrelinking: [NOTICE](https://github.com/KodeStar/audiosilo-server/blob/main/NOTICE)).\nIn Docker it needs Docker 20.10.10 or newer: older Docker blocks the system call\nglibc starts threads with, and the server stops at start-up.\n\nAudioSilo is free; sponsors keep it going:\n[GitHub Sponsors](https://github.com/sponsors/KodeStar).\n\n\n",
+   "upstream_url": "https://github.com/KodeStar/audiosilo-server/releases/tag/v2.6.0"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 58816,
+    "sha256": "91dbfd7da72cc163ba3b3fbc7a35ea8d3a402e0cfae9208e4a5fee1da62e12c7",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5043,
+    "sha256": "8d997f436352299c99baccb69c2aed7d0d96ceafbf54792b884e60b1b9d9817c",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 29504,
+    "sha256": "bd8a03a7d669b7dc008b8595d42d9aca0ece7e3fc6dc7c31bdfe5ed6e9ced6d1",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2600,
+    "sha256": "c553801525adc035c1819a4186263295fd0a970c2cbddc8e43af9af5831ed118",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 26023,
+    "sha256": "402dc7901ce9be9ea66e5a7bfb884515ec66ec095ee6d2b18f532ce85be67281",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 30128,
+    "sha256": "ce5351e8f6142c8fb933c1b98bdfa7fb8ff8cd4a908a21f565520b64036f3273",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 58376,
+    "sha256": "b8f1f69b86f366ab746619ee0e6503aa79a36b0b22eb8f6b171ea94116db28ce",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5043,
+    "sha256": "29814c40f198c939c154b74a706e15a1b6b8c0d4529ca63a1e7c2ebc73d13d51",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 28975,
+    "sha256": "214533240ab8263e1cf099a590be8b407ab243f789f015c62727f2abcb815946",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2601,
+    "sha256": "367d850a7a1e51dc2190d425d9ed3aa21f2ce7901316eaeb964f6750d9d2aa45",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 26037,
+    "sha256": "88ed061369316af3082d3524347dd32f74befed5feebdc2aae1bb2adcaeb7237",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 30016,
+    "sha256": "1db34bdd480f741925836ae24c74de5c3fcd89d137b9f57d96bc13ca1407d01b",
+    "url": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 42815702875,
+   "run_url": "https://github.com/linuxserver-playground/docker-audiosilo/actions/runs/42815702875",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/audiosilo",
+   "tags": [
+    "latest",
+    "v2.6.0-ls9",
+    "version-v2.6.0",
+    "2.6.0",
+    "amd64-latest",
+    "amd64-v2.6.0-ls9",
+    "amd64-version-v2.6.0",
+    "amd64-2.6.0",
+    "arm64v8-latest",
+    "arm64v8-v2.6.0-ls9",
+    "arm64v8-version-v2.6.0",
+    "arm64v8-2.6.0"
+   ]
+  }
+ },
+ "diff": {
+  "image": "audiosilo",
+  "branch": "main",
+  "tag": "v2.6.0-ls9",
+  "previous_tag": "v2.6.0-ls8",
+  "classification": "packages",
+  "reasons": [
+   "packages changed",
+   "1 commit (38c98c2 → eeb2c1f): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v2.6.0",
+   "to": "v2.6.0",
+   "changed": false
+  },
+  "commit": {
+   "from": "38c98c2c82a51e39c80c56e75905b87a18cfb35e",
+   "to": "eeb2c1fb806364fc5b95f6723e7e3425fa3811bf",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-audiosilo/compare/38c98c2c82a51e39c80c56e75905b87a18cfb35e...eeb2c1fb806364fc5b95f6723e7e3425fa3811bf",
+   "commits": [
+    {
+     "sha": "eeb2c1fb806364fc5b95f6723e7e3425fa3811bf",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T15:31:49Z",
+     "url": "https://github.com/linuxserver-playground/docker-audiosilo/commit/eeb2c1fb806364fc5b95f6723e7e3425fa3811bf",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 78209995,
+    "to": 78210093,
+    "delta": 98
+   },
+   "arm64": {
+    "from": 75449838,
+    "to": 75449693,
+    "delta": -145
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libopenmpt",
+       "from": "0.8.9-r0",
+       "to": "0.8.10-r0",
+       "purl": "pkg:apk/alpine/libopenmpt@0.8.10-r0?arch=x86_64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libopenmpt",
+       "from": "0.8.9-r0",
+       "to": "0.8.10-r0",
+       "purl": "pkg:apk/alpine/libopenmpt@0.8.10-r0?arch=aarch64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:545d4f15654f1a41d289dc8d6ff4323903aab87b026be0a65396345b2c101be4",
+    "diff_id": "sha256:8be867d300e530cf6d98eac7b9af2cc8d84469decd1054eabf8dfd99bf9e72ea",
+    "size": 6266615,
+    "uncompressed_size": 13711256,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2023bed36d24cf793e80fa15289e7bddee887ff422d51bdd8b408c79138f0f06",
+    "diff_id": "sha256:be2f9fea94da00699c9bcd4b86a523e62c1dee6224ee3cff60ac313aaadf4843",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:c6d434456495ac568c97d1c4c0b02833dd8d030d0229c025a1392a245db9951b",
+    "diff_id": "sha256:aa510fdedc0643fe353dd455e66b5b6887d102914d9b17d76e8530a9d548d878",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:f0d95394e91d9e9173e468997b34c65657362d6bac9985dd86090506b3703004",
+    "diff_id": "sha256:c5f324c75d01bb48409641211c83c5c00c222b5d2ede732004f34755941ad642",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:896e30f3f6a9a79a56b14501dfb29b94469d4f7e62d688eb7f9920c5e01248ca",
+    "diff_id": "sha256:7b93a48e4d05ad9969e9b34a2e2c814a9a905814d76f0cad3b2dda7b90b76295",
+    "size": 6091161,
+    "uncompressed_size": 14407458,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:f5fba40ea5e79a9b868c8956a0790ba521114c461fb913fe2120e5d28fc8dbc7",
+    "diff_id": "sha256:4e492c677e4c6b01a4449b80ef9d3fe690a851f54d49d0ace528903f1fea010a",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:7075a43814f01f3588cc8db86b77ed88652cfe2442375597264c007d0e12b4a1",
+    "diff_id": "sha256:4c5a4f91c9272cd62d515040b3f84ef2f696b26bb359bd495254d3ab8156aeb4",
+    "size": 65837945,
+    "uncompressed_size": 171997950,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-10T12:26:27Z VERSION=v2.6.0-ls9 AUDIOSILO_RELEASE=v2.6.0 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     ffmpeg &&   echo \"**** install audiosilo ****\" &&   if [ -z ${AUDIOSILO_RELEASE+x} ]; then     AUDIOSILO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/KodeStar/audiosilo-server/releases/latest\"     | jq -r .tag_name);   fi &&   AUDIOSILO_VER=${AUDIOSILO_RELEASE#v} &&   mkdir -p     /app/audiosilo &&   curl -fsSL -o     /tmp/audiosilo.tar.gz     \"https://github.com/KodeStar/audiosilo-server/releases/download/v${AUDIOSILO_VER}/audiosilo_${AUDIOSILO_VER}_linux_amd64.tar.gz\" &&   tar xzf     /tmp/audiosilo.tar.gz -C     /app/audiosilo     --no-same-owner     audiosilo &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     14,
+     38
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:595e092e9783724bffb2d70b0cfc3bf37c8977ae8a457e2624b1348beaa1fc0e",
+    "diff_id": "sha256:dfd5c808e89b90ad0fe0d63d92a5e396d6d19448ff8c7835f2ca846165fb0057",
+    "size": 1013,
+    "uncompressed_size": 904,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     41,
+     41
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:64b981af69cff029eba3c7e0777523e70f1f4054b0887f9a965c176d18169cc6",
+    "diff_id": "sha256:ff1102643737cf92b5ddf6c7a1b0d458827766891ea7a4f451e80d24cf72a580",
+    "size": 7083608,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:79a420625e0d676d8a32b0bfbd2195beb0da5e8b12eac1c933fcacfbf12a1b51",
+    "diff_id": "sha256:33f6be7ae4978af9a244d51a206ab0c210235afa751f59a501512bf033c19eff",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:1eea1340625cba05d1c5c9edd941668f886cdbee11741d5a10531401783164ee",
+    "diff_id": "sha256:b94ed0ba2e30c058a7c340548783ab419fd231871094ebeba35593c7f3092aed",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d433e188c5969ad4637c3026f984c0895a593777d729a9965b7ae4aef4b2fad6",
+    "diff_id": "sha256:e4ec07be27d69218cbd64a618be58d94b48a066d0cda68d0ea2437f3434664e8",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c7b7cefe879ff05f0664c285600286a1caa628150f63fc3f3dd08c79cf4af237",
+    "diff_id": "sha256:358853ccd9f142431d5a1e859f4923f0e9b1c320430f63bd87cb59fa1c3cb76e",
+    "size": 6326079,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:cc88e67bd7dfee632bf5f1db2d42cbbf63b5effbcedd683ebfbfb50a2b30c949",
+    "diff_id": "sha256:2dfe8908c338a57538164ebc6c067025885ba57080d8cb419e0d1afa546306af",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b27647f9a664f84f35abea85ee2e03d72585f035a8784ba99d85127d7ec3474b",
+    "diff_id": "sha256:9afa04f1804b484f44d4068f495b363f2c5fbf83ef59e857a0bcf3111ab5948a",
+    "size": 62025634,
+    "uncompressed_size": 145626354,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-10T12:26:27Z VERSION=v2.6.0-ls9 AUDIOSILO_RELEASE=v2.6.0 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     ffmpeg &&   echo \"**** install audiosilo ****\" &&   if [ -z ${AUDIOSILO_RELEASE+x} ]; then     AUDIOSILO_RELEASE=$(curl -sX GET \"https://api.github.com/repos/KodeStar/audiosilo-server/releases/latest\"     | jq -r .tag_name);   fi &&   AUDIOSILO_VER=${AUDIOSILO_RELEASE#v} &&   mkdir -p     /app/audiosilo &&   curl -fsSL -o     /tmp/audiosilo.tar.gz     \"https://github.com/KodeStar/audiosilo-server/releases/download/v${AUDIOSILO_VER}/audiosilo_${AUDIOSILO_VER}_linux_arm64.tar.gz\" &&   tar xzf     /tmp/audiosilo.tar.gz -C     /app/audiosilo     --no-same-owner     audiosilo &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     14,
+     38
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:a98049f01f1ea568580773285bf47cb2f9fec906993aa51d9d702076af74f781",
+    "diff_id": "sha256:0af264bbe75c4164c8c67fde9f3c9610f45894691277c5182a92e1db2dc8bac0",
+    "size": 1013,
+    "uncompressed_size": 904,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     41,
+     41
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "audiosilo",
+  "tag": "v2.6.0-ls9",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/audiosilo/builds/v2.6.0-ls9/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "8080/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 32915456,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.012,
+    "listening_ports": [
+     "8080/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 34205696,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-audiosilo/releases/download/v2.6.0-ls9/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-audiosilo/builds/v2.6.0-ls9/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "audiosilo",
+    "tag": "amd64-eeb2c1f-42815702875",
+    "arch": "amd64",
+    "started": "2026-11-10T12:29:38Z",
+    "finished": "2026-11-10T12:29:58Z",
+    "success": true,
+    "runner": "0b97ffaf6eeb",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-audiosilo, svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8080/tcp",
+      "seconds": 0.05
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from https://172.17.0.4:8080/ after 0.0s",
+      "seconds": 0.016
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "270 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "270 packages: syft JSON 58816 bytes gzipped, SPDX for the image attestation 522503 bytes",
+      "seconds": 0.095
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "325 dirs, 1616 files (199872061 bytes), 1379 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.05s",
+      "seconds": 0.146
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.605
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.043
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of https://172.17.0.4:8080/",
+      "seconds": 10.464
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8080], rss 32915456 bytes",
+      "seconds": 0.248
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 32915456,
+     "pids": 13,
+     "listening_tcp": [
+      8080
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-audiosilo",
+      "svc-cron"
+     ],
+     "changed_paths": 207
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "audiosilo",
+    "tag": "arm64-eeb2c1f-42815702875",
+    "arch": "arm64",
+    "started": "2026-11-10T12:27:27Z",
+    "finished": "2026-11-10T12:27:46Z",
+    "success": true,
+    "runner": "14706fc35155",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.012,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.012
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-audiosilo, svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8080/tcp",
+      "seconds": 0.047
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from https://172.17.0.4:8080/ after 0.0s",
+      "seconds": 0.025
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "269 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "269 packages: syft JSON 58376 bytes gzipped, SPDX for the image attestation 520318 bytes",
+      "seconds": 0.149
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "325 dirs, 1614 files (185413657 bytes), 1378 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.04s",
+      "seconds": 0.146
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.407
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.055
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of https://172.17.0.4:8080/",
+      "seconds": 10.627
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8080], rss 34205696 bytes",
+      "seconds": 0.225
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 34205696,
+     "pids": 13,
+     "listening_tcp": [
+      8080
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-audiosilo",
+      "svc-cron"
+     ],
+     "changed_paths": 207
+    }
+   }
+  }
+ }
+}
