@@ -1,0 +1,919 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "d2-builder",
+  "repository": "linuxserver-playground/docker-d2-builder",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "v0.9.0",
+   "upstream_clean": "v0.9.0",
+   "semver": "0.9.0",
+   "ls_build": 6,
+   "tag": "v0.9.0-ls6",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v0.9.0-ls6",
+    "version-v0.9.0",
+    "0.9.0",
+    "amd64-latest",
+    "amd64-v0.9.0-ls6",
+    "amd64-version-v0.9.0",
+    "amd64-0.9.0",
+    "arm64v8-latest",
+    "arm64v8-v0.9.0-ls6",
+    "arm64v8-version-v0.9.0",
+    "arm64v8-0.9.0"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/d2lang/d2/releases/tag/v0.9.0"
+  },
+  "commit": "b4dc7a900af8dbcfef6c73aec8fc0b544d9177ac",
+  "created": "2026-11-03T12:41:37Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v0.9.0-ls5",
+   "release_url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/tag/v0.9.0-ls5"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:2124cf9f813072f8caaa4fdc164c5131de5ffec7cf78b43ccb1bbd20209429f1"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:bceb73b18964096de03bf10f847b05e5abcf923a2ad8529c18de7ed8614b5374",
+    "size": 34686526,
+    "uncompressed_size": 78447100,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 13
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:5a113334d2147e3f0d85ac09a5737690b7e95e5c9411df7a3d66129a1a003706",
+    "size": 34424591,
+    "uncompressed_size": 87854605,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 12
+   }
+  ],
+  "index_digest": "sha256:f1bf3974a1308d2575bfd44a629f5e1f672cea55aab03690ef1f96c67f3d0d93",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v0.9.0-ls6 Build-date:- 2026-11-03T12:38:09Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:2124cf9f813072f8caaa4fdc164c5131de5ffec7cf78b43ccb1bbd20209429f1",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v0.9.0",
+   "maintainer": "thespad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-03T12:38:09Z",
+   "org.opencontainers.image.description": "d2-builder container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-d2-builder",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "b4dc7a900af8dbcfef6c73aec8fc0b544d9177ac",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-d2-builder",
+   "org.opencontainers.image.title": "D2-builder",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-d2-builder/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v0.9.0-ls6"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=2",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "S6_BEHAVIOUR_IF_STAGE2_FAILS=2"
+   ],
+   "entrypoint": [
+    "/init-d2"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG D2_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \\\n  S6_VERBOSITY=2\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add -U --upgrade --no-cache \\\n    git \\\n    grep && \\\n  echo \"**** install d2 ****\" && \\\n  mkdir -p /tmp/d2 /output /work && \\\n  if [ -z ${D2_VERSION+x} ]; then \\\n    D2_VERSION=$(curl -s https://api.github.com/repos/d2lang/d2/releases/latest \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/d2.tar.gz -L \\\n    \"https://github.com/d2lang/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-amd64.tar.gz\" && \\\n  tar xzf \\\n  /tmp/d2.tar.gz -C \\\n    /tmp/d2 --strip-components=1 && \\\n  cp /tmp/d2/bin/d2 /usr/local/bin && \\\n  printf \"Version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\nENTRYPOINT [\"/init-d2\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG D2_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2 \\\n  S6_VERBOSITY=2\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add -U --upgrade --no-cache \\\n    git \\\n    grep && \\\n  echo \"**** install d2 ****\" && \\\n  mkdir -p /tmp/d2 /output /work && \\\n  if [ -z ${D2_VERSION+x} ]; then \\\n    D2_VERSION=$(curl -s https://api.github.com/repos/d2lang/d2/releases/latest \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/d2.tar.gz -L \\\n    \"https://github.com/d2lang/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-arm64.tar.gz\" && \\\n  tar xzf \\\n  /tmp/d2.tar.gz -C \\\n    /tmp/d2 --strip-components=1 && \\\n  cp /tmp/d2/bin/d2 /usr/local/bin && \\\n  printf \"Version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\nENTRYPOINT [\"/init-d2\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"d2-builder:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-d2-output -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-config -> init-d2-config\n  init-d2-config -> init-d2-output\n  ci-service-check -> init-d2-shutdown\n  legacy-services -> init-d2-shutdown\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"d2-builder:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-d2-output"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-d2-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nset -e\n\nIFS=\"|\" read -r -a CLI_OPTIONS <<< \"$CLI_OPTIONS_STRING\"\nIMAGENAME=${CLI_OPTIONS[0]%%:*}\nif [[ ${CLI_OPTIONS[0]} == *\":\"* ]]; then\n    TAGNAME=${CLI_OPTIONS[0]##*:}\nelse\n    TAGNAME=\"latest\"\nfi\n\nif [[ -n ${LOCAL} ]]; then\n    OUTPUTNAME=\"${IMAGENAME}-${TAGNAME}-LOCAL.d2\"\nelse\n    OUTPUTNAME=\"${IMAGENAME}-${TAGNAME}.d2\"\nfi\n\nmkdir -p \"/work/merge\"\n\nif [[ ! ${IMAGENAME} == \"baseimage\"* ]]; then\n    if [[ -n ${LOCAL} ]]; then\n        mkdir -p \"/tmp/${IMAGENAME}\"\n        cp -R \"/input/docker-${IMAGENAME}/\"* \"/tmp/${IMAGENAME}/\"\n    else\n        git clone --depth=1 \"https://github.com/linuxserver/docker-${IMAGENAME}\" \"/tmp/${IMAGENAME}\"\n        IMAGEBRANCH=$(grep -Po \"/tmp/${IMAGENAME}/jenkins-vars.yml\" -e \"^release_tag: \\K(.*)$\" | tr -d '\"')\n        if [[ \"${IMAGEBRANCH}\" != \"${TAGNAME}\" ]]; then\n            cd \"/tmp/${IMAGENAME}\" || exit\n            git remote set-branches origin \"${TAGNAME}\"\n            git fetch --depth=1\n            git checkout \"${TAGNAME}\"\n        fi\n    fi\n\n    BASEIMAGE=$(grep \"/tmp/${IMAGENAME}/Dockerfile\" -e \"^FROM\" | tail -l)\n    BASEIMAGE=${BASEIMAGE##*/}\n    BASEIMAGENAME=${BASEIMAGE%%:*}\n    BASEIMAGETAG=${BASEIMAGE##*:}\n\n    BASELIST=\"\\\"${BASEIMAGE}\\\"\"\nelse\n    BASEIMAGENAME=${IMAGENAME}\n    BASEIMAGETAG=${TAGNAME}\nfi\n\nif [[ ${BASEIMAGENAME} =~ \"baseimage\" ]]; then\n    if [[ -n ${LOCAL} ]]; then\n        mkdir -p \"/tmp/${BASEIMAGENAME}\"\n        cp -R \"/input/docker-${BASEIMAGENAME}/\"* \"/tmp/${BASEIMAGENAME}/\"\n    else\n        git clone --depth=1 \"https://github.com/linuxserver/docker-${BASEIMAGENAME}\" \"/tmp/${BASEIMAGENAME}\"\n        BASEBRANCH=$(grep -Po \"/tmp/${BASEIMAGENAME}/jenkins-vars.yml\" -e \"^release_tag: \\K(.*)$\" | tr -d '\"')\n        if [[ \"${BASEBRANCH}\" != \"${BASEIMAGETAG}\" ]]; then\n            cd \"/tmp/${BASEIMAGENAME}\" || exit\n            git remote set-branches origin \"${BASEIMAGETAG}\"\n            git fetch --depth=1\n            git checkout \"${BASEIMAGETAG}\"\n        fi\n    fi\nfi\n\nBASEIMAGE=$(grep \"/tmp/${BASEIMAGENAME}/Dockerfile\" -e \"^FROM\" | tail -1)\nBASEIMAGE=${BASEIMAGE##*/}\nBASEIMAGENAME=${BASEIMAGE%%:*}\nBASEIMAGETAG=${BASEIMAGE##*:}\n\nwhile [[ ${BASEIMAGENAME} =~ \"baseimage\" ]]; do\n    if [[ -n ${BASELIST} ]]; then\n        BASELIST=\"${BASELIST} <- \\\"${BASEIMAGE}\\\"\"\n    else\n        BASELIST=\"\\\"${BASEIMAGE}\\\"\"\n    fi\n    if [[ -n ${LOCAL} ]]; then\n        mkdir -p \"/tmp/${BASEIMAGENAME}\"\n        cp -R \"/input/docker-${BASEIMAGENAME}/\"* \"/tmp/${BASEIMAGENAME}/\"\n    else\n        git clone --depth=1 \"https://github.com/linuxserver/docker-${BASEIMAGENAME}\" \"/tmp/${BASEIMAGENAME}\"\n        BASEBRANCH=$(grep -Po \"/tmp/${BASEIMAGENAME}/jenkins-vars.yml\" -e \"^release_tag: \\K(.*)$\" | tr -d '\"')\n        if [[ \"${BASEBRANCH}\" != \"${BASEIMAGETAG}\" ]]; then\n            cd \"/tmp/${BASEIMAGENAME}\" || exit\n            git remote set-branches origin \"${BASEIMAGETAG}\"\n            git fetch --depth=1\n            git checkout \"${BASEIMAGETAG}\"\n        fi\n    fi\n    BASEIMAGE=$(grep \"/tmp/${BASEIMAGENAME}/Dockerfile\" -e \"^FROM\" | tail -1)\n    BASEIMAGE=${BASEIMAGE##*/}\n    BASEIMAGENAME=${BASEIMAGE%%:*}\n    BASEIMAGETAG=${BASEIMAGE##*:}\ndone\n\nfor i in /tmp/*; do\n    if [[ -d \"${i}/root\" ]];then\n        cp -R \"${i}/root\" \"/work/merge\"\n    fi\ndone\n\nshopt -s globstar\n\nif [[ -z ${RAW} ]]; then\ncat <<EOF > \"/output/${OUTPUTNAME}\"\nvars: {\n  d2-config: {\n    layout-engine: elk\n    theme-id: 1\n    dark-theme-id: 200\n  }\n}\n\nEOF\nfi\n\necho \"\\\"${IMAGENAME}:${TAGNAME}\\\": {\" >> \"/output/${OUTPUTNAME}\"\n\ncat <<EOF >> \"/output/${OUTPUTNAME}\"\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\nEOF\n\nfor i in /work/merge/root/etc/s6-overlay/s6-rc.d/*; do\n    if [[ ! $(basename \"${i}\") == \"user\"* ]]; then\n        if [[ ! -d /work/merge/root/etc/s6-overlay/s6-rc.d/$(basename \"${i}\")/dependencies.d ]]; then\n            echo \"  base -> $(basename \"${i}\")\" >> \"/output/${OUTPUTNAME}\"\n        else\n            for d in \"/work/merge/root/etc/s6-overlay/s6-rc.d/$(basename \"${i}\")/dependencies.d/\"*; do\n                echo \"  $(basename \"${d}\") -> $(basename \"${i}\")\" >> \"/output/${OUTPUTNAME}\"\n            done\n        fi\n        if [[ $(basename \"${i}\") == \"svc-\"* ]]; then\n            echo \"  $(basename \"${i}\") -> legacy-services\" >> \"/output/${OUTPUTNAME}\"\n        fi\n    fi\ndone\n\necho \"}\" >> \"/output/${OUTPUTNAME}\"\n\nif [[ -n ${BASELIST} ]]; then\ncat <<EOF >> \"/output/${OUTPUTNAME}\"\nBase Images: {\n  ${BASELIST}\n}\n\"${IMAGENAME}:${TAGNAME}\" <- Base Images\nEOF\nfi\n\nshopt -u globstar\n\nlsiown abc:abc \\\n    /output \\\n    \"/output/${OUTPUTNAME}\"\n"
+    },
+    {
+     "name": "init-d2-output",
+     "type": "oneshot",
+     "depends_on": [
+      "init-d2-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nIFS=\"|\" read -r -a CLI_OPTIONS <<< \"$CLI_OPTIONS_STRING\"\nIMAGENAME=${CLI_OPTIONS[0]%%:*}\nif [[ ${CLI_OPTIONS[0]} == *\":\"* ]]; then\n    TAGNAME=${CLI_OPTIONS[0]##*:}\nelse\n    TAGNAME=\"latest\"\nfi\n\nif [[ -n ${LOCAL} ]]; then\n    OUTPUTNAME=\"${IMAGENAME}-${TAGNAME}-LOCAL\"\nelse\n    OUTPUTNAME=\"${IMAGENAME}-${TAGNAME}\"\nfi\n\nif [[ -z ${RAW} ]]; then\n    s6-setuidgid abc d2 \"/output/${OUTPUTNAME}.d2\" \"/output/${OUTPUTNAME}.svg\"\n    chmod 644 \"/output/${OUTPUTNAME}.d2\" \"/output/${OUTPUTNAME}.svg\"\nelse\n    chmod 644 \"/output/${OUTPUTNAME}.d2\"\nfi\n"
+    },
+    {
+     "name": "init-d2-shutdown",
+     "type": "oneshot",
+     "depends_on": [
+      "ci-service-check",
+      "legacy-services"
+     ],
+     "source": "image",
+     "script": "s6-svscanctl -t /run/service\n"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 88,
+    "distro": "Alpine Linux v3.24",
+    "hash": "70af244f",
+    "by_type": {
+     "apk": 56,
+     "go-module": 32
+    }
+   },
+   "arm64": {
+    "count": 88,
+    "distro": "Alpine Linux v3.24",
+    "hash": "70af244f",
+    "by_type": {
+     "apk": 56,
+     "go-module": 32
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/d2-builder/builds/v0.9.0-ls6/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-d2-builder/compare/v0.9.0-ls5...v0.9.0-ls6",
+   "upstream": "#### Features 🚀\n\n- TALA is now open source and bundled with D2, including the JavaScript/WASM package. Select it with `d2 --layout=tala`, `D2_LAYOUT=tala`, or `vars.d2-config.layout-engine: tala`. No separate plugin installation or license key is required.\n- tala: configure layout attempts with `--tala-seeds`, `D2_TALA_SEEDS`, or `vars.d2-config.data.tala-seeds`.\n- exports: render PNG, GIF, PDF, and PPTX with the built-in renderer\n\n#### Improvements 🧹\n\n- performance: reduce repeated work in Dagre ranking, text measurement, SVG preparation, and PNG encoding\n- performance: reduce repeated work in selective imports, dynamic grid layout, and PNG connection rendering\n- exports: reduce PNG memory usage and support images above the previous 67-megapixel limit\n- performance: SVG rendering is approximately 10× faster across the E2E corpus. Real-world diagrams compile, lay out, and render approximately 3× faster at the median.\n- renders: SVG exports are approximately 24% smaller across the E2E corpus and 18% smaller across real-world fixtures, with unchanged appearance.\n- renders: render Markdown labels as native SVG instead of HTML `foreignObject` content\n\n#### Bugfixes ⛑️\n\n- install: reject the obsolete `--tala` installer flag with migration guidance before installing, instead of incorrectly claiming that older D2 releases bundle TALA\n- sequence diagrams: keep synthetic lifeline endpoint IDs stable across architectures\n- exports: honor `D2_TIMEOUT` during PNG and GIF rendering\n- compiler: keep recursive globs out of class and variable definitions and report class reference cycles instead of overflowing the stack\n- renders: decode gzip, Brotli, and deflate remote images before embedding them\n\n---\n\nFor the latest d2.js changes, see separate [changelog](https://github.com/d2lang/d2/blob/master/d2js/js/CHANGELOG.md).\n",
+   "upstream_url": "https://github.com/d2lang/d2/releases/tag/v0.9.0"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 25430,
+    "sha256": "929de542e47a2e278c38cf27914a6200fee2eb0bb0c8f64396290114a7bbd97a",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4901,
+    "sha256": "776dc07ac58fe3faacd21d13bd02f6f077794fac3cee24379ce5621b259d41a1",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 24458,
+    "sha256": "b668cc47b02e04ad01ea2f5f3658a2cf1fc8ea46192ee3811ab9bfb198404404",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1951,
+    "sha256": "41f72ae69090004e2d03c46249f10da41433e74817a3e49867f1303c444f15d5",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 240,
+    "sha256": "0b718814c9f429efc192221898b650bd1cf8b30eac4e21434d87fe0a53d4cb8d",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 7476,
+    "sha256": "34a81f0b472ee2702d695ed58d4e79ea995b4173dbeee0f304781e8c5856fd51",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 25361,
+    "sha256": "c65b70b2209e2d6c18f8b0aa129b4b25249cfaec36325a3e733ca98cd0892f4b",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4901,
+    "sha256": "06b49c38ff64d26c2120d2449f6f70eb9a81a1486ff7f8d558b5a54bd9f7b995",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 24199,
+    "sha256": "b23a4de448490448579c800c5539793ecd4464c38d76e104cff729571544b2be",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1951,
+    "sha256": "f9f695fbafcffc4ae93f0f5a914567d77c99119678cc8c5e82deedec8001937c",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 238,
+    "sha256": "1a222f8cb25266a84973a9e67f11e778aff36b8b0da0e693503219150888af52",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 7476,
+    "sha256": "34a81f0b472ee2702d695ed58d4e79ea995b4173dbeee0f304781e8c5856fd51",
+    "url": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41637330081,
+   "run_url": "https://github.com/linuxserver-playground/docker-d2-builder/actions/runs/41637330081",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/d2-builder",
+   "tags": [
+    "latest",
+    "v0.9.0-ls6",
+    "version-v0.9.0",
+    "0.9.0",
+    "amd64-latest",
+    "amd64-v0.9.0-ls6",
+    "amd64-version-v0.9.0",
+    "amd64-0.9.0",
+    "arm64v8-latest",
+    "arm64v8-v0.9.0-ls6",
+    "arm64v8-version-v0.9.0",
+    "arm64v8-0.9.0"
+   ]
+  }
+ },
+ "diff": {
+  "image": "d2-builder",
+  "branch": "main",
+  "tag": "v0.9.0-ls6",
+  "previous_tag": "v0.9.0-ls5",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (33e3044 → b4dc7a9): the pipeline's own generated files"
+  ],
+  "upstream": {
+   "from": "v0.9.0",
+   "to": "v0.9.0",
+   "changed": false
+  },
+  "commit": {
+   "from": "33e30441ae2d375ba54cd9e005145f339f500314",
+   "to": "b4dc7a900af8dbcfef6c73aec8fc0b544d9177ac",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-d2-builder/compare/33e30441ae2d375ba54cd9e005145f339f500314...b4dc7a900af8dbcfef6c73aec8fc0b544d9177ac",
+   "commits": [
+    {
+     "sha": "b4dc7a900af8dbcfef6c73aec8fc0b544d9177ac",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-31T16:37:50Z",
+     "url": "https://github.com/linuxserver-playground/docker-d2-builder/commit/b4dc7a900af8dbcfef6c73aec8fc0b544d9177ac",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "generated": 2
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:2124cf9f813072f8caaa4fdc164c5131de5ffec7cf78b43ccb1bbd20209429f1"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 34685454,
+    "to": 34686526,
+    "delta": 1072
+   },
+   "arm64": {
+    "from": 34422703,
+    "to": 34424591,
+    "delta": 1888
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libexpat",
+       "from": "2.9.0-r0",
+       "to": "2.10.0-r0",
+       "purl": "pkg:apk/alpine/libexpat@2.10.0-r0?arch=x86_64&distro=alpine-3.24.3&upstream=expat"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libexpat",
+       "from": "2.9.0-r0",
+       "to": "2.10.0-r0",
+       "purl": "pkg:apk/alpine/libexpat@2.10.0-r0?arch=aarch64&distro=alpine-3.24.3&upstream=expat"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:276ea8a0f29bb646a3dc93e87bbea3581f514c7929015396944850be51454382",
+    "diff_id": "sha256:3c5ca511ef276351983687c2dd4bd3c27337af53150bbfe5a6fc9662f77b7c99",
+    "size": 6265151,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dfaf858b81f5ab9a890a227b430ad33961048bd20816ad5ce275fc4264927010",
+    "diff_id": "sha256:74c13f909e56c95485f1aa1a09973dd554e2b001df8047f65f690865c98058a3",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:2b034c1c7f430eb81c21d0b7e3d0b1dcc0503a470ec8fe6654dabfbc33e05e7a",
+    "diff_id": "sha256:008a44e2c4cc94af50c21a30ae1a7b19bb984a08a624a771afd4045cbf9d7f9c",
+    "size": 699,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:40c2fe273430a640283a5ba91caef5cab6dbee9031ecc070be2c1d7738ce28c4",
+    "diff_id": "sha256:02f905ec27229ca760095099595ccf7411aaca9fd9c6ff32c753ae9e028cbd88",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:300afd0130e859e1336ceb823b90c9a7113aae4f42d7b54c49230aeb326647bd",
+    "diff_id": "sha256:cf164d722f8a2dc5d78b78b691b518a65275c15fee7730bde8dd4fb8c59c6694",
+    "size": 6091189,
+    "uncompressed_size": 14407494,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-31T02:02:38Z VERSION=3ad40b41-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:c0c4a9f3b59406855c19a223e11de699721cb09e65367d125028ffb80026016f",
+    "diff_id": "sha256:8c4769757b2ba9f6a68fe7f23b5f0e7aa42122a7f45e326e130c9ed09736e961",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b011ff92f2c0088680521da6c68c33ab6e1d9847c439a13b81af9095ab580b71",
+    "diff_id": "sha256:7296f2384f1a042cd189452496a65eeb700425b61f7748c1b530c98a8833b0de",
+    "size": 22314828,
+    "uncompressed_size": 50280722,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-03T12:38:09Z VERSION=v0.9.0-ls6 D2_VERSION=v0.9.0 /bin/sh -c echo \"**** install packages ****\" &&   apk add -U --upgrade --no-cache     git     grep &&   echo \"**** install d2 ****\" &&   mkdir -p /tmp/d2 /output /work &&   if [ -z ${D2_VERSION+x} ]; then     D2_VERSION=$(curl -s https://api.github.com/repos/d2lang/d2/releases/latest     | jq -r '.tag_name');   fi &&   curl -o     /tmp/d2.tar.gz -L     \"https://github.com/d2lang/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-amd64.tar.gz\" &&   tar xzf   /tmp/d2.tar.gz -C     /tmp/d2 --strip-components=1 &&   cp /tmp/d2/bin/d2 /usr/local/bin &&   printf \"Version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     17,
+     38
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:fc69eaaed7a3da35ef59b7ff639c787611cf429b45cd8d5423d0159ac71d8f3e",
+    "diff_id": "sha256:b8ef53ca52f1f05517db1a5c033d02164951561cdbe976fa779dd90ca35ee9b3",
+    "size": 2001,
+    "uncompressed_size": 5564,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     41,
+     41
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:9568b0aceceb516e8273c368310228e7b23fd52de9d56d3b47e18860aca45f92",
+    "diff_id": "sha256:f7b0edc6f23b692d184cf0582344c895909172bdda2d2c682e048f3b15fe8873",
+    "size": 7081765,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:ccc2c4748adffa3127a326368b64f78b07c13f1dd55d1ac949626c82923409d8",
+    "diff_id": "sha256:2dd0e8f6cdac974e242fa852c4d498d691cf5b9fcac1b0c97e31404c25dc2315",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:58ab7436e8a06cb67027499c952d52b72adc675d5dda22149c44d02f45b59580",
+    "diff_id": "sha256:2f7c3894fc82924a5d26297b09a2cb4f36e5ccc6f62f644641a6d830073ea18f",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7d65306f0871d2248bc7c84cef9e39a917cffdc10c04b65c81781655a7a8c691",
+    "diff_id": "sha256:7ca379c7c04fb5de8aa50fc25afc5e17f42e5d498a3e03d75d5d0798e1703862",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:cdf4a2c48e65040aaf83ce92ddcee81efe0b3901d7b868d598634ac337189679",
+    "diff_id": "sha256:7b0560e0dc9ce3bf814190da52ab7c6bd91d7070ab3ce15be59eb0b805256c1f",
+    "size": 6326259,
+    "uncompressed_size": 21489258,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-31T02:02:38Z VERSION=3ad40b41-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:994ec26d34f26ad8cebd8471be112b494aed867ccff39d0fb0b5f174bb467831",
+    "diff_id": "sha256:174f8f7ea850a7fd06f535c20b0186a07348f6687f2e8af7035770a87b34c4df",
+    "size": 4633,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:dfbe8e64f1f9a915e14e91599f6a2dee5e801b7850882049ad106402bff2845b",
+    "diff_id": "sha256:95e2d129226e043437d754b5f985fc129d2fac265fdfc37e7974ae479a6421fa",
+    "size": 21001209,
+    "uncompressed_size": 47770976,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-03T12:38:09Z VERSION=v0.9.0-ls6 D2_VERSION=v0.9.0 /bin/sh -c echo \"**** install packages ****\" &&   apk add -U --upgrade --no-cache     git     grep &&   echo \"**** install d2 ****\" &&   mkdir -p /tmp/d2 /output /work &&   if [ -z ${D2_VERSION+x} ]; then     D2_VERSION=$(curl -s https://api.github.com/repos/d2lang/d2/releases/latest     | jq -r '.tag_name');   fi &&   curl -o     /tmp/d2.tar.gz -L     \"https://github.com/d2lang/d2/releases/download/${D2_VERSION}/d2-${D2_VERSION}-linux-arm64.tar.gz\" &&   tar xzf   /tmp/d2.tar.gz -C     /tmp/d2 --strip-components=1 &&   cp /tmp/d2/bin/d2 /usr/local/bin &&   printf \"Version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     17,
+     38
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:eee26f8bcc9f838a69fcfba4342ecb51ab5d6446b95f9e99f3b4a304295bd6be",
+    "diff_id": "sha256:66191b90d4c2ac571e80676b8d4585db55706bca9c3dc673b3e13b4a3bc64813",
+    "size": 2000,
+    "uncompressed_size": 5564,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     41,
+     41
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "d2-builder",
+  "tag": "v0.9.0-ls6",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/d2-builder/builds/v0.9.0-ls6/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/test.amd64.tar.gz",
+    "files": {}
+   },
+   "arm64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-d2-builder/releases/download/v0.9.0-ls6/test.arm64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "d2-builder",
+    "tag": "amd64-b4dc7a9-41637330081",
+    "arch": "amd64",
+    "started": "2026-11-03T12:40:27Z",
+    "finished": "2026-11-03T12:40:33Z",
+    "success": true,
+    "runner": "f2cf0b8a4f1b",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "88 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "88 packages: syft JSON 25430 bytes gzipped, SPDX for the image attestation 147764 bytes",
+      "seconds": 0.116
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "244 dirs, 1120 files (78155361 bytes), 1345 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.07s",
+      "seconds": 0.209
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 1.776
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, own units from the repository",
+      "seconds": 0.073
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "d2-builder",
+    "tag": "arm64-b4dc7a9-41637330081",
+    "arch": "arm64",
+    "started": "2026-11-03T12:39:30Z",
+    "finished": "2026-11-03T12:39:34Z",
+    "success": true,
+    "runner": "8adc93f7efbc",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "88 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "88 packages: syft JSON 25361 bytes gzipped, SPDX for the image attestation 147820 bytes",
+      "seconds": 0.099
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "244 dirs, 1119 files (87562911 bytes), 1345 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.04s",
+      "seconds": 0.128
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.907
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, own units from the repository",
+      "seconds": 0.051
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}
