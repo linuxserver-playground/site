@@ -1,0 +1,1215 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "cops",
+  "repository": "linuxserver-playground/docker-cops",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "4.6.1",
+   "upstream_clean": "4.6.1",
+   "semver": "4.6.1",
+   "ls_build": 8,
+   "tag": "4.6.1-ls8",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "4.6.1-ls8",
+    "version-4.6.1",
+    "4.6.1",
+    "amd64-latest",
+    "amd64-4.6.1-ls8",
+    "amd64-version-4.6.1",
+    "amd64-4.6.1",
+    "arm64v8-latest",
+    "arm64v8-4.6.1-ls8",
+    "arm64v8-version-4.6.1",
+    "arm64v8-4.6.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/mikespub-org/seblucas-cops/releases/tag/4.6.1"
+  },
+  "commit": "c6b0396b3ab3e83492cd197040422dcd4b49ce16",
+  "created": "2026-11-13T13:16:55Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "4.6.1-ls7",
+   "release_url": "https://github.com/linuxserver-playground/docker-cops/releases/tag/4.6.1-ls7"
+  },
+  "base": {
+   "family": "alpine-nginx",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+   "digest": "sha256:e81e256976c8d1d16f1e84a53540b12b20a917e650ff884b467db4c04a3458a2"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:8237045331748a9d67cbb5a57677eccb56283b26f566a5032395a9f23638de2a",
+    "size": 67495005,
+    "uncompressed_size": 199124386,
+    "layers": 11,
+    "runner": "Linux-X64",
+    "build_seconds": 25
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:0f7fe81f0715f1060903d73767e4ca629a2634070a171aac01835fbd93789982",
+    "size": 67895431,
+    "uncompressed_size": 200767323,
+    "layers": 11,
+    "runner": "Linux-ARM64",
+    "build_seconds": 23
+   }
+  ],
+  "index_digest": "sha256:45230fd31e7047b36218b79a238ed4415dd51d83861355ff99859860c364feaf",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 4.6.1-ls8 Build-date:- 2026-11-13T13:12:32Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24@sha256:e81e256976c8d1d16f1e84a53540b12b20a917e650ff884b467db4c04a3458a2",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "4.6.1",
+   "maintainer": "chbmb",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-13T13:12:32Z",
+   "org.opencontainers.image.description": "Cops by Sébastien Lucas, now maintained by MikesPub, stands for Calibre OPDS (and HTML) Php Server.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-cops",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "c6b0396b3ab3e83492cd197040422dcd4b49ce16",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-cops",
+   "org.opencontainers.image.title": "Cops",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-cops/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "4.6.1-ls8"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "PHP_INI_SCAN_DIR=:/config/php",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "443/tcp",
+    "80/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG COPS_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"chbmb\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    icu-data-full \\\n    php85-dom \\\n    php85-gd \\\n    php85-intl \\\n    php85-pdo_sqlite \\\n    php85-sqlite3 \\\n    php85-tokenizer && \\\n  echo \"**** configure php-fpm to pass env vars ****\" && \\\n  sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf && \\\n  if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi && \\\n  echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf && \\\n  echo \"**** install cops ****\" && \\\n  if [ -z ${COPS_RELEASE+x} ]; then \\\n    COPS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/mikespub-org/seblucas-cops/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/cops.tar.gz -L \\\n    \"https://github.com/mikespub-org/seblucas-cops/archive/${COPS_RELEASE}.tar.gz\" && \\\n  mkdir -p \\\n    /app/www/public && \\\n  tar xf /tmp/cops.tar.gz -C \\\n    /app/www/public --strip-components=1 && \\\n  cd /app/www/public && \\\n  composer \\\n    install --no-dev --optimize-autoloader && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"***install kepubify\" && \\\n  if [ -z ${KEPUBIFY_RELEASE+x} ]; then \\\n    KEPUBIFY_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pgaskin/kepubify/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /usr/bin/kepubify -L \\\n    \"https://github.com/pgaskin/kepubify/releases/download/${KEPUBIFY_RELEASE}/kepubify-linux-64bit\" && \\\n  chmod 755 /usr/bin/kepubify && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /root/.composer \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine-nginx:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG COPS_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"chbmb\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    icu-data-full \\\n    php85-dom \\\n    php85-gd \\\n    php85-intl \\\n    php85-pdo_sqlite \\\n    php85-sqlite3 \\\n    php85-tokenizer && \\\n  echo \"**** configure php-fpm to pass env vars ****\" && \\\n  sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf && \\\n  if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi && \\\n  echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf && \\\n  echo \"**** install cops ****\" && \\\n  if [ -z ${COPS_RELEASE+x} ]; then \\\n    COPS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/mikespub-org/seblucas-cops/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/cops.tar.gz -L \\\n    \"https://github.com/mikespub-org/seblucas-cops/archive/${COPS_RELEASE}.tar.gz\" && \\\n  mkdir -p \\\n    /app/www/public && \\\n  tar xf /tmp/cops.tar.gz -C \\\n    /app/www/public --strip-components=1 && \\\n  cd /app/www/public && \\\n  # use standard composer 2.x now, no need to install older 1.x version\n  composer \\\n    install --no-dev --optimize-autoloader && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"***install kepubify\" && \\\n  if [ -z ${KEPUBIFY_RELEASE+x} ]; then \\\n    KEPUBIFY_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pgaskin/kepubify/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /usr/bin/kepubify -L \\\n    \"https://github.com/pgaskin/kepubify/releases/download/${KEPUBIFY_RELEASE}/kepubify-linux-arm64\" && \\\n  chmod 755 /usr/bin/kepubify && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /root/.composer \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"cops:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-nginx-end -> init-config\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-cops-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-nginx-end -> init-cops-config\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-os-end -> init-folders\n  init-php -> init-keygen\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-samples -> init-nginx\n  init-version-checks -> init-nginx-end\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-keygen -> init-permissions\n  init-nginx -> init-php\n  init-folders -> init-samples\n  init-custom-files -> init-services\n  init-permissions -> init-version-checks\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-nginx\n  svc-nginx -> legacy-services\n  init-services -> svc-php-fpm\n  svc-php-fpm -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine-nginx:3.24\"\n}\n\"cops:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end",
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-cops-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-cops-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# create folders\nmkdir -p \\\n    /config/cache\n# create folders (COPS 3.x)\nmkdir -p \\\n    /config/config\n\n# clear previous config (COPS 1.x and 2.x)\nfor f in /app/www/public/config_local.*.php; do\n    if [ -f \"$f\" ]; then\n        rm \"$f\"\n    fi\ndone\n# clear previous config (COPS 3.x)\nfor f in /app/www/public/config/local.*.php; do\n    if [ -f \"$f\" ]; then\n        rm \"$f\"\n    fi\ndone\n\n# copy config\nif [[ ! -e /config/config/local.php ]]; then\n    if [[ -e /config/config_local.php ]]; then\n        echo \"**** Existing config found, migrating for v3. Please check the contents of /config/config/local.php which will be the active config in v3 ****\"\n        cp /config/config_local.php /config/config/local.php\n    else\n        echo \"**** New instance detected, generating default config at /config/config/local.php ****\"\n        cp /defaults/config/local.php /config/config/local.php\n    fi\nfi\n\n# copy extra user-profiles\nfor f in /config/config/local*.php; do\n    cp \"${f}\" /app/www/public/config/\n    chmod +r \"/app/www/public/config/$(basename ${f})\"\ndone\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-folders",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-keygen",
+     "type": "oneshot",
+     "depends_on": [
+      "init-php"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-nginx",
+     "type": "oneshot",
+     "depends_on": [
+      "init-samples"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-nginx-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-version-checks"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-permissions",
+     "type": "oneshot",
+     "depends_on": [
+      "init-keygen"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-php",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-samples",
+     "type": "oneshot",
+     "depends_on": [
+      "init-folders"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-version-checks",
+     "type": "oneshot",
+     "depends_on": [
+      "init-permissions"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-nginx",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-php-fpm",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 176,
+    "distro": "Alpine Linux v3.24",
+    "hash": "aaccdde0",
+    "by_type": {
+     "npm": 21,
+     "apk": 115,
+     "php-composer": 35,
+     "go-module": 5
+    }
+   },
+   "arm64": {
+    "count": 176,
+    "distro": "Alpine Linux v3.24",
+    "hash": "aaccdde0",
+    "by_type": {
+     "npm": 21,
+     "apk": 115,
+     "php-composer": 35,
+     "go-module": 5
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/cops/builds/4.6.1-ls8/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-cops/compare/4.6.1-ls7...4.6.1-ls8",
+   "upstream": "**Reminder:** COPS 4.x releases require PHP 8.4+\r\n\r\nFor more information about client-side virtual shelves, see [resources/shelves/README.md](https://github.com/mikespub-org/seblucas-cops/tree/main/resources/shelves/README.md). Server-side shelves intend to replicate most of the features on the server-side per session/user/shared, so that you don't need to share or export/import local shelves between devices. They should also work for devices with limited or no Javascript support.\r\n\r\nNote: feedback and contributions are welcome in the form of issues and/or pull requests :-)\r\n\r\n## Change log\r\n### 4.6.1 - 20261026 Add virtual shelves + fix issues\r\n  * Changes in config/default.php file:\r\n    - new $config['cops_use_client_shelves'] to use client-side shelves\r\n    - new $config['cops_use_server_shelves'] to use server-side shelves (WIP)\r\n    - new $config['cops_twig_cache_directory'] to cache compiled Twig templates\r\n  * Experiment with server-side virtual shelves in 'twigged' template (WIP)\r\n  * Add option to cache compiled Twig templates for server-side rendering\r\n  * Use sqlite function to filter queries by book idlist for shelves\r\n  * Add random books option to bootstrap5 menu - see PR #184 from @dunxd\r\n  * Remove 'bootstrap' template in this release - see issue #181 from @mikespub\r\n  * Clean up provide_kepub checks and Ignore_Title.kepub.epub in URLs - see issue #182 from @dunxd\r\n  * Try client-side virtual shelves (favorites) in supported templates\r\n\r\n\r\n**Full Changelog**: https://github.com/mikespub-org/seblucas-cops/compare/4.5.4...4.6.1",
+   "upstream_url": "https://github.com/mikespub-org/seblucas-cops/releases/tag/4.6.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 51621,
+    "sha256": "41e7a8466a8a50c71a68b8a8df56f169cbd0a1c48e92fddd74ec429ff369cd3f",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 9410,
+    "sha256": "5139241afbd52830b72e1c373349a19efe1ba75889b16455486cab4577562f21",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 67054,
+    "sha256": "d7e72679440da43612811be1a7047fdac8400e4ae19fe6064096d5e494784b31",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2656,
+    "sha256": "caea140b67a7a1c4de612abbf82a1c5fcc693c5f6866957700aa430d549248eb",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 84058,
+    "sha256": "6279ea367a2d31086068f291501a98bfa66d513a39294b726acc340f9f5d3075",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 11859,
+    "sha256": "6ddea07a47bffefbbd23cc480a3911967bee258daeedc34e9c0f84b90d143534",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 51636,
+    "sha256": "82b866c4db11f19698708d3762506d462c3b037d4e70db651002cce6237e9c77",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 9410,
+    "sha256": "60d60ed892aa1dca0681f9b94d5c3c05117ec707b421ebab3df468fbcc2493d9",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 66674,
+    "sha256": "6b4b14b356c4885eb2820b558553dab191307f144c82272a4df4a7743330d1dc",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2652,
+    "sha256": "44aeaf04dc9a20c48ba77836d12bdca9d3c3b4a72d72ab81981b4d99a7a52b59",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 90352,
+    "sha256": "c36716c45186ac6e61f5250d34578da7ac3ab6ae5e09bf95d3b1dde04da4c51f",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 11859,
+    "sha256": "6ddea07a47bffefbbd23cc480a3911967bee258daeedc34e9c0f84b90d143534",
+    "url": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 43431588041,
+   "run_url": "https://github.com/linuxserver-playground/docker-cops/actions/runs/43431588041",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/cops",
+   "tags": [
+    "latest",
+    "4.6.1-ls8",
+    "version-4.6.1",
+    "4.6.1",
+    "amd64-latest",
+    "amd64-4.6.1-ls8",
+    "amd64-version-4.6.1",
+    "amd64-4.6.1",
+    "arm64v8-latest",
+    "arm64v8-4.6.1-ls8",
+    "arm64v8-version-4.6.1",
+    "arm64v8-4.6.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "cops",
+  "branch": "master",
+  "tag": "4.6.1-ls8",
+  "previous_tag": "4.6.1-ls7",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (6bde402 → c6b0396): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "4.6.1",
+   "to": "4.6.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "6bde402a948ea1db8ce99994efac77ababebc408",
+   "to": "c6b0396b3ab3e83492cd197040422dcd4b49ce16",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-cops/compare/6bde402a948ea1db8ce99994efac77ababebc408...c6b0396b3ab3e83492cd197040422dcd4b49ce16",
+   "commits": [
+    {
+     "sha": "c6b0396b3ab3e83492cd197040422dcd4b49ce16",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-09T09:19:32Z",
+     "url": "https://github.com/linuxserver-playground/docker-cops/commit/c6b0396b3ab3e83492cd197040422dcd4b49ce16",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine-nginx",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+    "digest": "sha256:a5464bb0b85935854231e0dfa14bd55963c132d4acdfc3f5997de04f2e2bfa52"
+   },
+   "to": {
+    "family": "alpine-nginx",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+    "digest": "sha256:e81e256976c8d1d16f1e84a53540b12b20a917e650ff884b467db4c04a3458a2"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 67542342,
+    "to": 67495005,
+    "delta": -47337
+   },
+   "arm64": {
+    "from": 67951083,
+    "to": 67895431,
+    "delta": -55652
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.24.3-r0",
+       "to": "3.24.4-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.24.4-r0?arch=x86_64&distro=alpine-3.24.4&upstream=alpine-base"
+      },
+      {
+       "name": "apache2-utils",
+       "from": "2.4.69-r0",
+       "to": "2.4.71-r0",
+       "purl": "pkg:apk/alpine/apache2-utils@2.4.71-r0?arch=x86_64&distro=alpine-3.24.4&upstream=apache2"
+      },
+      {
+       "name": "apk-tools",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/apk-tools@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git@2.54.1-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git-init-template",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git-init-template@2.54.1-r0?arch=x86_64&distro=alpine-3.24.4&upstream=git"
+      },
+      {
+       "name": "libapk",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/libapk@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4&upstream=apk-tools"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=x86_64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    },
+    "php-composer": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "composer",
+       "from": "2.11.1",
+       "to": "2.11.2",
+       "purl": "pkg:generic/composer@2.11.2"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.24.3-r0",
+       "to": "3.24.4-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.24.4-r0?arch=aarch64&distro=alpine-3.24.4&upstream=alpine-base"
+      },
+      {
+       "name": "apache2-utils",
+       "from": "2.4.69-r0",
+       "to": "2.4.71-r0",
+       "purl": "pkg:apk/alpine/apache2-utils@2.4.71-r0?arch=aarch64&distro=alpine-3.24.4&upstream=apache2"
+      },
+      {
+       "name": "apk-tools",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/apk-tools@3.0.9-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git@2.54.1-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git-init-template",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git-init-template@2.54.1-r0?arch=aarch64&distro=alpine-3.24.4&upstream=git"
+      },
+      {
+       "name": "libapk",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/libapk@3.0.9-r0?arch=aarch64&distro=alpine-3.24.4&upstream=apk-tools"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=aarch64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    },
+    "php-composer": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "composer",
+       "from": "2.11.1",
+       "to": "2.11.2",
+       "purl": "pkg:generic/composer@2.11.2"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 16,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:545d4f15654f1a41d289dc8d6ff4323903aab87b026be0a65396345b2c101be4",
+    "diff_id": "sha256:8be867d300e530cf6d98eac7b9af2cc8d84469decd1054eabf8dfd99bf9e72ea",
+    "size": 6266615,
+    "uncompressed_size": 13711256,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2023bed36d24cf793e80fa15289e7bddee887ff422d51bdd8b408c79138f0f06",
+    "diff_id": "sha256:be2f9fea94da00699c9bcd4b86a523e62c1dee6224ee3cff60ac313aaadf4843",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:c6d434456495ac568c97d1c4c0b02833dd8d030d0229c025a1392a245db9951b",
+    "diff_id": "sha256:aa510fdedc0643fe353dd455e66b5b6887d102914d9b17d76e8530a9d548d878",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:f0d95394e91d9e9173e468997b34c65657362d6bac9985dd86090506b3703004",
+    "diff_id": "sha256:c5f324c75d01bb48409641211c83c5c00c222b5d2ede732004f34755941ad642",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:896e30f3f6a9a79a56b14501dfb29b94469d4f7e62d688eb7f9920c5e01248ca",
+    "diff_id": "sha256:7b93a48e4d05ad9969e9b34a2e2c814a9a905814d76f0cad3b2dda7b90b76295",
+    "size": 6091161,
+    "uncompressed_size": 14407458,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:f5fba40ea5e79a9b868c8956a0790ba521114c461fb913fe2120e5d28fc8dbc7",
+    "diff_id": "sha256:4e492c677e4c6b01a4449b80ef9d3fe690a851f54d49d0ace528903f1fea010a",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:37ed1a24fec6e9d9054c67a35e6aba0913dcbf21d677f8d14c6ef873d26d146d",
+    "diff_id": "sha256:70a4a4e9886a7fd9ac609035facaf4c069c9d0fc0782235560449f57b29fae3c",
+    "size": 16240278,
+    "uncompressed_size": 60627476,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-13T05:18:49Z VERSION=1.30.6-r0_8.5.12-r0-ls10 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php85     php85-ctype     php85-curl     php85-fileinfo     php85-fpm     php85-iconv     php85-json     php85-mbstring     php85-openssl     php85-phar     php85-session     php85-simplexml     php85-xml     php85-xmlwriter     php85-zip     php85-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php85\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php85 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php85/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php85/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php85/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php85/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:5311a5e52656d130a2d274fe77d4514c42c0ffa0ea20aa6cbb28b83f1dd4f610",
+    "diff_id": "sha256:93c3d2b0bbe738c2d897ad4082550929c75aab398dca9749f898f9ae7e3d4a43",
+    "size": 7738,
+    "uncompressed_size": 17446,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:111534ae32c68e8443bb42d5d40f95a35a8bb4888785da7f763da35b6d971107",
+    "diff_id": "sha256:8f75a1fbcec3f456b6f2434fb310cbc6d6a03644295a78c6bc78da2842d6400e",
+    "size": 38872027,
+    "uncompressed_size": 110306011,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-13T13:12:32Z VERSION=4.6.1-ls8 COPS_RELEASE=4.6.1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache --upgrade     icu-data-full     php85-dom     php85-gd     php85-intl     php85-pdo_sqlite     php85-sqlite3     php85-tokenizer &&   echo \"**** configure php-fpm to pass env vars ****\" &&   sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf &&   if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi &&   echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf &&   echo \"**** install cops ****\" &&   if [ -z ${COPS_RELEASE+x} ]; then     COPS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/mikespub-org/seblucas-cops/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     /tmp/cops.tar.gz -L     \"https://github.com/mikespub-org/seblucas-cops/archive/${COPS_RELEASE}.tar.gz\" &&   mkdir -p     /app/www/public &&   tar xf /tmp/cops.tar.gz -C     /app/www/public --strip-components=1 &&   cd /app/www/public &&   composer     install --no-dev --optimize-autoloader &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"***install kepubify\" &&   if [ -z ${KEPUBIFY_RELEASE+x} ]; then     KEPUBIFY_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pgaskin/kepubify/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /usr/bin/kepubify -L     \"https://github.com/pgaskin/kepubify/releases/download/${KEPUBIFY_RELEASE}/kepubify-linux-64bit\" &&   chmod 755 /usr/bin/kepubify &&   echo \"**** cleanup ****\" &&   rm -rf     /root/.composer     /tmp/*",
+    "dockerfile_lines": [
+     14,
+     56
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:b862eae0c90c9a9005fb6f453376c9fed88c7cc0d487ced5097f5f9e1153d67c",
+    "diff_id": "sha256:4351dce66af18b53a74da7daaeb9da61d1583c88e81e63f3736b208cf6c20b87",
+    "size": 3827,
+    "uncompressed_size": 8523,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     59,
+     59
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:64b981af69cff029eba3c7e0777523e70f1f4054b0887f9a965c176d18169cc6",
+    "diff_id": "sha256:ff1102643737cf92b5ddf6c7a1b0d458827766891ea7a4f451e80d24cf72a580",
+    "size": 7083608,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:79a420625e0d676d8a32b0bfbd2195beb0da5e8b12eac1c933fcacfbf12a1b51",
+    "diff_id": "sha256:33f6be7ae4978af9a244d51a206ab0c210235afa751f59a501512bf033c19eff",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:1eea1340625cba05d1c5c9edd941668f886cdbee11741d5a10531401783164ee",
+    "diff_id": "sha256:b94ed0ba2e30c058a7c340548783ab419fd231871094ebeba35593c7f3092aed",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d433e188c5969ad4637c3026f984c0895a593777d729a9965b7ae4aef4b2fad6",
+    "diff_id": "sha256:e4ec07be27d69218cbd64a618be58d94b48a066d0cda68d0ea2437f3434664e8",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c7b7cefe879ff05f0664c285600286a1caa628150f63fc3f3dd08c79cf4af237",
+    "diff_id": "sha256:358853ccd9f142431d5a1e859f4923f0e9b1c320430f63bd87cb59fa1c3cb76e",
+    "size": 6326079,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:cc88e67bd7dfee632bf5f1db2d42cbbf63b5effbcedd683ebfbfb50a2b30c949",
+    "diff_id": "sha256:2dfe8908c338a57538164ebc6c067025885ba57080d8cb419e0d1afa546306af",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:5fd70478b9e903c66902b741730fa6986fbb624cef5a1cebc5e2150d356d80b9",
+    "diff_id": "sha256:a8a2b6e1716e7d91c0ab58775f8ca7444f4720e5546b6397c079887cc2fd7f7a",
+    "size": 15980160,
+    "uncompressed_size": 52080936,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-13T05:18:49Z VERSION=1.30.6-r0_8.5.12-r0-ls10 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php85     php85-ctype     php85-curl     php85-fileinfo     php85-fpm     php85-iconv     php85-json     php85-mbstring     php85-openssl     php85-phar     php85-session     php85-simplexml     php85-xml     php85-xmlwriter     php85-zip     php85-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php85\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php85 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php85/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php85/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php85/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php85/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:d39d80126130e2a0de1430eff7226b854e5b572de18a92fb62c358d593de2f49",
+    "diff_id": "sha256:bfb9a243f85ba6691b56383f83da45b4fc81ea50f3b0e1dbe9699c99c3eea990",
+    "size": 7740,
+    "uncompressed_size": 17446,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:8ee20ba77b906f5fbbbeb1a55f487802531c07e5af74eb748f7e6f82f2eb160a",
+    "diff_id": "sha256:bd5768f331be4747f97847aee77e47136ac74c80fd44796d2cb7c0c8d7b3a655",
+    "size": 38480658,
+    "uncompressed_size": 108582341,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-13T13:12:32Z VERSION=4.6.1-ls8 COPS_RELEASE=4.6.1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache --upgrade     icu-data-full     php85-dom     php85-gd     php85-intl     php85-pdo_sqlite     php85-sqlite3     php85-tokenizer &&   echo \"**** configure php-fpm to pass env vars ****\" &&   sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf &&   if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi &&   echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf &&   echo \"**** install cops ****\" &&   if [ -z ${COPS_RELEASE+x} ]; then     COPS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/mikespub-org/seblucas-cops/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     /tmp/cops.tar.gz -L     \"https://github.com/mikespub-org/seblucas-cops/archive/${COPS_RELEASE}.tar.gz\" &&   mkdir -p     /app/www/public &&   tar xf /tmp/cops.tar.gz -C     /app/www/public --strip-components=1 &&   cd /app/www/public &&   composer     install --no-dev --optimize-autoloader &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"***install kepubify\" &&   if [ -z ${KEPUBIFY_RELEASE+x} ]; then     KEPUBIFY_RELEASE=$(curl -sX GET \"https://api.github.com/repos/pgaskin/kepubify/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /usr/bin/kepubify -L     \"https://github.com/pgaskin/kepubify/releases/download/${KEPUBIFY_RELEASE}/kepubify-linux-arm64\" &&   chmod 755 /usr/bin/kepubify &&   echo \"**** cleanup ****\" &&   rm -rf     /root/.composer     /tmp/*",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:e9881bb8716b019432dd38a413d8126d5693ce239ef8207851894ed00eae537e",
+    "diff_id": "sha256:1175e30e85ab06b3fb4ca17556c8a372a057b3639d67c9abd7bde336ccb73afd",
+    "size": 3827,
+    "uncompressed_size": 8523,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     60,
+     60
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "cops",
+  "tag": "4.6.1-ls8",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/cops/builds/4.6.1-ls8/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [
+     "80/tcp",
+     "443/tcp",
+     "9000/tcp",
+     "443/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 100438016,
+    "pids": 23,
+    "tarball": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.011,
+    "listening_ports": [
+     "80/tcp",
+     "443/tcp",
+     "9000/tcp",
+     "443/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 99995648,
+    "pids": 23,
+    "tarball": "https://github.com/linuxserver-playground/docker-cops/releases/download/4.6.1-ls8/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-cops/builds/4.6.1-ls8/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "cops",
+    "tag": "amd64-c6b0396-43431588041",
+    "arch": "amd64",
+    "started": "2026-11-13T13:15:13Z",
+    "finished": "2026-11-13T13:15:34Z",
+    "success": true,
+    "runner": "2425bf8a0127",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "3 services stayed up for 15s: svc-cron, svc-nginx, svc-php-fpm",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 80/tcp, 443/tcp",
+      "seconds": 0.078
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:80/ after 0.0s",
+      "seconds": 0.045
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running PHP, nginx; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "176 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "176 packages: syft JSON 51621 bytes gzipped, SPDX for the image attestation 384980 bytes",
+      "seconds": 0.157
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "959 dirs, 6736 files (198667638 bytes), 1416 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.11s, total 0.19s",
+      "seconds": 0.342
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.761
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 1 from this image, own units from the repository",
+      "seconds": 0.091
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:80/",
+      "seconds": 10.643
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "23 pids, tcp [80, 443, 9000], rss 100438016 bytes",
+      "seconds": 0.587
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 100438016,
+     "pids": 23,
+     "listening_tcp": [
+      80,
+      443,
+      9000
+     ],
+     "listening_udp": [
+      443
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-nginx",
+      "svc-php-fpm"
+     ],
+     "changed_paths": 247
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "cops",
+    "tag": "arm64-c6b0396-43431588041",
+    "arch": "arm64",
+    "started": "2026-11-13T13:14:20Z",
+    "finished": "2026-11-13T13:14:40Z",
+    "success": true,
+    "runner": "479fffd7c780",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "3 services stayed up for 15s: svc-cron, svc-nginx, svc-php-fpm",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 80/tcp, 443/tcp",
+      "seconds": 0.043
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:80/ after 0.0s",
+      "seconds": 0.038
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running PHP, nginx; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "176 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "176 packages: syft JSON 51636 bytes gzipped, SPDX for the image attestation 385095 bytes",
+      "seconds": 0.14
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "959 dirs, 6735 files (200310536 bytes), 1416 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.10s",
+      "seconds": 0.216
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.714
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 1 from this image, own units from the repository",
+      "seconds": 0.076
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:80/",
+      "seconds": 10.63
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "23 pids, tcp [80, 443, 9000], rss 99995648 bytes",
+      "seconds": 0.367
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 99995648,
+     "pids": 23,
+     "listening_tcp": [
+      80,
+      443,
+      9000
+     ],
+     "listening_udp": [
+      443
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-nginx",
+      "svc-php-fpm"
+     ],
+     "changed_paths": 247
+    }
+   }
+  }
+ }
+}

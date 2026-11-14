@@ -1,0 +1,998 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "mstream",
+  "repository": "linuxserver-playground/docker-mstream",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v6.33.1",
+   "upstream_clean": "v6.33.1",
+   "semver": "6.33.1",
+   "ls_build": 9,
+   "tag": "v6.33.1-ls9",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v6.33.1-ls9",
+    "version-v6.33.1",
+    "6.33.1",
+    "amd64-latest",
+    "amd64-v6.33.1-ls9",
+    "amd64-version-v6.33.1",
+    "amd64-6.33.1",
+    "arm64v8-latest",
+    "arm64v8-v6.33.1-ls9",
+    "arm64v8-version-v6.33.1",
+    "arm64v8-6.33.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/IrosTheBeggar/mStream/releases/tag/v6.33.1"
+  },
+  "commit": "0bc6f3cc7ebdfcbbbad68de17ed5b93b122946c4",
+  "created": "2026-11-14T05:19:55Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v6.33.1-ls8",
+   "release_url": "https://github.com/linuxserver-playground/docker-mstream/releases/tag/v6.33.1-ls8"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:dbfa95e68cfd957cf03458b4712ca08f95f57bdea10adeb6e6b3ad1a28ec9b31",
+    "size": 402037393,
+    "uncompressed_size": 1073285977,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 79
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:69abcce7eb5c8084dbe853bf4dfe423fa7d0be3c501546c2d874a5878d67519e",
+    "size": 403539190,
+    "uncompressed_size": 1063048258,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 79
+   }
+  ],
+  "index_digest": "sha256:71f2d399878d6c294e10f603ef27bc912bc030b5ccc35fb6b1d294fb969c80df",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v6.33.1-ls9 Build-date:- 2026-11-14T05:14:25Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v6.33.1",
+   "maintainer": "chbmb",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-14T05:14:25Z",
+   "org.opencontainers.image.description": "mstream is a personal music streaming server.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-mstream",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "0bc6f3cc7ebdfcbbbad68de17ed5b93b122946c4",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-mstream",
+   "org.opencontainers.image.title": "Mstream",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-mstream/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v6.33.1-ls9"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "3000/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MSTREAM_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"chbmb\"\n\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    ffmpeg \\\n    gcompat \\\n    nodejs \\\n    onnxruntime \\\n    openssl \\\n    yt-dlp && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    npm && \\\n  echo \"**** install app ****\" && \\\n  mkdir -p \\\n    /app/mstream && \\\n  if [ -z ${MSTREAM_RELEASE+x} ]; then \\\n    MSTREAM_RELEASE=$(curl -sX GET https://api.github.com/repos/IrosTheBeggar/mStream/releases \\\n      | jq -r '.[] | select(.prerelease != true) | select(.tag_name | contains(\"DESKTOP\") | not) .tag_name' | head -1); \\\n  fi && \\\n  curl -o \\\n    /tmp/mstream.tar.gz -L \\\n    \"https://github.com/IrosTheBeggar/mStream/archive/${MSTREAM_RELEASE}.tar.gz\" && \\\n  tar xzf \\\n    /tmp/mstream.tar.gz -C \\\n    /app/mstream/ --strip-components=1 && \\\n  cd /app/mstream && \\\n  HOME=/tmp npm install --omit=dev && \\\n  echo \"**** use distro onnxruntime for the discovery embedding runtime ****\" && \\\n  if [ -d /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64 ]; then \\\n    rm -f \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1 \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_cuda.so \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_tensorrt.so && \\\n    ln -s \\\n      /usr/lib/libonnxruntime.so.1 \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1; \\\n  fi && \\\n  npm link && \\\n  chmod +x /app/mstream/bin/rust-parser/* && \\\n  echo \"**** bake the p2p discovery sidecar (manifest-pinned, sha256-verified) ****\" && \\\n  HOME=/tmp node scripts/fetch-p2p-sidecar.mjs && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /app/mstream/save/sync \\\n    /app/mstream/waveform-cache && \\\n  ln -s /config/sync /app/mstream/save/sync && \\\n  ln -s /config/waveform-cache /app/mstream/waveform-cache && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    $HOME/.npm \\\n    /tmp/* \\\n    /tmp/.npm\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG MSTREAM_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"chbmb\"\n\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    ffmpeg \\\n    gcompat \\\n    nodejs \\\n    onnxruntime \\\n    openssl \\\n    yt-dlp && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    npm && \\\n  echo \"**** install app ****\" && \\\n  mkdir -p \\\n    /app/mstream && \\\n  if [ -z ${MSTREAM_RELEASE+x} ]; then \\\n    MSTREAM_RELEASE=$(curl -sX GET https://api.github.com/repos/IrosTheBeggar/mStream/releases \\\n      | jq -r '.[] | select(.prerelease != true) | select(.tag_name | contains(\"DESKTOP\") | not) .tag_name' | head -1); \\\n  fi && \\\n  curl -o \\\n    /tmp/mstream.tar.gz -L \\\n    \"https://github.com/IrosTheBeggar/mStream/archive/${MSTREAM_RELEASE}.tar.gz\" && \\\n  tar xzf \\\n    /tmp/mstream.tar.gz -C \\\n    /app/mstream/ --strip-components=1 && \\\n  cd /app/mstream && \\\n  HOME=/tmp npm install --omit=dev && \\\n  echo \"**** use distro onnxruntime for the discovery embedding runtime ****\" && \\\n  if [ -d /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64 ]; then \\\n    rm -f \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime.so.1 \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime_providers_cuda.so \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime_providers_tensorrt.so && \\\n    ln -s \\\n      /usr/lib/libonnxruntime.so.1 \\\n      /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime.so.1; \\\n  fi && \\\n  npm link && \\\n  chmod +x /app/mstream/bin/rust-parser/* && \\\n  echo \"**** bake the p2p discovery sidecar (manifest-pinned, sha256-verified) ****\" && \\\n  HOME=/tmp node scripts/fetch-p2p-sidecar.mjs && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /app/mstream/save/sync \\\n    /app/mstream/waveform-cache && \\\n  ln -s /config/sync /app/mstream/save/sync && \\\n  ln -s /config/waveform-cache /app/mstream/waveform-cache && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    $HOME/.npm \\\n    /tmp/* \\\n    /tmp/.npm\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"mstream:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-mstream-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-config -> init-mstream-config\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-mstream\n  svc-mstream -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"mstream:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-mstream-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mstream-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p \\\n    /config/{album-art,db,keys,logs,sync,waveform-cache} \\\n    /music\n\n# create keys\nif [[ ! -e /config/keys/certificate.pem ]]; then\n    openssl req -x509 -nodes -days 3650 \\\n    -newkey rsa:2048 -keyout /config/keys/private-key.pem  -out /config/keys/certificate.pem \\\n    -subj \"/CN=mstream\"\nfi\n\n# copy config.json if doesn't exist\nif [[ ! -e /config/config.json ]]; then\n    cp /defaults/config.json /config/config.json\nfi\n\nif grep -q '\"webAppDirectory\": \"public\"' /config/config.json; then\n    mv /config/config.json /config/config.json.v4-bak\n    echo '\n*************************************\n*************************************\n****                             ****\n****                             ****\n****   v4 config.json detected   ****\n****                             ****\n****   renaming to               ****\n****                             ****\n****   config.json.v4-bak        ****\n****                             ****\n****   due to incompatibility    ****\n****                             ****\n****   with v5                   ****\n****                             ****\n*************************************\n*************************************'\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config \\\n    /app/mstream/bin\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-mstream",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nPORT=$(jq -r '.port' /config/config.json)\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost ${PORT}\" \\\n        cd /app/mstream s6-setuidgid abc mstream -j /config/config.json\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 1427,
+    "distro": "Alpine Linux v3.24",
+    "hash": "d788bdcb",
+    "by_type": {
+     "npm": 271,
+     "binary": 10,
+     "rust-crate": 875,
+     "apk": 258,
+     "python": 13
+    }
+   },
+   "arm64": {
+    "count": 1425,
+    "distro": "Alpine Linux v3.24",
+    "hash": "883d972f",
+    "by_type": {
+     "npm": 271,
+     "binary": 10,
+     "rust-crate": 874,
+     "apk": 257,
+     "python": 13
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/mstream/builds/v6.33.1-ls9/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-mstream/compare/v6.33.1-ls8...v6.33.1-ls9",
+   "upstream": "- The P2P sidecar has had some package updates\r\n-  Some new API endpoints for the upcoming mp3 player\r\n\r\n**Full Changelog**: https://github.com/IrosTheBeggar/mStream/compare/v6.33.0...v6.33.1",
+   "upstream_url": "https://github.com/IrosTheBeggar/mStream/releases/tag/v6.33.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 235210,
+    "sha256": "f5a156b1e0a8cd116dd1ed63ac145db01066ecb0010b9b7568b7b287dda175e8",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 6283,
+    "sha256": "2edb685cc1c2ab265ab9fe1892a762e9790adc0b4e75269de6055b9c9e9ee190",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 122519,
+    "sha256": "83838793267e691cf2c1aedf71d442ea37a7e1c7386179a77a2e486380a2a40b",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2600,
+    "sha256": "1489fe7bca895de669d65440490a420e5217c2d9d9a631cb990ebc48ba5bfe49",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 86583,
+    "sha256": "df738de6c905cb91190eea8786ae2c403bad0516b21e98f50248b21308b8c1fe",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 154512,
+    "sha256": "95fbdb0d6db2d7b3c80c3cf035272f8a10a4a9d9b7990d53b8672672d047e25b",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 234106,
+    "sha256": "c4496b33fc64bc711140682326cb742320f7e8ecfbbc52e3b724f8b59d5d7746",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 6293,
+    "sha256": "ff2e3d71edce718b5d20fbfb5bcc969a4abff78e2472207a0fb13a545075e05d",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 121878,
+    "sha256": "7e5da2e5bd42f1b828b50013177da8943b2ec70979a373fafc39c173aabeea54",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2599,
+    "sha256": "110ff23c821c4893535f5890b094450763f94f0f0d012b02a9e6811e45d13d23",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 87695,
+    "sha256": "c15a39e2ede59eca02c081c43741cdc1f39ffc0b3bd71dedcfe5b5faad202959",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 154290,
+    "sha256": "0c16ecb48c629177ba4f085cbd5a80dd6553ca957c216404715136faaaa35134",
+    "url": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 43560530035,
+   "run_url": "https://github.com/linuxserver-playground/docker-mstream/actions/runs/43560530035",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/mstream",
+   "tags": [
+    "latest",
+    "v6.33.1-ls9",
+    "version-v6.33.1",
+    "6.33.1",
+    "amd64-latest",
+    "amd64-v6.33.1-ls9",
+    "amd64-version-v6.33.1",
+    "amd64-6.33.1",
+    "arm64v8-latest",
+    "arm64v8-v6.33.1-ls9",
+    "arm64v8-version-v6.33.1",
+    "arm64v8-6.33.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "mstream",
+  "branch": "master",
+  "tag": "v6.33.1-ls9",
+  "previous_tag": "v6.33.1-ls8",
+  "classification": "packages",
+  "reasons": [
+   "packages changed",
+   "1 commit (e8776aa → 0bc6f3c): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v6.33.1",
+   "to": "v6.33.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "e8776aa7e1a1ecb6886f9926f281e911e1b3b8a6",
+   "to": "0bc6f3cc7ebdfcbbbad68de17ed5b93b122946c4",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-mstream/compare/e8776aa7e1a1ecb6886f9926f281e911e1b3b8a6...0bc6f3cc7ebdfcbbbad68de17ed5b93b122946c4",
+   "commits": [
+    {
+     "sha": "0bc6f3cc7ebdfcbbbad68de17ed5b93b122946c4",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-11T09:21:46Z",
+     "url": "https://github.com/linuxserver-playground/docker-mstream/commit/0bc6f3cc7ebdfcbbbad68de17ed5b93b122946c4",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 402040907,
+    "to": 402037393,
+    "delta": -3514
+   },
+   "arm64": {
+    "from": 403504779,
+    "to": 403539190,
+    "delta": 34411
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "nodejs",
+       "from": "24.22.1-r1",
+       "to": "24.22.3-r0",
+       "purl": "pkg:apk/alpine/nodejs@24.22.3-r0?arch=x86_64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "nodejs",
+       "from": "24.22.1-r1",
+       "to": "24.22.3-r0",
+       "purl": "pkg:apk/alpine/nodejs@24.22.3-r0?arch=aarch64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:545d4f15654f1a41d289dc8d6ff4323903aab87b026be0a65396345b2c101be4",
+    "diff_id": "sha256:8be867d300e530cf6d98eac7b9af2cc8d84469decd1054eabf8dfd99bf9e72ea",
+    "size": 6266615,
+    "uncompressed_size": 13711256,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2023bed36d24cf793e80fa15289e7bddee887ff422d51bdd8b408c79138f0f06",
+    "diff_id": "sha256:be2f9fea94da00699c9bcd4b86a523e62c1dee6224ee3cff60ac313aaadf4843",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:c6d434456495ac568c97d1c4c0b02833dd8d030d0229c025a1392a245db9951b",
+    "diff_id": "sha256:aa510fdedc0643fe353dd455e66b5b6887d102914d9b17d76e8530a9d548d878",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:f0d95394e91d9e9173e468997b34c65657362d6bac9985dd86090506b3703004",
+    "diff_id": "sha256:c5f324c75d01bb48409641211c83c5c00c222b5d2ede732004f34755941ad642",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:896e30f3f6a9a79a56b14501dfb29b94469d4f7e62d688eb7f9920c5e01248ca",
+    "diff_id": "sha256:7b93a48e4d05ad9969e9b34a2e2c814a9a905814d76f0cad3b2dda7b90b76295",
+    "size": 6091161,
+    "uncompressed_size": 14407458,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:f5fba40ea5e79a9b868c8956a0790ba521114c461fb913fe2120e5d28fc8dbc7",
+    "diff_id": "sha256:4e492c677e4c6b01a4449b80ef9d3fe690a851f54d49d0ace528903f1fea010a",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:ad24a728fb5a6d265a94280d77a0b07e8ece5eb8821a8742e099c839bb6c91a3",
+    "diff_id": "sha256:a9482649c1174189ca6ecc3cee2659273d0bdb9bf45b0750d59c38a263dcfa8d",
+    "size": 389664830,
+    "uncompressed_size": 1045118883,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-14T05:14:25Z VERSION=v6.33.1-ls9 MSTREAM_RELEASE=v6.33.1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache --upgrade     ffmpeg     gcompat     nodejs     onnxruntime     openssl     yt-dlp &&   apk add --no-cache --upgrade --virtual=build-dependencies     npm &&   echo \"**** install app ****\" &&   mkdir -p     /app/mstream &&   if [ -z ${MSTREAM_RELEASE+x} ]; then     MSTREAM_RELEASE=$(curl -sX GET https://api.github.com/repos/IrosTheBeggar/mStream/releases       | jq -r '.[] | select(.prerelease != true) | select(.tag_name | contains(\"DESKTOP\") | not) .tag_name' | head -1);   fi &&   curl -o     /tmp/mstream.tar.gz -L     \"https://github.com/IrosTheBeggar/mStream/archive/${MSTREAM_RELEASE}.tar.gz\" &&   tar xzf     /tmp/mstream.tar.gz -C     /app/mstream/ --strip-components=1 &&   cd /app/mstream &&   HOME=/tmp npm install --omit=dev &&   echo \"**** use distro onnxruntime for the discovery embedding runtime ****\" &&   if [ -d /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64 ]; then     rm -f       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_cuda.so       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime_providers_tensorrt.so &&     ln -s       /usr/lib/libonnxruntime.so.1       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/x64/libonnxruntime.so.1;   fi &&   npm link &&   chmod +x /app/mstream/bin/rust-parser/* &&   echo \"**** bake the p2p discovery sidecar (manifest-pinned, sha256-verified) ****\" &&   HOME=/tmp node scripts/fetch-p2p-sidecar.mjs &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /app/mstream/save/sync     /app/mstream/waveform-cache &&   ln -s /config/sync /app/mstream/save/sync &&   ln -s /config/waveform-cache /app/mstream/waveform-cache &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     $HOME/.npm     /tmp/*     /tmp/.npm",
+    "dockerfile_lines": [
+     16,
+     69
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:1c11d20589634928a479092c4ed7f3f9697d4db1bbf6514383908cc3ee70aaba",
+    "diff_id": "sha256:70c9fee5e9aa94973ebb4b1187dcb81560b75905813f57b473394c3d05d3b256",
+    "size": 1428,
+    "uncompressed_size": 2164,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     72,
+     72
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:64b981af69cff029eba3c7e0777523e70f1f4054b0887f9a965c176d18169cc6",
+    "diff_id": "sha256:ff1102643737cf92b5ddf6c7a1b0d458827766891ea7a4f451e80d24cf72a580",
+    "size": 7083608,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:79a420625e0d676d8a32b0bfbd2195beb0da5e8b12eac1c933fcacfbf12a1b51",
+    "diff_id": "sha256:33f6be7ae4978af9a244d51a206ab0c210235afa751f59a501512bf033c19eff",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:1eea1340625cba05d1c5c9edd941668f886cdbee11741d5a10531401783164ee",
+    "diff_id": "sha256:b94ed0ba2e30c058a7c340548783ab419fd231871094ebeba35593c7f3092aed",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d433e188c5969ad4637c3026f984c0895a593777d729a9965b7ae4aef4b2fad6",
+    "diff_id": "sha256:e4ec07be27d69218cbd64a618be58d94b48a066d0cda68d0ea2437f3434664e8",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c7b7cefe879ff05f0664c285600286a1caa628150f63fc3f3dd08c79cf4af237",
+    "diff_id": "sha256:358853ccd9f142431d5a1e859f4923f0e9b1c320430f63bd87cb59fa1c3cb76e",
+    "size": 6326079,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:cc88e67bd7dfee632bf5f1db2d42cbbf63b5effbcedd683ebfbfb50a2b30c949",
+    "diff_id": "sha256:2dfe8908c338a57538164ebc6c067025885ba57080d8cb419e0d1afa546306af",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:7b5c015d295fb0da3c898b0c3f43a3924c3d7d22a65242453deb36e4892732fc",
+    "diff_id": "sha256:1e0a74cf6aedb2f8c0e0bd76681e6e04ed852fa8728243fdac1c39414074064a",
+    "size": 390114718,
+    "uncompressed_size": 1022968017,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-14T05:14:25Z VERSION=v6.33.1-ls9 MSTREAM_RELEASE=v6.33.1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache --upgrade     ffmpeg     gcompat     nodejs     onnxruntime     openssl     yt-dlp &&   apk add --no-cache --upgrade --virtual=build-dependencies     npm &&   echo \"**** install app ****\" &&   mkdir -p     /app/mstream &&   if [ -z ${MSTREAM_RELEASE+x} ]; then     MSTREAM_RELEASE=$(curl -sX GET https://api.github.com/repos/IrosTheBeggar/mStream/releases       | jq -r '.[] | select(.prerelease != true) | select(.tag_name | contains(\"DESKTOP\") | not) .tag_name' | head -1);   fi &&   curl -o     /tmp/mstream.tar.gz -L     \"https://github.com/IrosTheBeggar/mStream/archive/${MSTREAM_RELEASE}.tar.gz\" &&   tar xzf     /tmp/mstream.tar.gz -C     /app/mstream/ --strip-components=1 &&   cd /app/mstream &&   HOME=/tmp npm install --omit=dev &&   echo \"**** use distro onnxruntime for the discovery embedding runtime ****\" &&   if [ -d /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64 ]; then     rm -f       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime.so.1       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime_providers_cuda.so       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime_providers_tensorrt.so &&     ln -s       /usr/lib/libonnxruntime.so.1       /app/mstream/node_modules/onnxruntime-node/bin/napi-v6/linux/arm64/libonnxruntime.so.1;   fi &&   npm link &&   chmod +x /app/mstream/bin/rust-parser/* &&   echo \"**** bake the p2p discovery sidecar (manifest-pinned, sha256-verified) ****\" &&   HOME=/tmp node scripts/fetch-p2p-sidecar.mjs &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /app/mstream/save/sync     /app/mstream/waveform-cache &&   ln -s /config/sync /app/mstream/save/sync &&   ln -s /config/waveform-cache /app/mstream/waveform-cache &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     $HOME/.npm     /tmp/*     /tmp/.npm",
+    "dockerfile_lines": [
+     16,
+     69
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:425edc1f46f1a8aa9cad90388b323600a8bd0616ec0f07992fc51ee2a208c4f7",
+    "diff_id": "sha256:3c148870eda2b8ed5ac2a81d0e97507f7b5bda165e536c7912ce838ef11d0517",
+    "size": 1426,
+    "uncompressed_size": 2164,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     72,
+     72
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "mstream",
+  "tag": "v6.33.1-ls9",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/mstream/builds/v6.33.1-ls9/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 3.019,
+    "listening_ports": [
+     "3000/tcp",
+     "5353/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 136142848,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.013,
+    "listening_ports": [
+     "3000/tcp",
+     "5353/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 132231168,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-mstream/releases/download/v6.33.1-ls9/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-mstream/builds/v6.33.1-ls9/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "mstream",
+    "tag": "amd64-0bc6f3c-43560530035",
+    "arch": "amd64",
+    "started": "2026-11-14T05:18:02Z",
+    "finished": "2026-11-14T05:18:29Z",
+    "success": true,
+    "runner": "e9a9ea0c65cf",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.019,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.019
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-mstream",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.074
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 2.6s",
+      "seconds": 2.572
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "1427 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "1427 packages: syft JSON 235210 bytes gzipped, SPDX for the image attestation 3533300 bytes",
+      "seconds": 0.553
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1710 dirs, 14004 files (1072994254 bytes), 1426 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.19s, total 0.33s",
+      "seconds": 0.501
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.367
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.069
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 10.983
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [3000], rss 136142848 bytes",
+      "seconds": 0.812
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 136142848,
+     "pids": 13,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [
+      5353
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-mstream"
+     ],
+     "changed_paths": 248
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "mstream",
+    "tag": "arm64-0bc6f3c-43560530035",
+    "arch": "arm64",
+    "started": "2026-11-14T05:17:24Z",
+    "finished": "2026-11-14T05:17:51Z",
+    "success": true,
+    "runner": "50dc9566aa8a",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.013,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.013
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 16s: svc-cron, svc-mstream",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.045
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 4.6s",
+      "seconds": 4.584
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "1425 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "1425 packages: syft JSON 234106 bytes gzipped, SPDX for the image attestation 3527462 bytes",
+      "seconds": 0.459
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1710 dirs, 13999 files (1062756580 bytes), 1425 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.10s, total 0.18s",
+      "seconds": 0.34
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.668
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.058
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 10.997
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [3000], rss 132231168 bytes",
+      "seconds": 0.496
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 132231168,
+     "pids": 13,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [
+      5353
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-mstream"
+     ],
+     "changed_paths": 248
+    }
+   }
+  }
+ }
+}

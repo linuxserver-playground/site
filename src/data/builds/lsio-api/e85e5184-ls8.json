@@ -1,0 +1,685 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "lsio-api",
+  "repository": "linuxserver-playground/docker-lsio-api",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "e85e5184",
+   "upstream_clean": "e85e5184",
+   "ls_build": 8,
+   "tag": "e85e5184-ls8",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "e85e5184-ls8",
+    "version-e85e5184",
+    "amd64-latest",
+    "amd64-e85e5184-ls8",
+    "amd64-version-e85e5184"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "9b4ffe7ffcfecc8c80d660e0e7111d5e2d9acbe1",
+  "created": "2026-11-10T05:09:25Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "6ddc36f4-ls7",
+   "release_url": "https://github.com/linuxserver-playground/docker-lsio-api/releases/tag/6ddc36f4-ls7"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:edge",
+   "digest": "sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:1a3bb7f1ac02dcd1b39afe78f8e75c37af3376f0fc80bde680fcdee23cab22b1",
+    "size": 64048590,
+    "uncompressed_size": 177969889,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 43
+   }
+  ],
+  "index_digest": "sha256:7d765dd4a424d6071e12902bb05a60c80aa8ee10e7527c30e8824cf8eb452109",
+  "labels": {
+   "build_version": "Linuxserver.io version:- e85e5184-ls8 Build-date:- 2026-11-10T05:05:44Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:edge@sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "e85e5184",
+   "maintainer": "Quietsy",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-10T05:05:44Z",
+   "org.opencontainers.image.description": "lsio-api container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-lsio-api",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "9b4ffe7ffcfecc8c80d660e0e7111d5e2d9acbe1",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-lsio-api",
+   "org.opencontainers.image.title": "Lsio-api",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-lsio-api/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "e85e5184-ls8"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "8000/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "FROM ghcr.io/linuxserver-playground/baseimage-alpine:edge\n\nENV LSIO_FIRST_PARTY=true\n\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"Quietsy\"\n\nCOPY root/app/requirements.txt /tmp/requirements.txt\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add  -U --update --no-cache \\\n    python3 && \\\n  cd /app && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip && \\\n  pip install -U --no-cache-dir -r /tmp/requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\nCOPY root/ /\n\nEXPOSE 8000\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"lsio-api:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-api\n  svc-api -> legacy-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-updater\n  svc-updater -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:edge\"\n}\n\"lsio-api:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-api",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8000\" \\\n    cd /app s6-setuidgid abc fastapi run --workers 4 api.py\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-updater",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8000\" \\\n    cd /app s6-setuidgid abc python -u /app/updater.py\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 143,
+    "distro": "BusyBox v1.38.0",
+    "hash": "25005dda",
+    "by_type": {
+     "python": 72,
+     "binary": 6,
+     "apk": 64,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/lsio-api/builds/e85e5184-ls8/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-lsio-api/compare/6ddc36f4-ls7...e85e5184-ls8"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 44232,
+    "sha256": "0d4adff1af9dccc28e63cdd3681acb5f686d4c5c7e423c93d83f659a4e8fa581",
+    "url": "https://github.com/linuxserver-playground/docker-lsio-api/releases/download/e85e5184-ls8/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4945,
+    "sha256": "848fa11c8fe69e58ee58af689ec930b39e45b8e03e08ad0fd6ecadebd25d9cf5",
+    "url": "https://github.com/linuxserver-playground/docker-lsio-api/releases/download/e85e5184-ls8/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 74228,
+    "sha256": "82291186aad1ac39b8e8b50990f2009d9c1f34b3e2bf2b7baea723acf6a90d0a",
+    "url": "https://github.com/linuxserver-playground/docker-lsio-api/releases/download/e85e5184-ls8/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2466,
+    "sha256": "6911c944ac53cf6cfceaf0114e7f8f902b53ac92cdc8cb71f19a0ed2d6c41d5b",
+    "url": "https://github.com/linuxserver-playground/docker-lsio-api/releases/download/e85e5184-ls8/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3590,
+    "sha256": "ceda6a811bab557d7b6f37b2d39fca3d37091f2bee9afc9497c53a56d5bae12f",
+    "url": "https://github.com/linuxserver-playground/docker-lsio-api/releases/download/e85e5184-ls8/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 10032,
+    "sha256": "90f34e5b1e9ab041c9e72135293cb05c9812656045f94a5582b18adee2328137",
+    "url": "https://github.com/linuxserver-playground/docker-lsio-api/releases/download/e85e5184-ls8/package_versions.amd64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 42759885244,
+   "run_url": "https://github.com/linuxserver-playground/docker-lsio-api/actions/runs/42759885244",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/lsio-api",
+   "tags": [
+    "latest",
+    "e85e5184-ls8",
+    "version-e85e5184",
+    "amd64-latest",
+    "amd64-e85e5184-ls8",
+    "amd64-version-e85e5184"
+   ]
+  }
+ },
+ "diff": {
+  "image": "lsio-api",
+  "branch": "main",
+  "tag": "e85e5184-ls8",
+  "previous_tag": "6ddc36f4-ls7",
+  "classification": "upstream",
+  "reasons": [
+   "package set changed (an os image's version is the hash of package_versions.txt)",
+   "packages changed",
+   "1 commit (f45f4ca → 9b4ffe7): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "6ddc36f4",
+   "to": "e85e5184",
+   "changed": true
+  },
+  "commit": {
+   "from": "f45f4ca4ac4ceb9f6b1590ebe9171992cd7a6a37",
+   "to": "9b4ffe7ffcfecc8c80d660e0e7111d5e2d9acbe1",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-lsio-api/compare/f45f4ca4ac4ceb9f6b1590ebe9171992cd7a6a37...9b4ffe7ffcfecc8c80d660e0e7111d5e2d9acbe1",
+   "commits": [
+    {
+     "sha": "9b4ffe7ffcfecc8c80d660e0e7111d5e2d9acbe1",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T10:12:04Z",
+     "url": "https://github.com/linuxserver-playground/docker-lsio-api/commit/9b4ffe7ffcfecc8c80d660e0e7111d5e2d9acbe1",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:edge",
+    "digest": "sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:edge",
+    "digest": "sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 64050519,
+    "to": 64048590,
+    "delta": -1929
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": ""
+  },
+  "packages": {
+   "amd64": {
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "fastapi-cloud-cli",
+       "from": "0.26.0",
+       "to": "0.27.1",
+       "purl": "pkg:pypi/fastapi-cloud-cli@0.27.1"
+      },
+      {
+       "name": "typer",
+       "from": "0.28.0",
+       "to": "0.29.0",
+       "purl": "pkg:pypi/typer@0.29.0"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:2c1a8af3f7bda42c8d0e1362de11d1d290b10236c196ff623427db07465edf72",
+    "diff_id": "sha256:304a229a6b310b9b982ed3d865dfb80a88e8c198bee7de909e0fdb6601d02aa5",
+    "size": 6275478,
+    "uncompressed_size": 13719510,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:0355e6af25fdf75b64b1a3040b31ac76d9d5a4886b244487be71bde6210e2417",
+    "diff_id": "sha256:3a97ea13c3c7bb3c8f985ede02b4b276609c3a6fda2f7db3c427324dcb0667c6",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:7a48d7bc358f3e43367c7edc88ee5f14d9ed47f2dd9b18602b748b68b21ddf18",
+    "diff_id": "sha256:af49b4440a53f57de019b5aee5647474134d10fd8fbf687dabd3c952d329954a",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:402d24373f7b86d8987942747418b7ed535e89aaa2381c9b3336ebdc1cea6145",
+    "diff_id": "sha256:41212bc34f964559416d5c721bb58703abb303b1799df8a21a788cff25fb632e",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:619772191cbcadca26597a8d113385077b3e3f78c75579a00d49f80055be6404",
+    "diff_id": "sha256:515fa4c75ce61a36b2062f3c84892e905a42471f8c08ef314e789ba0f4339be3",
+    "size": 6065660,
+    "uncompressed_size": 14304666,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-06T03:22:30Z VERSION=56a67628-ls5 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:9f18efdee22165e9c4e8f88c591279aeee766ceb61735186b489147641aaf74c",
+    "diff_id": "sha256:0412c251f8b9bab7a04fe0fd6d043db7bef8694b78c006a20e9bc0e8e115b3ce",
+    "size": 4585,
+    "uncompressed_size": 9330,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:39187f89a035df83b431f653b7ae6b66b1e69afcaf499a5853d2ab3de7dd4450",
+    "diff_id": "sha256:029cb3c2de4b446dd7587fd6f3907d4e751b19e689b25f1296f5670a69bc1d2f",
+    "size": 199,
+    "uncompressed_size": 57,
+    "created_by": "COPY root/app/requirements.txt /tmp/requirements.txt",
+    "dockerfile_lines": [
+     10,
+     10
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:7bd2b08814d9e6a855256f95b969502aa29562c27cf9ce4a66243ec83e3c03b4",
+    "diff_id": "sha256:3d8941a7aa8129a2ce76d5e0ec9a206c8bf6cbaed91e3c0a2ec3f1e39e697b82",
+    "size": 51666670,
+    "uncompressed_size": 149858100,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-10T05:05:44Z VERSION=e85e5184-ls8 /bin/sh -c echo \"**** install packages ****\" &&   apk add  -U --update --no-cache     python3 &&   cd /app &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip &&   pip install -U --no-cache-dir -r /tmp/requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     12,
+     25
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:992b7ab2378093c0aea3bd889c2bd910ef7bd12416fd530c6835ed24a630f685",
+    "diff_id": "sha256:f6489b3fdea4fa15d7015789455f693bdb15adaa91e3f6f22acb189cd9e12559",
+    "size": 27276,
+    "uncompressed_size": 41432,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     27,
+     27
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "lsio-api",
+  "tag": "e85e5184-ls8",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/lsio-api/builds/e85e5184-ls8/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 4.026,
+    "listening_ports": [
+     "8000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 429477888,
+    "pids": 20,
+    "tarball": "https://github.com/linuxserver-playground/docker-lsio-api/releases/download/e85e5184-ls8/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-lsio-api/builds/e85e5184-ls8/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-lsio-api/builds/e85e5184-ls8/amd64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "lsio-api",
+    "tag": "amd64-9b4ffe7-42759885244",
+    "arch": "amd64",
+    "started": "2026-11-10T05:08:05Z",
+    "finished": "2026-11-10T05:08:26Z",
+    "success": true,
+    "runner": "1bb9c946a86d",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 4.026,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 4.0s",
+      "seconds": 4.026
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "3 services stayed up for 15s: svc-api, svc-cron, svc-updater",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "143 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "143 packages: syft JSON 44232 bytes gzipped, SPDX for the image attestation 437858 bytes",
+      "seconds": 0.156
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "937 dirs, 7760 files (177678981 bytes), 1215 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.12s, total 0.20s",
+      "seconds": 0.346
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.382
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.069
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "20 pids, tcp [8000], rss 429477888 bytes",
+      "seconds": 0.566
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 429477888,
+     "pids": 20,
+     "listening_tcp": [
+      8000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-api",
+      "svc-cron",
+      "svc-updater"
+     ],
+     "changed_paths": 226
+    }
+   }
+  }
+ }
+}
