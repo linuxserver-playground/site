@@ -1,0 +1,1050 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "build-agent",
+  "repository": "linuxserver-playground/docker-build-agent",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "d54cae80",
+   "upstream_clean": "d54cae80",
+   "ls_build": 8,
+   "tag": "d54cae80-ls8",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "d54cae80-ls8",
+    "version-d54cae80",
+    "amd64-latest",
+    "amd64-d54cae80-ls8",
+    "amd64-version-d54cae80",
+    "arm64v8-latest",
+    "arm64v8-d54cae80-ls8",
+    "arm64v8-version-d54cae80"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "6d7ed2b6d16ea5fe7f728c499da8ad8c8e5ec43d",
+  "created": "2026-11-11T12:27:52Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "de276f12-ls7",
+   "release_url": "https://github.com/linuxserver-playground/docker-build-agent/releases/tag/de276f12-ls7"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:edge",
+   "digest": "sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:07ff4cce0076e96bc097b72134842098c22cde787f7c29a286954a208c9f4cfd",
+    "size": 271611711,
+    "uncompressed_size": 863800756,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 51
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:0d4e7dd6b2accc355b71ad13d889c51c4edbee6df08f560db138bc38bee2a5cf",
+    "size": 264527545,
+    "uncompressed_size": 876228059,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 55
+   }
+  ],
+  "index_digest": "sha256:e34c81aa62b6b0198b5c0d5a54988a49b490a45ad669a7bd920917fe33749725",
+  "labels": {
+   "build_version": "Linuxserver.io version:- d54cae80-ls8 Build-date:- 2026-11-11T12:23:35Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:edge@sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "d54cae80",
+   "maintainer": "thespad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-11T12:23:35Z",
+   "org.opencontainers.image.description": "build-agent container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-build-agent",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "6d7ed2b6d16ea5fe7f728c499da8ad8c8e5ec43d",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-build-agent",
+   "org.opencontainers.image.title": "Build-agent",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-build-agent/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "d54cae80-ls8"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "2222/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:edge\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG BUILD_AGENT_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nENV HOME=/config\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    alpine-release \\\n    btrfs-progs \\\n    docker \\\n    docker-cli-buildx \\\n    docker-cli-compose \\\n    e2fsprogs \\\n    e2fsprogs-extra \\\n    erofs-utils \\\n    git \\\n    ip6tables \\\n    iptables \\\n    openjdk25-jre \\\n    openssh-client \\\n    openssh-server-pam \\\n    openssh-sftp-server \\\n    pandoc-cli \\\n    xfsprogs \\\n    xmlstarlet \\\n    xz \\\n    yq-go && \\\n  echo \"**** setup openssh environment ****\" && \\\n  sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config && \\\n  usermod --shell /bin/bash abc && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  rm -rf \\\n    /tmp/*\n\n# add local files\nCOPY /root /\n\nEXPOSE 2222\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-edge\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG BUILD_AGENT_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nENV HOME=/config\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache --upgrade \\\n    alpine-release \\\n    btrfs-progs \\\n    docker \\\n    docker-cli-buildx \\\n    docker-cli-compose \\\n    e2fsprogs \\\n    e2fsprogs-extra \\\n    erofs-utils \\\n    git \\\n    ip6tables \\\n    iptables \\\n    openjdk25-jre \\\n    openssh-client \\\n    openssh-server-pam \\\n    openssh-sftp-server \\\n    pandoc-cli \\\n    xfsprogs \\\n    xmlstarlet \\\n    xz \\\n    yq-go && \\\n  echo \"**** setup openssh environment ****\" && \\\n  sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config && \\\n  usermod --shell /bin/bash abc && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  rm -rf \\\n    /tmp/*\n\n# add local files\nCOPY /root /\n\nEXPOSE 2222\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"build-agent:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-config -> init-build-agent-config\n  svc-docker-in-docker -> init-buildx-config\n  init-os-end -> init-config\n  init-build-agent-config -> init-config-end\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  svc-docker-in-docker -> init-qemu\n  init-custom-files -> init-services\n  init-services -> log-docker-in-docker\n  log-docker-in-docker -> legacy-services\n  init-services -> log-openssh-server\n  log-openssh-server -> legacy-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-docker-in-docker\n  svc-docker-in-docker -> legacy-services\n  init-services -> svc-openssh-server\n  svc-openssh-server -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:edge\"\n}\n\"build-agent:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-build-agent-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# create folders\nmkdir -p \\\n    /etc/docker \\\n    /config/{.ssh,ssh_host_keys,logs/openssh,logs/dockerd,var/lib/docker}\n\nUSER_NAME=${USER_NAME:-jenkins}\necho \"User name is set to $USER_NAME\"\n\nUSER_PASSWORD=${USER_PASSWORD:-$(< /dev/urandom tr -dc _A-Z-a-z-0-9 | head -c\"${1:-8}\";echo;)}\necho \"${USER_NAME}:${USER_PASSWORD}\" | chpasswd\n\n# symlink out ssh config directory\nif [[ ! -L /etc/ssh ]]; then\n    if [[ ! -f /config/ssh_host_keys/sshd_config ]]; then\n        sed -i '/#PidFile/c\\PidFile \\/config\\/sshd.pid' /etc/ssh/sshd_config\n        cp -a /etc/ssh/sshd_config /config/ssh_host_keys/\n    fi\n    rm -Rf /etc/ssh\n    ln -s /config/ssh_host_keys /etc/ssh\n    ssh-keygen -A\nfi\n\n# custom port\nif [[ -n \"${LISTEN_PORT}\" ]]; then\n    sed -i \"s/^#Port [[:digit:]]\\+/Port ${LISTEN_PORT}\"/ /etc/ssh/sshd_config\n    sed -i \"s/^Port [[:digit:]]\\+/Port ${LISTEN_PORT}\"/ /etc/ssh/sshd_config\n    echo \"sshd is listening on port ${LISTEN_PORT}\"\nelse\n    sed -i \"s/^#Port [[:digit:]]\\+/Port 2222\"/ /etc/ssh/sshd_config\n    sed -i \"s/^Port [[:digit:]]\\+/Port 2222\"/ /etc/ssh/sshd_config\n    echo \"sshd is listening on port 2222\"\nfi\n\n# password access\nif [[ \"$PASSWORD_ACCESS\" == \"true\" ]]; then\n    sed -i '/^#PasswordAuthentication/c\\PasswordAuthentication yes' /etc/ssh/sshd_config\n    sed -i '/^PasswordAuthentication/c\\PasswordAuthentication yes' /etc/ssh/sshd_config\n    chown root:\"${USER_NAME}\" \\\n        /etc/shadow\n    echo \"User/password ssh access is enabled.\"\nelse\n    sed -i '/^PasswordAuthentication/c\\PasswordAuthentication no' /etc/ssh/sshd_config\n    chown root:root \\\n        /etc/shadow\n    echo \"User/password ssh access is disabled.\"\nfi\n\n# set umask for sftp\nUMASK=${UMASK:-022}\nsed -i \"s|/usr/lib/ssh/sftp-server$|/usr/lib/ssh/sftp-server -u ${UMASK}|g\" /etc/ssh/sshd_config\n\n# set key auth in file\nif [[ ! -f /config/.ssh/authorized_keys ]]; then\n    touch /config/.ssh/authorized_keys\nfi\n\nif [[ -n \"$PUBLIC_KEY\" ]]; then\n    if ! grep -q \"${PUBLIC_KEY}\" /config/.ssh/authorized_keys; then\n        echo \"$PUBLIC_KEY\" >> /config/.ssh/authorized_keys\n        echo \"Public key from env variable added\"\n    fi\nfi\n\nif [[ -n \"$PUBLIC_KEY_URL\" ]]; then\n    PUBLIC_KEY_DOWNLOADED=$(curl -s \"$PUBLIC_KEY_URL\")\n    if ! grep -q \"$PUBLIC_KEY_DOWNLOADED\" /config/.ssh/authorized_keys; then\n        echo \"$PUBLIC_KEY_DOWNLOADED\" >> /config/.ssh/authorized_keys\n        echo \"Public key downloaded from '$PUBLIC_KEY_URL' added\"\n    fi\nfi\n\nif [[ -n \"$PUBLIC_KEY_FILE\" ]] && [[ -f \"$PUBLIC_KEY_FILE\" ]]; then\n    PUBLIC_KEY2=$(cat \"$PUBLIC_KEY_FILE\")\n    if ! grep -q \"$PUBLIC_KEY2\" /config/.ssh/authorized_keys; then\n        echo \"$PUBLIC_KEY2\" >> /config/.ssh/authorized_keys\n        echo \"Public key from file added\"\n    fi\nfi\n\nif [[ -d \"$PUBLIC_KEY_DIR\" ]]; then\n    for F in \"${PUBLIC_KEY_DIR}\"/*; do\n        PUBLIC_KEYN=$(cat \"$F\")\n        if ! grep -q \"$PUBLIC_KEYN\" /config/.ssh/authorized_keys; then\n            echo \"$PUBLIC_KEYN\" >> /config/.ssh/authorized_keys\n            echo \"Public key from file '$F' added\"\n        fi\n    done\nfi\n\n# add log file info\nif [[ ! -f /config/logs/loginfo.txt ]]; then\n    echo \"The current log file is named \\\"current\\\". The rotated log files are gzipped, named with a TAI64N timestamp and a \\\".s\\\" extension\" > /config/logs/loginfo.txt\nfi\n\n# delete Docker PID if exists\nfind /run /var/run -iname 'docker*.pid' -delete || :\n\n# create docker group and add abc to it\ngroupadd -f docker\nif ! id -nG \"$(id -nu \"${PUID:-911}\")\" | grep -q \"docker\"; then\n    usermod -aG docker \"$(id -nu \"${PUID:-911}\")\"\nfi\n\ngit config --global user.email \"ci@linuxserver.io\"\ngit config --global user.name \"LinuxServer-CI\"\n\n# permissions\nlsiown -R \"${USER_NAME}\":\"${USER_NAME}\" \\\n    /config\nchmod go-w \\\n    /config\nchmod 700 \\\n    /config/.ssh\nchmod 600 \\\n    /config/.ssh/authorized_keys\n"
+    },
+    {
+     "name": "init-buildx-config",
+     "type": "oneshot",
+     "depends_on": [
+      "svc-docker-in-docker"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\ndocker pull docker.io/moby/buildkit:buildx-stable-1\ndocker buildx rm container >/dev/null 2>&1\ndocker buildx create --driver docker-container --name container --bootstrap >/dev/null 2>&1\ndocker image prune -f >/dev/null 2>&1\n\nUSER_NAME=${USER_NAME:-jenkins}\nlsiown -R \"${USER_NAME}:${USER_NAME}\" /config/.docker\n"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-build-agent-config",
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-qemu",
+     "type": "oneshot",
+     "depends_on": [
+      "svc-docker-in-docker"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\necho \"┌─────────────────────────────────────────────────────────────────────────────────┐\"\necho \"│                         Make sure you enable QEMU. Run:                         │\"\necho \"│                                                                                 │\"\necho \"│ docker run --rm -it --privileged ghcr.io/linuxserver/qemu-static --reset -p yes │\"\necho \"│                                                                                 │\"\necho \"│                                   on the host                                   │\"\necho \"└─────────────────────────────────────────────────────────────────────────────────┘\"\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "log-docker-in-docker",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nUSER_NAME=${USER_NAME:-jenkins}\n\nexec \\\n    s6-setuidgid \"${USER_NAME}\" s6-log n30 s10000000 S30000000 T !\"gzip -nq9\" /config/logs/dockerd\n"
+    },
+    {
+     "name": "log-openssh-server",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nUSER_NAME=${USER_NAME:-jenkins}\n\nexec \\\n    s6-setuidgid \"${USER_NAME}\" s6-log n30 s10000000 S30000000 T !\"gzip -nq9\" /config/logs/openssh\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-docker-in-docker",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# apparmor sucks and Docker needs to know that it's in a container (c) @tianon\nexport container=docker\n\nif [[ -d /sys/kernel/security ]] && ! mountpoint -q /sys/kernel/security; then\n\tmount -t securityfs none /sys/kernel/security || {\n\t\techo 'Could not mount /sys/kernel/security.'\n\t\techo 'AppArmor detection and --privileged mode might break.'\n\t}\nfi\n\n# Mount /tmp (conditionally)\nif ! mountpoint -q /tmp; then\n\tmount -t tmpfs none /tmp\nfi\n\n# cgroup v2: enable nesting\nif [[ -f /sys/fs/cgroup/cgroup.controllers ]]; then\n\t# move the processes from the root group to the /init group,\n\t# otherwise writing subtree_control fails with EBUSY.\n\t# An error during moving non-existent process (i.e., \"cat\") is ignored.\n\tmkdir -p /sys/fs/cgroup/init\n\txargs -rn1 < /sys/fs/cgroup/cgroup.procs > /sys/fs/cgroup/init/cgroup.procs || :\n\t# enable controllers\n\tsed -e 's/ / +/g' -e 's/^/+/' < /sys/fs/cgroup/cgroup.controllers \\\n\t\t> /sys/fs/cgroup/cgroup.subtree_control || :\nfi\n\nmount --make-rshared /\n\nexec 2>&1 \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"docker version\" \\\n    /usr/bin/dockerd --data-root \"/config/var/lib/docker\"\n"
+    },
+    {
+     "name": "svc-openssh-server",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nUSER_NAME=${USER_NAME:-jenkins}\n\nexec 2>&1 \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost ${LISTEN_PORT:-2222}\" \\\n    s6-setuidgid \"${USER_NAME}\" /usr/sbin/sshd.pam -D -e\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 976,
+    "distro": "Alpine Linux edge",
+    "hash": "2299929e",
+    "by_type": {
+     "apk": 124,
+     "rust-crate": 27,
+     "go-module": 824,
+     "java-archive": 1
+    }
+   },
+   "arm64": {
+    "count": 976,
+    "distro": "Alpine Linux edge",
+    "hash": "2299929e",
+    "by_type": {
+     "apk": 124,
+     "rust-crate": 27,
+     "go-module": 824,
+     "java-archive": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/build-agent/builds/d54cae80-ls8/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-build-agent/compare/de276f12-ls7...d54cae80-ls8"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 107396,
+    "sha256": "34c09657e83b1cb394447c20bedf262391990dd57fffd9fabd8b5772113ff683",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4903,
+    "sha256": "aafcbe1d40c7e920c8f87952fa3c0a96bfeaaaf88ecc29254b62aa9c612b732c",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 31828,
+    "sha256": "7a02bed36bc15f6d64a6956180371a13ea238d01f15ceb073abcdf4f7d5a045d",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1956,
+    "sha256": "df90dc29f4f3e5db0a5503891f8b6832e00cacc82b900b45171690753b70b150",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 343,
+    "sha256": "c5660c88a79f29cecd785bb3e773bbb027ba0d50b4002f1f7ea4fe4d0bf579b9",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 88506,
+    "sha256": "82a2ec28ad83d136f875027b5ad5a46b8b9b4524b876f19c786a1ca07b1da45f",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 107587,
+    "sha256": "3d6dde96e8e8334c8942f709f3bceaa1e0f66431a1cc5f12a83524e6fcd03f40",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4903,
+    "sha256": "7db9c422af9f464ee9d3901a38cd731d47a49f90f49b3690c101a72cdef5dc5a",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 31413,
+    "sha256": "5b3d83eea5562abeb6d8993a175d25cda7fde8714bb4b5cfae3413693fc65708",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1957,
+    "sha256": "8508cf75347cc8ae4551c4cfd275cd94514f6c5dc3d630634af389b3bb321b9d",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 343,
+    "sha256": "d26b24dbd014591ce7d9b3a8d69d9c9bc10aaf0c6f2cce27b5ef6d4df0036fc2",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 88506,
+    "sha256": "82a2ec28ad83d136f875027b5ad5a46b8b9b4524b876f19c786a1ca07b1da45f",
+    "url": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 43019878713,
+   "run_url": "https://github.com/linuxserver-playground/docker-build-agent/actions/runs/43019878713",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/build-agent",
+   "tags": [
+    "latest",
+    "d54cae80-ls8",
+    "version-d54cae80",
+    "amd64-latest",
+    "amd64-d54cae80-ls8",
+    "amd64-version-d54cae80",
+    "arm64v8-latest",
+    "arm64v8-d54cae80-ls8",
+    "arm64v8-version-d54cae80"
+   ]
+  }
+ },
+ "diff": {
+  "image": "build-agent",
+  "branch": "main",
+  "tag": "d54cae80-ls8",
+  "previous_tag": "de276f12-ls7",
+  "classification": "upstream",
+  "reasons": [
+   "package set changed (an os image's version is the hash of package_versions.txt)",
+   "packages changed",
+   "1 commit (f4df1de → 6d7ed2b): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "de276f12",
+   "to": "d54cae80",
+   "changed": true
+  },
+  "commit": {
+   "from": "f4df1de6b133032796851e9928312aecf285830a",
+   "to": "6d7ed2b6d16ea5fe7f728c499da8ad8c8e5ec43d",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-build-agent/compare/f4df1de6b133032796851e9928312aecf285830a...6d7ed2b6d16ea5fe7f728c499da8ad8c8e5ec43d",
+   "commits": [
+    {
+     "sha": "6d7ed2b6d16ea5fe7f728c499da8ad8c8e5ec43d",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-08T16:29:42Z",
+     "url": "https://github.com/linuxserver-playground/docker-build-agent/commit/6d7ed2b6d16ea5fe7f728c499da8ad8c8e5ec43d",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:edge",
+    "digest": "sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:edge",
+    "digest": "sha256:7d708408cd3327e6e3d154d36abfa7595ef611fe021fa3adc4860169c893c817"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 268175222,
+    "to": 271611711,
+    "delta": 3436489
+   },
+   "arm64": {
+    "from": 260740709,
+    "to": 264527545,
+    "delta": 3786836
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "docker",
+       "from": "29.9.3-r0",
+       "to": "29.9.3-r1",
+       "purl": "pkg:apk/alpine/docker@29.9.3-r1?arch=x86_64&distro=alpine-3.25.0_alpha20260805"
+      },
+      {
+       "name": "docker-cli",
+       "from": "29.9.3-r0",
+       "to": "29.9.3-r1",
+       "purl": "pkg:apk/alpine/docker-cli@29.9.3-r1?arch=x86_64&distro=alpine-3.25.0_alpha20260805&upstream=docker"
+      },
+      {
+       "name": "docker-engine",
+       "from": "29.9.3-r0",
+       "to": "29.9.3-r1",
+       "purl": "pkg:apk/alpine/docker-engine@29.9.3-r1?arch=x86_64&distro=alpine-3.25.0_alpha20260805&upstream=docker"
+      },
+      {
+       "name": "git",
+       "from": "2.56.0-r0",
+       "to": "2.56.1-r0",
+       "purl": "pkg:apk/alpine/git@2.56.1-r0?arch=x86_64&distro=alpine-3.25.0_alpha20260805"
+      },
+      {
+       "name": "git-init-template",
+       "from": "2.56.0-r0",
+       "to": "2.56.1-r0",
+       "purl": "pkg:apk/alpine/git-init-template@2.56.1-r0?arch=x86_64&distro=alpine-3.25.0_alpha20260805&upstream=git"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=x86_64&distro=alpine-3.25.0_alpha20260805&upstream=openssl"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=x86_64&distro=alpine-3.25.0_alpha20260805&upstream=openssl"
+      },
+      {
+       "name": "libxslt",
+       "from": "1.1.43-r3",
+       "to": "1.1.43-r4",
+       "purl": "pkg:apk/alpine/libxslt@1.1.43-r4?arch=x86_64&distro=alpine-3.25.0_alpha20260805"
+      },
+      {
+       "name": "pandoc-cli",
+       "from": "3.12.1-r0",
+       "to": "3.13-r0",
+       "purl": "pkg:apk/alpine/pandoc-cli@3.13-r0?arch=x86_64&distro=alpine-3.25.0_alpha20260805"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "docker",
+       "from": "29.9.3-r0",
+       "to": "29.9.3-r1",
+       "purl": "pkg:apk/alpine/docker@29.9.3-r1?arch=aarch64&distro=alpine-3.25.0_alpha20260805"
+      },
+      {
+       "name": "docker-cli",
+       "from": "29.9.3-r0",
+       "to": "29.9.3-r1",
+       "purl": "pkg:apk/alpine/docker-cli@29.9.3-r1?arch=aarch64&distro=alpine-3.25.0_alpha20260805&upstream=docker"
+      },
+      {
+       "name": "docker-engine",
+       "from": "29.9.3-r0",
+       "to": "29.9.3-r1",
+       "purl": "pkg:apk/alpine/docker-engine@29.9.3-r1?arch=aarch64&distro=alpine-3.25.0_alpha20260805&upstream=docker"
+      },
+      {
+       "name": "git",
+       "from": "2.56.0-r0",
+       "to": "2.56.1-r0",
+       "purl": "pkg:apk/alpine/git@2.56.1-r0?arch=aarch64&distro=alpine-3.25.0_alpha20260805"
+      },
+      {
+       "name": "git-init-template",
+       "from": "2.56.0-r0",
+       "to": "2.56.1-r0",
+       "purl": "pkg:apk/alpine/git-init-template@2.56.1-r0?arch=aarch64&distro=alpine-3.25.0_alpha20260805&upstream=git"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=aarch64&distro=alpine-3.25.0_alpha20260805&upstream=openssl"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=aarch64&distro=alpine-3.25.0_alpha20260805&upstream=openssl"
+      },
+      {
+       "name": "libxslt",
+       "from": "1.1.43-r3",
+       "to": "1.1.43-r4",
+       "purl": "pkg:apk/alpine/libxslt@1.1.43-r4?arch=aarch64&distro=alpine-3.25.0_alpha20260805"
+      },
+      {
+       "name": "pandoc-cli",
+       "from": "3.12.1-r0",
+       "to": "3.13-r0",
+       "purl": "pkg:apk/alpine/pandoc-cli@3.13-r0?arch=aarch64&distro=alpine-3.25.0_alpha20260805"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 18,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:2c1a8af3f7bda42c8d0e1362de11d1d290b10236c196ff623427db07465edf72",
+    "diff_id": "sha256:304a229a6b310b9b982ed3d865dfb80a88e8c198bee7de909e0fdb6601d02aa5",
+    "size": 6275478,
+    "uncompressed_size": 13719510,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:0355e6af25fdf75b64b1a3040b31ac76d9d5a4886b244487be71bde6210e2417",
+    "diff_id": "sha256:3a97ea13c3c7bb3c8f985ede02b4b276609c3a6fda2f7db3c427324dcb0667c6",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:7a48d7bc358f3e43367c7edc88ee5f14d9ed47f2dd9b18602b748b68b21ddf18",
+    "diff_id": "sha256:af49b4440a53f57de019b5aee5647474134d10fd8fbf687dabd3c952d329954a",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:402d24373f7b86d8987942747418b7ed535e89aaa2381c9b3336ebdc1cea6145",
+    "diff_id": "sha256:41212bc34f964559416d5c721bb58703abb303b1799df8a21a788cff25fb632e",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:619772191cbcadca26597a8d113385077b3e3f78c75579a00d49f80055be6404",
+    "diff_id": "sha256:515fa4c75ce61a36b2062f3c84892e905a42471f8c08ef314e789ba0f4339be3",
+    "size": 6065660,
+    "uncompressed_size": 14304666,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-06T03:22:30Z VERSION=56a67628-ls5 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:9f18efdee22165e9c4e8f88c591279aeee766ceb61735186b489147641aaf74c",
+    "diff_id": "sha256:0412c251f8b9bab7a04fe0fd6d043db7bef8694b78c006a20e9bc0e8e115b3ce",
+    "size": 4585,
+    "uncompressed_size": 9330,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b542631fd692de65269765779f6b0d2a4939ee4f772373167c021528ef857199",
+    "diff_id": "sha256:07f13f7b2f466f0c04e8db44165743ae2bea606a89728f04838037b77721b5b0",
+    "size": 259252926,
+    "uncompressed_size": 835720817,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-11T12:23:35Z VERSION=d54cae80-ls8 BUILD_AGENT_RELEASE=d54cae80 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache --upgrade     alpine-release     btrfs-progs     docker     docker-cli-buildx     docker-cli-compose     e2fsprogs     e2fsprogs-extra     erofs-utils     git     ip6tables     iptables     openjdk25-jre     openssh-client     openssh-server-pam     openssh-sftp-server     pandoc-cli     xfsprogs     xmlstarlet     xz     yq-go &&   echo \"**** setup openssh environment ****\" &&   sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config &&   usermod --shell /bin/bash abc &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     44
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:abce545c82994cdff59b9f680f684b5cd31f396271d01918f2bfb9e163a75f39",
+    "diff_id": "sha256:2bf09223b9ea11bd0f46c66399af4983cdd87b4e52f49b272f740f54ddbe94a9",
+    "size": 4340,
+    "uncompressed_size": 9639,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     47,
+     47
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:d1fe2f3a08e344b9809c7cb8590aaf2c773a2db9f47a9c76251e4d8cfab39bae",
+    "diff_id": "sha256:2d0735cb56e09498cea1421a21031264ed661c5e5732edd43f699853fa0900a7",
+    "size": 7091298,
+    "uncompressed_size": 18542702,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:eea3482c7262b18825b716163c27161bfddc85cf62a976fe227aa6e7324a3670",
+    "diff_id": "sha256:132b5cd9cbf950da8f2f6fccfec2e46d89a5f35f6d5d8e36c8ca188cb1ae0b8a",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:540ea494fade2135f43eba869f2267d668b0ccfc80787de304c17b623a9cd24f",
+    "diff_id": "sha256:afb267da88dfa93b0024567070d53d3c2be6e9843e04ed1275eec6ca53fa7d72",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:e55f4425c54f513f78e99e3457d0583d2713e7934176c684c39df0bafdc5fb23",
+    "diff_id": "sha256:7f3825ee0a46d1769c1d6146ed38ffe38fdb05c6a3ef09e8d9d19bc4b532b5ad",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:e8bb2a1c44764e4bc9d39641d173f5b1d182e60b3e07285c32181978337f2747",
+    "diff_id": "sha256:c6ecf1c6b4b8795bc9dfd4a22623aab73a8d29d766beeef9810353722f1279c8",
+    "size": 6289584,
+    "uncompressed_size": 21150054,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-06T03:22:30Z VERSION=56a67628-ls5 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:ba201a9b83b0f47bbe3f44d16e0b457a3d032b0c238ab387949d1effe5b7b8f7",
+    "diff_id": "sha256:26c7d8bee66e0a4fb5c8cf0d9f15e08c76750910effdfcfffc9805d9a7da26b6",
+    "size": 4588,
+    "uncompressed_size": 9330,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:6e19b4d0b9a4acea4d50490988fe0978c80cc98fff97fe40a252db84197b4236",
+    "diff_id": "sha256:6e11eba8d8a4616fa4c278951e737e9993e64bb19b5a4bdb8a8ca84310ede8b7",
+    "size": 251129003,
+    "uncompressed_size": 836479540,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-11T12:23:35Z VERSION=d54cae80-ls8 BUILD_AGENT_RELEASE=d54cae80 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache --upgrade     alpine-release     btrfs-progs     docker     docker-cli-buildx     docker-cli-compose     e2fsprogs     e2fsprogs-extra     erofs-utils     git     ip6tables     iptables     openjdk25-jre     openssh-client     openssh-server-pam     openssh-sftp-server     pandoc-cli     xfsprogs     xmlstarlet     xz     yq-go &&   echo \"**** setup openssh environment ****\" &&   sed -i 's/#PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config &&   usermod --shell /bin/bash abc &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     44
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:b2b092136fb84954ddb89939c939c252c33f85bd62b760950926596ab27bccf3",
+    "diff_id": "sha256:4c8bba82ae1b7cf16e3d8000910223f08d484c9e812d0d98e2e3639d013f0bd1",
+    "size": 4342,
+    "uncompressed_size": 9639,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     47,
+     47
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "build-agent",
+  "tag": "d54cae80-ls8",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/build-agent/builds/d54cae80-ls8/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/test.amd64.tar.gz",
+    "files": {}
+   },
+   "arm64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-build-agent/releases/download/d54cae80-ls8/test.arm64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "build-agent",
+    "tag": "amd64-6d7ed2b-43019878713",
+    "arch": "amd64",
+    "started": "2026-11-11T12:26:38Z",
+    "finished": "2026-11-11T12:26:48Z",
+    "success": true,
+    "runner": "10077826cd6a",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "976 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "976 packages: syft JSON 107396 bytes gzipped, SPDX for the image attestation 1706951 bytes",
+      "seconds": 0.283
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "423 dirs, 1810 files (857260980 bytes), 1699 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.10s",
+      "seconds": 0.243
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.692
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "24 units, 7 from this image, own units from the repository",
+      "seconds": 0.09
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "build-agent",
+    "tag": "arm64-6d7ed2b-43019878713",
+    "arch": "arm64",
+    "started": "2026-11-11T12:25:40Z",
+    "finished": "2026-11-11T12:25:52Z",
+    "success": true,
+    "runner": "030c3f66acff",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "976 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "976 packages: syft JSON 107587 bytes gzipped, SPDX for the image attestation 1707075 bytes",
+      "seconds": 0.247
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "423 dirs, 1808 files (869923935 bytes), 1699 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.05s",
+      "seconds": 0.168
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 1.055
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "24 units, 7 from this image, own units from the repository",
+      "seconds": 0.067
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}

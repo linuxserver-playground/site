@@ -1,0 +1,988 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "limnoria",
+  "repository": "linuxserver-playground/docker-limnoria",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "2026.10.4",
+   "upstream_clean": "2026.10.4",
+   "semver": "2026.10.4",
+   "ls_build": 8,
+   "tag": "2026.10.4-ls8",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "2026.10.4-ls8",
+    "version-2026.10.4",
+    "2026.10.4",
+    "amd64-latest",
+    "amd64-2026.10.4-ls8",
+    "amd64-version-2026.10.4",
+    "amd64-2026.10.4",
+    "arm64v8-latest",
+    "arm64v8-2026.10.4-ls8",
+    "arm64v8-version-2026.10.4",
+    "arm64v8-2026.10.4"
+   ],
+   "source": "pip",
+   "source_url": "https://pypi.org/project/limnoria/"
+  },
+  "commit": "db469e4b8b56906fb16461e624d29efd6144520e",
+  "created": "2026-11-13T03:39:15Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "2026.10.4-ls7",
+   "release_url": "https://github.com/linuxserver-playground/docker-limnoria/releases/tag/2026.10.4-ls7"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+   "digest": "sha256:ba356b0853b0079e990e1ce4af4e4e4b4b1a5658c1ddc526e0dbafc66c4a1c4a"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:0dd7bcdb37d00dfce1b73480c6669aab4af54c08ce29e3c9b45046bc9f3a7fe0",
+    "size": 48991621,
+    "uncompressed_size": 150139723,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 42
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:5fe4085839c7db190bcd0e29097452fe34706d42859f98a8f47a737563e29290",
+    "size": 49740825,
+    "uncompressed_size": 165748751,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 33
+   }
+  ],
+  "index_digest": "sha256:751ce060b09cddb12878ec4f989b0e6689a98282f60eb440d112aca5055ab77e",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 2026.10.4-ls8 Build-date:- 2026-11-13T03:34:33Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21@sha256:ba356b0853b0079e990e1ce4af4e4e4b4b1a5658c1ddc526e0dbafc66c4a1c4a",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "2026.10.4",
+   "maintainer": "nemchik",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-13T03:34:33Z",
+   "org.opencontainers.image.description": "Limnoria A robust, full-featured, and user/programmer-friendly Python IRC bot, with many existing plugins.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-limnoria",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "db469e4b8b56906fb16461e624d29efd6144520e",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-limnoria",
+   "org.opencontainers.image.title": "Limnoria",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-limnoria/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "2026.10.4-ls8"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "8080/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.21\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG LIMNORIA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    cargo \\\n    libffi-dev \\\n    openssl-dev \\\n    python3-dev && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    gnupg \\\n    python3 && \\\n  echo \"**** install app ****\" && \\\n  if [ -z ${LIMNORIA_VERSION+x} ]; then \\\n    LIMNORIA_VERSION=$(curl -sL  https://pypi.python.org/pypi/limnoria/json |jq -r '. | .info.version'); \\\n  fi && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/ \\\n    -r https://raw.githubusercontent.com/ProgVal/Limnoria/master/requirements.txt && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/ \\\n    limnoria==\"${LIMNORIA_VERSION}\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache \\\n    $HOME/.cargo\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8080\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.21\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG LIMNORIA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    cargo \\\n    libffi-dev \\\n    openssl-dev \\\n    python3-dev && \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    gnupg \\\n    python3 && \\\n  echo \"**** install app ****\" && \\\n  if [ -z ${LIMNORIA_VERSION+x} ]; then \\\n    LIMNORIA_VERSION=$(curl -sL  https://pypi.python.org/pypi/limnoria/json |jq -r '. | .info.version'); \\\n  fi && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/ \\\n    -r https://raw.githubusercontent.com/ProgVal/Limnoria/master/requirements.txt && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/ \\\n    limnoria==\"${LIMNORIA_VERSION}\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache \\\n    $HOME/.cargo\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8080\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"limnoria:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-limnoria-plugin-requirements -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-config -> init-limnoria-config\n  init-limnoria-config -> init-limnoria-plugin-requirements\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-limnoria\n  svc-limnoria -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.21\"\n}\n\"limnoria:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-limnoria-plugin-requirements"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-limnoria-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# create folders\nmkdir -p \\\n    /config/{backup,conf,data,data/tmp,web,logs,plugins}\n\n# set permissions\nlsiown -R abc:abc /config\n"
+    },
+    {
+     "name": "init-limnoria-plugin-requirements",
+     "type": "oneshot",
+     "depends_on": [
+      "init-limnoria-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nPLUGIN_REQUIREMENTS=$(find /config/plugins -maxdepth 2 -name 'requirements.txt')\nif [[ -n \"${PLUGIN_REQUIREMENTS}\" ]]; then\n    apk add --no-cache --virtual=pip-dependencies \\\n        build-base \\\n        cargo \\\n        libffi-dev \\\n        openssl-dev \\\n        python3-dev\n    while IFS= read -r line; do\n        pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/ \\\n            -r \"${line}\"\n    done <<<\"${PLUGIN_REQUIREMENTS}\"\n    apk del --purge \\\n        pip-dependencies\n    rm -rf \\\n        /tmp/* \\\n        \"${HOME}\"/.cache \\\n        \"${HOME}\"/.cargo\nfi\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-limnoria",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ \"$(find /config -maxdepth 1 -name '*.conf' | wc -l)\" -gt 1 ]]; then\n    echo \"Multiple Limnoria configuration (*.conf) files found. Only one at a time may be used. Remove the extra configurations.\"\n    while [[ ! \"$(find /config -maxdepth 1 -name '*.conf' | wc -l)\" -eq 1 ]]; do\n        sleep 5\n    done\nfi\n\nif [[ \"$(find /config -maxdepth 1 -name '*.conf' | wc -l)\" -lt 1 ]]; then\n    echo \"No config found. Please terminal into the container and run the wizard.\"\n    echo \"Example: \\\"docker exec -it -w /config -u abc limnoria limnoria-wizard\\\"\"\n    while [[ ! -f \"/config/configdone\" ]]; do\n        sleep 5\n    done\nfi\n\nCONF_FILE=$(find /config -maxdepth 1 -name '*.conf')\n\nexec \\\n    s6-setuidgid abc limnoria \\\n        \"${CONF_FILE}\"\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 153,
+    "distro": "Alpine Linux v3.21",
+    "hash": "a32a758d",
+    "by_type": {
+     "python": 49,
+     "binary": 14,
+     "apk": 89,
+     "UnknownPackage": 1
+    }
+   },
+   "arm64": {
+    "count": 153,
+    "distro": "Alpine Linux v3.21",
+    "hash": "a32a758d",
+    "by_type": {
+     "python": 49,
+     "binary": 14,
+     "apk": 89,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/limnoria/builds/2026.10.4-ls8/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-limnoria/compare/2026.10.4-ls7...2026.10.4-ls8"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 43128,
+    "sha256": "3a3dc137e65050becb09cdc6e7dd87cf7448bb775d41df37913e3b866682366f",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5290,
+    "sha256": "f07a25bab318c7232db3c677bdc308d5e2b9b23c929b1c0fb6d2bb1f3977092a",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 62741,
+    "sha256": "09ea7aa3871fe0618b9023ca18d81e2ea1f17cc751c56f26555052cd3742b5bc",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2501,
+    "sha256": "bdd5faeed04acb9aa5f4147e712d30df355c7097d932dd6979bd3db682b9b9e8",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3169,
+    "sha256": "1782566c60b4c7f88203bce361728fb06a68a9b1f4c6768f4089d238a064882a",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 11096,
+    "sha256": "e322df0c0d0e7c75a9c2df4cd8d1fcf47e49cd970d1c20f2f97d700fd8264b15",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 43322,
+    "sha256": "147910b2e30b6c34058635ee80c7e14e8fef3c8cd763f8027e2d11c2e124f6cd",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5290,
+    "sha256": "dbd465494584e81caee7ba9eb2a7b30d3d44f9f2b95ac7db1908741f4df5a9d3",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 62381,
+    "sha256": "6f4d4ec1e5f5b1cb174f92c8acf277edfa5ccc282990dbb73c36d1022d08cde5",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2503,
+    "sha256": "d4b328c2d7805856ae70fc306b7d20d1408d9337aa5bc1837e21a1bebfe59372",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3172,
+    "sha256": "23f2ac524d6411e6c37cdcbea79d837452984487ffaab86c87d4a090e67f5447",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 11096,
+    "sha256": "e322df0c0d0e7c75a9c2df4cd8d1fcf47e49cd970d1c20f2f97d700fd8264b15",
+    "url": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 43359835311,
+   "run_url": "https://github.com/linuxserver-playground/docker-limnoria/actions/runs/43359835311",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/limnoria",
+   "tags": [
+    "latest",
+    "2026.10.4-ls8",
+    "version-2026.10.4",
+    "2026.10.4",
+    "amd64-latest",
+    "amd64-2026.10.4-ls8",
+    "amd64-version-2026.10.4",
+    "amd64-2026.10.4",
+    "arm64v8-latest",
+    "arm64v8-2026.10.4-ls8",
+    "arm64v8-version-2026.10.4",
+    "arm64v8-2026.10.4"
+   ]
+  }
+ },
+ "diff": {
+  "image": "limnoria",
+  "branch": "master",
+  "tag": "2026.10.4-ls8",
+  "previous_tag": "2026.10.4-ls7",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (19a0a0d → db469e4): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "2026.10.4",
+   "to": "2026.10.4",
+   "changed": false
+  },
+  "commit": {
+   "from": "19a0a0df48b1797979414176dd4a7794c461d59a",
+   "to": "db469e4b8b56906fb16461e624d29efd6144520e",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-limnoria/compare/19a0a0df48b1797979414176dd4a7794c461d59a...db469e4b8b56906fb16461e624d29efd6144520e",
+   "commits": [
+    {
+     "sha": "db469e4b8b56906fb16461e624d29efd6144520e",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-08T23:41:08Z",
+     "url": "https://github.com/linuxserver-playground/docker-limnoria/commit/db469e4b8b56906fb16461e624d29efd6144520e",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+    "digest": "sha256:f185cfa56759be32872853ba14ca2d468c3b9e457ca37632840cfc7cd374963c"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+    "digest": "sha256:ba356b0853b0079e990e1ce4af4e4e4b4b1a5658c1ddc526e0dbafc66c4a1c4a"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 48990381,
+    "to": 48991621,
+    "delta": 1240
+   },
+   "arm64": {
+    "from": 49740090,
+    "to": 49740825,
+    "delta": 735
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=x86_64&distro=alpine-3.21.10"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=aarch64&distro=alpine-3.21.10"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:8fcd2a6bb494664fda9f09eaec2dbd7de320b3aae690e867ae64b4b53198a4fc",
+    "diff_id": "sha256:ca4b76617358b60c1c69986663c5d9500b82b01dd53401d2b0f5f2448b801054",
+    "size": 6038261,
+    "uncompressed_size": 13077443,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:72c97f9600a3aec8c06f03c38ef68b1408927b0d68c52565fd2d52fbd8e6ef6f",
+    "diff_id": "sha256:be3449c74802754c0d50bd724d01cb45742a93e84cad79f1822e83e7ac95f629",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:e56ff350f46ae4cb059d926cb0aeb4675bb96a14497bf4f3d06bc04f92a2ef6a",
+    "diff_id": "sha256:defaa23d9a4f1e3e90d9127014c35a467aadc729bc9f02ae80eba0dd2a76f823",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d5a2bc37fdde3770c309a1cbb3386418660aa4f2a2174e1dc824ac0fc2a17567",
+    "diff_id": "sha256:e5a102453ae65d4113b266870ff0f2c21f954c710d158c9589fe71f5ec4b72c3",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:f1c2bae16f491db9ed51d944951771ac9c594ad52d69e7083029e707d8ad51cb",
+    "diff_id": "sha256:bce9260fda367c005d08a1cc5f03502b985fe5f8a967f417d0df6744403b9ca5",
+    "size": 5931870,
+    "uncompressed_size": 13959426,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-09T03:53:08Z VERSION=d3c50a7f-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:ccb6ec6819ad9b7f3e358cfd36e8066fd763f291237ba62e08354927de683f91",
+    "diff_id": "sha256:329e28f26e4f1336691e419cb14e6cd26a84e3e3b31a7c7e814c0d85462fddf1",
+    "size": 4628,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:89f5dc62019bc80653ddb0651a8f7c9b9916024dbff7e322b4fa9c720335c3ed",
+    "diff_id": "sha256:82b9be01fa13b5c840a83dcf5f6b791846750464291a97b282e946ed6653659b",
+    "size": 37006649,
+    "uncompressed_size": 123054686,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-13T03:34:33Z VERSION=2026.10.4-ls8 LIMNORIA_RELEASE= /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     cargo     libffi-dev     openssl-dev     python3-dev &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     gnupg     python3 &&   echo \"**** install app ****\" &&   if [ -z ${LIMNORIA_VERSION+x} ]; then     LIMNORIA_VERSION=$(curl -sL  https://pypi.python.org/pypi/limnoria/json |jq -r '. | .info.version');   fi &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/     -r https://raw.githubusercontent.com/ProgVal/Limnoria/master/requirements.txt &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/     limnoria==\"${LIMNORIA_VERSION}\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     $HOME/.cache     $HOME/.cargo",
+    "dockerfile_lines": [
+     14,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:85ad2e17481bfc3540c3767ab1adb250850e734d0cef4458db8f506705ec2fe1",
+    "diff_id": "sha256:215f1627d6a528e47eacc0a7107cf40d7fb0736f51792eee5ebbc850d1460031",
+    "size": 1485,
+    "uncompressed_size": 1952,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     48,
+     48
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:bc4b48c28cb1cc01d25d2699ff564c4d3feb11f089dd800ef8bc58a5dd5fb0f6",
+    "diff_id": "sha256:cc3e46043a8f2f0ce452c1a7a79d3c5906aee5973b6b3a8fbe5870b0051cd7a0",
+    "size": 6866179,
+    "uncompressed_size": 18015124,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:82c6e0d0eeba92bb69d7a2b51dc05588e4d242c34b2069ae16b2d016904b873a",
+    "diff_id": "sha256:45d1a2d2bc30d7b2c0cf3fbccb78ce7b800bae1c1b8af25415a8ce208e0c4a11",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:88ccd0d437498946f90cad785aca8887132bd9fd7e0c3fd0c5c01bf8715f803c",
+    "diff_id": "sha256:f357a6eec2615257e60821824a0795db4924af083ae9d5863d02187dc8d39d9a",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:bb93051eb1759735803aef5e2c3140a898916994049e7ae4ecf53734b226afac",
+    "diff_id": "sha256:0254a31e168a878a01ffc6de2520474a3349960aee66a0af88335df84f48f5f6",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:3a13b08298244c0412b4839e9c6921595765c37aa574c2c562707e379c6b12af",
+    "diff_id": "sha256:314d2450a3de42c1210f17235b375589fb8ea8dc7252d7908af1f15b19ae3659",
+    "size": 6135135,
+    "uncompressed_size": 20693162,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-09T03:53:08Z VERSION=d3c50a7f-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:5c98fe41f2e8b853567622c4412c202e5eea356bf69b16d6a44898004cdce530",
+    "diff_id": "sha256:99b357a170fd67f69b201ee8e1a542659836092fcdf19a6d76e0a37abe13fbc2",
+    "size": 4629,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:f6c2be94973389839ebd36716d8020864a2df3821491a0e6223c1dc4282f6436",
+    "diff_id": "sha256:cb60ead5f754eaa5153ed238781e066c10fdf0fea732e2c1e5b311c9f3ec9904",
+    "size": 36724670,
+    "uncompressed_size": 126992297,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-13T03:34:33Z VERSION=2026.10.4-ls8 LIMNORIA_RELEASE= /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --virtual=build-dependencies     build-base     cargo     libffi-dev     openssl-dev     python3-dev &&   echo \"**** install runtime packages ****\" &&   apk add --no-cache     gnupg     python3 &&   echo \"**** install app ****\" &&   if [ -z ${LIMNORIA_VERSION+x} ]; then     LIMNORIA_VERSION=$(curl -sL  https://pypi.python.org/pypi/limnoria/json |jq -r '. | .info.version');   fi &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/     -r https://raw.githubusercontent.com/ProgVal/Limnoria/master/requirements.txt &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.21/     limnoria==\"${LIMNORIA_VERSION}\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /tmp/*     $HOME/.cache     $HOME/.cargo",
+    "dockerfile_lines": [
+     14,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:f999e7d55d0effa09622590fa33ab13f1e34fa7829d7b1ef773813fa28141089",
+    "diff_id": "sha256:dc79de01df9035a8cb29254256cc1a465308498a0b94e10b1c03b8d3ab4ffca3",
+    "size": 1483,
+    "uncompressed_size": 1952,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     48,
+     48
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "limnoria",
+  "tag": "2026.10.4-ls8",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/limnoria/builds/2026.10.4-ls8/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 1,
+    "total": 12,
+    "failed_tests": [
+     "Ports"
+    ],
+    "startup_seconds": 1.011,
+    "listening_ports": [],
+    "warnings": 1,
+    "rss_bytes": 6934528,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-limnoria/builds/2026.10.4-ls8/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-limnoria/builds/2026.10.4-ls8/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 1,
+    "total": 12,
+    "failed_tests": [
+     "Ports"
+    ],
+    "startup_seconds": 1.008,
+    "listening_ports": [],
+    "warnings": 1,
+    "rss_bytes": 6754304,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-limnoria/releases/download/2026.10.4-ls8/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-limnoria/builds/2026.10.4-ls8/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-limnoria/builds/2026.10.4-ls8/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "limnoria",
+    "tag": "amd64-db469e4-43359835311",
+    "arch": "amd64",
+    "started": "2026-11-13T03:36:53Z",
+    "finished": "2026-11-13T03:37:58Z",
+    "success": true,
+    "runner": "f3d8eb4079ce",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 61s: svc-cron, svc-limnoria",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "WARN",
+      "message": "not listening after 60s: 8080/tcp",
+      "seconds": 60.32
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "153 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "153 packages: syft JSON 43128 bytes gzipped, SPDX for the image attestation 414710 bytes",
+      "seconds": 0.158
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "932 dirs, 6355 files (149829744 bytes), 1241 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.10s, total 0.17s",
+      "seconds": 0.325
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.339
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, own units from the repository",
+      "seconds": 0.07
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [], rss 6934528 bytes",
+      "seconds": 0.544
+     }
+    ],
+    "warnings": {
+     "ports": "not listening after 60s: 8080/tcp"
+    },
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 6934528,
+     "pids": 14,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-limnoria"
+     ],
+     "changed_paths": 205
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "limnoria",
+    "tag": "arm64-db469e4-43359835311",
+    "arch": "arm64",
+    "started": "2026-11-13T03:36:26Z",
+    "finished": "2026-11-13T03:37:32Z",
+    "success": true,
+    "runner": "43d3f1ef1521",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 62s: svc-cron, svc-limnoria",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "WARN",
+      "message": "not listening after 60s: 8080/tcp",
+      "seconds": 61.511
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "153 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "153 packages: syft JSON 43322 bytes gzipped, SPDX for the image attestation 414830 bytes",
+      "seconds": 0.136
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "932 dirs, 6355 files (165438651 bytes), 1241 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.09s",
+      "seconds": 0.232
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.561
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "20 units, 3 from this image, own units from the repository",
+      "seconds": 0.062
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [], rss 6754304 bytes",
+      "seconds": 0.344
+     }
+    ],
+    "warnings": {
+     "ports": "not listening after 60s: 8080/tcp"
+    },
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 6754304,
+     "pids": 14,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-limnoria"
+     ],
+     "changed_paths": 205
+    }
+   }
+  }
+ }
+}
