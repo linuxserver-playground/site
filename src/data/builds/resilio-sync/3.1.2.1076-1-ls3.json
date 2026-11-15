@@ -1,0 +1,989 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "resilio-sync",
+  "repository": "linuxserver-playground/docker-resilio-sync",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "3.1.2.1076-1",
+   "upstream_clean": "3.1.2.1076-1",
+   "semver": "3.1.2",
+   "ls_build": 3,
+   "tag": "3.1.2.1076-1-ls3",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "3.1.2.1076-1-ls3",
+    "version-3.1.2.1076-1",
+    "3.1.2",
+    "amd64-latest",
+    "amd64-3.1.2.1076-1-ls3",
+    "amd64-version-3.1.2.1076-1",
+    "amd64-3.1.2",
+    "arm64v8-latest",
+    "arm64v8-3.1.2.1076-1-ls3",
+    "arm64v8-version-3.1.2.1076-1",
+    "arm64v8-3.1.2"
+   ],
+   "source": "deb_packages",
+   "source_url": "https://linux-packages.resilio.com/resilio-sync/deb/dists/resilio-sync/non-free/binary-amd64/Packages"
+  },
+  "commit": "666b82c3317f501d01975403a74be5e16e5f5f5c",
+  "created": "2026-10-28T06:06:19Z",
+  "reason": "rebuild",
+  "previous": {
+   "tag": "3.1.2.1076-1-ls2",
+   "release_url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/tag/3.1.2.1076-1-ls2"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+   "digest": "sha256:84f6719f5ac0aee8075b45bdf91857ac2eb7aba6daafc2509ffc01a88505caf4"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:6b7c2921557072f323171510d15b31b3d9972b6cd2dcc0bdbb55b193523be50d",
+    "size": 63648344,
+    "uncompressed_size": 148224923,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 19
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:1c90cb76edf26be131d4e45de89ca25cb4e9a19215c5c4fa0ece6c93c85ad5b2",
+    "size": 63052033,
+    "uncompressed_size": 175720239,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 18
+   }
+  ],
+  "index_digest": "sha256:1a0a862a70552e64a4880be7e0389ea107677bd40c54e6ffdfb95f18ca716f36",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 3.1.2.1076-1-ls3 Build-date:- 2026-10-28T06:02:37Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble@sha256:84f6719f5ac0aee8075b45bdf91857ac2eb7aba6daafc2509ffc01a88505caf4",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "3.1.2.1076-1",
+   "maintainer": "thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-28T06:02:37Z",
+   "org.opencontainers.image.description": "Resilio-sync (formerly BitTorrent Sync) uses the BitTorrent protocol to sync files and folders between all of your devices.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-resilio-sync",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "666b82c3317f501d01975403a74be5e16e5f5f5c",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-resilio-sync",
+   "org.opencontainers.image.title": "Resilio-sync",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-resilio-sync/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "3.1.2.1076-1-ls3"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/root",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "55555/tcp",
+    "8888/tcp"
+   ],
+   "volumes": [
+    "/config",
+    "/sync"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-ubuntu:noble\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SYNC_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\nRUN \\\n  echo \"**** install resilio-sync ****\" && \\\n  if [ -z ${SYNC_VERSION+x} ]; then \\\n    SYNC_VERSION=$(curl -sX GET https://linux-packages.resilio.com/resilio-sync/deb/dists/resilio-sync/non-free/binary-amd64/Packages |grep -A 7 -m 1 'Package: resilio-sync' | awk -F ': ' '/Version/{print $2;exit}'); \\\n  fi && \\\n  curl -fsSL https://linux-packages.resilio.com/resilio-sync/key.asc | tee /usr/share/keyrings/resilio-sync.asc >/dev/null && \\\n  echo \"deb [aarch=amd64 signed-by=/usr/share/keyrings/resilio-sync.asc] https://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free\" > /etc/apt/sources.list.d/resilio-sync.list && \\\n  apt-get update && \\\n  apt-get install -y --no-install-recommends \\\n    \"resilio-sync=${SYNC_VERSION}\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8888 55555\nVOLUME /config /sync\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-ubuntu:arm64v8-noble\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SYNC_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\nRUN \\\n  echo \"**** install resilio-sync ****\" && \\\n  if [ -z ${SYNC_VERSION+x} ]; then \\\n    SYNC_VERSION=$(curl -sX GET https://linux-packages.resilio.com/resilio-sync/deb/dists/resilio-sync/non-free/binary-amd64/Packages |grep -A 7 -m 1 'Package: resilio-sync' | awk -F ': ' '/Version/{print $2;exit}'); \\\n  fi && \\\n  curl -fsSL https://linux-packages.resilio.com/resilio-sync/key.asc | tee /usr/share/keyrings/resilio-sync.asc >/dev/null && \\\n  echo \"deb [aarch=arm64 signed-by=/usr/share/keyrings/resilio-sync.asc] https://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free\" > /etc/apt/sources.list.d/resilio-sync.list && \\\n  apt-get update && \\\n  apt-get install -y --no-install-recommends \\\n    \"resilio-sync=${SYNC_VERSION}\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8888 55555\nVOLUME /config /sync\n"
+  },
+  "init_graph": {
+   "d2": "\"resilio-sync:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-resilio-sync-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-resilio-sync-config\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-resilio-sync\n  svc-resilio-sync -> legacy-services\n}\nBase Images: {\n  \"baseimage-ubuntu:noble\"\n}\n\"resilio-sync:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-resilio-sync-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-resilio-sync-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# copy config\nif [[ ! -e /config/sync.conf ]]; then\n    cp /defaults/sync.conf /config/sync.conf\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /config\n\nlsiown abc:abc \\\n    /sync\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-resilio-sync",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n  exec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8888\" \\\n        s6-setuidgid abc rslsync \\\n        --nodaemon --config /config/sync.conf\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 142,
+    "distro": "Ubuntu 24.04.5 LTS",
+    "hash": "4f6b70fd",
+    "by_type": {
+     "deb": 142
+    }
+   },
+   "arm64": {
+    "count": 142,
+    "distro": "Ubuntu 24.04.5 LTS",
+    "hash": "4f6b70fd",
+    "by_type": {
+     "deb": 142
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/resilio-sync/builds/3.1.2.1076-1-ls3/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-resilio-sync/compare/3.1.2.1076-1-ls2...3.1.2.1076-1-ls3"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 40578,
+    "sha256": "a4caefff218b11481e611de4d2efd47f0851199179cc7573bf60a0b9912ae368",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 7165,
+    "sha256": "af0401924d58feae929d2f98dfaf6fbaad4d2303fe87c5da7dc9924f2285bb3b",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 48045,
+    "sha256": "ccf61b745fb32b9e66ed3f283045395778fbc845e22fd1514a7e11e5f6ab74d7",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2700,
+    "sha256": "792261f9445ea521878ba4645a79877f130d4a51bd58fd764d936642f4e32648",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 46486,
+    "sha256": "015b01542c8a2d9d7f71f075188a3be8fd5bb9935e599d3e07ddbe7cfbac88ae",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 10153,
+    "sha256": "482acf17925908d72d9e6a92500d9eaa1f3546e5925b4678622f27f7a422f9b2",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 40935,
+    "sha256": "2a71dbdbcede276b6bf0759fe0eaee45660d4f3ef13b8844efd3c95a3d0e09d5",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 7182,
+    "sha256": "e7b3f2d1a091c11ec62c8f7e5d351dbb03fe8fda1179357ea9a772e95f5646a2",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 47243,
+    "sha256": "73a9e3612e369f1d4ecb720a930218b0f0f50d13bdc3ec68482e3c97c9a9b80b",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2699,
+    "sha256": "b97dcd5ed52341d782eecf828b51dff82fd913021fbad7459565b83a10799772",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 44027,
+    "sha256": "93e3afbe6d51ed7827ffc4563c5057745359be2068ac809fafcccc749919e058",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 10153,
+    "sha256": "482acf17925908d72d9e6a92500d9eaa1f3546e5925b4678622f27f7a422f9b2",
+    "url": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40641416524,
+   "run_url": "https://github.com/linuxserver-playground/docker-resilio-sync/actions/runs/40641416524",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "resilio-sync",
+  "branch": "master",
+  "tag": "3.1.2.1076-1-ls3",
+  "previous_tag": "3.1.2.1076-1-ls2",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed"
+  ],
+  "upstream": {
+   "from": "3.1.2.1076-1",
+   "to": "3.1.2.1076-1",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+    "digest": "sha256:8ab987000b0e8001e49199a3d633327473284419740066ddb45c32428c6c0d28"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+    "digest": "sha256:84f6719f5ac0aee8075b45bdf91857ac2eb7aba6daafc2509ffc01a88505caf4"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 63647512,
+    "to": 63648344,
+    "delta": 832
+   },
+   "arm64": {
+    "from": 63051025,
+    "to": 63052033,
+    "delta": 1008
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libbrotli1",
+       "from": "1.1.0-2build2",
+       "to": "1.1.0-2ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/libbrotli1@1.1.0-2ubuntu0.1?arch=amd64&distro=ubuntu-24.04&upstream=brotli"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libbrotli1",
+       "from": "1.1.0-2build2",
+       "to": "1.1.0-2ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/libbrotli1@1.1.0-2ubuntu0.1?arch=arm64&distro=ubuntu-24.04&upstream=brotli"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:6484dc31ffd844a3c731a6a227180ddd024ed821ee764e458ace24fa5501c318",
+    "diff_id": "sha256:ebed12086c15c4cd450735b3d15a0339b1ba186afbfd3da14ff141d351f29fbc",
+    "size": 33012540,
+    "uncompressed_size": 83181356,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:014f6d6fb2142f81349eddd6bba46b483e219cef2da693aafac387d70d352bfa",
+    "diff_id": "sha256:d47f790042e87c1f653dadc7672aa6378a7bc9ff8f755eb35fb3521c85837083",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:8811a1bdd1323b73357beb6cc468c7c26482a6d3650339245743c155c2078b71",
+    "diff_id": "sha256:be047fcb6ae5ae6ef9e3c3f1bf7a5c82758cf97b9218dc9c0a66bfe062c5a530",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:f663811a75a013650ceca654f48ad3b31ce5c3d43b1239733d72effacf1a9558",
+    "diff_id": "sha256:8a1b14cee4ad787872d0957ce7bc7857f2bb11539e10da20a6d630322c93149c",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:72bd0a64cd87fa9b24bf1b653633d013f30b8887e50140b51208ee87a2511838",
+    "diff_id": "sha256:08f61f28d86230d9f8c3b4681fb570df65ad1de694c1c40a7d4fdfe06d739618",
+    "size": 273,
+    "uncompressed_size": 836,
+    "created_by": "COPY sources.list /etc/apt/",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:84ab3ebd5af56c29617e864ab898839c19ecc8c16d67dcea9192a93d41ffdc42",
+    "diff_id": "sha256:9c945e0defac8f3ae5032f35da5f88ed1c9b0440377db057d3cb9cce2b9b05ef",
+    "size": 14769136,
+    "uncompressed_size": 39411441,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-27T17:28:36Z VERSION=198b6097-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   rm -f /etc/apt/sources.list.d/ubuntu.sources &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:e05f6df64f26772cffdb95ad3e23346aad9d34cc85bf721c1eedfb9abf293b18",
+    "diff_id": "sha256:d39733e92f3bc6fe7abcd04157ae7a34cf03590c101742e974d517ef30c53b80",
+    "size": 4640,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:f2be98d1ab1fcce7ddd4897fddd2b34766df3a58bbc2684fc0949cc63de44525",
+    "diff_id": "sha256:b09a8c518711ca354f320e697afd6c6ac426a6bfe7ffc076ebb542aa9579d41f",
+    "size": 15851979,
+    "uncompressed_size": 25584123,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-28T06:02:37Z VERSION=3.1.2.1076-1-ls3 SYNC_VERSION=3.1.2.1076-1 /bin/sh -c echo \"**** install resilio-sync ****\" &&   if [ -z ${SYNC_VERSION+x} ]; then     SYNC_VERSION=$(curl -sX GET https://linux-packages.resilio.com/resilio-sync/deb/dists/resilio-sync/non-free/binary-amd64/Packages |grep -A 7 -m 1 'Package: resilio-sync' | awk -F ': ' '/Version/{print $2;exit}');   fi &&   curl -fsSL https://linux-packages.resilio.com/resilio-sync/key.asc | tee /usr/share/keyrings/resilio-sync.asc >/dev/null &&   echo \"deb [aarch=amd64 signed-by=/usr/share/keyrings/resilio-sync.asc] https://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free\" > /etc/apt/sources.list.d/resilio-sync.list &&   apt-get update &&   apt-get install -y --no-install-recommends     \"resilio-sync=${SYNC_VERSION}\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "dockerfile_lines": [
+     14,
+     30
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:c7521795e87b570d0f69e8aeb556564e509ad407f4f5cb227b73d3fe86caa93a",
+    "diff_id": "sha256:dba3f95f5c2928e753039b4cedd4729d9d07a04bbc62e9ac962c2b8ebb6d84a8",
+    "size": 1049,
+    "uncompressed_size": 923,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     33,
+     33
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:81523dfd59d8c6d13ac1da68668e3082ec8ca9416fc8219b133933326545ccb0",
+    "diff_id": "sha256:d7fee6690017eb24be53bdf0ce2137dc62e8a8aac3491592cecdf8e6a794aa39",
+    "size": 32890872,
+    "uncompressed_size": 110411734,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:948d025d8fec121073980aa956e0bd0968a08fd9849ef5e0a1051409c73a6557",
+    "diff_id": "sha256:843548e922e7b789bf4a9f48eb3c5a022f1efbb5bf7c678648d42be7a3dbe96e",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:e8c2601fab8968f96826611b9625e7bd370282183e5dd62889e85991c06a077f",
+    "diff_id": "sha256:21220bca4c0b68b18b5db2acb84603e77de7bf889a76f530f77e1dcc2c5b822d",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d936a7698c2c59864d79fd4a586458fc2abb2d9acde9929cbf7e5fbcbd257374",
+    "diff_id": "sha256:6d840d9bf2bc04dd5348f6d72dd75ab5d39871e6157deeee2e55946f92d9cfb8",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:8cb0a702ae2ac218da3cea7f6c6b9196e9f7f33ac9fad00db4fc640e251d235f",
+    "diff_id": "sha256:952bb5326944a147137b3e3af931f54eeb244df93c010bade551fa438075d4e6",
+    "size": 273,
+    "uncompressed_size": 884,
+    "created_by": "COPY sources.list.arm /etc/apt/sources.list",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:d28665fe630b451430e4268600e1435f3456ab16dca234437574a74b44bbc4c9",
+    "diff_id": "sha256:258b18328834e3621506b16011381d317fd35d61f3cc37b75cb537a4ed6ffd94",
+    "size": 14716366,
+    "uncompressed_size": 40870457,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-27T17:28:36Z VERSION=198b6097-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   rm -f /etc/apt/sources.list.d/ubuntu.sources &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b512a78bb74bfe414e893edecc47e71a782f8c7c40b36f44c99bfbf9ffa7e569",
+    "diff_id": "sha256:f852d460a8d23cd99eebed09efe2ad0e6801c7a9968990b29a4ed9456e03c800",
+    "size": 4641,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:49bd5d5fe2ead69e0ddeb7a2bbd6d79cff4bb5ca8de11089f7cd83967e433101",
+    "diff_id": "sha256:b674f2af78eaef95fa554f8f7a7ef26da3b12f3c6a522e27dc301a2cca148eda",
+    "size": 15430106,
+    "uncompressed_size": 24389997,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-28T06:02:37Z VERSION=3.1.2.1076-1-ls3 SYNC_VERSION=3.1.2.1076-1 /bin/sh -c echo \"**** install resilio-sync ****\" &&   if [ -z ${SYNC_VERSION+x} ]; then     SYNC_VERSION=$(curl -sX GET https://linux-packages.resilio.com/resilio-sync/deb/dists/resilio-sync/non-free/binary-amd64/Packages |grep -A 7 -m 1 'Package: resilio-sync' | awk -F ': ' '/Version/{print $2;exit}');   fi &&   curl -fsSL https://linux-packages.resilio.com/resilio-sync/key.asc | tee /usr/share/keyrings/resilio-sync.asc >/dev/null &&   echo \"deb [aarch=arm64 signed-by=/usr/share/keyrings/resilio-sync.asc] https://linux-packages.resilio.com/resilio-sync/deb resilio-sync non-free\" > /etc/apt/sources.list.d/resilio-sync.list &&   apt-get update &&   apt-get install -y --no-install-recommends     \"resilio-sync=${SYNC_VERSION}\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "dockerfile_lines": [
+     14,
+     30
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:c7521795e87b570d0f69e8aeb556564e509ad407f4f5cb227b73d3fe86caa93a",
+    "diff_id": "sha256:dba3f95f5c2928e753039b4cedd4729d9d07a04bbc62e9ac962c2b8ebb6d84a8",
+    "size": 1049,
+    "uncompressed_size": 923,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     33,
+     33
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "resilio-sync",
+  "tag": "3.1.2.1076-1-ls3",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/resilio-sync/builds/3.1.2.1076-1-ls3/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [
+     "8888/tcp",
+     "55555/tcp",
+     "1900/udp",
+     "5351/udp",
+     "45838/udp",
+     "55555/udp",
+     "56544/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 36470784,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [
+     "8888/tcp",
+     "55555/tcp",
+     "1900/udp",
+     "5351/udp",
+     "41249/udp",
+     "49277/udp",
+     "55555/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 34254848,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-resilio-sync/releases/download/3.1.2.1076-1-ls3/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-resilio-sync/builds/3.1.2.1076-1-ls3/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "resilio-sync",
+    "tag": "amd64-666b82c-40641416524",
+    "arch": "amd64",
+    "started": "2026-10-28T06:04:57Z",
+    "finished": "2026-10-28T06:05:17Z",
+    "success": true,
+    "runner": "39485d89b087",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-resilio-sync",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8888/tcp, 55555/tcp",
+      "seconds": 0.059
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8888/gui after 0.0s",
+      "seconds": 0.027
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "142 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "142 packages: syft JSON 40578 bytes gzipped, SPDX for the image attestation 289693 bytes",
+      "seconds": 0.125
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "886 dirs, 4528 files (147352935 bytes), 1188 symlinks, 2 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.07s, total 0.11s",
+      "seconds": 0.238
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.949
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.052
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8888/gui",
+      "seconds": 10.708
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [8888, 55555], rss 36470784 bytes",
+      "seconds": 0.365
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 36470784,
+     "pids": 14,
+     "listening_tcp": [
+      8888,
+      55555
+     ],
+     "listening_udp": [
+      1900,
+      5351,
+      45838,
+      55555,
+      56544
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-resilio-sync"
+     ],
+     "changed_paths": 206
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "resilio-sync",
+    "tag": "arm64-666b82c-40641416524",
+    "arch": "arm64",
+    "started": "2026-10-28T06:03:56Z",
+    "finished": "2026-10-28T06:04:14Z",
+    "success": true,
+    "runner": "8aa1f0cac7d9",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-resilio-sync",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8888/tcp, 55555/tcp",
+      "seconds": 0.046
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8888/gui after 0.0s",
+      "seconds": 0.028
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "142 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "142 packages: syft JSON 40935 bytes gzipped, SPDX for the image attestation 289693 bytes",
+      "seconds": 0.144
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "885 dirs, 4529 files (174847655 bytes), 1185 symlinks, 2 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.07s",
+      "seconds": 0.179
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.367
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.056
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8888/gui",
+      "seconds": 10.86
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [8888, 55555], rss 34254848 bytes",
+      "seconds": 0.262
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 34254848,
+     "pids": 14,
+     "listening_tcp": [
+      8888,
+      55555
+     ],
+     "listening_udp": [
+      1900,
+      5351,
+      41249,
+      49277,
+      55555
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-resilio-sync"
+     ],
+     "changed_paths": 204
+    }
+   }
+  }
+ }
+}
