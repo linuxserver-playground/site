@@ -1,0 +1,981 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "ombi",
+  "repository": "linuxserver-playground/docker-ombi",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v4.53.10",
+   "upstream_clean": "v4.53.10",
+   "semver": "4.53.10",
+   "ls_build": 3,
+   "tag": "v4.53.10-ls3",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v4.53.10-ls3",
+    "version-v4.53.10",
+    "4.53.10",
+    "amd64-latest",
+    "amd64-v4.53.10-ls3",
+    "amd64-version-v4.53.10",
+    "amd64-4.53.10",
+    "arm64v8-latest",
+    "arm64v8-v4.53.10-ls3",
+    "arm64v8-version-v4.53.10",
+    "arm64v8-4.53.10"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/Ombi-app/Ombi/releases/tag/v4.53.10"
+  },
+  "commit": "87eba60cf9047173c628f921507404b50c2501a2",
+  "created": "2026-10-29T12:07:18Z",
+  "reason": "rebuild",
+  "previous": {
+   "tag": "v4.53.10-ls2",
+   "release_url": "https://github.com/linuxserver-playground/docker-ombi/releases/tag/v4.53.10-ls2"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+   "digest": "sha256:4a0e605dd0422df67bee626f6d3a8e11e66819f83290da9856ac045404b94266"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:e02084f2e043a74b9afdd56035fa0b854c461aab81623a56905aafe0d3e05a66",
+    "size": 124826411,
+    "uncompressed_size": 302298320,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 31
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:78a815d31fe39e0621b60a3ab806872b8b3a0a45b663955d9c5615c78042de66",
+    "size": 123082618,
+    "uncompressed_size": 341521436,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 29
+   }
+  ],
+  "index_digest": "sha256:fe071711169f4f8fa5644e7d2e34aa0d782ea136cabb98b3af64f06239ad008d",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v4.53.10-ls3 Build-date:- 2026-10-29T12:01:44Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble@sha256:4a0e605dd0422df67bee626f6d3a8e11e66819f83290da9856ac045404b94266",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v4.53.10",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-29T12:01:44Z",
+   "org.opencontainers.image.description": "Ombi allows you to host your own Plex Request and user management system.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-ombi",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "87eba60cf9047173c628f921507404b50c2501a2",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-ombi",
+   "org.opencontainers.image.title": "Ombi",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-ombi/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v4.53.10-ls3"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/config",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "COMPlus_EnableDiagnostics=0",
+    "DEBIAN_FRONTEND=noninteractive",
+    "TMPDIR=/run/ombi-temp"
+   ],
+   "exposed_ports": [
+    "3579/tcp"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "FROM ghcr.io/linuxserver-playground/baseimage-ubuntu:noble\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG OMBI_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment settings\nENV HOME=\"/config\" \\\n  COMPlus_EnableDiagnostics=0 \\\n  DEBIAN_FRONTEND=\"noninteractive\" \\\n  TMPDIR=/run/ombi-temp\n\nRUN \\\n  apt-get update && \\\n  apt-get install -y \\\n    libicu74 && \\\n  echo \"**** install ombi ****\" && \\\n  mkdir -p \\\n    /app/ombi && \\\n  if [ -z ${OMBI_RELEASE+x} ]; then \\\n    OMBI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Ombi-app/Ombi/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n  /tmp/ombi-src.tar.gz -L \\\n    \"https://github.com/Ombi-app/Ombi/releases/download/${OMBI_RELEASE}/linux-x64.tar.gz\" && \\\n  tar xzf /tmp/ombi-src.tar.gz -C \\\n    /app/ombi/ && \\\n  chmod +x /app/ombi/Ombi && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/*\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 3579\n",
+   "arm64": "FROM ghcr.io/linuxserver-playground/baseimage-ubuntu:arm64v8-noble\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG OMBI_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment settings\nENV HOME=\"/config\" \\\n  COMPlus_EnableDiagnostics=0 \\\n  DEBIAN_FRONTEND=\"noninteractive\" \\\n  TMPDIR=/run/ombi-temp\n\nRUN \\\n  apt-get update && \\\n  apt-get install -y \\\n    libicu74 && \\\n  echo \"**** install ombi ****\" && \\\n  mkdir -p \\\n    /app/ombi && \\\n  if [ -z ${OMBI_RELEASE+x} ]; then \\\n    OMBI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Ombi-app/Ombi/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n  /tmp/ombi-src.tar.gz -L \\\n    \"https://github.com/Ombi-app/Ombi/releases/download/${OMBI_RELEASE}/linux-arm64.tar.gz\" && \\\n  tar xzf /tmp/ombi-src.tar.gz -C \\\n    /app/ombi/ && \\\n  chmod +x /app/ombi/Ombi && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/*\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 3579\n"
+  },
+  "init_graph": {
+   "d2": "\"ombi:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-ombi-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-config -> init-ombi-config\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-ombi\n  svc-ombi -> legacy-services\n}\nBase Images: {\n  \"baseimage-ubuntu:noble\"\n}\n\"ombi:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-ombi-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-ombi-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p /run/ombi-temp\n\n# permissions\nlsiown -R abc:abc \\\n    /run/ombi-temp \\\n    /config\n\nif [[ -z ${LSIO_READ_ONLY_FS} ]]; then\n    lsiown abc:abc /app/ombi/ClientApp/dist/browser/index.html\nfi\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-ombi",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -n \"${BASE_URL}\" ]]; then\n    EXTRA_PARAM=\"--baseurl ${BASE_URL}\"\nfi\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z 127.0.0.1 3579\" \\\n        cd /app/ombi s6-setuidgid abc /app/ombi/Ombi --storage \"/config\" --host http://*:3579 ${EXTRA_PARAM}\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 231,
+    "distro": "Ubuntu 24.04.5 LTS",
+    "hash": "189bf846",
+    "by_type": {
+     "dotnet": 89,
+     "deb": 142
+    }
+   },
+   "arm64": {
+    "count": 231,
+    "distro": "Ubuntu 24.04.5 LTS",
+    "hash": "47f9af3c",
+    "by_type": {
+     "dotnet": 89,
+     "deb": 142
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/ombi/builds/v4.53.10-ls3/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-ombi/compare/v4.53.10-ls2...v4.53.10-ls3",
+   "upstream_url": "https://github.com/Ombi-app/Ombi/releases/tag/v4.53.10"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 55893,
+    "sha256": "360f7e1e58531415b0ac81c44b770750413212e2ad7ca8b322458cade8513555",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 6908,
+    "sha256": "c8ba044cb9bd0554cebb2803b3d47a4c0bcf08ccea1a155bd7734dc56ac1b70f",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 50084,
+    "sha256": "c92b8edbdc6c4fbd7f01d7dac42caf31d54ad281a5b1081ab6aed835e5f325f9",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2574,
+    "sha256": "d2388cda90fcf05212e5c92a185ea73c8b3805e0b3588f25b436662e3050880f",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 45413,
+    "sha256": "71e36d479b697fcfd26c60f264e50bb97269578ac2b367bdb433de6f66b31c2f",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 23200,
+    "sha256": "f73fa4c3bc7234a08ebe8323b4182abc0b70c16631a1401ad88d18f5346e2c42",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 55911,
+    "sha256": "12ff8786db3561272f1722e85c425019503513e9e8bbeb15e63083e18f5cb42f",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 6927,
+    "sha256": "643a199498852c74c8f86c3182aa129bb420af74bc55c61d28e5a21f3149cc49",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 49353,
+    "sha256": "ab122ca9ca8c689febd2f645fed5c36e67931285fe7312bc0eb992b9ee47cc52",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2574,
+    "sha256": "466f2e333584607da2c3e45baeddbc2d17f588172ecf779cc2e9d4b41beb8526",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 45213,
+    "sha256": "97f5ccf8cde6759cb40df3af662d1a542a02df7e26a865499f3e240686d926bd",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 23664,
+    "sha256": "78a53069439472c9cdf544fa41071aa8ffbe79b273d4e8a6cdf0639f56991194",
+    "url": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40869861708,
+   "run_url": "https://github.com/linuxserver-playground/docker-ombi/actions/runs/40869861708",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/ombi",
+   "tags": [
+    "latest",
+    "v4.53.10-ls3",
+    "version-v4.53.10",
+    "4.53.10",
+    "amd64-latest",
+    "amd64-v4.53.10-ls3",
+    "amd64-version-v4.53.10",
+    "amd64-4.53.10",
+    "arm64v8-latest",
+    "arm64v8-v4.53.10-ls3",
+    "arm64v8-version-v4.53.10",
+    "arm64v8-4.53.10"
+   ]
+  }
+ },
+ "diff": {
+  "image": "ombi",
+  "branch": "master",
+  "tag": "v4.53.10-ls3",
+  "previous_tag": "v4.53.10-ls2",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed"
+  ],
+  "upstream": {
+   "from": "v4.53.10",
+   "to": "v4.53.10",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+    "digest": "sha256:8ab987000b0e8001e49199a3d633327473284419740066ddb45c32428c6c0d28"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+    "digest": "sha256:4a0e605dd0422df67bee626f6d3a8e11e66819f83290da9856ac045404b94266"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 124825410,
+    "to": 124826411,
+    "delta": 1001
+   },
+   "arm64": {
+    "from": 123081559,
+    "to": 123082618,
+    "delta": 1059
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libbrotli1",
+       "from": "1.1.0-2build2",
+       "to": "1.1.0-2ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/libbrotli1@1.1.0-2ubuntu0.1?arch=amd64&distro=ubuntu-24.04&upstream=brotli"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libbrotli1",
+       "from": "1.1.0-2build2",
+       "to": "1.1.0-2ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/libbrotli1@1.1.0-2ubuntu0.1?arch=arm64&distro=ubuntu-24.04&upstream=brotli"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:d01db7591d857354f8463fd5a716420d37c20bb828fc3bdfd806ebf4c15e0b56",
+    "diff_id": "sha256:69a4087f083ed6027c9393d178e78598db1827331454a44cae980a8adc8f63f1",
+    "size": 33012392,
+    "uncompressed_size": 83181356,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:e84497b425c0edfca73676eefd194725c043bd2dd32107918a2b2975abd699aa",
+    "diff_id": "sha256:46d04fc5caeae81a48683bb57accdb66e3a6337b63f062378ac59714d7e336aa",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:945cf510e6daff3fb071a4c3125cb26267222ca54275c3686f318ba031c1612b",
+    "diff_id": "sha256:0b90bc0fd8090fd10b90efb654f18c5975539d4c307d1c6b4983bb49481cdb5e",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d46c15623d24b280b1fee4041054c3d71136f1b209eb896e482b3a4b76f17f56",
+    "diff_id": "sha256:c6fdc259a2aa2e97260a072b285412fe8b782a4aaf18cc6adbc094a2f0b2bd8e",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:d5ef6287fd8e4cdcb4d6adf1a7fe8cc0412dee56ce12a866b20356bb226c5354",
+    "diff_id": "sha256:5c221c49b05c93d4b663040eb9e4c07e9e80368c071c5c05ca2434707ce930c5",
+    "size": 270,
+    "uncompressed_size": 836,
+    "created_by": "COPY sources.list /etc/apt/",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:d63dc22962476908dc4ba5213e277b0d87bf6985326034bac3f0873fbb72cb28",
+    "diff_id": "sha256:26dbcc9b456998faad5760a519f6716d96ce1ad5e030f94ad17598304180bf00",
+    "size": 14769447,
+    "uncompressed_size": 39411441,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-28T23:19:57Z VERSION=4df45e38-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   rm -f /etc/apt/sources.list.d/ubuntu.sources &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:c230a97eee65a237f4b32c5f0c458279c29d374039e6eae62cbd50648477ceb1",
+    "diff_id": "sha256:9f7433769675a41030b3e838ea955a6429cd1d24048299bece78ca5e21d6e862",
+    "size": 4643,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:13e12c7c1131f0c7c0c21f1dbb974be11c853c4ca1e650202759dd3dbe0a3506",
+    "diff_id": "sha256:99192e3bec3024ed58b12c9148638069fc7daf82898ac3aa4882683d3af9ab4d",
+    "size": 77029950,
+    "uncompressed_size": 179657721,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-29T12:01:44Z VERSION=v4.53.10-ls3 OMBI_RELEASE=v4.53.10 /bin/sh -c apt-get update &&   apt-get install -y     libicu74 &&   echo \"**** install ombi ****\" &&   mkdir -p     /app/ombi &&   if [ -z ${OMBI_RELEASE+x} ]; then     OMBI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Ombi-app/Ombi/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o   /tmp/ombi-src.tar.gz -L     \"https://github.com/Ombi-app/Ombi/releases/download/${OMBI_RELEASE}/linux-x64.tar.gz\" &&   tar xzf /tmp/ombi-src.tar.gz -C     /app/ombi/ &&   chmod +x /app/ombi/Ombi &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*",
+    "dockerfile_lines": [
+     18,
+     40
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:d1812795069bb3d4d5355bfa3f8c7d60898b14b957aa3b878a8f9e682d24ca8d",
+    "diff_id": "sha256:835eb6bac83e14a5207b30419a0496396a36b13b53f7fdd4375ceee8d3cfaad1",
+    "size": 988,
+    "uncompressed_size": 722,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     43,
+     43
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:4b791db32d2e029faaf5552f4d65a0d87b106cdb688c72398eb70b801490ecee",
+    "diff_id": "sha256:3e81e56c770592fdf109b96783b815c26d22ce084732264fa2ae9ce8bdde1d39",
+    "size": 32890754,
+    "uncompressed_size": 110411734,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:5adc70fa5baaee9bf3602256f77d1f793df5b679a9c541540372d4644d9a86a5",
+    "diff_id": "sha256:463838f06e4c253fab4949c1a35b5b8887c21d7cdd617314cb37e8dbe13295e1",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:740b178e2623adf5413690ab7188ad4c7d3b7f532700703aab846490badd9f93",
+    "diff_id": "sha256:12eb94832ab02d810fb301e090b03db43866efd3da0258115d3b08c20e1b22ef",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:b3aa6e325dcbf98a0efa505d342da57c71bbd195174fba37fe60efb38f12ef7a",
+    "diff_id": "sha256:189cae40d3a894792ef9f8841833211f9a5f9cd3c4e87a6798b4f78cfe747988",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:0c56b924cdcff3178277408b4cf905964658898f558a8d41017d99b37ae8bbb9",
+    "diff_id": "sha256:4d4d8ea7218536b50faa4217902871b7742768408a913219d76549015ba903e7",
+    "size": 273,
+    "uncompressed_size": 884,
+    "created_by": "COPY sources.list.arm /etc/apt/sources.list",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:d431775c3183b73d4545a5368b228eef1c9e88acd3754eb82f7487562c16c116",
+    "diff_id": "sha256:cd3e158742859712bc4403eda0772f28d2db5f329a1c7d8a1c91b32deea8ff6c",
+    "size": 14716560,
+    "uncompressed_size": 40870457,
+    "created_by": "RUN |7 BUILD_DATE=2026-10-28T23:19:57Z VERSION=4df45e38-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   rm -f /etc/apt/sources.list.d/ubuntu.sources &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:f660220be32c9257f4a34924188b3f8895e5b3e03ce93cafe585da80ccb857a5",
+    "diff_id": "sha256:55896ec48d14c3c5d487ecb297950397f49a1595b64ab70f95044608abe8e1b7",
+    "size": 4641,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:80f39a63655111c9571c0d201101f99d43e685e8816f114987d040554dafd351",
+    "diff_id": "sha256:f79c8661f540f4502cc4805052cd283d3d387d068129e2f2d31d86a08f862c0f",
+    "size": 75460677,
+    "uncompressed_size": 190191395,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-29T12:01:44Z VERSION=v4.53.10-ls3 OMBI_RELEASE=v4.53.10 /bin/sh -c apt-get update &&   apt-get install -y     libicu74 &&   echo \"**** install ombi ****\" &&   mkdir -p     /app/ombi &&   if [ -z ${OMBI_RELEASE+x} ]; then     OMBI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Ombi-app/Ombi/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o   /tmp/ombi-src.tar.gz -L     \"https://github.com/Ombi-app/Ombi/releases/download/${OMBI_RELEASE}/linux-arm64.tar.gz\" &&   tar xzf /tmp/ombi-src.tar.gz -C     /app/ombi/ &&   chmod +x /app/ombi/Ombi &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*",
+    "dockerfile_lines": [
+     18,
+     40
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:53956281eabe9fa60faf7de6f51b99d93d0be8df50306a49ee84225f43a754dc",
+    "diff_id": "sha256:856b404c1096acf751ac0b2bd913de5329ac91a64fe629a8ba29d68e74d15a29",
+    "size": 988,
+    "uncompressed_size": 722,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     43,
+     43
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "ombi",
+  "tag": "v4.53.10-ls3",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/ombi/builds/v4.53.10-ls3/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 5.022,
+    "listening_ports": [
+     "3579/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 227082240,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 5.023,
+    "listening_ports": [
+     "3579/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 262160384,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-ombi/releases/download/v4.53.10-ls3/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-ombi/builds/v4.53.10-ls3/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "ombi",
+    "tag": "amd64-87eba60-40869861708",
+    "arch": "amd64",
+    "started": "2026-10-29T12:05:54Z",
+    "finished": "2026-10-29T12:06:17Z",
+    "success": true,
+    "runner": "d303168aa124",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 5.022,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 5.0s",
+      "seconds": 5.022
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-ombi",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3579/tcp",
+      "seconds": 0.061
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3579/ after 0.1s",
+      "seconds": 0.079
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "231 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "231 packages: syft JSON 55893 bytes gzipped, SPDX for the image attestation 409498 bytes",
+      "seconds": 0.138
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "894 dirs, 4683 files (301417949 bytes), 1187 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.07s, total 0.12s",
+      "seconds": 0.268
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.907
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.049
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3579/",
+      "seconds": 10.737
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [3579], rss 227082240 bytes",
+      "seconds": 0.394
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 227082240,
+     "pids": 14,
+     "listening_tcp": [
+      3579
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-ombi"
+     ],
+     "changed_paths": 220
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "ombi",
+    "tag": "arm64-87eba60-40869861708",
+    "arch": "arm64",
+    "started": "2026-10-29T12:03:16Z",
+    "finished": "2026-10-29T12:03:39Z",
+    "success": true,
+    "runner": "084f2720776d",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 5.023,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 5.0s",
+      "seconds": 5.023
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-ombi",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3579/tcp",
+      "seconds": 0.048
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3579/ after 0.1s",
+      "seconds": 0.093
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "231 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "231 packages: syft JSON 55911 bytes gzipped, SPDX for the image attestation 409518 bytes",
+      "seconds": 0.158
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "893 dirs, 4684 files (340640312 bytes), 1184 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.07s",
+      "seconds": 0.195
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.727
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, base units assumed",
+      "seconds": 0.055
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3579/",
+      "seconds": 10.889
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [3579], rss 262160384 bytes",
+      "seconds": 0.289
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 262160384,
+     "pids": 14,
+     "listening_tcp": [
+      3579
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-ombi"
+     ],
+     "changed_paths": 220
+    }
+   }
+  }
+ }
+}
