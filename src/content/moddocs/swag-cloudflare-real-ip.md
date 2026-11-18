@@ -1,0 +1,30 @@
+---
+branch: "swag-cloudflare-real-ip"
+---
+At startup the mod reads Cloudflare's IPv4 and IPv6 ranges from the Cloudflare API (the published lists are
+https://www.cloudflare.com/ips-v4 and https://www.cloudflare.com/ips-v6), adds the container's own interface
+networks, and writes one `set_real_ip_from` line per range to `/config/nginx/cf_real-ip.conf` in your
+persistent data.
+
+To enable nginx to read the IPs from this file, you need the following in your `nginx.conf` (`http` section):
+
+```nginx
+real_ip_header X-Forwarded-For;
+real_ip_recursive on;
+include /config/nginx/cf_real-ip.conf;
+```
+
+You may need to add this mod (and the above config changes) to every nginx based container being proxied by
+SWAG.
+
+## Cloudflare tunnels
+
+In case you use Cloudflare tunnels, the real IP might be reported in containers as 127.0.0.1. In this case,
+add `set_real_ip_from 127.0.0.1;` after the include in the `http` section of `nginx.conf`:
+
+```nginx
+real_ip_header X-Forwarded-For;
+real_ip_recursive on;
+include /config/nginx/cf_real-ip.conf;
+set_real_ip_from 127.0.0.1;
+```

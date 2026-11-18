@@ -1,0 +1,1030 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "nzbget",
+  "repository": "linuxserver-playground/docker-nzbget",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v26.3",
+   "upstream_clean": "v26.3",
+   "semver": "26.3.20261109",
+   "ls_build": 8,
+   "tag": "v26.3-ls8",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v26.3-ls8",
+    "version-v26.3",
+    "26.3.20261109",
+    "amd64-latest",
+    "amd64-v26.3-ls8",
+    "amd64-version-v26.3",
+    "amd64-26.3.20261109",
+    "arm64v8-latest",
+    "arm64v8-v26.3-ls8",
+    "arm64v8-version-v26.3",
+    "arm64v8-26.3.20261109"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/nzbgetcom/nzbget/releases/tag/v26.3"
+  },
+  "commit": "edb1d8467236d63e6a0de1adc622bbfa9d82e3ed",
+  "created": "2026-11-09T22:45:54Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v26.3-ls7",
+   "release_url": "https://github.com/linuxserver-playground/docker-nzbget/releases/tag/v26.3-ls7"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:7d6001cac77d8b850ae651b738fc3633b528c2553c5f7c24969feaa5a3d0ab4f",
+    "size": 53758283,
+    "uncompressed_size": 132411666,
+    "layers": 11,
+    "runner": "Linux-X64",
+    "build_seconds": 166
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:2d494c52b6ba1cc2b339ba37cc1035d17bbff57e51cc20085d098a75c63aa740",
+    "size": 54347370,
+    "uncompressed_size": 146841164,
+    "layers": 11,
+    "runner": "Linux-ARM64",
+    "build_seconds": 212
+   }
+  ],
+  "index_digest": "sha256:032ab414e251748bd812e116e8080a9e41ded7c2d99aaf82a20953533a6a5cc3",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v26.3-ls8 Build-date:- 2026-11-09T22:39:28Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v26.3",
+   "maintainer": "thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-09T22:39:28Z",
+   "org.opencontainers.image.description": "Nzbget is a usenet downloader, written in C++ and designed with performance in mind to achieve maximum download speed by using very little system resources.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-nzbget",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "edb1d8467236d63e6a0de1adc622bbfa9d82e3ed",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-nzbget",
+   "org.opencontainers.image.title": "Nzbget",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-nzbget/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v26.3-ls8"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "6789/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/unrar:latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set NZBGET version\nARG NZBGET_RELEASE\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add \\\n    boost-dev \\\n    build-base \\\n    cmake \\\n    git \\\n    libxml2-dev \\\n    libxslt-dev \\\n    ncurses-dev \\\n    openssl-dev && \\\n  echo \"**** build nzbget ****\" && \\\n  if [ -z ${NZBGET_RELEASE+x} ]; then \\\n    NZBGET_RELEASE=$(curl -sX GET \"https://api.github.com/repos/nzbgetcom/nzbget/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p /nzbget && \\\n  git clone https://github.com/nzbgetcom/nzbget.git nzbget && \\\n  cd nzbget/ && \\\n  git checkout ${NZBGET_RELEASE} && \\\n  mkdir -p build && \\\n  cd build && \\\n  cmake .. -DCMAKE_INSTALL_PREFIX=/app/nzbget && \\\n  cmake --build . -j 2 && \\\n  cmake --build . --target install-conf && \\\n  cmake --install . && \\\n  mv /app/nzbget/bin/nzbget /app/nzbget/ && \\\n  rm -rf /app/nzbget/bin/ && \\\n  rm -rf /app/nzbget/etc/ && \\\n  sed -i \\\n    -e \"s|^MainDir=.*|MainDir=/config|g\" \\\n    -e \"s|^ScriptDir=.*|ScriptDir=$\\{MainDir\\}/scripts|g\" \\\n    -e \"s|^WebDir=.*|WebDir=$\\{AppDir\\}/webui|g\" \\\n    -e \"s|^ConfigTemplate=.*|ConfigTemplate=$\\{AppDir\\}/webui/nzbget.conf.template|g\" \\\n    -e \"s|^UnrarCmd=.*|UnrarCmd=unrar|g\" \\\n    -e \"s|^SevenZipCmd=.*|SevenZipCmd=7z|g\" \\\n    -e \"s|^CertStore=.*|CertStore=$\\{AppDir\\}/cacert.pem|g\" \\\n    -e \"s|^CertCheck=.*|CertCheck=yes|g\" \\\n    -e \"s|^DestDir=.*|DestDir=/downloads/completed|g\" \\\n    -e \"s|^InterDir=.*|InterDir=/downloads/intermediate|g\" \\\n    -e \"s|^LogFile=.*|LogFile=$\\{MainDir\\}/nzbget.log|g\" \\\n    -e \"s|^AuthorizedIP=.*|AuthorizedIP=127.0.0.1|g\" \\\n  /app/nzbget/share/nzbget/nzbget.conf && \\\n  mv /app/nzbget/share/nzbget/webui /app/nzbget/ && \\\n  cp /app/nzbget/share/nzbget/nzbget.conf /app/nzbget/webui/nzbget.conf.template && \\\n  ln -s /usr/bin/7z /app/nzbget/7za && \\\n  ln -s /usr/bin/unrar /app/nzbget/unrar && \\\n  cp /nzbget/pubkey.pem /app/nzbget/pubkey.pem && \\\n  curl -o /app/nzbget/cacert.pem -L \"https://curl.se/ca/cacert.pem\"\n\n# Runtime Stage\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    build-base && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    7zip \\\n    boost1.84-filesystem \\\n    boost1.84-json \\\n    libxml2 \\\n    libxslt \\\n    openssl \\\n    python3 && \\\n  echo \"**** install python packages ****\" && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ \\\n    apprise \\\n    pynzb \\\n    requests && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root/.cache \\\n    /root/.cargo \\\n    /tmp/*\n\n# add local files and files from buildstage\nCOPY --from=buildstage /app/nzbget /app/nzbget\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nVOLUME /config\nEXPOSE 6789\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/unrar:arm64v8-latest AS unrar\n\nENV LSIO_FIRST_PARTY=true\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set NZBGET version\nARG NZBGET_RELEASE\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add \\\n    boost-dev \\\n    build-base \\\n    cmake \\\n    git \\\n    libxml2-dev \\\n    libxslt-dev \\\n    ncurses-dev \\\n    openssl-dev && \\\n  echo \"**** build nzbget ****\" && \\\n  if [ -z ${NZBGET_RELEASE+x} ]; then \\\n    NZBGET_RELEASE=$(curl -sX GET \"https://api.github.com/repos/nzbgetcom/nzbget/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p /nzbget && \\\n  git clone https://github.com/nzbgetcom/nzbget.git nzbget && \\\n  cd nzbget/ && \\\n  git checkout ${NZBGET_RELEASE} && \\\n  mkdir -p build && \\\n  cd build && \\\n  cmake .. -DCMAKE_INSTALL_PREFIX=/app/nzbget && \\\n  cmake --build . -j 2 && \\\n  cmake --build . --target install-conf && \\\n  cmake --install . && \\\n  mv /app/nzbget/bin/nzbget /app/nzbget/ && \\\n  rm -rf /app/nzbget/bin/ && \\\n  rm -rf /app/nzbget/etc/ && \\\n  sed -i \\\n    -e \"s|^MainDir=.*|MainDir=/config|g\" \\\n    -e \"s|^ScriptDir=.*|ScriptDir=$\\{MainDir\\}/scripts|g\" \\\n    -e \"s|^WebDir=.*|WebDir=$\\{AppDir\\}/webui|g\" \\\n    -e \"s|^ConfigTemplate=.*|ConfigTemplate=$\\{AppDir\\}/webui/nzbget.conf.template|g\" \\\n    -e \"s|^UnrarCmd=.*|UnrarCmd=unrar|g\" \\\n    -e \"s|^SevenZipCmd=.*|SevenZipCmd=7z|g\" \\\n    -e \"s|^CertStore=.*|CertStore=$\\{AppDir\\}/cacert.pem|g\" \\\n    -e \"s|^CertCheck=.*|CertCheck=yes|g\" \\\n    -e \"s|^DestDir=.*|DestDir=/downloads/completed|g\" \\\n    -e \"s|^InterDir=.*|InterDir=/downloads/intermediate|g\" \\\n    -e \"s|^LogFile=.*|LogFile=$\\{MainDir\\}/nzbget.log|g\" \\\n    -e \"s|^AuthorizedIP=.*|AuthorizedIP=127.0.0.1|g\" \\\n  /app/nzbget/share/nzbget/nzbget.conf && \\\n  mv /app/nzbget/share/nzbget/webui /app/nzbget/ && \\\n  cp /app/nzbget/share/nzbget/nzbget.conf /app/nzbget/webui/nzbget.conf.template && \\\n  ln -s /usr/bin/7z /app/nzbget/7za && \\\n  ln -s /usr/bin/unrar /app/nzbget/unrar && \\\n  cp /nzbget/pubkey.pem /app/nzbget/pubkey.pem && \\\n  curl -o /app/nzbget/cacert.pem -L \"https://curl.se/ca/cacert.pem\"\n\n# Runtime Stage\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    build-base && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    7zip \\\n    boost1.84-filesystem \\\n    boost1.84-json \\\n    libxml2 \\\n    libxslt \\\n    openssl \\\n    python3 && \\\n  echo \"**** install python packages ****\" && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    wheel && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ \\\n    apprise \\\n    pynzb \\\n    requests && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /root/.cache \\\n    /root/.cargo \\\n    /tmp/*\n\n# add local files and files from buildstage\nCOPY --from=buildstage /app/nzbget /app/nzbget\nCOPY root/ /\n\n# add unrar\nCOPY --from=unrar /usr/bin/unrar-alpine /usr/bin/unrar\n\n# ports and volumes\nVOLUME /config\nEXPOSE 6789\n"
+  },
+  "init_graph": {
+   "d2": "\"nzbget:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-nzbget-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-config -> init-nzbget-config\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-nzbget\n  svc-nzbget -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"nzbget:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-nzbget-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-nzbget-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# check if config file exists in /config\nif [[ ! -f /config/nzbget.conf ]]; then\n    cp /app/nzbget/share/nzbget/nzbget.conf /config/nzbget.conf\nfi\n\n# delete lock file if found\nif [[ -f /config/nzbget.lock ]]; then\n    rm /config/nzbget.lock\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    if grep -qe ' /downloads ' /proc/mounts; then\n        lsiown abc:abc \\\n            /downloads\n    fi\n\n    lsiown -R abc:abc \\\n        /config\n\n    chmod u+rw \\\n        /config/nzbget.conf\nfi\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-nzbget",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# parse env vars to options\nOPTIONS=\"\"\nif [[ ${NZBGET_USER} && ${NZBGET_USER-x} ]]; then\n    OPTIONS+=\"-o ControlUsername=${NZBGET_USER} \"\nfi\n\nif [[ ${NZBGET_PASS} && ${NZBGET_PASS-x} ]]; then\n    OPTIONS+=\"-o ControlPassword=${NZBGET_PASS} \"\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 6789\" \\\n            s6-setuidgid abc /app/nzbget/nzbget -s -c /config/nzbget.conf \\\n            -o OutputMode=log ${OPTIONS}\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 6789\" \\\n            /app/nzbget/nzbget -s -c /config/nzbget.conf \\\n            -o OutputMode=log ${OPTIONS}\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 132,
+    "distro": "Alpine Linux v3.24",
+    "hash": "90b5e1db",
+    "by_type": {
+     "apk": 71,
+     "python": 46,
+     "binary": 14,
+     "UnknownPackage": 1
+    }
+   },
+   "arm64": {
+    "count": 132,
+    "distro": "Alpine Linux v3.24",
+    "hash": "90b5e1db",
+    "by_type": {
+     "apk": 71,
+     "python": 46,
+     "binary": 14,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/nzbget/builds/v26.3-ls8/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-nzbget/compare/v26.3-ls7...v26.3-ls8",
+   "upstream": "## What's Changed\r\n\r\n> [!CAUTION]\r\n**Version 26.3 is the final release supporting legacy architectures and older OS baselines**:\r\n>* Linux MIPS (`mipseb`, `mipsel`)\r\n>* Linux PowerPC e500 (`ppc500`)\r\n>* Linux kernel < 3.2 (Kernel 2.6.x series is now deprecated)\r\n\r\n  - Features:\r\n    - Added support for extension i18n [https://github.com/nzbgetcom/nzbget/pull/872](https://github.com/nzbgetcom/nzbget/pull/872)\r\n    - Added per-feed certificate verification option [https://github.com/nzbgetcom/nzbget/pull/846](https://github.com/nzbgetcom/nzbget/pull/846)\r\n    - Updated 7-Zip to 26.02 and UnRAR to 7.23 [https://github.com/nzbgetcom/nzbget/pull/847](https://github.com/nzbgetcom/nzbget/pull/847)\r\n\r\n  - Bug fixes:\r\n    - Fixed missing path separator in auto-detected config template path [https://github.com/nzbgetcom/nzbget/pull/902](https://github.com/nzbgetcom/nzbget/pull/902)\r\n    - Fixed feed preview for new (unsaved) feeds [https://github.com/nzbgetcom/nzbget/pull/893](https://github.com/nzbgetcom/nzbget/pull/893)\r\n    - Fixed RSS episode duplicate keys [https://github.com/nzbgetcom/nzbget/pull/868](https://github.com/nzbgetcom/nzbget/pull/868)\r\n    - Hardened web auth token generation and unpack-dir symlink handling [https://github.com/nzbgetcom/nzbget/pull/894](https://github.com/nzbgetcom/nzbget/pull/894)\r\n    - Fixed WebUI crash on startup with non-English languages [https://github.com/nzbgetcom/nzbget/pull/845](https://github.com/nzbgetcom/nzbget/pull/845)\r\n    - Fixed WebUI runtime errors from unguarded addEventListener and Status.status accesses [https://github.com/nzbgetcom/nzbget/pull/834](https://github.com/nzbgetcom/nzbget/pull/834)\r\n    - Fixed feed category priority and consolidated category resolution [https://github.com/nzbgetcom/nzbget/pull/835](https://github.com/nzbgetcom/nzbget/pull/835)\r\n    - Fixed JSON-RPC param reader [https://github.com/nzbgetcom/nzbget/pull/843](https://github.com/nzbgetcom/nzbget/pull/843)\r\n    - Fixed category not preserved for compressed archives in NzbDir subdirectories [https://github.com/nzbgetcom/nzbget/pull/860](https://github.com/nzbgetcom/nzbget/pull/860)\r\n    - Fixed SkipWrite causing an infinite spin loop [https://github.com/nzbgetcom/nzbget/pull/871](https://github.com/nzbgetcom/nzbget/pull/871)\r\n    - Fixed \"Download Remaining Files\" not working for Health-failed files from History [https://github.com/nzbgetcom/nzbget/pull/870](https://github.com/nzbgetcom/nzbget/pull/870)\r\n    - Fixed UnpackPassFile not being consulted for 7z archives with encrypted headers [https://github.com/nzbgetcom/nzbget/pull/877](https://github.com/nzbgetcom/nzbget/pull/877)\r\n    - Fixed parsing of the filename from the Content-Disposition header [https://github.com/nzbgetcom/nzbget/pull/865](https://github.com/nzbgetcom/nzbget/pull/865)\r\n    - Fixed error message for OS release retrieval on Linux [https://github.com/nzbgetcom/nzbget/pull/864](https://github.com/nzbgetcom/nzbget/pull/864)\r\n    - Fixed segfault crashes and data races [https://github.com/nzbgetcom/nzbget/pull/851](https://github.com/nzbgetcom/nzbget/pull/851)\r\n    - Fixed printf format specifiers for int64 and size_t [https://github.com/nzbgetcom/nzbget/pull/856](https://github.com/nzbgetcom/nzbget/pull/856)\r\n    - Translated leftover English strings in Polish and Hungarian locale files [https://github.com/nzbgetcom/nzbget/pull/876](https://github.com/nzbgetcom/nzbget/pull/876)\r\n    - Updated DirectUnpack description and WriteLog default value [https://github.com/nzbgetcom/nzbget/pull/837](https://github.com/nzbgetcom/nzbget/pull/837)\r\n\r\n  - For developers:\r\n    - Added AI-Assisted Contributions Policy [https://github.com/nzbgetcom/nzbget/pull/873](https://github.com/nzbgetcom/nzbget/pull/873)\r\n    - Bumped par2-turbo to v1.4.0-20260803 [https://github.com/nzbgetcom/nzbget/pull/885](https://github.com/nzbgetcom/nzbget/pull/885)\r\n    - Updated rapidyenc to v1.1.1-20260821 [https://github.com/nzbgetcom/nzbget/pull/896](https://github.com/nzbgetcom/nzbget/pull/896)\r\n    - Fixed functional test suite on Python 3 and modern pytest [https://github.com/nzbgetcom/nzbget/pull/883](https://github.com/nzbgetcom/nzbget/pull/883)\r\n    - Fixed rare random failures in System tests [https://github.com/nzbgetcom/nzbget/pull/859](https://github.com/nzbgetcom/nzbget/pull/859)\r\n    - Fixed tests skipping without assertions when unrar/7z unavailable [https://github.com/nzbgetcom/nzbget/pull/878](https://github.com/nzbgetcom/nzbget/pull/878)\r\n    - Fixed cppcheck errors in CI and added .clang-tidy / .clangd configs for consistent static analysis [https://github.com/nzbgetcom/nzbget/pull/811](https://github.com/nzbgetcom/nzbget/pull/811)",
+   "upstream_url": "https://github.com/nzbgetcom/nzbget/releases/tag/v26.3"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 39382,
+    "sha256": "614d82d6475c9765df784f4d92eaba6dba5bf7335eb3515853cc58df13f13336",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5686,
+    "sha256": "23848e8a2124ce772d94fe6f8cfc7e2bc7b71b00dff8387f9ed0a9e08953f0eb",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 55130,
+    "sha256": "e7d1c741078acdb40d45cc0bc12a51c8144bb45af49bb7b2484c60e1e7f01b02",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2590,
+    "sha256": "1f224f85553611a710ae76af0ad697da0aee587e69e7067ceeb76ba5f4228f5a",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 58322,
+    "sha256": "45e9ca238632b61b5343a381ce7f60c9d69b9334ac2fb72e3dfacf22db64982a",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 9272,
+    "sha256": "bd0c9cf1976d6b15e20d646f9c47a6c28c4b3997ba7902565266e9a452765824",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 39482,
+    "sha256": "2b17044f2e1fa5a302806ce4233564b4957ed454a6ba80b52c7439b2bdfb19b5",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5686,
+    "sha256": "95c1f523cd914c471c4908f60f9cda648cf9d9cfa16a80eeb39bf4920cbd3dc6",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 54855,
+    "sha256": "618adb655c90a5fb97c3e723e7595314eaeb6e760c18fe9d018e38d45a1f7013",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2591,
+    "sha256": "7e09a46fce49f45e0689511ec3621f2de445498815cbe25701661411dcad7f2a",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 61058,
+    "sha256": "58cd853040e237be0eec09419c19e4197df2207dfdbe331d5e15b8077754853f",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 9272,
+    "sha256": "bd0c9cf1976d6b15e20d646f9c47a6c28c4b3997ba7902565266e9a452765824",
+    "url": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 42713779403,
+   "run_url": "https://github.com/linuxserver-playground/docker-nzbget/actions/runs/42713779403",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/nzbget",
+   "tags": [
+    "latest",
+    "v26.3-ls8",
+    "version-v26.3",
+    "26.3.20261109",
+    "amd64-latest",
+    "amd64-v26.3-ls8",
+    "amd64-version-v26.3",
+    "amd64-26.3.20261109",
+    "arm64v8-latest",
+    "arm64v8-v26.3-ls8",
+    "arm64v8-version-v26.3",
+    "arm64v8-26.3.20261109"
+   ]
+  }
+ },
+ "diff": {
+  "image": "nzbget",
+  "branch": "master",
+  "tag": "v26.3-ls8",
+  "previous_tag": "v26.3-ls7",
+  "classification": "packages",
+  "reasons": [
+   "packages changed",
+   "1 commit (bd19002 → edb1d84): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v26.3",
+   "to": "v26.3",
+   "changed": false
+  },
+  "commit": {
+   "from": "bd190024ae0194892dcd6b4b3f6ff4eb3d1a538d",
+   "to": "edb1d8467236d63e6a0de1adc622bbfa9d82e3ed",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-nzbget/compare/bd190024ae0194892dcd6b4b3f6ff4eb3d1a538d...edb1d8467236d63e6a0de1adc622bbfa9d82e3ed",
+   "commits": [
+    {
+     "sha": "edb1d8467236d63e6a0de1adc622bbfa9d82e3ed",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T02:49:48Z",
+     "url": "https://github.com/linuxserver-playground/docker-nzbget/commit/edb1d8467236d63e6a0de1adc622bbfa9d82e3ed",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 53549211,
+    "to": 53758283,
+    "delta": 209072
+   },
+   "arm64": {
+    "from": 54144970,
+    "to": 54347370,
+    "delta": 202400
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "apprise",
+       "from": "2.1.0",
+       "to": "2.2.0",
+       "purl": "pkg:pypi/apprise@2.2.0"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "apprise",
+       "from": "2.1.0",
+       "to": "2.2.0",
+       "purl": "pkg:pypi/apprise@2.2.0"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:545d4f15654f1a41d289dc8d6ff4323903aab87b026be0a65396345b2c101be4",
+    "diff_id": "sha256:8be867d300e530cf6d98eac7b9af2cc8d84469decd1054eabf8dfd99bf9e72ea",
+    "size": 6266615,
+    "uncompressed_size": 13711256,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2023bed36d24cf793e80fa15289e7bddee887ff422d51bdd8b408c79138f0f06",
+    "diff_id": "sha256:be2f9fea94da00699c9bcd4b86a523e62c1dee6224ee3cff60ac313aaadf4843",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:c6d434456495ac568c97d1c4c0b02833dd8d030d0229c025a1392a245db9951b",
+    "diff_id": "sha256:aa510fdedc0643fe353dd455e66b5b6887d102914d9b17d76e8530a9d548d878",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:f0d95394e91d9e9173e468997b34c65657362d6bac9985dd86090506b3703004",
+    "diff_id": "sha256:c5f324c75d01bb48409641211c83c5c00c222b5d2ede732004f34755941ad642",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:896e30f3f6a9a79a56b14501dfb29b94469d4f7e62d688eb7f9920c5e01248ca",
+    "diff_id": "sha256:7b93a48e4d05ad9969e9b34a2e2c814a9a905814d76f0cad3b2dda7b90b76295",
+    "size": 6091161,
+    "uncompressed_size": 14407458,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:f5fba40ea5e79a9b868c8956a0790ba521114c461fb913fe2120e5d28fc8dbc7",
+    "diff_id": "sha256:4e492c677e4c6b01a4449b80ef9d3fe690a851f54d49d0ace528903f1fea010a",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:c7a3fb0a9886d3f4696ad9168a5363430dfee37a5b75c28570e8c8304d7aa7a7",
+    "diff_id": "sha256:3158065ffe27be30a73eeffc451db3441631867d790727d86e62f2b231d8fc48",
+    "size": 34446015,
+    "uncompressed_size": 90383849,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-09T22:39:28Z VERSION=v26.3-ls8 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     build-base &&   echo \"**** install packages ****\" &&   apk add --no-cache     7zip     boost1.84-filesystem     boost1.84-json     libxml2     libxslt     openssl     python3 &&   echo \"**** install python packages ****\" &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/     apprise     pynzb     requests &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /root/.cache     /root/.cargo     /tmp/*",
+    "dockerfile_lines": [
+     75,
+     104
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:e6b276b7c7b9d6affb1bf8ac4d05f87fd1e8b07fec3dd37cf883669f58f46e1b",
+    "diff_id": "sha256:907e083523b93f29a8ff0662a523b9dc515889670cc201a25283ab55a19d1efd",
+    "size": 6585379,
+    "uncompressed_size": 13128672,
+    "created_by": "COPY /app/nzbget /app/nzbget",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:ac0dd8ff237dec1c2f3645c9b85fd70c69d87ab9b015e0d51bd5fc34a2e1f1fd",
+    "diff_id": "sha256:2d8b1f1175e41abc73cb0c815d07f7d09be991ab8ff1890ed866c552661278e6",
+    "size": 1103,
+    "uncompressed_size": 1367,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     108,
+     108
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:fc5dfb55a5bb51a0e1127cec16ab798a8a14465b845f62c28c0f4d91f13c285f",
+    "diff_id": "sha256:1eec1182daa7ad538d5bde708309b79752b9f20f99dc93dfcf896a443e478e44",
+    "size": 354651,
+    "uncompressed_size": 732848,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:64b981af69cff029eba3c7e0777523e70f1f4054b0887f9a965c176d18169cc6",
+    "diff_id": "sha256:ff1102643737cf92b5ddf6c7a1b0d458827766891ea7a4f451e80d24cf72a580",
+    "size": 7083608,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:79a420625e0d676d8a32b0bfbd2195beb0da5e8b12eac1c933fcacfbf12a1b51",
+    "diff_id": "sha256:33f6be7ae4978af9a244d51a206ab0c210235afa751f59a501512bf033c19eff",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:1eea1340625cba05d1c5c9edd941668f886cdbee11741d5a10531401783164ee",
+    "diff_id": "sha256:b94ed0ba2e30c058a7c340548783ab419fd231871094ebeba35593c7f3092aed",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d433e188c5969ad4637c3026f984c0895a593777d729a9965b7ae4aef4b2fad6",
+    "diff_id": "sha256:e4ec07be27d69218cbd64a618be58d94b48a066d0cda68d0ea2437f3434664e8",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c7b7cefe879ff05f0664c285600286a1caa628150f63fc3f3dd08c79cf4af237",
+    "diff_id": "sha256:358853ccd9f142431d5a1e859f4923f0e9b1c320430f63bd87cb59fa1c3cb76e",
+    "size": 6326079,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:cc88e67bd7dfee632bf5f1db2d42cbbf63b5effbcedd683ebfbfb50a2b30c949",
+    "diff_id": "sha256:2dfe8908c338a57538164ebc6c067025885ba57080d8cb419e0d1afa546306af",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:45f345606cd2d38ef5834888184312a83837b22c415b78f1a1d0bfadb4fe67b6",
+    "diff_id": "sha256:b287e3b5ac70a823fb6b642e095544753237a6c2213e23f30ce96f162ec6efad",
+    "size": 34254955,
+    "uncompressed_size": 93697512,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-09T22:39:28Z VERSION=v26.3-ls8 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     build-base &&   echo \"**** install packages ****\" &&   apk add --no-cache     7zip     boost1.84-filesystem     boost1.84-json     libxml2     libxslt     openssl     python3 &&   echo \"**** install python packages ****\" &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     wheel &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/     apprise     pynzb     requests &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     /root/.cache     /root/.cargo     /tmp/*",
+    "dockerfile_lines": [
+     75,
+     104
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:cea1189c30695acaf507dcff80b8a01a9498b58c47f52c66441975c983356959",
+    "diff_id": "sha256:78661d3bb5137d749022159d27ff7c18f5c6579465e888bd6d86eb987ed3ddf6",
+    "size": 6321023,
+    "uncompressed_size": 12339712,
+    "created_by": "COPY /app/nzbget /app/nzbget",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:fa223633041924aefc8b4d4c50e5d02d1bffc86572b0cd07668653090f2c1603",
+    "diff_id": "sha256:e5e83873d0e038f7a271f6238585e9513d054abc015743c1f6fe8124fd37f430",
+    "size": 1101,
+    "uncompressed_size": 1367,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     108,
+     108
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:ba1c640a2941d0def832e60259babc2ce470b70f856a2c19807240795916b3f4",
+    "diff_id": "sha256:d8e3719289145f63cc2e5dc7bd2c9e8bb3bc5860da3bcee38c57b60abe723b5d",
+    "size": 347245,
+    "uncompressed_size": 724496,
+    "created_by": "COPY /usr/bin/unrar-alpine /usr/bin/unrar",
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "nzbget",
+  "tag": "v26.3-ls8",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/nzbget/builds/v26.3-ls8/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "6789/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 17563648,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.012,
+    "listening_ports": [
+     "6789/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 17448960,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-nzbget/releases/download/v26.3-ls8/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-nzbget/builds/v26.3-ls8/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "nzbget",
+    "tag": "amd64-edb1d84-42713779403",
+    "arch": "amd64",
+    "started": "2026-11-09T22:44:26Z",
+    "finished": "2026-11-09T22:44:46Z",
+    "success": true,
+    "runner": "e4968beb1c65",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-nzbget",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 6789/tcp",
+      "seconds": 0.05
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:6789/ after 0.0s",
+      "seconds": 0.005
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "132 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "132 packages: syft JSON 39382 bytes gzipped, SPDX for the image attestation 360303 bytes",
+      "seconds": 0.087
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "777 dirs, 5249 files (132119943 bytes), 1221 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.08s, total 0.11s",
+      "seconds": 0.236
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.643
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.048
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:6789/",
+      "seconds": 10.719
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [6789], rss 17563648 bytes",
+      "seconds": 0.364
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 17563648,
+     "pids": 13,
+     "listening_tcp": [
+      6789
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-nzbget"
+     ],
+     "changed_paths": 207
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "nzbget",
+    "tag": "arm64-edb1d84-42713779403",
+    "arch": "arm64",
+    "started": "2026-11-09T22:44:34Z",
+    "finished": "2026-11-09T22:44:53Z",
+    "success": true,
+    "runner": "9c8563dd6f83",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.012,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.012
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-nzbget",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 6789/tcp",
+      "seconds": 0.047
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:6789/ after 0.0s",
+      "seconds": 0.005
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "132 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "132 packages: syft JSON 39482 bytes gzipped, SPDX for the image attestation 360374 bytes",
+      "seconds": 0.128
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "777 dirs, 5248 files (146549486 bytes), 1221 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.08s",
+      "seconds": 0.227
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.657
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.062
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:6789/",
+      "seconds": 11.379
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [6789], rss 17448960 bytes",
+      "seconds": 0.313
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 17448960,
+     "pids": 13,
+     "listening_tcp": [
+      6789
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-nzbget"
+     ],
+     "changed_paths": 207
+    }
+   }
+  }
+ }
+}
