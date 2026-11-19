@@ -1,0 +1,990 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "webgrabplus",
+  "repository": "linuxserver-playground/docker-webgrabplus",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "5.6.1",
+   "upstream_clean": "5.6.1",
+   "semver": "5.6.1",
+   "ls_build": 7,
+   "tag": "5.6.1-ls7",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "5.6.1-ls7",
+    "version-5.6.1",
+    "5.6.1",
+    "amd64-latest",
+    "amd64-5.6.1-ls7",
+    "amd64-version-5.6.1",
+    "amd64-5.6.1",
+    "arm64v8-latest",
+    "arm64v8-5.6.1-ls7",
+    "arm64v8-version-5.6.1",
+    "arm64v8-5.6.1"
+   ],
+   "source": "regex",
+   "source_url": "https://webgrabplus.com/download/sw"
+  },
+  "commit": "de0358b188081d16cec279eb56fe9d70ce835618",
+  "created": "2026-11-11T12:41:54Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "5.6.1-ls6",
+   "release_url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/tag/5.6.1-ls6"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+   "digest": "sha256:6600ec90f15ecc611bf91be1b29078e57651e77062e45c3e268aff53e802bb68"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:42d9fa19d193c97ea7021d863a29f57bb4f1603cb2466190940536b2cae762bb",
+    "size": 131182968,
+    "uncompressed_size": 220365408,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 28
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:c72b559c7ce1eee06d38c296ca1dcb1e9f9cf688b97cf018773b029a0a58b60f",
+    "size": 130481742,
+    "uncompressed_size": 238790605,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 21
+   }
+  ],
+  "index_digest": "sha256:404f294e17ab94c12082c8bfb8b08858e26f2c2b58879d229ef53d8c67ab5238",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 5.6.1-ls7 Build-date:- 2026-11-11T12:37:05Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22@sha256:6600ec90f15ecc611bf91be1b29078e57651e77062e45c3e268aff53e802bb68",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "5.6.1",
+   "maintainer": "saarg",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-11T12:37:05Z",
+   "org.opencontainers.image.description": "Webgrabplus is a multi-site incremental xmltv epg grabber.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-webgrabplus",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "de0358b188081d16cec279eb56fe9d70ce835618",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-webgrabplus",
+   "org.opencontainers.image.title": "Webgrabplus",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-webgrabplus/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "5.6.1-ls7"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "volumes": [
+    "/config",
+    "/data"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"saarg\"\n\n# package versions\nARG WEBGRAB_VER\n\n# environment variables.\nENV HOME=/config\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk -U --update --no-cache add \\\n    icu-libs \\\n    iputils \\\n    unzip && \\\n  echo \"**** install dotnet sdk ****\" && \\\n  mkdir -p /app/dotnet && \\\n  curl -o /tmp/dotnet-install.sh -L \\\n    https://dot.net/v1/dotnet-install.sh && \\\n  chmod +x /tmp/dotnet-install.sh && \\\n  /tmp/dotnet-install.sh -c 9.0 --install-dir /app/dotnet --runtime dotnet && \\\n  echo \"**** install webgrabplus ****\" && \\\n  if [ -z \"$WEBGRAB_VER\" ]; then \\\n    WEBGRAB_VER=$(curl -fsL https://webgrabplus.com/download/sw | grep -m1 /download/sw/v | sed 's|.*/download/sw/v\\(.*\\)\">V.*|\\1|'); \\\n  fi && \\\n  echo \"Found Webgrabplus version ${WEBGRAB_VER}\" && \\\n  WEBGRAB_URL=$(curl -fsL https://webgrabplus.com/download/sw/v${WEBGRAB_VER} | grep '>Linux</a>' | sed 's|.*\\(https://webgrab.*.gz\\).*|\\1|') && \\\n  mkdir -p \\\n    /app/wg++ && \\\n  curl -o /tmp/wg++.tar.gz -L \\\n    \"${WEBGRAB_URL}\" && \\\n  tar xzf \\\n    /tmp/wg++.tar.gz -C \\\n    /app/wg++ --strip-components=1 && \\\n  echo \"**** download siteini.pack ****\" && \\\n  curl -o \\\n    /tmp/ini.zip -L \\\n    https://www.webgrabplus.com/sites/default/files/download/ini/SiteIniPack_current.zip && \\\n  unzip -q /tmp/ini.zip -d /defaults/ini/ && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/*\n\n# copy files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config /data\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"saarg\"\n\n# package versions\nARG WEBGRAB_VER\n\n# environment variables.\nENV HOME=/config\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk -U --update --no-cache add \\\n    icu-libs \\\n    iputils \\\n    unzip && \\\n  echo \"**** install dotnet sdk ****\" && \\\n  mkdir -p /app/dotnet && \\\n  curl -o /tmp/dotnet-install.sh -L \\\n    https://dot.net/v1/dotnet-install.sh && \\\n  chmod +x /tmp/dotnet-install.sh && \\\n  /tmp/dotnet-install.sh -c 9.0 --install-dir /app/dotnet --runtime dotnet && \\\n  echo \"**** install webgrabplus ****\" && \\\n  if [ -z \"$WEBGRAB_VER\" ]; then \\\n    WEBGRAB_VER=$(curl -fsL https://webgrabplus.com/download/sw | grep -m1 /download/sw/v | sed 's|.*/download/sw/v\\(.*\\)\">V.*|\\1|'); \\\n  fi && \\\n  echo \"Found Webgrabplus version ${WEBGRAB_VER}\" && \\\n  WEBGRAB_URL=$(curl -fsL https://webgrabplus.com/download/sw/v${WEBGRAB_VER} | grep '>Linux</a>' | sed 's|.*\\(https://webgrab.*\\.gz\\).*|\\1|') && \\\n  mkdir -p \\\n    /app/wg++ && \\\n  curl -o /tmp/wg++.tar.gz -L \\\n    \"${WEBGRAB_URL}\" && \\\n  tar xzf \\\n    /tmp/wg++.tar.gz -C \\\n    /app/wg++ --strip-components=1 && \\\n  echo \"**** download siteini.pack ****\" && \\\n  curl -o \\\n    /tmp/ini.zip -L \\\n    https://www.webgrabplus.com/sites/default/files/download/ini/SiteIniPack_current.zip && \\\n  unzip -q /tmp/ini.zip -d /defaults/ini/ && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/*\n\n# copy files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config /data\n"
+  },
+  "init_graph": {
+   "d2": "\"webgrabplus:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-webgrabplus-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-webgrabplus-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"webgrabplus:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-webgrabplus-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-webgrabplus-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p \\\n    /app/wg++/bin.net/WebGrab+Plus \\\n    /config/License\nln -sf /config/License /app/wg++/bin.net/WebGrab+Plus\n\n# copy config\nif [[ ! -e /config/WebGrab++.config.xml ]]; then\n    cp /defaults/WebGrab++.config.xml /config/\nfi\n\nif [[ ! -e /config/siteini.pack ]]; then\n    cp -R /defaults/ini/siteini.pack /config/\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /app \\\n    /config \\\n    /data\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 79,
+    "distro": "Alpine Linux v3.22",
+    "hash": "5bb30e9e",
+    "by_type": {
+     "dotnet": 17,
+     "apk": 62
+    }
+   },
+   "arm64": {
+    "count": 79,
+    "distro": "Alpine Linux v3.22",
+    "hash": "178c1ffe",
+    "by_type": {
+     "dotnet": 17,
+     "apk": 62
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/webgrabplus/builds/5.6.1-ls7/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-webgrabplus/compare/5.6.1-ls6...5.6.1-ls7"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 35338,
+    "sha256": "7c447e8804c0940948e7b5d1d36cbd5eced325556ae7078b1dfbbce466d6031f",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5532,
+    "sha256": "78372c7affcbfcaf99853dfb046b9a62d83e39e9c039bbea7e059038137291e0",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 45067,
+    "sha256": "d3048060bde1c24bac1e803a6566f3c5330107d36329422ac6f46f4e2d9591ec",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2398,
+    "sha256": "83bdc93f522351d66e43911e8258d425cbfc713e6b80696f635e3dcb5ea61704",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3060,
+    "sha256": "5fe457bed3a089143017c116969a534aff8c8d2e16590535de48bcffc2e9cc6a",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 5840,
+    "sha256": "164319665552d3248e4da0a355ae654e308a064472469aac09bdb3a1d26db38d",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 35500,
+    "sha256": "4fcd752d7973cdb45ecae85e8716984ade43171d70bace9ac60f2ba48ec7ce29",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5574,
+    "sha256": "17367e433f2ffbe7d3c4b69737ccd64ed9ebef9aeffb2c8d74cd0a8ffea9de98",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 44827,
+    "sha256": "6975d8cbd95a8b28aba2648b88e82a2972ceacf562aebb6b396516b7342f29bc",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2398,
+    "sha256": "e3b1fae3df671bd9ed195ab7da8fd5033c892ecde327513b27dbab2257504760",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3058,
+    "sha256": "b159053c7a245ea8fa1ef2a86583741333d3182d2bad1b90cdea2fb5d5f8cfd6",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 6000,
+    "sha256": "053994e8ab8f1c874dddb7ebe8f0fc0758412acfac4012731f233a21f05acce2",
+    "url": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 43021825337,
+   "run_url": "https://github.com/linuxserver-playground/docker-webgrabplus/actions/runs/43021825337",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/webgrabplus",
+   "tags": [
+    "latest",
+    "5.6.1-ls7",
+    "version-5.6.1",
+    "5.6.1",
+    "amd64-latest",
+    "amd64-5.6.1-ls7",
+    "amd64-version-5.6.1",
+    "amd64-5.6.1",
+    "arm64v8-latest",
+    "arm64v8-5.6.1-ls7",
+    "arm64v8-version-5.6.1",
+    "arm64v8-5.6.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "webgrabplus",
+  "branch": "master",
+  "tag": "5.6.1-ls7",
+  "previous_tag": "5.6.1-ls6",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (fc3396a → de0358b): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "5.6.1",
+   "to": "5.6.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "fc3396ab16cfa29a13a1eb131f7801128624e996",
+   "to": "de0358b188081d16cec279eb56fe9d70ce835618",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-webgrabplus/compare/fc3396ab16cfa29a13a1eb131f7801128624e996...de0358b188081d16cec279eb56fe9d70ce835618",
+   "commits": [
+    {
+     "sha": "de0358b188081d16cec279eb56fe9d70ce835618",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T08:43:27Z",
+     "url": "https://github.com/linuxserver-playground/docker-webgrabplus/commit/de0358b188081d16cec279eb56fe9d70ce835618",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:471536f3a3e33e66a1b18d94f6157fc1d57012dd097177aa3b5f4cd741296ae5"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:6600ec90f15ecc611bf91be1b29078e57651e77062e45c3e268aff53e802bb68"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 131179180,
+    "to": 131182968,
+    "delta": 3788
+   },
+   "arm64": {
+    "from": 130480020,
+    "to": 130481742,
+    "delta": 1722
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.22.7-r0",
+       "to": "3.22.8-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.22.8-r0?arch=x86_64&distro=alpine-3.22.8&upstream=alpine-base"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=x86_64&distro=alpine-3.22.8"
+      }
+     ],
+     "downgraded": []
+    },
+    "dotnet": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "Microsoft.NETCore.App.Runtime.linux-musl-x64",
+       "from": "9.0.22",
+       "to": "9.0.23",
+       "purl": "pkg:nuget/Microsoft.NETCore.App.Runtime.linux-musl-x64@9.0.23"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.22.7-r0",
+       "to": "3.22.8-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.22.8-r0?arch=aarch64&distro=alpine-3.22.8&upstream=alpine-base"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=aarch64&distro=alpine-3.22.8"
+      }
+     ],
+     "downgraded": []
+    },
+    "dotnet": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "Microsoft.NETCore.App.Runtime.linux-musl-arm64",
+       "from": "9.0.22",
+       "to": "9.0.23",
+       "purl": "pkg:nuget/Microsoft.NETCore.App.Runtime.linux-musl-arm64@9.0.23"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 6,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:5f9e30bb8348660ecdbc1b2f166ab8d534e864836f1e48051612170dfa3a2669",
+    "diff_id": "sha256:70f4891ef6937fd832b7d50e41fa80ff1bd4db166ebbf9944ca9912fd9789d94",
+    "size": 6206928,
+    "uncompressed_size": 13585008,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:f6ff6fe268735acfac4ec9ef0f6c8939cc1b66ab425b3487dee2d4828bf32daa",
+    "diff_id": "sha256:27c6f251eeba57da4d09a17d0d6e366a6a796a9a8c30e4a75de700eed7a71d0e",
+    "size": 1357,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:68faa435d7c2c52104a70eaca9a72b326c61027779f977e7020fb9a5340e7fcc",
+    "diff_id": "sha256:106fb4b067b625adc94e9a2e878df326c78f1de55c0854ba927b40d640e0141e",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:947f12ce1a8ba4c605ff8191a9392ccbc1d8e4e630430330f4717986d01b4d4c",
+    "diff_id": "sha256:df541c50fd58fd0ce774eb46260e2f1b65c82fd8b6dbdcf96ac79e465235d4f6",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:ac0026b5b9d77037f3fc257d8e808eddb28148ec1f5cbb8c91b60f97ee259b9d",
+    "diff_id": "sha256:7fbf0483ea1ae868efdea915329949bdbcdfa4b2f2a320283a613d891e1b0580",
+    "size": 5894923,
+    "uncompressed_size": 13967163,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T17:16:32Z VERSION=6260247a-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:dc7a67526ed3ab873e671ab04ec1d5eeec4aba3e2651f8828dec555204932005",
+    "diff_id": "sha256:786018a9e2435e5ed66bccd8736de45b4dff11588081c125c92090feb6f79ae9",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:818be1d4ccc1accaad67e623ad0eae1e7c48e5910b9b66c18c4208674dd814bc",
+    "diff_id": "sha256:e0642ee096301002a03db65b5f8a934b85cabaa5f903cedfdc4cfc763842a57f",
+    "size": 119066256,
+    "uncompressed_size": 192765042,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-11T12:37:05Z VERSION=5.6.1-ls7 WEBGRAB_VER=5.6.1 /bin/sh -c echo \"**** install packages ****\" &&   apk -U --update --no-cache add     icu-libs     iputils     unzip &&   echo \"**** install dotnet sdk ****\" &&   mkdir -p /app/dotnet &&   curl -o /tmp/dotnet-install.sh -L     https://dot.net/v1/dotnet-install.sh &&   chmod +x /tmp/dotnet-install.sh &&   /tmp/dotnet-install.sh -c 9.0 --install-dir /app/dotnet --runtime dotnet &&   echo \"**** install webgrabplus ****\" &&   if [ -z \"$WEBGRAB_VER\" ]; then     WEBGRAB_VER=$(curl -fsL https://webgrabplus.com/download/sw | grep -m1 /download/sw/v | sed 's|.*/download/sw/v\\(.*\\)\">V.*|\\1|');   fi &&   echo \"Found Webgrabplus version ${WEBGRAB_VER}\" &&   WEBGRAB_URL=$(curl -fsL https://webgrabplus.com/download/sw/v${WEBGRAB_VER} | grep '>Linux</a>' | sed 's|.*\\(https://webgrab.*.gz\\).*|\\1|') &&   mkdir -p     /app/wg++ &&   curl -o /tmp/wg++.tar.gz -L     \"${WEBGRAB_URL}\" &&   tar xzf     /tmp/wg++.tar.gz -C     /app/wg++ --strip-components=1 &&   echo \"**** download siteini.pack ****\" &&   curl -o     /tmp/ini.zip -L     https://www.webgrabplus.com/sites/default/files/download/ini/SiteIniPack_current.zip &&   unzip -q /tmp/ini.zip -d /defaults/ini/ &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "dockerfile_lines": [
+     19,
+     52
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:e3c445213f60c14bf971cd8a826d3800dd8521151fc7dd04914bcd644e82644c",
+    "diff_id": "sha256:dfa831cc78e92263b9e51f2c0366604fae6a073b63608755486dcf8b0badfc61",
+    "size": 1505,
+    "uncompressed_size": 1979,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     55,
+     55
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:21ad289f04ff40d830f609a801559905d5dd34c3da3ac038c19e458001338f23",
+    "diff_id": "sha256:415bfd4b62d91cc7e0e9acada496c39464c03487075d7b5f57e123fccdb0d6b3",
+    "size": 7020598,
+    "uncompressed_size": 18421348,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:044604c89d3e55d34ec772d0f98fabe93857a416a0821639e513cf86ff3ae2c1",
+    "diff_id": "sha256:636246786df16b19d6ba16437cbe0647fc4a63cb2253ae85667471ed0f7b731e",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:4537d5bef02b14bbcca380b347ae267b85d52170626b8f978397856b8e467a69",
+    "diff_id": "sha256:2295cc8b2c099d605bf50ef2ebd0ef03a2c213be523ffafa2a479fa73a54b00d",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:bf3f687beaa33622b5f49ad5ff487251f0c0971e95e802462c0e9f0cbdab797e",
+    "diff_id": "sha256:bfbec72efda3a5ba3042c50dcc52d6558e9b447757491afa44ff444eeb9847d1",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:707e13faeb5bafdcdbb2f655b1c189ad6508d7dacc925565fa6c24723532834d",
+    "diff_id": "sha256:24ca67f73da9e9e716a9a269c66943d4a60ada6d956e0bb13aa28d15291db865",
+    "size": 6110448,
+    "uncompressed_size": 20893470,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T17:16:32Z VERSION=6260247a-ls6 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:dc38c17b3774966f37a5df45e09e848fe18457851f79abca7f5751ce6d16658f",
+    "diff_id": "sha256:2379e92e94d574d730fa055169a6a5b15e350d84870795aa109e10e7ad6419d2",
+    "size": 4629,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:a871b06852013acecd21160d986c9bd20aa246cdd6cbff5048acda694eb90828",
+    "diff_id": "sha256:1cd6f857363f776db579fac9d76a5c3c9df3508b6ba11522d61330dd72546f79",
+    "size": 117335834,
+    "uncompressed_size": 199427592,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-11T12:37:05Z VERSION=5.6.1-ls7 WEBGRAB_VER=5.6.1 /bin/sh -c echo \"**** install packages ****\" &&   apk -U --update --no-cache add     icu-libs     iputils     unzip &&   echo \"**** install dotnet sdk ****\" &&   mkdir -p /app/dotnet &&   curl -o /tmp/dotnet-install.sh -L     https://dot.net/v1/dotnet-install.sh &&   chmod +x /tmp/dotnet-install.sh &&   /tmp/dotnet-install.sh -c 9.0 --install-dir /app/dotnet --runtime dotnet &&   echo \"**** install webgrabplus ****\" &&   if [ -z \"$WEBGRAB_VER\" ]; then     WEBGRAB_VER=$(curl -fsL https://webgrabplus.com/download/sw | grep -m1 /download/sw/v | sed 's|.*/download/sw/v\\(.*\\)\">V.*|\\1|');   fi &&   echo \"Found Webgrabplus version ${WEBGRAB_VER}\" &&   WEBGRAB_URL=$(curl -fsL https://webgrabplus.com/download/sw/v${WEBGRAB_VER} | grep '>Linux</a>' | sed 's|.*\\(https://webgrab.*\\.gz\\).*|\\1|') &&   mkdir -p     /app/wg++ &&   curl -o /tmp/wg++.tar.gz -L     \"${WEBGRAB_URL}\" &&   tar xzf     /tmp/wg++.tar.gz -C     /app/wg++ --strip-components=1 &&   echo \"**** download siteini.pack ****\" &&   curl -o     /tmp/ini.zip -L     https://www.webgrabplus.com/sites/default/files/download/ini/SiteIniPack_current.zip &&   unzip -q /tmp/ini.zip -d /defaults/ini/ &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*",
+    "dockerfile_lines": [
+     19,
+     54
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:e3c445213f60c14bf971cd8a826d3800dd8521151fc7dd04914bcd644e82644c",
+    "diff_id": "sha256:dfa831cc78e92263b9e51f2c0366604fae6a073b63608755486dcf8b0badfc61",
+    "size": 1505,
+    "uncompressed_size": 1979,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     57,
+     57
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "webgrabplus",
+  "tag": "5.6.1-ls7",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/webgrabplus/builds/5.6.1-ls7/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.01,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 2686976,
+    "pids": 11,
+    "tarball": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-webgrabplus/builds/5.6.1-ls7/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-webgrabplus/builds/5.6.1-ls7/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 2584576,
+    "pids": 11,
+    "tarball": "https://github.com/linuxserver-playground/docker-webgrabplus/releases/download/5.6.1-ls7/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-webgrabplus/builds/5.6.1-ls7/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-webgrabplus/builds/5.6.1-ls7/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "webgrabplus",
+    "tag": "amd64-de0358b-43021825337",
+    "arch": "amd64",
+    "started": "2026-11-11T12:40:34Z",
+    "finished": "2026-11-11T12:40:55Z",
+    "success": true,
+    "runner": "8f7c3160fa94",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.01,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.01
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "79 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "79 packages: syft JSON 35338 bytes gzipped, SPDX for the image attestation 160961 bytes",
+      "seconds": 0.125
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "366 dirs, 3439 files (220054524 bytes), 1203 symlinks, 255 hardlinks, 0 special, 7 skipped, 4 non-UTF-8 names; walk 0.06s, total 0.11s",
+      "seconds": 0.245
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.923
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "18 units, 1 from this image, own units from the repository",
+      "seconds": 0.067
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "11 pids, tcp [], rss 2686976 bytes",
+      "seconds": 0.416
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 2686976,
+     "pids": 11,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 432
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "webgrabplus",
+    "tag": "arm64-de0358b-43021825337",
+    "arch": "arm64",
+    "started": "2026-11-11T12:38:32Z",
+    "finished": "2026-11-11T12:38:51Z",
+    "success": true,
+    "runner": "d45382a34312",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "79 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "79 packages: syft JSON 35500 bytes gzipped, SPDX for the image attestation 161033 bytes",
+      "seconds": 0.111
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "366 dirs, 3439 files (238479594 bytes), 1203 symlinks, 255 hardlinks, 0 special, 7 skipped, 4 non-UTF-8 names; walk 0.03s, total 0.06s",
+      "seconds": 0.17
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.43
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "18 units, 1 from this image, own units from the repository",
+      "seconds": 0.056
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "11 pids, tcp [], rss 2584576 bytes",
+      "seconds": 0.244
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 2584576,
+     "pids": 11,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 432
+    }
+   }
+  }
+ }
+}

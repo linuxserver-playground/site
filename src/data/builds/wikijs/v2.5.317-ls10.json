@@ -1,0 +1,989 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "wikijs",
+  "repository": "linuxserver-playground/docker-wikijs",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v2.5.317",
+   "upstream_clean": "v2.5.317",
+   "semver": "2.5.317",
+   "ls_build": 10,
+   "tag": "v2.5.317-ls10",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v2.5.317-ls10",
+    "version-v2.5.317",
+    "2.5.317",
+    "amd64-latest",
+    "amd64-v2.5.317-ls10",
+    "amd64-version-v2.5.317",
+    "amd64-2.5.317",
+    "arm64v8-latest",
+    "arm64v8-v2.5.317-ls10",
+    "arm64v8-version-v2.5.317",
+    "arm64v8-2.5.317"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/requarks/wiki-v2/releases/tag/v2.5.317"
+  },
+  "commit": "930ab072c9a70dd1cce20d1a221ff6b6bb3ea135",
+  "created": "2026-11-15T19:59:30Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v2.5.317-ls9",
+   "release_url": "https://github.com/linuxserver-playground/docker-wikijs/releases/tag/v2.5.317-ls9"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:5e43ed329a67efafd1c6cbe4afa3a40abde2e530beea4ddaa21fd79f78c4ced0",
+    "size": 142998212,
+    "uncompressed_size": 562675767,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 50
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:93bf55c9f936326f6aaf4249d129dc1bc1e9ea718c1bb54a2c0c70a096a9aa3b",
+    "size": 143337931,
+    "uncompressed_size": 571650322,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 58
+   }
+  ],
+  "index_digest": "sha256:fab7056797957870665238f79556105be5ce1aa70299ce58ce54123418df484c",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v2.5.317-ls10 Build-date:- 2026-11-15T19:53:55Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v2.5.317",
+   "maintainer": "alex-phillips",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-15T19:53:55Z",
+   "org.opencontainers.image.description": "Wikijs A modern, lightweight and powerful wiki app built on NodeJS.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-wikijs",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "930ab072c9a70dd1cce20d1a221ff6b6bb3ea135",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-wikijs",
+   "org.opencontainers.image.title": "Wikijs",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-wikijs/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v2.5.317-ls10"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/app",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "NODE_ENV=production"
+   ],
+   "exposed_ports": [
+    "3000/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG WIKIJS_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"alex-phillips\"\n\n# environment settings\nENV HOME=\"/app\"\nENV NODE_ENV=\"production\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk -U --update --no-cache add --virtual=build-dependencies \\\n    build-base \\\n    python3 && \\\n  apk add --no-cache \\\n    git \\\n    nodejs \\\n    npm \\\n    openssh && \\\n  echo \"**** install wiki.js ****\" && \\\n  mkdir -p /app/wiki && \\\n  if [ -z ${WIKIJS_RELEASE} ]; then \\\n    WIKIJS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Requarks/wiki-v2/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/wiki.tar.gz -L \\\n    \"https://github.com/Requarks/wiki-v2/releases/download/${WIKIJS_RELEASE}/wiki-js.tar.gz\" && \\\n  tar xf \\\n    /tmp/wiki.tar.gz -C \\\n    /app/wiki/ && \\\n  cd /app/wiki && \\\n  npm rebuild sqlite3 && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG WIKIJS_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"alex-phillips\"\n\n# environment settings\nENV HOME=\"/app\"\nENV NODE_ENV=\"production\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk -U --update --no-cache add --virtual=build-dependencies \\\n    build-base \\\n    python3 && \\\n  apk add --no-cache \\\n    git \\\n    nodejs \\\n    npm \\\n    openssh && \\\n  echo \"**** install wiki.js ****\" && \\\n  mkdir -p /app/wiki && \\\n  if [ -z ${WIKIJS_RELEASE} ]; then \\\n    WIKIJS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Requarks/wiki-v2/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/wiki.tar.gz -L \\\n    \"https://github.com/Requarks/wiki-v2/releases/download/${WIKIJS_RELEASE}/wiki-js.tar.gz\" && \\\n  tar xf \\\n    /tmp/wiki.tar.gz -C \\\n    /app/wiki/ && \\\n  cd /app/wiki && \\\n  npm rebuild sqlite3 && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"wikijs:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-wikijs-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-wikijs-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-wikijs\n  svc-wikijs -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"wikijs:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-wikijs-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-wikijs-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${DB_TYPE} ]]; then\n    printf \"sqlite\" > /run/s6/container_environment/DB_TYPE\nfi\n\nif [[ ! -f \"/config/config.yml\" ]]; then\n    cp /defaults/config.yml /config/config.yml\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # permissions\n    lsiown -R abc:abc \\\n        /config\n\n    if grep -qe ' /data ' /proc/mounts; then\n        lsiown abc:abc \\\n            /data\n    fi\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-wikijs",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexport CONFIG_FILE=\"/config/config.yml\"\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 3000\" \\\n            cd /app/wiki s6-setuidgid abc /usr/bin/node server\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 3000\" \\\n            cd /app/wiki /usr/bin/node server\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 1844,
+    "distro": "Alpine Linux v3.24",
+    "hash": "0e042f29",
+    "by_type": {
+     "npm": 1769,
+     "apk": 73,
+     "binary": 2
+    }
+   },
+   "arm64": {
+    "count": 1844,
+    "distro": "Alpine Linux v3.24",
+    "hash": "0e042f29",
+    "by_type": {
+     "npm": 1769,
+     "apk": 73,
+     "binary": 2
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/wikijs/builds/v2.5.317-ls10/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-wikijs/compare/v2.5.317-ls9...v2.5.317-ls10",
+   "upstream": "### :bug: Bug Fixes\n- [`bd602f7`](https://github.com/requarks/wiki-v2/commit/bd602f7e667728d5256316f9eddcd096569fc6ce) - trigger new build with latest node security updates *(commit by @NGPixel)*",
+   "upstream_url": "https://github.com/requarks/wiki-v2/releases/tag/v2.5.317"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 271722,
+    "sha256": "e962c456b75ada14f0356cb1c4cf8c094dd7c39f7468d13a9221a1ffdb3cf90b",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5084,
+    "sha256": "88ceeb3c901bc125177cb864ec3a9f7fb4edec0e681e271d8f7979c3ce32bd0a",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 435536,
+    "sha256": "c0f7e8a47386163041606a59e018857c1e0ff6417c7fb774bf505b86acf1b218",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2575,
+    "sha256": "759c680db0254099f4736be0f3ebae27a401112806a07ea314c6d5df1a33fa8e",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 643817,
+    "sha256": "ea6856c19d4f65b107b460269a051df5f7b262ce3be8ac9ceee87d8bc69539bb",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 158784,
+    "sha256": "28ee4c681fb5d5a6d48872d274245fdaa373587bcac1cf55bbcafa1a670ab741",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 271894,
+    "sha256": "ddc168050a7b19bb28a08c27e670ffa65e932d7931d34bb6afa13d72fc795a86",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5084,
+    "sha256": "89eea98bc5ef183f187567a7ff1da02b3e58578b61bae4a62ce6a8e08e2d5c5a",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 435275,
+    "sha256": "1a9cff97bf5b9ec5cc8a4d9d0e22240a43e1abb0408230a889974950ce1f047b",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2578,
+    "sha256": "a455d86c7656c2a7e90abea2186cf5b4ecd60fe8445e31f2fd6c8b3b55b2b71b",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 671816,
+    "sha256": "a5777b0e3dc62fc535f1a3989730bdcdddcef7bb4c46c1ce25a28029ce831372",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 158784,
+    "sha256": "28ee4c681fb5d5a6d48872d274245fdaa373587bcac1cf55bbcafa1a670ab741",
+    "url": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 43754929811,
+   "run_url": "https://github.com/linuxserver-playground/docker-wikijs/actions/runs/43754929811",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/wikijs",
+   "tags": [
+    "latest",
+    "v2.5.317-ls10",
+    "version-v2.5.317",
+    "2.5.317",
+    "amd64-latest",
+    "amd64-v2.5.317-ls10",
+    "amd64-version-v2.5.317",
+    "amd64-2.5.317",
+    "arm64v8-latest",
+    "arm64v8-v2.5.317-ls10",
+    "arm64v8-version-v2.5.317",
+    "arm64v8-2.5.317"
+   ]
+  }
+ },
+ "diff": {
+  "image": "wikijs",
+  "branch": "master",
+  "tag": "v2.5.317-ls10",
+  "previous_tag": "v2.5.317-ls9",
+  "classification": "packages",
+  "reasons": [
+   "packages changed",
+   "1 commit (3a1b697 → 930ab07): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v2.5.317",
+   "to": "v2.5.317",
+   "changed": false
+  },
+  "commit": {
+   "from": "3a1b69746306b52e0452eb85035554e8bc2488b8",
+   "to": "930ab072c9a70dd1cce20d1a221ff6b6bb3ea135",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-wikijs/compare/3a1b69746306b52e0452eb85035554e8bc2488b8...930ab072c9a70dd1cce20d1a221ff6b6bb3ea135",
+   "commits": [
+    {
+     "sha": "930ab072c9a70dd1cce20d1a221ff6b6bb3ea135",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-11T16:05:00Z",
+     "url": "https://github.com/linuxserver-playground/docker-wikijs/commit/930ab072c9a70dd1cce20d1a221ff6b6bb3ea135",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 142993527,
+    "to": 142998212,
+    "delta": 4685
+   },
+   "arm64": {
+    "from": 143328536,
+    "to": 143337931,
+    "delta": 9395
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "nodejs",
+       "from": "24.22.1-r1",
+       "to": "24.22.3-r0",
+       "purl": "pkg:apk/alpine/nodejs@24.22.3-r0?arch=x86_64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "nodejs",
+       "from": "24.22.1-r1",
+       "to": "24.22.3-r0",
+       "purl": "pkg:apk/alpine/nodejs@24.22.3-r0?arch=aarch64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:545d4f15654f1a41d289dc8d6ff4323903aab87b026be0a65396345b2c101be4",
+    "diff_id": "sha256:8be867d300e530cf6d98eac7b9af2cc8d84469decd1054eabf8dfd99bf9e72ea",
+    "size": 6266615,
+    "uncompressed_size": 13734397,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2023bed36d24cf793e80fa15289e7bddee887ff422d51bdd8b408c79138f0f06",
+    "diff_id": "sha256:be2f9fea94da00699c9bcd4b86a523e62c1dee6224ee3cff60ac313aaadf4843",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:c6d434456495ac568c97d1c4c0b02833dd8d030d0229c025a1392a245db9951b",
+    "diff_id": "sha256:aa510fdedc0643fe353dd455e66b5b6887d102914d9b17d76e8530a9d548d878",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:f0d95394e91d9e9173e468997b34c65657362d6bac9985dd86090506b3703004",
+    "diff_id": "sha256:c5f324c75d01bb48409641211c83c5c00c222b5d2ede732004f34755941ad642",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:896e30f3f6a9a79a56b14501dfb29b94469d4f7e62d688eb7f9920c5e01248ca",
+    "diff_id": "sha256:7b93a48e4d05ad9969e9b34a2e2c814a9a905814d76f0cad3b2dda7b90b76295",
+    "size": 6091161,
+    "uncompressed_size": 14421909,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:f5fba40ea5e79a9b868c8956a0790ba521114c461fb913fe2120e5d28fc8dbc7",
+    "diff_id": "sha256:4e492c677e4c6b01a4449b80ef9d3fe690a851f54d49d0ace528903f1fea010a",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:942cb24042392a483e1dd6f9af68876a17132ad0b03388f78613e1f0478274a5",
+    "diff_id": "sha256:c5e72aba6ae60fb24ae654fc8e9012068bd3160ed00c6b4f213e146d366003dc",
+    "size": 130624450,
+    "uncompressed_size": 534467333,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-15T19:53:55Z VERSION=v2.5.317-ls10 WIKIJS_RELEASE= /bin/sh -c echo \"**** install build packages ****\" &&   apk -U --update --no-cache add --virtual=build-dependencies     build-base     python3 &&   apk add --no-cache     git     nodejs     npm     openssh &&   echo \"**** install wiki.js ****\" &&   mkdir -p /app/wiki &&   if [ -z ${WIKIJS_RELEASE} ]; then     WIKIJS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Requarks/wiki-v2/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     /tmp/wiki.tar.gz -L     \"https://github.com/Requarks/wiki-v2/releases/download/${WIKIJS_RELEASE}/wiki-js.tar.gz\" &&   tar xf     /tmp/wiki.tar.gz -C     /app/wiki/ &&   cd /app/wiki &&   npm rebuild sqlite3 &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     18,
+     48
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:ffa521421aa1364fa1206e93cda6cbdee2ad0c2ea1101dc8b4b81dbc2b788706",
+    "diff_id": "sha256:e1862895241795bf5ec2a87f0f25316e3c84630517193b6c0e6814a10f1bba4d",
+    "size": 2627,
+    "uncompressed_size": 5912,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     51,
+     51
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:64b981af69cff029eba3c7e0777523e70f1f4054b0887f9a965c176d18169cc6",
+    "diff_id": "sha256:ff1102643737cf92b5ddf6c7a1b0d458827766891ea7a4f451e80d24cf72a580",
+    "size": 7083608,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:79a420625e0d676d8a32b0bfbd2195beb0da5e8b12eac1c933fcacfbf12a1b51",
+    "diff_id": "sha256:33f6be7ae4978af9a244d51a206ab0c210235afa751f59a501512bf033c19eff",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:1eea1340625cba05d1c5c9edd941668f886cdbee11741d5a10531401783164ee",
+    "diff_id": "sha256:b94ed0ba2e30c058a7c340548783ab419fd231871094ebeba35593c7f3092aed",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d433e188c5969ad4637c3026f984c0895a593777d729a9965b7ae4aef4b2fad6",
+    "diff_id": "sha256:e4ec07be27d69218cbd64a618be58d94b48a066d0cda68d0ea2437f3434664e8",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c7b7cefe879ff05f0664c285600286a1caa628150f63fc3f3dd08c79cf4af237",
+    "diff_id": "sha256:358853ccd9f142431d5a1e859f4923f0e9b1c320430f63bd87cb59fa1c3cb76e",
+    "size": 6326079,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:cc88e67bd7dfee632bf5f1db2d42cbbf63b5effbcedd683ebfbfb50a2b30c949",
+    "diff_id": "sha256:2dfe8908c338a57538164ebc6c067025885ba57080d8cb419e0d1afa546306af",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:53f86ddf863e15498a51e0fbb5da186c4a7b7fa3811ae9e4c0e887b43a1974e8",
+    "diff_id": "sha256:8b89cc9bf931018c250fa500c8c1a19e495c5f9101b0790aaef1f958a946bfae",
+    "size": 129912258,
+    "uncompressed_size": 531566333,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-15T19:53:55Z VERSION=v2.5.317-ls10 WIKIJS_RELEASE= /bin/sh -c echo \"**** install build packages ****\" &&   apk -U --update --no-cache add --virtual=build-dependencies     build-base     python3 &&   apk add --no-cache     git     nodejs     npm     openssh &&   echo \"**** install wiki.js ****\" &&   mkdir -p /app/wiki &&   if [ -z ${WIKIJS_RELEASE} ]; then     WIKIJS_RELEASE=$(curl -sX GET \"https://api.github.com/repos/Requarks/wiki-v2/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     /tmp/wiki.tar.gz -L     \"https://github.com/Requarks/wiki-v2/releases/download/${WIKIJS_RELEASE}/wiki-js.tar.gz\" &&   tar xf     /tmp/wiki.tar.gz -C     /app/wiki/ &&   cd /app/wiki &&   npm rebuild sqlite3 &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     18,
+     48
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:c2e2d42e745403e36c058bd6ac187d605858d81edb11812a4c429e26384d215c",
+    "diff_id": "sha256:ba8ed99d25058b0a34deccfba5f88d19e2be67482d9b05ca0844470f4916a99c",
+    "size": 2627,
+    "uncompressed_size": 5912,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     51,
+     51
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "wikijs",
+  "tag": "v2.5.317-ls10",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/wikijs/builds/v2.5.317-ls10/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.012,
+    "listening_ports": [
+     "3000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 129945600,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.01,
+    "listening_ports": [
+     "3000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 126820352,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-wikijs/releases/download/v2.5.317-ls10/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-wikijs/builds/v2.5.317-ls10/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "wikijs",
+    "tag": "amd64-930ab07-43754929811",
+    "arch": "amd64",
+    "started": "2026-11-15T19:57:42Z",
+    "finished": "2026-11-15T19:58:08Z",
+    "success": true,
+    "runner": "e295ac2e3901",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.012,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.012
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-wikijs",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.05
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 0.1s",
+      "seconds": 0.101
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "1844 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "1844 packages: syft JSON 271722 bytes gzipped, SPDX for the image attestation 3263649 bytes",
+      "seconds": 0.43
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "6386 dirs, 61987 files (562339750 bytes), 1523 symlinks, 258 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.32s, total 0.70s",
+      "seconds": 0.88
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.914
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.035
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 10.961
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [3000], rss 129945600 bytes",
+      "seconds": 1.2
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 129945600,
+     "pids": 13,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-wikijs"
+     ],
+     "changed_paths": 209
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "wikijs",
+    "tag": "arm64-930ab07-43754929811",
+    "arch": "arm64",
+    "started": "2026-11-15T19:56:08Z",
+    "finished": "2026-11-15T19:56:37Z",
+    "success": true,
+    "runner": "3bd7a0feb444",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.01,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.01
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-wikijs",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.043
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 0.2s",
+      "seconds": 0.171
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "1844 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "1844 packages: syft JSON 271894 bytes gzipped, SPDX for the image attestation 3263722 bytes",
+      "seconds": 0.505
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "6386 dirs, 61986 files (571358644 bytes), 1523 symlinks, 258 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.40s, total 0.85s",
+      "seconds": 1.088
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.617
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.063
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 11.256
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [3000], rss 126820352 bytes",
+      "seconds": 1.585
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 126820352,
+     "pids": 13,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-wikijs"
+     ],
+     "changed_paths": 209
+    }
+   }
+  }
+ }
+}
