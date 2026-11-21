@@ -1,0 +1,85 @@
+---
+image: "fail2ban"
+section: "usage"
+title: "Usage"
+order: 2
+---
+To help you get started creating a container from this image you can either use docker-compose or the docker cli.
+
+> [!NOTE]
+> Unless a parameter is flagged as 'optional', it is *mandatory* and a value must be provided.
+
+### docker-compose (recommended, [click here for more info](https://linuxserver-playground.github.io/site/docs/general/docker-compose))
+
+```yaml
+---
+services:
+  fail2ban:
+    image: ghcr.io/linuxserver-playground/fail2ban:latest
+    container_name: fail2ban
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Etc/UTC
+      - VERBOSITY=-vv #optional
+    volumes:
+      - /path/to/fail2ban/config:/config
+      - /var/log:/var/log:ro
+      - /path/to/airsonic/log:/remotelogs/airsonic:ro #optional
+      - /path/to/apache2/log:/remotelogs/apache2:ro #optional
+      - /path/to/authelia/log:/remotelogs/authelia:ro #optional
+      - /path/to/emby/log:/remotelogs/emby:ro #optional
+      - /path/to/filebrowser/log:/remotelogs/filebrowser:ro #optional
+      - /path/to/homeassistant/log:/remotelogs/homeassistant:ro #optional
+      - /path/to/lighttpd/log:/remotelogs/lighttpd:ro #optional
+      - /path/to/nextcloud/log:/remotelogs/nextcloud:ro #optional
+      - /path/to/nginx/log:/remotelogs/nginx:ro #optional
+      - /path/to/nzbget/log:/remotelogs/nzbget:ro #optional
+      - /path/to/overseerr/log:/remotelogs/overseerr:ro #optional
+      - /path/to/prowlarr/log:/remotelogs/prowlarr:ro #optional
+      - /path/to/radarr/log:/remotelogs/radarr:ro #optional
+      - /path/to/sabnzbd/log:/remotelogs/sabnzbd:ro #optional
+      - /path/to/sonarr/log:/remotelogs/sonarr:ro #optional
+      - /path/to/unificontroller/log:/remotelogs/unificontroller:ro #optional
+      - /path/to/vaultwarden/log:/remotelogs/vaultwarden:ro #optional
+    restart: unless-stopped
+```
+
+### docker cli ([click here for more info](https://docs.docker.com/engine/reference/commandline/cli/))
+
+```bash
+docker run -d \
+  --name=fail2ban \
+  --net=host \
+  --cap-add=NET_ADMIN \
+  --cap-add=NET_RAW \
+  -e PUID=1000 \
+  -e PGID=1000 \
+  -e TZ=Etc/UTC \
+  -e VERBOSITY=-vv `#optional` \
+  -v /path/to/fail2ban/config:/config \
+  -v /var/log:/var/log:ro \
+  -v /path/to/airsonic/log:/remotelogs/airsonic:ro `#optional` \
+  -v /path/to/apache2/log:/remotelogs/apache2:ro `#optional` \
+  -v /path/to/authelia/log:/remotelogs/authelia:ro `#optional` \
+  -v /path/to/emby/log:/remotelogs/emby:ro `#optional` \
+  -v /path/to/filebrowser/log:/remotelogs/filebrowser:ro `#optional` \
+  -v /path/to/homeassistant/log:/remotelogs/homeassistant:ro `#optional` \
+  -v /path/to/lighttpd/log:/remotelogs/lighttpd:ro `#optional` \
+  -v /path/to/nextcloud/log:/remotelogs/nextcloud:ro `#optional` \
+  -v /path/to/nginx/log:/remotelogs/nginx:ro `#optional` \
+  -v /path/to/nzbget/log:/remotelogs/nzbget:ro `#optional` \
+  -v /path/to/overseerr/log:/remotelogs/overseerr:ro `#optional` \
+  -v /path/to/prowlarr/log:/remotelogs/prowlarr:ro `#optional` \
+  -v /path/to/radarr/log:/remotelogs/radarr:ro `#optional` \
+  -v /path/to/sabnzbd/log:/remotelogs/sabnzbd:ro `#optional` \
+  -v /path/to/sonarr/log:/remotelogs/sonarr:ro `#optional` \
+  -v /path/to/unificontroller/log:/remotelogs/unificontroller:ro `#optional` \
+  -v /path/to/vaultwarden/log:/remotelogs/vaultwarden:ro `#optional` \
+  --restart unless-stopped \
+  ghcr.io/linuxserver-playground/fail2ban:latest
+```
