@@ -1,0 +1,815 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "baseimage-ubuntu",
+  "repository": "linuxserver-playground/docker-baseimage-ubuntu",
+  "branch": "jammy",
+  "mode": "live",
+  "version": {
+   "upstream": "b618d2a9",
+   "upstream_clean": "b618d2a9",
+   "ls_build": 3,
+   "tag": "jammy-b618d2a9-ls3",
+   "release_tag": "jammy",
+   "tags": [
+    "jammy",
+    "jammy-b618d2a9-ls3",
+    "jammy-version-b618d2a9",
+    "amd64-jammy",
+    "amd64-jammy-b618d2a9-ls3",
+    "amd64-jammy-version-b618d2a9",
+    "arm64v8-jammy",
+    "arm64v8-jammy-b618d2a9-ls3",
+    "arm64v8-jammy-version-b618d2a9"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "44dadfa97829398ea186e193694ce5efd26d7cee",
+  "created": "2026-10-27T17:34:17Z",
+  "reason": "push",
+  "previous": {
+   "tag": "jammy-b618d2a9-ls2",
+   "release_url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/tag/jammy-b618d2a9-ls2"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:b16f5b984da6c9869b6bf2e19d00a10bf5845c866b68e8741bc3d457302f9f82",
+    "size": 72113567,
+    "uncompressed_size": 186432568,
+    "layers": 7,
+    "runner": "Linux-X64",
+    "build_seconds": 75
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:a230b42255e42b0cb4c1b25b346452c678cd2acc3690d2027c65161fe923f8d9",
+    "size": 70235576,
+    "uncompressed_size": 178424016,
+    "layers": 7,
+    "runner": "Linux-ARM64",
+    "build_seconds": 44
+   }
+  ],
+  "index_digest": "sha256:107a3f6cced224f8be09ee9c08fd46642f9b52cc9d30c87de28c5cf9175c4a42",
+  "labels": {
+   "build_version": "Linuxserver.io version:- b618d2a9-ls3 Build-date:- 2026-10-27T17:28:38Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "jammy",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "b618d2a9",
+   "maintainer": "TheLamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-27T17:28:38Z",
+   "org.opencontainers.image.description": "baseimage-ubuntu container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-baseimage-ubuntu",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "44dadfa97829398ea186e193694ce5efd26d7cee",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu",
+   "org.opencontainers.image.title": "Baseimage-ubuntu",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "b618d2a9-ls3"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/root",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 as rootfs-stage\n\n# environment\nENV REL=jammy\nENV ARCH=amd64\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    tzdata \\\n    xz\n\n# grab base tarball\nRUN \\\n  mkdir /root-out && \\\n  curl -o \\\n    /rootfs.tar.gz -L \\\n    https://partner-images.canonical.com/core/${REL}/current/ubuntu-${REL}-core-cloudimg-${ARCH}-root.tar.gz && \\\n  tar xf \\\n    /rootfs.tar.gz -C \\\n    /root-out && \\\n  rm -rf \\\n    /root-out/var/log/*\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"x86_64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\n# copy sources\nCOPY sources.list /etc/apt/\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  set -xe && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    netcat \\\n    tzdata && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/*\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 as rootfs-stage\n\n# environment\nENV REL=jammy\nENV ARCH=arm64\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    tzdata \\\n    xz\n\n# grab base tarball\nRUN \\\n  mkdir /root-out && \\\n  curl -o \\\n    /rootfs.tar.gz -L \\\n    https://partner-images.canonical.com/core/${REL}/current/ubuntu-${REL}-core-cloudimg-${ARCH}-root.tar.gz && \\\n  tar xf \\\n    /rootfs.tar.gz -C \\\n    /root-out && \\\n  rm -rf \\\n    /root-out/var/log/*\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"aarch64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\n# copy sources\nCOPY sources.list.arm /etc/apt/sources.list\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  set -xe && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    netcat \\\n    tzdata && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** add qemu ****\" && \\\n  curl -o \\\n  /usr/bin/qemu-aarch64-static -L \\\n    \"https://lsio-ci.ams3.digitaloceanspaces.com/qemu-aarch64-static\" && \\\n  chmod +x /usr/bin/qemu-aarch64-static && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/*\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"baseimage-ubuntu:jammy\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-os-end -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  base -> init-mods\n  init-config-end -> init-mods\n  init-mods -> init-mods-end\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  base -> init-os-end\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-migrations -> init-os-end\n  init-custom-files -> init-services\n  init-mods-end -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"scratch\"\n}\n\"baseimage-ubuntu:jammy\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "base",
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods",
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "base",
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile",
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files",
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 145,
+    "distro": "Ubuntu 22.04.5 LTS",
+    "hash": "50edd965",
+    "by_type": {
+     "deb": 145
+    }
+   },
+   "arm64": {
+    "count": 145,
+    "distro": "Ubuntu 22.04.5 LTS",
+    "hash": "50edd965",
+    "by_type": {
+     "deb": 145
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-ubuntu/builds/jammy-b618d2a9-ls3/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-baseimage-ubuntu/compare/jammy-b618d2a9-ls2...jammy-b618d2a9-ls3"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 38225,
+    "sha256": "7769e0c3dc12cde0f15bd4f4d404d31e538a4e217ad0eb95087ca57f9b1e0290",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4733,
+    "sha256": "0210774332b68b7e77fe6bae962e51c46ce0d6e11f99e1a2d3b4486b4bc95033",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 51223,
+    "sha256": "8e6ccccd9df703427ca7545e7f701b673879e45efc7a8206f08d9c271fc56a7b",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2392,
+    "sha256": "8b581b29af3e7980acc04be72358293edf36423af36ee7e22fdd191bfd675fd3",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 2900,
+    "sha256": "0ee5ca69b293a727aa550d7893e5baf59e773c436bac9b43830fb726943a2f8f",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 10074,
+    "sha256": "278e62c62b89cda35df6400c74bce88215fa358bb89e575614b21bfb74f0bbbe",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 38277,
+    "sha256": "de90c404f00112ddc8e0d4396523429229fe037195e87df904fd5cc2f959fe9f",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4943,
+    "sha256": "0717ed6073fe71787ac4540cb130465c920310b55a1732de00466e847d9b34aa",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 51099,
+    "sha256": "0be9180cc1f5b3b231768cf0a177f51fbad40b3f15eadfa18d9372b081c86188",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2394,
+    "sha256": "3e6c1896f74d0fa14b8cab3c5403532de7629833bf8ed2fbdf3f6fdf7b11f15d",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 2922,
+    "sha256": "d4534f2bac25ac88c47dd8c1b1deb8a3089ebfe471ef5cd6b3913a178d29f57c",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 10074,
+    "sha256": "278e62c62b89cda35df6400c74bce88215fa358bb89e575614b21bfb74f0bbbe",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 40550887201,
+   "run_url": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/actions/runs/40550887201",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  }
+ },
+ "diff": {
+  "image": "baseimage-ubuntu",
+  "branch": "jammy",
+  "tag": "jammy-b618d2a9-ls3",
+  "previous_tag": "jammy-b618d2a9-ls2",
+  "classification": "linuxserver",
+  "reasons": [
+   "Dockerfile changed"
+  ],
+  "upstream": {
+   "from": "b618d2a9",
+   "to": "b618d2a9",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "scratch"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 72113279,
+    "to": 72113567,
+    "delta": 288
+   },
+   "arm64": {
+    "from": 70235521,
+    "to": 70235576,
+    "delta": 55
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "--- a/Dockerfile\n+++ b/Dockerfile\n@@ -53,9 +53,9 @@\n LABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\n LABEL maintainer=\"TheLamer\"\n \n-ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n-ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n-ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n+ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n+ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n+ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n \n # set environment variables\n ARG DEBIAN_FRONTEND=\"noninteractive\"\n",
+   "arm64": "--- a/Dockerfile.aarch64\n+++ b/Dockerfile.aarch64\n@@ -53,9 +53,9 @@\n LABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\n LABEL maintainer=\"TheLamer\"\n \n-ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n-ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n-ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n+ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\n+ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\n+ADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\n \n # set environment variables\n ARG DEBIAN_FRONTEND=\"noninteractive\"\n"
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:d0cd31de77a21f1659efda58712cd87358973031325303222a497820ea4090be",
+    "diff_id": "sha256:1da0df46cd6d56f837a48efe83256fd50fd3a82a7e526d485f148d4c2bb02fb7",
+    "size": 32812795,
+    "uncompressed_size": 82787438,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:3f88478044e0e4575726e35140309e356e4e76f89f65042d5694a2bf3ab6de52",
+    "diff_id": "sha256:f803dd5fe801d02a13a17fae710f5e6e897bb884a3d42769b6b8ffc7cbf59fe9",
+    "size": 1365,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:ec9fbc96b494621c8c0668771f4f09531a77f546d6dae6589ea44b00f5c5be3c",
+    "diff_id": "sha256:a0bac71396faeaec359630947dbd015de238a34c9c470d7eb4edcb943d0e7f11",
+    "size": 703,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:63b6f455ccb0087b28da4101469c86fc562080488d3e67d63f69ca81a02251e0",
+    "diff_id": "sha256:079aeb92900f79cf921310fb148eb9e05c98e1adb4084e4e91382287599f7eb6",
+    "size": 274,
+    "uncompressed_size": 836,
+    "created_by": "COPY sources.list /etc/apt/",
+    "dockerfile_lines": [
+     73,
+     73
+    ],
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:4f24ae5a377af7f6d96accd5de06b671059aa9fb331ab6004f29f1353e2b2800",
+    "diff_id": "sha256:8eb8e1255aacd579b0aa3f2cfb90ef9c51c5e0fae0476e58ddd58b8c8d13b210",
+    "size": 39287669,
+    "uncompressed_size": 103599503,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:28:38Z VERSION=b618d2a9-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "dockerfile_lines": [
+     75,
+     140
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:e66bfde750f663e00e8b5f162006bfa992977c044429fdb2e1c7e054196ceeeb",
+    "diff_id": "sha256:6edd4e1f35dd9828da23fbb6ba46be879319ed0dc93fd9801f12befe600de94c",
+    "size": 4522,
+    "uncompressed_size": 8475,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     143,
+     143
+    ],
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:5dfe88245f16e4882fcdb5d3de57f7962a0747a7805a2ba3538219744f3525ed",
+    "diff_id": "sha256:7ebc601ac31ffc77e0b834e2275048685eaf76ca2f678b701e31d1ac002ec79b",
+    "size": 31253132,
+    "uncompressed_size": 78765465,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:3ba45c1cbb98af161cc382cbf2b46a3e69dc55cde5612054633cf42ad7d9fe58",
+    "diff_id": "sha256:73790f8d295404cce9bb60989b1c211fa976b90342c2c214591f870110c55042",
+    "size": 1366,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:9bc53dfc770654dd9321ad5c04b23c4db4df050986fb18cbe8a1d6d1d3b2ec57",
+    "diff_id": "sha256:69b484bdce2ccc9422c6a5dd639fbaec25751797813d2b078276c93ae361f1d2",
+    "size": 704,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:0e3cbb20ebec5603905d14da9fade0b63dd3e97eac9f41d02f90343b7e14f417",
+    "diff_id": "sha256:b002273ba7ed25d37eb41158aa7a8756ee86087e800e9be0a84d8dcb4272efb5",
+    "size": 273,
+    "uncompressed_size": 884,
+    "created_by": "COPY sources.list.arm /etc/apt/sources.list",
+    "dockerfile_lines": [
+     73,
+     73
+    ],
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:7fe1620635b601b15a9f5797ce0d646b8aa3a9085c0ca071e4ce4561dcd395da",
+    "diff_id": "sha256:1d46867c4689dad9671fd31e5caa2a190c01f1a7c21acdb5096ec717bf76b7c2",
+    "size": 38969339,
+    "uncompressed_size": 99612876,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:28:38Z VERSION=b618d2a9-ls3 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** add qemu ****\" &&   curl -o   /usr/bin/qemu-aarch64-static -L     \"https://lsio-ci.ams3.digitaloceanspaces.com/qemu-aarch64-static\" &&   chmod +x /usr/bin/qemu-aarch64-static &&   echo \"**** cleanup ****\" &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "dockerfile_lines": [
+     75,
+     145
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b2088e7e31e94a4847c83af2c5a8217b3f4da560f6495870c6185089a41b4c97",
+    "diff_id": "sha256:f8d067b155fa266d4e4f76f640c74c69f1b4f346df390d0cd24fcf41f52dbfb5",
+    "size": 4523,
+    "uncompressed_size": 8475,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     148,
+     148
+    ],
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "baseimage-ubuntu",
+  "tag": "jammy-b618d2a9-ls3",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-ubuntu/builds/jammy-b618d2a9-ls3/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.01,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 8450048,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-ubuntu/builds/jammy-b618d2a9-ls3/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-ubuntu/builds/jammy-b618d2a9-ls3/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.008,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 6905856,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-ubuntu/releases/download/jammy-b618d2a9-ls3/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-ubuntu/builds/jammy-b618d2a9-ls3/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-ubuntu/builds/jammy-b618d2a9-ls3/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "baseimage-ubuntu",
+    "tag": "amd64-44dadfa-40550887201",
+    "arch": "amd64",
+    "started": "2026-10-27T17:32:53Z",
+    "finished": "2026-10-27T17:33:12Z",
+    "success": true,
+    "runner": "6f6cfcb97158",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.01,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.01
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "145 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "145 packages: syft JSON 38225 bytes gzipped, SPDX for the image attestation 293158 bytes",
+      "seconds": 0.122
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "927 dirs, 5376 files (121000489 bytes), 1591 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.09s",
+      "seconds": 0.224
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.717
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.047
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 8450048 bytes",
+      "seconds": 0.338
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 8450048,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 194
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "baseimage-ubuntu",
+    "tag": "arm64-44dadfa-40550887201",
+    "arch": "arm64",
+    "started": "2026-10-27T17:30:24Z",
+    "finished": "2026-10-27T17:30:43Z",
+    "success": true,
+    "runner": "da36c3370c88",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.008,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.008
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "145 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "145 packages: syft JSON 38277 bytes gzipped, SPDX for the image attestation 293158 bytes",
+      "seconds": 0.132
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "924 dirs, 5376 files (120847532 bytes), 1586 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.08s",
+      "seconds": 0.188
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.366
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 0 from this image, base units assumed",
+      "seconds": 0.048
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 6905856 bytes",
+      "seconds": 0.282
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 6905856,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 194
+    }
+   }
+  }
+ }
+}
