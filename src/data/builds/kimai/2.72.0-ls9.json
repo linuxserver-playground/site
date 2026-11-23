@@ -1,0 +1,1380 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "kimai",
+  "repository": "linuxserver-playground/docker-kimai",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "2.72.0",
+   "upstream_clean": "2.72.0",
+   "semver": "2.72.0",
+   "ls_build": 9,
+   "tag": "2.72.0-ls9",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "2.72.0-ls9",
+    "version-2.72.0",
+    "2.72.0",
+    "amd64-latest",
+    "amd64-2.72.0-ls9",
+    "amd64-version-2.72.0",
+    "amd64-2.72.0",
+    "arm64v8-latest",
+    "arm64v8-2.72.0-ls9",
+    "arm64v8-version-2.72.0",
+    "arm64v8-2.72.0"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/kimai/kimai/releases/tag/2.72.0"
+  },
+  "commit": "09ad955eeab9df775e1e4e0c1c85909c5e6dbc53",
+  "created": "2026-11-20T08:40:35Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "2.72.0-ls8",
+   "release_url": "https://github.com/linuxserver-playground/docker-kimai/releases/tag/2.72.0-ls8"
+  },
+  "base": {
+   "family": "alpine-nginx",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+   "digest": "sha256:00312088782a28947c9a7313c8e27d684f234fc088e841b851982e3a96231587"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:e198669f21377cda6551854d0adc259809a644c9003fce90f1a35fc48c051336",
+    "size": 138350330,
+    "uncompressed_size": 421002657,
+    "layers": 11,
+    "runner": "Linux-X64",
+    "build_seconds": 60
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:29372a849eddbc00baf77bc035933f6504727691f41730e8b99af9956d078ff4",
+    "size": 139254431,
+    "uncompressed_size": 423265423,
+    "layers": 11,
+    "runner": "Linux-ARM64",
+    "build_seconds": 50
+   }
+  ],
+  "index_digest": "sha256:9995ea1efd6033b50a55b7cea5ea3ef8db5c12daa0ff5224f9e65ebf387b6a0a",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 2.72.0-ls9 Build-date:- 2026-11-20T08:35:38Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24@sha256:00312088782a28947c9a7313c8e27d684f234fc088e841b851982e3a96231587",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "2.72.0",
+   "maintainer": "nemchik",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-20T08:35:38Z",
+   "org.opencontainers.image.description": "Kimai is a professional grade time-tracking application, free and open-source.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-kimai",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "09ad955eeab9df775e1e4e0c1c85909c5e6dbc53",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-kimai",
+   "org.opencontainers.image.title": "Kimai",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-kimai/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "2.72.0-ls9"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "PHP_INI_SCAN_DIR=:/config/php",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "443/tcp",
+    "80/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KIMAI_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    php85-gd \\\n    php85-intl \\\n    php85-ldap \\\n    php85-pdo_mysql \\\n    php85-pecl-redis \\\n    php85-tokenizer \\\n    php85-xmlreader \\\n    php85-xsl && \\\n  echo \"**** configure php-fpm to pass env vars ****\" && \\\n  sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf && \\\n  if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi && \\\n  echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf && \\\n  echo \"**** install kimai ****\" && \\\n  mkdir -p\\\n    /app/www && \\\n  if [ -z ${KIMAI_RELEASE+x} ]; then \\\n    KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/kimai.tar.gz -L \\\n    \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/kimai.tar.gz -C \\\n    /app/www --strip-components=1 && \\\n  echo \"**** install composer dependencies ****\" && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap && \\\n  /usr/bin/composer clearcache -d /app/www/ && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache \\\n    $HOME/.composer\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine-nginx:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG KIMAI_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    php85-gd \\\n    php85-intl \\\n    php85-ldap \\\n    php85-pdo_mysql \\\n    php85-pecl-redis \\\n    php85-tokenizer \\\n    php85-xmlreader \\\n    php85-xsl && \\\n  echo \"**** configure php-fpm to pass env vars ****\" && \\\n  sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf && \\\n  if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi && \\\n  echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf && \\\n  echo \"**** install kimai ****\" && \\\n  mkdir -p\\\n    /app/www && \\\n  if [ -z ${KIMAI_RELEASE+x} ]; then \\\n    KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\" \\\n      | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/kimai.tar.gz -L \\\n    \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/kimai.tar.gz -C \\\n    /app/www --strip-components=1 && \\\n  echo \"**** install composer dependencies ****\" && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction && \\\n  COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap && \\\n  /usr/bin/composer clearcache -d /app/www/ && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache \\\n    $HOME/.composer\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 80 443\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"kimai:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-nginx-end -> init-config\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-kimai-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-os-end -> init-folders\n  init-php -> init-keygen\n  init-nginx-end -> init-kimai-config\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-samples -> init-nginx\n  init-version-checks -> init-nginx-end\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-keygen -> init-permissions\n  init-nginx -> init-php\n  init-folders -> init-samples\n  init-custom-files -> init-services\n  init-permissions -> init-version-checks\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-nginx\n  svc-nginx -> legacy-services\n  init-services -> svc-php-fpm\n  svc-php-fpm -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine-nginx:3.24\"\n}\n\"kimai:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end",
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-kimai-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-folders",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-keygen",
+     "type": "oneshot",
+     "depends_on": [
+      "init-php"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-kimai-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nDB_VALID=$(php -r 'echo filter_var(getenv(\"DATABASE_URL\"), FILTER_VALIDATE_URL, FILTER_FLAG_PATH_REQUIRED);')\n\nif [[ ${DATABASE_URL+x} == \"\" ]] || [[ ${DB_VALID+x} == \"NULL\" ]]; then\n    cat <<-EOF\n    ********************************************************\n    ********************************************************\n    *                                                      *\n    *                         !!!!                         *\n    *     DATABASE_URL environment variable is not set     *\n    *                          OR                          *\n    *    DATABASE_URL environment variable is not valid    *\n    *                                                      *\n    *              Please refer to the README              *\n    *                                                      *\n    *                                                      *\n    ********************************************************\n    ********************************************************\nEOF\n    sleep infinity\nfi\n\n# make our folders\nmkdir -p \\\n    /config/www/var/{cache,data,log,packages,plugins,sessions}\n\nrm -rf /app/www/var\nln -s /config/www/var /app/www/var\ncp /app/www/config/packages/kimai.yaml /config/kimai.yaml.sample\nif [[ ! -f /config/local.yaml ]]; then\n    echo '# See https://www.kimai.org/documentation/local-yaml.html' > /config/local.yaml\nfi\nif [[ ! -L /app/www/config/packages/local.yaml ]]; then\n    ln -s /config/local.yaml /app/www/config/packages/local.yaml\nfi\n\n# Clear cache on image upgade\nif [[ ! -f /dbwait.lock ]];then\n    rm -rf /config/www/var/cache/*\nfi\n\nDB_HOST=$(php -r 'echo parse_url(getenv(\"DATABASE_URL\"), PHP_URL_HOST);')\nDB_PORT=$(php -r 'echo parse_url(getenv(\"DATABASE_URL\"), PHP_URL_PORT) ?? 3306;')\n\n# check for the mysql endpoint\necho \"Waiting for DB to be available\"\nEND=$((SECONDS + 30))\nwhile [[ ${SECONDS} -lt ${END} ]]; do\n    if [[ $(/usr/bin/nc -w1 \"${DB_HOST}\" \"${DB_PORT}\" | tr -d '\\0') ]]; then\n        if [[ -n \"${RUN}\" ]]; then\n            break\n        fi\n        RUN=\"RAN\"\n        # we sleep here again due to first run init on DB containers\n        if [[ ! -f /dbwait.lock ]]; then\n            sleep 5\n        fi\n    else\n        sleep 1\n    fi\ndone\n# set lockfile to avoid DB waits for this specific container\ntouch /dbwait.lock\n\nlsiown -R abc:abc \\\n    /config/www\n\nconsole kimai:install -n\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-nginx",
+     "type": "oneshot",
+     "depends_on": [
+      "init-samples"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-nginx-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-version-checks"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-permissions",
+     "type": "oneshot",
+     "depends_on": [
+      "init-keygen"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-php",
+     "type": "oneshot",
+     "depends_on": [
+      "init-nginx"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-samples",
+     "type": "oneshot",
+     "depends_on": [
+      "init-folders"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-version-checks",
+     "type": "oneshot",
+     "depends_on": [
+      "init-permissions"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-nginx",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-php-fpm",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 274,
+    "distro": "Alpine Linux v3.24",
+    "hash": "65164bb1",
+    "by_type": {
+     "binary": 1,
+     "apk": 126,
+     "php-composer": 146,
+     "npm": 1
+    }
+   },
+   "arm64": {
+    "count": 274,
+    "distro": "Alpine Linux v3.24",
+    "hash": "65164bb1",
+    "by_type": {
+     "binary": 1,
+     "apk": 126,
+     "php-composer": 146,
+     "npm": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/kimai/builds/2.72.0-ls9/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-kimai/compare/2.72.0-ls8...2.72.0-ls9",
+   "upstream": "**Compatible with PHP 8.2 to 8.5**\r\n\r\n## Features & Maintenance\r\n\r\n- Bump Docker to PHP 8.5, use custom ICU data to fix timezone issues in some countries (#6318)\r\n- Search invoice history by invoice number (#6287) - thanks @Deniiz23 \r\n- Highlight unpaid invoices in listings\r\n- Run the search on Enter instead of saving the filter as default (invoice & export screen) (#6291) - thanks @dgesteves \r\n- Run `pnpm lint` during CI\r\n- Updated translations (#6292) (#6306)\r\n- Fix twig deprecations: missing default parameter in macros\r\n- Improved invoice overdue calculation (internal API bug, no visible changes)\r\n- Bumped frontend and composer packages\r\n\r\n## Bugfixes\r\n\r\n- Keep the calendar month in the URL on reload (#6324) - thanks @shu-chen-dot-ca \r\n- Use correct TTL settings for \"password reset\" links\r\n- Reduce default TTL for \"password reset\" links to 0.5h\r\n- Use consistent currency aware monetary rounding half-up, mainly for invoices (#6317)\r\n- Memory safe export preview (#6295)\r\n- Do not fail on unpersisted entities in rate calculation (mass import via internal API)\r\n\r\n## 🚨 Security\r\n\r\n- Disable login route if SAML is active and user disabled form login (#6311) - thanks @mrtxmrtx\r\n- Validate custom-field values submitted via API (#6301) - thanks @wleeaf and @manus-pi\r\n- Fix locale route matching in global firewall - thanks @petertornstrand \r\n- Harden twig security policy - thanks @manus-pi\r\n\r\nYou can read more about all security reports [here](https://www.kimai.org/documentation/bughunter.html#published-vulnerabilities) or grab this [RSS feed](https://www.kimai.org/security.xml) to get notified about new published advisories.\r\n\r\nAlso involved in this release: @kevinpapst, @weblate, Andrei Stepanov, @aspopovic, @Deniiz23, @dgesteves, Gabriel, Phil, testecelular and @Watchman89\r\n",
+   "upstream_url": "https://github.com/kimai/kimai/releases/tag/2.72.0"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 86840,
+    "sha256": "778e70be2066af317f6f2da1380efa50dfda8e06da773db2ee4cf376cc51e937",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 9320,
+    "sha256": "b17c3069e9ed948905fd57e7691570e432c52e72951599c8ccd76a42038e20c7",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 186027,
+    "sha256": "6d88606dcd880b02bfe7d34652ceeb9be470710e435db62451c97dea5d82fc10",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1952,
+    "sha256": "7d241201e340dfd906c00d42ea336ded0aeac74a9bc8166509d31088c760a2fb",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 428,
+    "sha256": "19c841195046f54daf118bd34bfe61e81a13e641f996394dc771451ce9222bf3",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 19250,
+    "sha256": "8e9ed8a36b0cf13bdbed11e91f424c69fd4f42ac83fa750439c41537c8707b29",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 86686,
+    "sha256": "4dc125ef2d46ee85c92d3e02459e48e5ab13202aaf43e259d64f3fd51707a935",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 9320,
+    "sha256": "aca28322022085a1797ad45a266f1fb86892b19b514abb315ca8b0e338a94990",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 185661,
+    "sha256": "a30dbf8b38b8d2a1beae1c64b026214049e0d20d4048f74ad172211e36f758e7",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1951,
+    "sha256": "1fb1cfcd17fafe096cfd53d8157e9694145f4451c964a1ff9c946d1ce9105292",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 429,
+    "sha256": "f94ddfc04447977ea124d25c4be0ba24aa233dd07c7e7646af4b3017567d2cf9",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 19250,
+    "sha256": "8e9ed8a36b0cf13bdbed11e91f424c69fd4f42ac83fa750439c41537c8707b29",
+    "url": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 44703705312,
+   "run_url": "https://github.com/linuxserver-playground/docker-kimai/actions/runs/44703705312",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/kimai",
+   "tags": [
+    "latest",
+    "2.72.0-ls9",
+    "version-2.72.0",
+    "2.72.0",
+    "amd64-latest",
+    "amd64-2.72.0-ls9",
+    "amd64-version-2.72.0",
+    "amd64-2.72.0",
+    "arm64v8-latest",
+    "arm64v8-2.72.0-ls9",
+    "arm64v8-version-2.72.0",
+    "arm64v8-2.72.0"
+   ]
+  }
+ },
+ "diff": {
+  "image": "kimai",
+  "branch": "main",
+  "tag": "2.72.0-ls9",
+  "previous_tag": "2.72.0-ls8",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (9fe9c3e → 09ad955): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "2.72.0",
+   "to": "2.72.0",
+   "changed": false
+  },
+  "commit": {
+   "from": "9fe9c3e08040068c6acf02a343c9b61d3d0fc777",
+   "to": "09ad955eeab9df775e1e4e0c1c85909c5e6dbc53",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-kimai/compare/9fe9c3e08040068c6acf02a343c9b61d3d0fc777...09ad955eeab9df775e1e4e0c1c85909c5e6dbc53",
+   "commits": [
+    {
+     "sha": "09ad955eeab9df775e1e4e0c1c85909c5e6dbc53",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-13T14:41:06Z",
+     "url": "https://github.com/linuxserver-playground/docker-kimai/commit/09ad955eeab9df775e1e4e0c1c85909c5e6dbc53",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine-nginx",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+    "digest": "sha256:e81e256976c8d1d16f1e84a53540b12b20a917e650ff884b467db4c04a3458a2"
+   },
+   "to": {
+    "family": "alpine-nginx",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine-nginx:3.24",
+    "digest": "sha256:00312088782a28947c9a7313c8e27d684f234fc088e841b851982e3a96231587"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 135769049,
+    "to": 138350330,
+    "delta": 2581281
+   },
+   "arm64": {
+    "from": 136369051,
+    "to": 139254431,
+    "delta": 2885380
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "nginx",
+       "from": "1.30.6-r0",
+       "to": "1.30.7-r0",
+       "purl": "pkg:apk/alpine/nginx@1.30.7-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "openssl",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/openssl@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "php85",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "php85-common",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-common@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-ctype",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-ctype@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-curl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-curl@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-dom",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-dom@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-fileinfo",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-fileinfo@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-fpm",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-fpm@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-gd",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-gd@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-iconv",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-iconv@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-intl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-intl@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-ldap",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-ldap@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-mbstring",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-mbstring@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-mysqlnd",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-mysqlnd@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-openssl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-openssl@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-pdo",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-pdo@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-pdo_mysql",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-pdo_mysql@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-phar",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-phar@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-session",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-session@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-simplexml",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-simplexml@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-sockets",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-sockets@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-tokenizer",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-tokenizer@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xml",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xml@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xmlreader",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xmlreader@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xmlwriter",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xmlwriter@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xsl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xsl@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-zip",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-zip@8.5.13-r0?arch=x86_64&distro=alpine-3.24.4&upstream=php85"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "nginx",
+       "from": "1.30.6-r0",
+       "to": "1.30.7-r0",
+       "purl": "pkg:apk/alpine/nginx@1.30.7-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "openssl",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/openssl@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "php85",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "php85-common",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-common@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-ctype",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-ctype@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-curl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-curl@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-dom",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-dom@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-fileinfo",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-fileinfo@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-fpm",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-fpm@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-gd",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-gd@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-iconv",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-iconv@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-intl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-intl@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-ldap",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-ldap@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-mbstring",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-mbstring@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-mysqlnd",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-mysqlnd@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-openssl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-openssl@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-pdo",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-pdo@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-pdo_mysql",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-pdo_mysql@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-phar",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-phar@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-session",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-session@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-simplexml",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-simplexml@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-sockets",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-sockets@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-tokenizer",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-tokenizer@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xml",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xml@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xmlreader",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xmlreader@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xmlwriter",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xmlwriter@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-xsl",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-xsl@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      },
+      {
+       "name": "php85-zip",
+       "from": "8.5.12-r0",
+       "to": "8.5.13-r0",
+       "purl": "pkg:apk/alpine/php85-zip@8.5.13-r0?arch=aarch64&distro=alpine-3.24.4&upstream=php85"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 60,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:545d4f15654f1a41d289dc8d6ff4323903aab87b026be0a65396345b2c101be4",
+    "diff_id": "sha256:8be867d300e530cf6d98eac7b9af2cc8d84469decd1054eabf8dfd99bf9e72ea",
+    "size": 6266615,
+    "uncompressed_size": 13711256,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:2023bed36d24cf793e80fa15289e7bddee887ff422d51bdd8b408c79138f0f06",
+    "diff_id": "sha256:be2f9fea94da00699c9bcd4b86a523e62c1dee6224ee3cff60ac313aaadf4843",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:c6d434456495ac568c97d1c4c0b02833dd8d030d0229c025a1392a245db9951b",
+    "diff_id": "sha256:aa510fdedc0643fe353dd455e66b5b6887d102914d9b17d76e8530a9d548d878",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:f0d95394e91d9e9173e468997b34c65657362d6bac9985dd86090506b3703004",
+    "diff_id": "sha256:c5f324c75d01bb48409641211c83c5c00c222b5d2ede732004f34755941ad642",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:896e30f3f6a9a79a56b14501dfb29b94469d4f7e62d688eb7f9920c5e01248ca",
+    "diff_id": "sha256:7b93a48e4d05ad9969e9b34a2e2c814a9a905814d76f0cad3b2dda7b90b76295",
+    "size": 6091161,
+    "uncompressed_size": 14407458,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:f5fba40ea5e79a9b868c8956a0790ba521114c461fb913fe2120e5d28fc8dbc7",
+    "diff_id": "sha256:4e492c677e4c6b01a4449b80ef9d3fe690a851f54d49d0ace528903f1fea010a",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:8d18c722736447b5db83f330d684b7b5b1f9669df0e80a029205ec2596b7cf77",
+    "diff_id": "sha256:9108e00d65b701741eaa54c4023a73025ce9e56173846a83f9665adaccf42f15",
+    "size": 18824268,
+    "uncompressed_size": 66880219,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-20T05:18:56Z VERSION=1.30.7-r0_8.5.13-r0-ls12 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php85     php85-ctype     php85-curl     php85-fileinfo     php85-fpm     php85-iconv     php85-json     php85-mbstring     php85-openssl     php85-phar     php85-session     php85-simplexml     php85-xml     php85-xmlwriter     php85-zip     php85-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php85\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php85 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php85/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php85/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php85/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php85/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:ad6e08f197640414e7fd3f7a70fcdcbc8e66ae4c8e3d2e472f695d644f973a6c",
+    "diff_id": "sha256:2bc3ab6f83f4f21dc744a6b6ca3bf0d20979d03e2de74f6d1143923e9f1f6f05",
+    "size": 7738,
+    "uncompressed_size": 17446,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:8124e60d8b6b4f5db409bd7365eab5143993fa3b579d08c8bb561bff02038460",
+    "diff_id": "sha256:46a5c5cb1268aaaff8d601d9e150594d2e9cecbf60c4ef3243e5be61943365db",
+    "size": 107145693,
+    "uncompressed_size": 325937303,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-20T08:35:38Z VERSION=2.72.0-ls9 KIMAI_RELEASE=2.72.0 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     php85-gd     php85-intl     php85-ldap     php85-pdo_mysql     php85-pecl-redis     php85-tokenizer     php85-xmlreader     php85-xsl &&   echo \"**** configure php-fpm to pass env vars ****\" &&   sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf &&   if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi &&   echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf &&   echo \"**** install kimai ****\" &&   mkdir -p    /app/www &&   if [ -z ${KIMAI_RELEASE+x} ]; then     KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/kimai.tar.gz -L     \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" &&   tar xf     /tmp/kimai.tar.gz -C     /app/www --strip-components=1 &&   echo \"**** install composer dependencies ****\" &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap &&   /usr/bin/composer clearcache -d /app/www/ &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache     $HOME/.composer",
+    "dockerfile_lines": [
+     14,
+     51
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:c50f5e9a594e7e5da5c3c41079497ad19726fcc0337d63978ad854ba45b7322a",
+    "diff_id": "sha256:dee237b9047d2d5139b428690cf266f5b063a00a59d972a7302852204ce55f78",
+    "size": 1496,
+    "uncompressed_size": 2759,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     54,
+     54
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:64b981af69cff029eba3c7e0777523e70f1f4054b0887f9a965c176d18169cc6",
+    "diff_id": "sha256:ff1102643737cf92b5ddf6c7a1b0d458827766891ea7a4f451e80d24cf72a580",
+    "size": 7083608,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:79a420625e0d676d8a32b0bfbd2195beb0da5e8b12eac1c933fcacfbf12a1b51",
+    "diff_id": "sha256:33f6be7ae4978af9a244d51a206ab0c210235afa751f59a501512bf033c19eff",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:1eea1340625cba05d1c5c9edd941668f886cdbee11741d5a10531401783164ee",
+    "diff_id": "sha256:b94ed0ba2e30c058a7c340548783ab419fd231871094ebeba35593c7f3092aed",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:d433e188c5969ad4637c3026f984c0895a593777d729a9965b7ae4aef4b2fad6",
+    "diff_id": "sha256:e4ec07be27d69218cbd64a618be58d94b48a066d0cda68d0ea2437f3434664e8",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c7b7cefe879ff05f0664c285600286a1caa628150f63fc3f3dd08c79cf4af237",
+    "diff_id": "sha256:358853ccd9f142431d5a1e859f4923f0e9b1c320430f63bd87cb59fa1c3cb76e",
+    "size": 6326079,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-07T01:57:37Z VERSION=3ad40b41-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:cc88e67bd7dfee632bf5f1db2d42cbbf63b5effbcedd683ebfbfb50a2b30c949",
+    "diff_id": "sha256:2dfe8908c338a57538164ebc6c067025885ba57080d8cb419e0d1afa546306af",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:a3bee32829de81ce66169d38fde8577c2d4f8eba24ff9028b2b9f91c7326b90e",
+    "diff_id": "sha256:94a7c544237da94509e0ad890a58e14ea66096b53e2a4cd97388769ea4037ef1",
+    "size": 18866835,
+    "uncompressed_size": 58089879,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-20T05:18:56Z VERSION=1.30.7-r0_8.5.13-r0-ls12 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     apache2-utils     git     logrotate     nano     nginx     openssl     php85     php85-ctype     php85-curl     php85-fileinfo     php85-fpm     php85-iconv     php85-json     php85-mbstring     php85-openssl     php85-phar     php85-session     php85-simplexml     php85-xml     php85-xmlwriter     php85-zip     php85-zlib &&   echo \"**** configure nginx ****\" &&   echo 'fastcgi_param  HTTP_PROXY         \"\"; # https://httpoxy.org/' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  PATH_INFO          $fastcgi_path_info; # http://nginx.org/en/docs/http/ngx_http_fastcgi_module.html#fastcgi_split_path_info' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name; # https://www.nginx.com/resources/wiki/start/topics/examples/phpfcgi/#connecting-nginx-to-php-fpm' >>     /etc/nginx/fastcgi_params &&   echo 'fastcgi_param  SERVER_NAME        $host; # Send HTTP_HOST as SERVER_NAME. If HTTP_HOST is blank, send the value of server_name from nginx (default is `_`)' >>     /etc/nginx/fastcgi_params &&   rm -f /etc/nginx/conf.d/stream.conf &&   rm -f /etc/nginx/http.d/default.conf &&   echo \"**** guarantee correct php version is symlinked ****\" &&   if [ \"$(readlink /usr/bin/php)\" != \"php85\" ]; then     rm -rf /usr/bin/php &&     ln -s /usr/bin/php85 /usr/bin/php;   fi &&   echo \"**** configure php ****\" &&   sed -i \"s#;error_log = log/php85/error.log.*#error_log = /config/log/php/error.log#g\"     /etc/php85/php-fpm.conf &&   sed -i \"s#user = nobody.*#user = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   sed -i \"s#group = nobody.*#group = abc#g\"     /etc/php85/php-fpm.d/www.conf &&   echo \"**** add run paths to php runtime config ****\" &&   grep -qxF 'include=/config/php/*.conf' /etc/php85/php-fpm.conf || echo 'include=/config/php/*.conf' >> /etc/php85/php-fpm.conf &&   echo \"**** install php composer ****\" &&   EXPECTED_CHECKSUM=\"$(php -r 'copy(\"https://composer.github.io/installer.sig\", \"php://stdout\");')\" &&   php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" &&   ACTUAL_CHECKSUM=\"$(php -r \"echo hash_file('sha384', 'composer-setup.php');\")\" &&   if [ \"$EXPECTED_CHECKSUM\" != \"$ACTUAL_CHECKSUM\" ]; then     >&2 echo 'ERROR: Invalid installer checksum' &&     rm composer-setup.php &&     exit 1;   fi &&   php composer-setup.php --install-dir=/usr/bin &&   rm composer-setup.php &&   ln -s /usr/bin/composer.phar /usr/bin/composer &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:a7cc36152a9d872a6b58d5d211aea96fd23af3c7ae0fd0c2ef53bc9b4213f4d1",
+    "diff_id": "sha256:1b71f2d03c1ddc2cd88e4dcef85c695dda1dbcf3bbdb673cd8da08608b999c21",
+    "size": 7740,
+    "uncompressed_size": 17446,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:48a6de1c67c00eccc3aeb21c7e69f3758650887040e59523a777da8ecb5666cc",
+    "diff_id": "sha256:366a9cc8ee7b00789cddc7b3f6209a1455430657f425a6389899994d442b7225",
+    "size": 106955314,
+    "uncompressed_size": 325077262,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-20T08:35:38Z VERSION=2.72.0-ls9 KIMAI_RELEASE=2.72.0 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     php85-gd     php85-intl     php85-ldap     php85-pdo_mysql     php85-pecl-redis     php85-tokenizer     php85-xmlreader     php85-xsl &&   echo \"**** configure php-fpm to pass env vars ****\" &&   sed -E -i 's/^;?clear_env ?=.*$/clear_env = no/g' /etc/php85/php-fpm.d/www.conf &&   if ! grep -qxF 'clear_env = no' /etc/php85/php-fpm.d/www.conf; then echo 'clear_env = no' >> /etc/php85/php-fpm.d/www.conf; fi &&   echo \"env[PATH] = /usr/local/bin:/usr/bin:/bin\" >> /etc/php85/php-fpm.conf &&   echo \"**** install kimai ****\" &&   mkdir -p    /app/www &&   if [ -z ${KIMAI_RELEASE+x} ]; then     KIMAI_RELEASE=$(curl -sX GET \"https://api.github.com/repos/kimai/kimai/releases/latest\"       | jq -r '.tag_name');   fi &&   curl -o     /tmp/kimai.tar.gz -L     \"https://github.com/kimai/kimai/archive/refs/tags/${KIMAI_RELEASE}.tar.gz\" &&   tar xf     /tmp/kimai.tar.gz -C     /app/www --strip-components=1 &&   echo \"**** install composer dependencies ****\" &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer install -d /app/www/ --no-dev --optimize-autoloader --no-interaction &&   COMPOSER_MEMORY_LIMIT=-1 php -d memory_limit=-1 /usr/bin/composer require -d /app/www/ --update-no-dev laminas/laminas-ldap &&   /usr/bin/composer clearcache -d /app/www/ &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache     $HOME/.composer",
+    "dockerfile_lines": [
+     14,
+     51
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:10f6e10065f3811c0500266a0a442f4a971f90bf6511f49ebf0c6e22f6c5852a",
+    "diff_id": "sha256:41ffee58934b97954dee729a9bea3a51421dd0ee1989bafe93c432a464be49fd",
+    "size": 1496,
+    "uncompressed_size": 2759,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     54,
+     54
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "kimai",
+  "tag": "2.72.0-ls9",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/kimai/builds/2.72.0-ls9/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/test.amd64.tar.gz",
+    "files": {}
+   },
+   "arm64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-kimai/releases/download/2.72.0-ls9/test.arm64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "kimai",
+    "tag": "amd64-09ad955-44703705312",
+    "arch": "amd64",
+    "started": "2026-11-20T08:38:51Z",
+    "finished": "2026-11-20T08:38:59Z",
+    "success": true,
+    "runner": "35a55829c5d1",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "274 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "274 packages: syft JSON 86840 bytes gzipped, SPDX for the image attestation 564797 bytes",
+      "seconds": 0.117
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2958 dirs, 19171 files (414302710 bytes), 1429 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.23s, total 0.33s",
+      "seconds": 0.483
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.688
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 1 from this image, own units from the repository",
+      "seconds": 0.058
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "kimai",
+    "tag": "arm64-09ad955-44703705312",
+    "arch": "arm64",
+    "started": "2026-11-20T08:37:44Z",
+    "finished": "2026-11-20T08:37:52Z",
+    "success": true,
+    "runner": "50cc6dc9741d",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "274 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "274 packages: syft JSON 86686 bytes gzipped, SPDX for the image attestation 564923 bytes",
+      "seconds": 0.177
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2958 dirs, 19170 files (416801045 bytes), 1429 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.15s, total 0.25s",
+      "seconds": 0.42
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "11 layers, 9 from base, compressed sizes from registry",
+      "seconds": 0.531
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "28 units, 1 from this image, own units from the repository",
+      "seconds": 0.075
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}
