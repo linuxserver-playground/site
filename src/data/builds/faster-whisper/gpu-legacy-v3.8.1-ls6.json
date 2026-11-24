@@ -1,0 +1,699 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "faster-whisper",
+  "repository": "linuxserver-playground/docker-faster-whisper",
+  "branch": "gpu-legacy",
+  "mode": "live",
+  "version": {
+   "upstream": "v3.8.1",
+   "upstream_clean": "v3.8.1",
+   "semver": "3.8.1",
+   "ls_build": 6,
+   "tag": "gpu-legacy-v3.8.1-ls6",
+   "release_tag": "gpu-legacy",
+   "tags": [
+    "gpu-legacy",
+    "gpu-legacy-v3.8.1-ls6",
+    "gpu-legacy-version-v3.8.1",
+    "gpu-legacy-3.8.1",
+    "amd64-gpu-legacy",
+    "amd64-gpu-legacy-v3.8.1-ls6",
+    "amd64-gpu-legacy-version-v3.8.1",
+    "amd64-gpu-legacy-3.8.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/OHF-Voice/wyoming-faster-whisper/releases/tag/v3.8.1"
+  },
+  "commit": "2239f6fdacda674940e82a7ef48530596a2f84c5",
+  "created": "2026-11-10T22:45:40Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "gpu-legacy-v3.8.1-ls5",
+   "release_url": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/tag/gpu-legacy-v3.8.1-ls5"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+   "digest": "sha256:5c85b2babfb9f4f3dfa0c4b9e3bf5879f933a18ea06e78cb88ec6838730e98ee"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:27b3a901d2adfc5dadb2bb68a0be237503199cdbe55b076b16485aab0d58fef7",
+    "size": 1530070734,
+    "uncompressed_size": 2590912293,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 177
+   }
+  ],
+  "index_digest": "sha256:c08b36fd084650bb214f3dfca0a551d2e36dcd8c3069859dd3b5457d06453a5b",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v3.8.1-ls6 Build-date:- 2026-11-10T22:39:38Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute@sha256:5c85b2babfb9f4f3dfa0c4b9e3bf5879f933a18ea06e78cb88ec6838730e98ee",
+   "io.linuxserver.image.branch": "gpu-legacy",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v3.8.1",
+   "maintainer": "thespad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-10T22:39:38Z",
+   "org.opencontainers.image.description": "Faster-whisper is a reimplementation of OpenAI's Whisper model using CTranslate2, which is a fast inference engine for Transformer models.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-faster-whisper",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "2239f6fdacda674940e82a7ef48530596a2f84c5",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-faster-whisper",
+   "org.opencontainers.image.title": "Faster-whisper",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-faster-whisper/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v3.8.1-ls6"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/config",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "DEBIAN_FRONTEND=noninteractive",
+    "TMPDIR=/run/whisper-temp"
+   ],
+   "exposed_ports": [
+    "10300/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG WHISPER_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nENV HOME=/config \\\n  DEBIAN_FRONTEND=\"noninteractive\" \\\n  TMPDIR=\"/run/whisper-temp\"\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apt-get update && \\\n  apt-get install -y --no-install-recommends \\\n    build-essential \\\n    git \\\n    python3-dev \\\n    python3-venv && \\\n  if [ -z ${WHISPER_VERSION+x} ]; then \\\n    WHISPER_VERSION=$(curl -sX GET \"https://api.github.com/repos/OHF-Voice/wyoming-faster-whisper/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/ubuntu/ \\\n    \"av>=18.0.0,<19.0.0\" \\\n    \"nvidia-cublas-cu12==12.9.1.4\" \\\n    \"nvidia-cudnn-cu12==9.10.2.21\" \\\n    git+https://github.com/OHF-Voice/wyoming-faster-whisper@${WHISPER_VERSION} && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get purge -y --auto-remove \\\n    build-essential \\\n    git \\\n    python3-dev && \\\n  rm -rf \\\n    /var/lib/apt/lists/* \\\n    /tmp/*\n\nCOPY root/ /\n\nVOLUME /config\n\nEXPOSE 10300\n"
+  },
+  "init_graph": {
+   "d2": "\"faster-whisper:gpu-legacy\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-whisper-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-whisper-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-whisper\n  svc-whisper -> legacy-services\n}\nBase Images: {\n  \"baseimage-ubuntu:resolute\"\n}\n\"faster-whisper:gpu-legacy\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-whisper-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-whisper-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p \"/run/whisper-temp\"\n\n# permissions\nlsiown -R abc:abc \\\n    /config \\\n    /run/whisper-temp\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-whisper",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexport LD_LIBRARY_PATH=$(python3 -c 'import os; import nvidia.cublas.lib; import nvidia.cudnn.lib; print(os.path.dirname(nvidia.cublas.lib.__path__[0]) + \"/lib:\" + os.path.dirname(nvidia.cudnn.lib.__path__[0]) + \"/lib\")')\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 10300\" \\\n        s6-setuidgid abc python3 -m wyoming_faster_whisper \\\n        --uri 'tcp://0.0.0.0:10300' \\\n        --device cuda \\\n        --model \"${WHISPER_MODEL:-auto}\" \\\n        --beam-size \"${WHISPER_BEAM:-1}\" \\\n        --language \"${WHISPER_LANG:-auto}\" \\\n        --compute-type \"${WHISPER_COMPUTE_TYPE:-default}\" \\\n        --data-dir /config \\\n        --download-dir /config \\\n        ${DEBUG:+--debug} \\\n        ${LOCAL_ONLY:+--local-files-only}\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 256,
+    "distro": "Ubuntu 26.04.1 LTS",
+    "hash": "c814d94e",
+    "by_type": {
+     "python": 63,
+     "binary": 15,
+     "deb": 159,
+     "go-module": 11,
+     "rpm": 7,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/faster-whisper/builds/gpu-legacy-v3.8.1-ls6/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-faster-whisper/compare/gpu-legacy-v3.8.1-ls5...gpu-legacy-v3.8.1-ls6",
+   "upstream": "- Streaming sherpa-onnx models no longer cut off the last word or two of an\n  utterance. The trailing silence fed before `input_finished()` is now measured\n  from the model rather than fixed at the 0.66s in sherpa-onnx's own examples:\n  the encoder only runs on whole chunks, and a chunk is 1.41s for the Kroko\n  streaming zipformers that `--sherpa-streaming` defaults to, so the tail of\n  every utterance went undecoded. 0.66s stays the minimum for models whose\n  chunk is shorter\n  - Priming those models at startup was a no-op for the same reason — it fed\n    128 samples, far less than one chunk — so the first transcription paid for\n    the warm-up",
+   "upstream_url": "https://github.com/OHF-Voice/wyoming-faster-whisper/releases/tag/v3.8.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 71165,
+    "sha256": "23d72909d54db00d06441fa0894caf0827cebacdb2d299539060d4501f95c8dd",
+    "url": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/download/gpu-legacy-v3.8.1-ls6/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 7172,
+    "sha256": "63ebcd9ed313bfa3daae09fd471de922c731d4a26115a9746ab2842c49e1b960",
+    "url": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/download/gpu-legacy-v3.8.1-ls6/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 120424,
+    "sha256": "d0d3e8a16c6ac96d5a376448f8742865d1ad04de3f278e7a32fadfb973020102",
+    "url": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/download/gpu-legacy-v3.8.1-ls6/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1962,
+    "sha256": "a936fc46daf76770dd7362a4a5532a751b8733a57a367ee6af370cbc68f94ed6",
+    "url": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/download/gpu-legacy-v3.8.1-ls6/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 353,
+    "sha256": "5ccf9548b379e69d3d4ae28f4674eb5400009ab90a67a22e1afae08c5f3f424b",
+    "url": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/download/gpu-legacy-v3.8.1-ls6/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 25168,
+    "sha256": "1ce690827d30135287be4fb39a5457fa1d71bbaa5ff0161f71f92eacbeae6e44",
+    "url": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/download/gpu-legacy-v3.8.1-ls6/package_versions.amd64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 42916526728,
+   "run_url": "https://github.com/linuxserver-playground/docker-faster-whisper/actions/runs/42916526728",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/faster-whisper",
+   "tags": [
+    "gpu-legacy",
+    "gpu-legacy-v3.8.1-ls6",
+    "gpu-legacy-version-v3.8.1",
+    "gpu-legacy-3.8.1",
+    "amd64-gpu-legacy",
+    "amd64-gpu-legacy-v3.8.1-ls6",
+    "amd64-gpu-legacy-version-v3.8.1",
+    "amd64-gpu-legacy-3.8.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "faster-whisper",
+  "branch": "gpu-legacy",
+  "tag": "gpu-legacy-v3.8.1-ls6",
+  "previous_tag": "gpu-legacy-v3.8.1-ls5",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (5960a29 → 2239f6f): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v3.8.1",
+   "to": "v3.8.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "5960a29d628391e6cb169d34f0710f9843124e47",
+   "to": "2239f6fdacda674940e82a7ef48530596a2f84c5",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-faster-whisper/compare/5960a29d628391e6cb169d34f0710f9843124e47...2239f6fdacda674940e82a7ef48530596a2f84c5",
+   "commits": [
+    {
+     "sha": "2239f6fdacda674940e82a7ef48530596a2f84c5",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-06T18:41:14Z",
+     "url": "https://github.com/linuxserver-playground/docker-faster-whisper/commit/2239f6fdacda674940e82a7ef48530596a2f84c5",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+    "digest": "sha256:9dae1619587960de00fd076cd6b26821982f4853b63ef9e0617b95b5ab8e9364"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+    "digest": "sha256:5c85b2babfb9f4f3dfa0c4b9e3bf5879f933a18ea06e78cb88ec6838730e98ee"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 1527824771,
+    "to": 1530070734,
+    "delta": 2245963
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "apt",
+       "from": "3.2.0",
+       "to": "3.2.1ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/apt@3.2.1ubuntu0.1?arch=amd64&distro=ubuntu-26.04"
+      },
+      {
+       "name": "apt-utils",
+       "from": "3.2.0",
+       "to": "3.2.1ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/apt-utils@3.2.1ubuntu0.1?arch=amd64&distro=ubuntu-26.04&upstream=apt"
+      },
+      {
+       "name": "ca-certificates",
+       "from": "20260816ubuntu0.26.04.1",
+       "to": "20260816ubuntu0.26.04.2",
+       "purl": "pkg:deb/ubuntu/ca-certificates@20260816ubuntu0.26.04.2?arch=all&distro=ubuntu-26.04"
+      },
+      {
+       "name": "libapt-pkg7.0",
+       "from": "3.2.0",
+       "to": "3.2.1ubuntu0.1",
+       "purl": "pkg:deb/ubuntu/libapt-pkg7.0@3.2.1ubuntu0.1?arch=amd64&distro=ubuntu-26.04&upstream=apt"
+      },
+      {
+       "name": "perl-base",
+       "from": "5.40.1-7ubuntu0.3",
+       "to": "5.40.1-7ubuntu0.4",
+       "purl": "pkg:deb/ubuntu/perl-base@5.40.1-7ubuntu0.4?arch=amd64&distro=ubuntu-26.04&upstream=perl"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "ctranslate2",
+       "from": "4.8.5",
+       "to": "4.9.0",
+       "purl": "pkg:pypi/ctranslate2@4.9.0?file_name=ctranslate2-4.9.0-cp314-cp314-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl"
+      },
+      {
+       "name": "filelock",
+       "from": "4.2.9",
+       "to": "4.2.10",
+       "purl": "pkg:pypi/filelock@4.2.10"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 7,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:9c9be768dcb678319d2a1e849f74c560daa75119a4491822a381bd5d94ef4cd5",
+    "diff_id": "sha256:c84aee34275c594210ef9e0d4f8888538550c7a7c9577122007a3ad81e4efcc8",
+    "size": 42693949,
+    "uncompressed_size": 106539205,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:560178102c24e5e7a341e91a583dbfda0d790b2879fa357bb0feb71668478d81",
+    "diff_id": "sha256:4c9d795cbef122f0699328ec181fbe58d3dd50387cba628f5eaeb8dc0af9ba13",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:4bd6365c68b7291d981faed49d4d13b9d755d49d4063ea9822030ce72e912c70",
+    "diff_id": "sha256:03528c27c690f75f0759e1fb25a17858cd580792258d558af1cad944d7a121b7",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:ab6e19a683d729192dc52ae8a05c253fa02c9dd32c211a920f3000b5ec4f0ffc",
+    "diff_id": "sha256:2e50547857afac60a81a17e519e868451037915b840df7580c25a5d0025530a5",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5d6cd541b4f0a7c7b85b036de6e8d690562aedbb1825462e808bcacbd8ec9880",
+    "diff_id": "sha256:07df0d9fc0b6537aff2cac0e564d7602206c9ede6ce941dddb97ce8414430918",
+    "size": 339,
+    "uncompressed_size": 413,
+    "created_by": "COPY ubuntu.sources /etc/apt/sources.d/ubuntu.sources",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:e79014c6dd4db82d7d517d36a125b6d12655b8476879d829f447d926957cd721",
+    "diff_id": "sha256:4201a8dfdf708476384077a5b3bcdae6d99dada4ab963ffc3dbd95864ff3b46a",
+    "size": 18217478,
+    "uncompressed_size": 48836937,
+    "created_by": "RUN |7 BUILD_DATE=2026-11-08T11:23:22Z VERSION=05394c78-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:d4a2cf2890a7e8864403e1a7dfac6687aa32ebab30da2df0c9e9094b4e725735",
+    "diff_id": "sha256:bebd083b66d5d312758c2faae327c1f9b07c5f352098131f1c56f3d0053f8c78",
+    "size": 4640,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:ecaada1afdcb9e0f9eca941fa41e6cdfe92ab2cc4d8a04715e063d54bca55dd8",
+    "diff_id": "sha256:d50ee08f98a471833ac8619844a30763c7594fa8d5c7e96b75c1af87734d2242",
+    "size": 1469144552,
+    "uncompressed_size": 2435488476,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-10T22:39:38Z VERSION=v3.8.1-ls6 WHISPER_VERSION=v3.8.1 /bin/sh -c echo \"**** install packages ****\" &&   apt-get update &&   apt-get install -y --no-install-recommends     build-essential     git     python3-dev     python3-venv &&   if [ -z ${WHISPER_VERSION+x} ]; then     WHISPER_VERSION=$(curl -sX GET \"https://api.github.com/repos/OHF-Voice/wyoming-faster-whisper/releases/latest\"     | jq -r '.tag_name');   fi &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/ubuntu/     \"av>=18.0.0,<19.0.0\"     \"nvidia-cublas-cu12==12.9.1.4\"     \"nvidia-cudnn-cu12==9.10.2.21\"     git+https://github.com/OHF-Voice/wyoming-faster-whisper@${WHISPER_VERSION} &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apt-get purge -y --auto-remove     build-essential     git     python3-dev &&   rm -rf     /var/lib/apt/lists/*     /tmp/*",
+    "dockerfile_lines": [
+     18,
+     47
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:13a1331d52eb8a4274fa63365de2db77022434ddf49e92c985e7543e6320cd49",
+    "diff_id": "sha256:94d4b70877e89804b5e0f5e0a3db5b788ca0de66087f26b1ae2d7d7ba2f18bff",
+    "size": 1051,
+    "uncompressed_size": 1018,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     49,
+     49
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "faster-whisper",
+  "tag": "gpu-legacy-v3.8.1-ls6",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/faster-whisper/builds/gpu-legacy-v3.8.1-ls6/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-faster-whisper/releases/download/gpu-legacy-v3.8.1-ls6/test.amd64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "faster-whisper",
+    "tag": "amd64-2239f6f-42916526728",
+    "arch": "amd64",
+    "started": "2026-11-10T22:44:17Z",
+    "finished": "2026-11-10T22:44:42Z",
+    "success": true,
+    "runner": "f17d104f4a4f",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "256 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "256 packages: syft JSON 71165 bytes gzipped, SPDX for the image attestation 677046 bytes",
+      "seconds": 0.235
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1801 dirs, 14857 files (2581007273 bytes), 1836 symlinks, 116 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.22s, total 0.37s",
+      "seconds": 0.553
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.379
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.081
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}
