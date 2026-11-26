@@ -1,0 +1,964 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "fail2ban",
+  "repository": "linuxserver-playground/docker-fail2ban",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "1.1.0-r2",
+   "upstream_clean": "1.1.0-r2",
+   "semver": "1.1.0",
+   "ls_build": 9,
+   "tag": "1.1.0-r2-ls9",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "1.1.0-r2-ls9",
+    "version-1.1.0-r2",
+    "1.1.0",
+    "amd64-latest",
+    "amd64-1.1.0-r2-ls9",
+    "amd64-version-1.1.0-r2",
+    "amd64-1.1.0",
+    "arm64v8-latest",
+    "arm64v8-1.1.0-r2-ls9",
+    "arm64v8-version-1.1.0-r2",
+    "arm64v8-1.1.0"
+   ],
+   "source": "alpine_apk",
+   "source_url": "http://dl-cdn.alpinelinux.org/alpine/v3.21/main/"
+  },
+  "commit": "832eff737ee99729626eff9f9be5125dd8eab6ea",
+  "created": "2026-11-25T04:02:39Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "1.1.0-r2-ls8",
+   "release_url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/tag/1.1.0-r2-ls8"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+   "digest": "sha256:d8851b24dc71fde2955b629c0bb94c0d3e0760f2da4670d89157b25916bcaf61"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:ff9daeba815aeb58b88f46bfb11c9597eb55f670f9f3d3bd25872df9e7790c34",
+    "size": 30430885,
+    "uncompressed_size": 77197247,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 24
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:74921f604764dd798f68f0f0567974449171ea1075fc9909f29013631450e821",
+    "size": 31524577,
+    "uncompressed_size": 98808516,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 12
+   }
+  ],
+  "index_digest": "sha256:2de663498efe39b2d32f15429c5826548b102cffd1561736783566ac68691d7e",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 1.1.0-r2-ls9 Build-date:- 2026-11-25T03:58:06Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21@sha256:d8851b24dc71fde2955b629c0bb94c0d3e0760f2da4670d89157b25916bcaf61",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "1.1.0-r2",
+   "maintainer": "nomandera,nemchik",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-25T03:58:06Z",
+   "org.opencontainers.image.description": "Fail2ban is a daemon to ban hosts that cause multiple authentication errors.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-fail2ban",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "832eff737ee99729626eff9f9be5125dd8eab6ea",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-fail2ban",
+   "org.opencontainers.image.title": "Fail2ban",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-fail2ban/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "1.1.0-r2-ls9"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "S6_BEHAVIOUR_IF_STAGE2_FAILS=2"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.21\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nomandera,nemchik\"\n\n# environment settings\nENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    fail2ban \\\n    iptables-legacy \\\n    logrotate \\\n    msmtp \\\n    nftables \\\n    whois && \\\n  echo \"**** copy fail2ban confs to /defaults ****\" && \\\n  mkdir -p \\\n    /defaults/fail2ban && \\\n  curl -o \\\n    /tmp/fail2ban-confs.tar.gz -L \\\n    \"https://github.com/linuxserver/fail2ban-confs/tarball/master\" && \\\n  tar xf \\\n    /tmp/fail2ban-confs.tar.gz -C \\\n    /defaults/fail2ban/ --strip-components=1 --exclude=linux*/.editorconfig --exclude=linux*/.gitattributes --exclude=linux*/.github --exclude=linux*/.gitignore --exclude=linux*/LICENSE && \\\n  echo \"**** fix logrotate ****\" && \\\n  sed -i \"s#/var/log/messages {}.*# #g\" \\\n    /etc/logrotate.conf && \\\n  sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g' \\\n    /etc/periodic/daily/logrotate && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.21\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nomandera,nemchik\"\n\n# environment settings\nENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    fail2ban \\\n    iptables-legacy \\\n    logrotate \\\n    msmtp \\\n    nftables \\\n    whois && \\\n  echo \"**** copy fail2ban confs to /defaults ****\" && \\\n  mkdir -p \\\n    /defaults/fail2ban && \\\n  curl -o \\\n    /tmp/fail2ban-confs.tar.gz -L \\\n    \"https://github.com/linuxserver/fail2ban-confs/tarball/master\" && \\\n  tar xf \\\n    /tmp/fail2ban-confs.tar.gz -C \\\n    /defaults/fail2ban/ --strip-components=1 --exclude=linux*/.editorconfig --exclude=linux*/.gitattributes --exclude=linux*/.github --exclude=linux*/.gitignore --exclude=linux*/LICENSE && \\\n  echo \"**** fix logrotate ****\" && \\\n  sed -i \"s#/var/log/messages {}.*# #g\" \\\n    /etc/logrotate.conf && \\\n  sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g' \\\n    /etc/periodic/daily/logrotate && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"fail2ban:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-fail2ban-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  init-config -> init-fail2ban-config\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-fail2ban\n  svc-fail2ban -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.21\"\n}\n\"fail2ban:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-fail2ban-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-fail2ban-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p \\\n    /config/log/fail2ban \\\n    /config/fail2ban/{action.d,filter.d,jail.d}\n\n# copy/update the fail2ban configs from /defaults to /config\ncp -R /defaults/fail2ban /config\n\n# symlink fail2ban configs to /config\nrm -rf /etc/fail2ban\nln -s /config/fail2ban /etc/fail2ban\n\n# permissions\nchmod -R 644 /etc/logrotate.d\nif [[ -f \"/config/log/logrotate.status\" ]]; then\n    chmod 600 /config/log/logrotate.status\nfi\n\nlsiown -R abc:abc \\\n    /config\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-fail2ban",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nFAIL2BAN_ARGS=()\n\ncase \"${VERBOSITY:-}\" in\n-v | -vv | -vvv | -vvvv)\n    FAIL2BAN_ARGS+=(\"${VERBOSITY:-}\")\n    ;;\n*) ;;\nesac\n\nFAIL2BAN_ARGS+=(\"-x\" \"-f\" \"start\")\n\nexec \\\n    fail2ban-client \"${FAIL2BAN_ARGS[@]}\"\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 90,
+    "distro": "Alpine Linux v3.21",
+    "hash": "164da336",
+    "by_type": {
+     "apk": 89,
+     "python": 1
+    }
+   },
+   "arm64": {
+    "count": 90,
+    "distro": "Alpine Linux v3.21",
+    "hash": "164da336",
+    "by_type": {
+     "apk": 89,
+     "python": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/fail2ban/builds/1.1.0-r2-ls9/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-fail2ban/compare/1.1.0-r2-ls8...1.1.0-r2-ls9",
+   "upstream": "## ver. 1.1.0 (2024/04/25) - object found: norad:59479, cospar:2024-069a, altitude: 36267km\r\n\r\nUpdate of major version of fail2ban with primary target to provide python 3.12/3.13 compatibility, issue #3487.\r\nSee the [ChangeLog](https://github.com/fail2ban/fail2ban/blob/1.1.0/ChangeLog) for more information.\r\n\r\nIt also includes debian package, built without a test suite (fail2ban-testcases, fail2ban.test python module).",
+   "upstream_url": "https://github.com/fail2ban/fail2ban/releases/tag/1.1.0"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 29631,
+    "sha256": "794b0ddc9962d7cbd6456db8d15c9d425636e6549adffd509776b2b7fb6d209b",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5225,
+    "sha256": "8dda64596f5ae10ec0631447a5cfa5892ee2cef62362efde8ffdb939b686e129",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 40585,
+    "sha256": "2b6657aa3a4a2a011072dc9bce44829c151b234ab133b15f7a82ffdc22235979",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2416,
+    "sha256": "8983f699cbfb05fad0fcfd94821cc6c0385fc612a7edf66b473bb2d3dec6ed7f",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3065,
+    "sha256": "338cf78fafc2edb2fbb99ef867ee358ccf64d9596180c9106b153d57f6f6fa6e",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 4641,
+    "sha256": "3391ca856dab2d91794213d0a90eadb66ea13d02606a28563e5242d3a7a2b271",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 29686,
+    "sha256": "cda66dd452efc4ba950c43858d91d3073cfd64f69e173613340f606f39e02492",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5225,
+    "sha256": "48c24faa2ca13165b1a18fb7a22bc83372918794089420ec1e58bd98c3a5b3cd",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 40240,
+    "sha256": "d9ecaba7e2e4877cdcdc48bef48c90e6d80631a86dd78389c28ab1b840e33ea9",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2415,
+    "sha256": "26d54ca787a07ea720405f26820a98915c24b6f24993c61765e885f2b1e2f9a5",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3062,
+    "sha256": "836f8af633bec8b98d21a6923fdacbdd8007d154492fae09335d85c4b2fdc221",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 4641,
+    "sha256": "3391ca856dab2d91794213d0a90eadb66ea13d02606a28563e5242d3a7a2b271",
+    "url": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 45543498249,
+   "run_url": "https://github.com/linuxserver-playground/docker-fail2ban/actions/runs/45543498249",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/fail2ban",
+   "tags": [
+    "latest",
+    "1.1.0-r2-ls9",
+    "version-1.1.0-r2",
+    "1.1.0",
+    "amd64-latest",
+    "amd64-1.1.0-r2-ls9",
+    "amd64-version-1.1.0-r2",
+    "amd64-1.1.0",
+    "arm64v8-latest",
+    "arm64v8-1.1.0-r2-ls9",
+    "arm64v8-version-1.1.0-r2",
+    "arm64v8-1.1.0"
+   ]
+  }
+ },
+ "diff": {
+  "image": "fail2ban",
+  "branch": "main",
+  "tag": "1.1.0-r2-ls9",
+  "previous_tag": "1.1.0-r2-ls8",
+  "classification": "packages",
+  "reasons": [
+   "packages changed",
+   "1 commit (b2bdae0 → 832eff7): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "1.1.0-r2",
+   "to": "1.1.0-r2",
+   "changed": false
+  },
+  "commit": {
+   "from": "b2bdae0f01fda67a139b853e37618f2c4faa85dc",
+   "to": "832eff737ee99729626eff9f9be5125dd8eab6ea",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-fail2ban/compare/b2bdae0f01fda67a139b853e37618f2c4faa85dc...832eff737ee99729626eff9f9be5125dd8eab6ea",
+   "commits": [
+    {
+     "sha": "832eff737ee99729626eff9f9be5125dd8eab6ea",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-21T00:04:48Z",
+     "url": "https://github.com/linuxserver-playground/docker-fail2ban/commit/832eff737ee99729626eff9f9be5125dd8eab6ea",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+    "digest": "sha256:d8851b24dc71fde2955b629c0bb94c0d3e0760f2da4670d89157b25916bcaf61"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.21",
+    "digest": "sha256:d8851b24dc71fde2955b629c0bb94c0d3e0760f2da4670d89157b25916bcaf61"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 30425576,
+    "to": 30430885,
+    "delta": 5309
+   },
+   "arm64": {
+    "from": 31520810,
+    "to": 31524577,
+    "delta": 3767
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libffi",
+       "from": "3.4.7-r0",
+       "to": "3.8.1-r0",
+       "purl": "pkg:apk/alpine/libffi@3.8.1-r0?arch=x86_64&distro=alpine-3.21.10"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libffi",
+       "from": "3.4.7-r0",
+       "to": "3.8.1-r0",
+       "purl": "pkg:apk/alpine/libffi@3.8.1-r0?arch=aarch64&distro=alpine-3.21.10"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 2,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:eb1d25b0e6759e4e0af48c729a16fb8e52d87ad8e9aca19a52b924b16d03bf3f",
+    "diff_id": "sha256:d36cfa1ddb067324efd713b3b1d44ba7ff991ae540f137bc3ffbf4ebdba3fb12",
+    "size": 6038412,
+    "uncompressed_size": 13100584,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:47f24e8c3be24a5309e42a67d6ea64cc31c075238dd2bc71eabbd777b6dcba6e",
+    "diff_id": "sha256:80b2bfd11a1386c08ab892fca185e624a277dfa22b96ee86ce33bd3d9601e890",
+    "size": 1359,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:6ded04b8cf5510f199962ba8da0f6c74c3aa417792586f5905197e9948026e87",
+    "diff_id": "sha256:169858d56cc6c60b5783f8f958863568b66ae9997ff5a6b2f728ad462e061d97",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:446b37707412cf70f588584a1e15f57a16502d06a7c00d6e6ca3860e2718d99b",
+    "diff_id": "sha256:13b2de9b8759c7f6a5035026c27af3d48101acc07f316984e7635cfde4b1e6cf",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:d5a34ad44b3eaaa1ef66d454baad491b7f2fb83408c246885130381e3a4e8afe",
+    "diff_id": "sha256:7731285b6344bde0907d7d9f26a61103e4addc42ea7967a782e9ca056a3995dc",
+    "size": 5801805,
+    "uncompressed_size": 13699029,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-20T07:50:46Z VERSION=452c59bc-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b364c8f31b41279b55e84495a8dd59cf4d6a62112e1929cc7695f8136767a219",
+    "diff_id": "sha256:dc4c4ac0897c893708f5d3218245270bd59db1a81a5c680f3122a81d3a68b398",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:70f27011714c975174eb48ced51315916ad70a5e1e165125cf5036c0a201e192",
+    "diff_id": "sha256:a62bf2cc582cfd80e4e16839b1e910ce0d05b75434e75f20672134688357d707",
+    "size": 18576253,
+    "uncompressed_size": 50350356,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-25T03:58:06Z VERSION=1.1.0-r2-ls9 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     fail2ban     iptables-legacy     logrotate     msmtp     nftables     whois &&   echo \"**** copy fail2ban confs to /defaults ****\" &&   mkdir -p     /defaults/fail2ban &&   curl -o     /tmp/fail2ban-confs.tar.gz -L     \"https://github.com/linuxserver/fail2ban-confs/tarball/master\" &&   tar xf     /tmp/fail2ban-confs.tar.gz -C     /defaults/fail2ban/ --strip-components=1 --exclude=linux*/.editorconfig --exclude=linux*/.gitattributes --exclude=linux*/.github --exclude=linux*/.gitignore --exclude=linux*/LICENSE &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     16,
+     43
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:e6e81316047a307cc37f56cbe07b133827e834ed6b5b92d378db4c746a003ec5",
+    "diff_id": "sha256:7cfc2612af873edb2555ffb722aacd6422791052e5dea588e1ed926a4d585e86",
+    "size": 1057,
+    "uncompressed_size": 1062,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     46,
+     46
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:f827d5381c83c160ba2d16e4a44f47f7c532019eb811f4beaad6afaa870ae474",
+    "diff_id": "sha256:7aa0c08e1d3f06f06c92ec4c153695ccc05873b1f1f3d617d537ac8cd35ad531",
+    "size": 6866173,
+    "uncompressed_size": 18015124,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:307b18b63e96652a50df8f74244f9fdc5bbf28b3b3a1a54901ff9984da5013a4",
+    "diff_id": "sha256:2e745eb8dd665fc70b6ed183d373f46c958210e63110aa4f3f4227eda637c65a",
+    "size": 1357,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:f268974df4646242a1515a62a20dc1058c574211860417c1297cc2f53ab28a6c",
+    "diff_id": "sha256:91c0aad6f3b18b79586cf1e644f03776a2d60a9975dbefb602e483227e4b9d2a",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:9337d5549a51da91b31d22c2f90f2d7e7e5fd664cf720b822a8aa7a03dd6cd52",
+    "diff_id": "sha256:4145c3e0c32f4feca44bf88536ca60db2fdf1be528526bb511dc2da573639fb6",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:4ea7c47ca4db6ea35fe279f6a18e0a6a9036299194a5498c2f3ac3e51ec790b3",
+    "diff_id": "sha256:793e4891a00c3fd0cba2917591c3f83c6a6097af6e6b186046d37ca025308262",
+    "size": 6009780,
+    "uncompressed_size": 20430930,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-20T07:50:46Z VERSION=452c59bc-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:1a2802b4c56932edd9dc6ca601ad36aa40f722afefcdce17cc26fefb6f0887e3",
+    "diff_id": "sha256:b5aff6f89229120f20fb25000347dd29c3313c1192fc06766f8835df54179fe1",
+    "size": 4628,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:d89c133263d3009227d143d25e007ee42f29286e54c664292195ef80bbf1b48f",
+    "diff_id": "sha256:f37a01580cbb7145e6f369df9e049b3d5ef8d1522d06451b27368ac42368b9bc",
+    "size": 18634213,
+    "uncompressed_size": 60315184,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-25T03:58:06Z VERSION=1.1.0-r2-ls9 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     fail2ban     iptables-legacy     logrotate     msmtp     nftables     whois &&   echo \"**** copy fail2ban confs to /defaults ****\" &&   mkdir -p     /defaults/fail2ban &&   curl -o     /tmp/fail2ban-confs.tar.gz -L     \"https://github.com/linuxserver/fail2ban-confs/tarball/master\" &&   tar xf     /tmp/fail2ban-confs.tar.gz -C     /defaults/fail2ban/ --strip-components=1 --exclude=linux*/.editorconfig --exclude=linux*/.gitattributes --exclude=linux*/.github --exclude=linux*/.gitignore --exclude=linux*/LICENSE &&   echo \"**** fix logrotate ****\" &&   sed -i \"s#/var/log/messages {}.*# #g\"     /etc/logrotate.conf &&   sed -i 's#/usr/sbin/logrotate /etc/logrotate.conf#/usr/sbin/logrotate /etc/logrotate.conf -s /config/log/logrotate.status#g'     /etc/periodic/daily/logrotate &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     16,
+     43
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:cdf38aa693492d3ef45b5308559fea2b4576b5674cf02e41278da59ab77fce44",
+    "diff_id": "sha256:0b882cd252849f8989e7833a33b0dd4bbc329551d0f46c32ebf2c7f99a6bd88c",
+    "size": 1057,
+    "uncompressed_size": 1062,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     46,
+     46
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "fail2ban",
+  "tag": "1.1.0-r2-ls9",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/fail2ban/builds/1.1.0-r2-ls9/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.006,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 23744512,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-fail2ban/builds/1.1.0-r2-ls9/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-fail2ban/builds/1.1.0-r2-ls9/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 24297472,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-fail2ban/releases/download/1.1.0-r2-ls9/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-fail2ban/builds/1.1.0-r2-ls9/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-fail2ban/builds/1.1.0-r2-ls9/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "fail2ban",
+    "tag": "amd64-832eff7-45543498249",
+    "arch": "amd64",
+    "started": "2026-11-25T04:01:18Z",
+    "finished": "2026-11-25T04:01:37Z",
+    "success": true,
+    "runner": "7fa86b0b0bd9",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.006,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.006
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-fail2ban",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "90 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "90 packages: syft JSON 29631 bytes gzipped, SPDX for the image attestation 182144 bytes",
+      "seconds": 0.091
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "381 dirs, 3120 files (76848326 bytes), 1284 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.05s",
+      "seconds": 0.131
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.913
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.031
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [], rss 23744512 bytes",
+      "seconds": 0.204
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 23744512,
+     "pids": 13,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-fail2ban"
+     ],
+     "changed_paths": 212
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "fail2ban",
+    "tag": "arm64-832eff7-45543498249",
+    "arch": "arm64",
+    "started": "2026-11-25T03:59:22Z",
+    "finished": "2026-11-25T03:59:41Z",
+    "success": true,
+    "runner": "7840c759b4aa",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-fail2ban",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "90 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "90 packages: syft JSON 29686 bytes gzipped, SPDX for the image attestation 182233 bytes",
+      "seconds": 0.112
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "381 dirs, 3120 files (98498186 bytes), 1284 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.06s",
+      "seconds": 0.181
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.367
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.064
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [], rss 24297472 bytes",
+      "seconds": 0.24
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 24297472,
+     "pids": 13,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-fail2ban"
+     ],
+     "changed_paths": 212
+    }
+   }
+  }
+ }
+}

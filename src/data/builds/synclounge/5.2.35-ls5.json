@@ -1,0 +1,936 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "synclounge",
+  "repository": "linuxserver-playground/docker-synclounge",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "5.2.35",
+   "upstream_clean": "5.2.35",
+   "semver": "5.2.35",
+   "ls_build": 5,
+   "tag": "5.2.35-ls5",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "5.2.35-ls5",
+    "version-5.2.35",
+    "5.2.35",
+    "amd64-latest",
+    "amd64-5.2.35-ls5",
+    "amd64-version-5.2.35",
+    "amd64-5.2.35",
+    "arm64v8-latest",
+    "arm64v8-5.2.35-ls5",
+    "arm64v8-version-5.2.35",
+    "arm64v8-5.2.35"
+   ],
+   "source": "json",
+   "source_url": "https://registry.npmjs.org/synclounge/"
+  },
+  "commit": "9f7c11d5f91f7febf5f190c57909edb84a17bfbd",
+  "created": "2026-10-30T21:33:25Z",
+  "reason": "rebuild",
+  "previous": {
+   "tag": "5.2.35-ls4",
+   "release_url": "https://github.com/linuxserver-playground/docker-synclounge/releases/tag/5.2.35-ls4"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:a31dc2b64e462fda3bf2aec257e17f3577bc1c8e3cd752ba04d5da877b68caaa",
+    "size": 55865747,
+    "uncompressed_size": 148928222,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 20
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:1e09c42895ce70606c12de01860eaa42ff85f73ee34963b5748077d34dda0006",
+    "size": 56530824,
+    "uncompressed_size": 158118540,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 41
+   }
+  ],
+  "index_digest": "sha256:d1ee26108a6a3e94d463a4bac23a259a74e3ba56f3f37a16c5fa4d2bbcb5ae8b",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 5.2.35-ls5 Build-date:- 2026-10-30T21:30:12Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "5.2.35",
+   "maintainer": "alex-phillips",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-10-30T21:30:12Z",
+   "org.opencontainers.image.description": "Synclounge is a third party tool that allows you to watch Plex in sync with your friends/family, wherever you are.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-synclounge",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "9f7c11d5f91f7febf5f190c57909edb84a17bfbd",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-synclounge",
+   "org.opencontainers.image.title": "Synclounge",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-synclounge/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "5.2.35-ls5"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/app",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/app"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SYNCLOUNGE_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"alex-phillips\"\n\n# environment settings\nENV HOME=\"/app\"\nWORKDIR /app\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    nodejs && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    git \\\n    npm && \\\n  echo \"**** install SyncLounge ****\" && \\\n  if [ -z ${SYNCLOUNGE_RELEASE+x} ]; then \\\n    SYNCLOUNGE_RELEASE=$(curl -sX GET \"https://registry.npmjs.org/synclounge/\" \\\n      | jq -r '.\"dist-tags\".latest'); \\\n  fi && \\\n  npm install -g --omit=dev synclounge@\"$SYNCLOUNGE_RELEASE\" && \\\n  npm prune --omit=dev && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SYNCLOUNGE_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"alex-phillips\"\n\n# environment settings\nENV HOME=\"/app\"\nWORKDIR /app\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    nodejs && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    npm \\\n    python3-dev && \\\n  echo \"**** install SyncLounge ****\" && \\\n  if [ -z ${SYNCLOUNGE_RELEASE+x} ]; then \\\n    SYNCLOUNGE_RELEASE=$(curl -sX GET \"https://registry.npmjs.org/synclounge/\" \\\n      | jq -r '.\"dist-tags\".latest'); \\\n  fi && \\\n  npm install -g --omit=dev synclounge@\"$SYNCLOUNGE_RELEASE\" --unsafe && \\\n  npm prune --omit=dev && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# copy local files\nCOPY root/ /\n"
+  },
+  "init_graph": {
+   "d2": "\"synclounge:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-synclounge\n  svc-synclounge -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"synclounge:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-synclounge",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [ -n \"${AUTH_LIST}\" ]; then\n    export authentication__mechanism='[\"plex\"]'\n    export authentication__type='[\"server\", \"user\"]'\n    export authentication__authorized=\"[\\\"$(echo ${AUTH_LIST} | sed 's|,|\", \"|g')\\\"]\"\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8088\" \\\n            s6-setuidgid abc synclounge\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8088\" \\\n            synclounge\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 179,
+    "distro": "Alpine Linux v3.24",
+    "hash": "b63e1390",
+    "by_type": {
+     "npm": 119,
+     "apk": 60
+    }
+   },
+   "arm64": {
+    "count": 179,
+    "distro": "Alpine Linux v3.24",
+    "hash": "b63e1390",
+    "by_type": {
+     "npm": 119,
+     "apk": 60
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/synclounge/builds/5.2.35-ls5/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-synclounge/compare/5.2.35-ls4...5.2.35-ls5",
+   "upstream": "## [5.2.35](https://github.com/synclounge/synclounge/compare/v5.2.34...v5.2.35) (2024-12-26)\n\n\n### Build\n\n* **deps-dev:** bump @commitlint/cli from 19.5.0 to 19.6.0 ([59a208a](https://github.com/synclounge/synclounge/commit/59a208a7b6a8672dd428112e66af22fb91992a75))\n* **deps-dev:** bump @commitlint/cli from 19.6.0 to 19.6.1 ([0d9fdca](https://github.com/synclounge/synclounge/commit/0d9fdcafbabfa9b82a27684bcea572b8f8024dfe))\n* **deps-dev:** bump @commitlint/config-conventional ([9ec0c8f](https://github.com/synclounge/synclounge/commit/9ec0c8f58aa0810159c7cac87ee6d557154d0b9b))\n* **deps-dev:** bump core-js from 3.38.1 to 3.39.0 ([e1bf2f6](https://github.com/synclounge/synclounge/commit/e1bf2f665dacdc43324b9617e3d8dffe77ff9c27))\n* **deps-dev:** bump eslint-plugin-vue from 9.29.1 to 9.30.0 ([89774a9](https://github.com/synclounge/synclounge/commit/89774a9ebb27f117ef948d0a07f33ed9b4bd7374))\n* **deps-dev:** bump eslint-plugin-vue from 9.30.0 to 9.31.0 ([c45c567](https://github.com/synclounge/synclounge/commit/c45c56717d9f36d0e5c6b08d5d363a6aa64e76ef))\n* **deps-dev:** bump eslint-plugin-vue from 9.31.0 to 9.32.0 ([5f325f0](https://github.com/synclounge/synclounge/commit/5f325f0574407ccaff02d8c31ffd4b97b2da3912))\n* **deps-dev:** bump fast-xml-parser from 4.5.0 to 4.5.1 ([78d776d](https://github.com/synclounge/synclounge/commit/78d776d991e8ea5d1088fb9158b6d8ad5ff62b7d))\n* **deps-dev:** bump husky from 9.1.6 to 9.1.7 ([c4365ca](https://github.com/synclounge/synclounge/commit/c4365ca3434e880b7a5c9bcf5f09b51820cbbe0a))\n* **deps-dev:** bump lint-staged from 15.2.10 to 15.2.11 ([582d0f4](https://github.com/synclounge/synclounge/commit/582d0f4a82d47a60a897646987fc1fdbaba77aeb))\n* **deps-dev:** bump sass from 1.80.3 to 1.80.4 ([ecc54ec](https://github.com/synclounge/synclounge/commit/ecc54ec226818d22ec516f76d3612a10cee68acd))\n* **deps-dev:** bump sass from 1.80.4 to 1.80.5 ([3f3663f](https://github.com/synclounge/synclounge/commit/3f3663f8d0d3adeb0b1d0177b0018cfb3b04d5e0))\n* **deps-dev:** bump sass from 1.80.5 to 1.80.6 ([fdff7f0](https://github.com/synclounge/synclounge/commit/fdff7f0358b50154cdda8f8c759fff7d6edd19dc))\n* **deps-dev:** bump sass from 1.80.6 to 1.80.7 ([8fadcef](https://github.com/synclounge/synclounge/commit/8fadceff1be7538ef5d91e342db5734ace50e3de))\n* **deps-dev:** bump sass from 1.80.7 to 1.81.0 ([e42f284](https://github.com/synclounge/synclounge/commit/e42f2842ec7b54fb4f05e3a89aeeb4c766f5e5a6))\n* **deps-dev:** bump sass from 1.81.0 to 1.81.1 ([af6558c](https://github.com/synclounge/synclounge/commit/af6558cd6d3118b631ed15a2e72f9b0b4720a8c8))\n* **deps-dev:** bump sass from 1.81.1 to 1.82.0 ([d8dbd75](https://github.com/synclounge/synclounge/commit/d8dbd75424657a5e7232bf750bc21d899e242ea7))\n* **deps-dev:** bump sass from 1.82.0 to 1.83.0 ([1c15877](https://github.com/synclounge/synclounge/commit/1c158777c3ff1eab9ea46f33af9a90584b657ca3))\n* **deps-dev:** bump shaka-player from 4.11.10 to 4.11.11 ([17c34e8](https://github.com/synclounge/synclounge/commit/17c34e8b2b211f148bfee7c886de553e2f009927))\n* **deps-dev:** bump shaka-player from 4.11.11 to 4.12.0 ([6a86e49](https://github.com/synclounge/synclounge/commit/6a86e4994057aea950969ed595febefa79597d42))\n* **deps-dev:** bump shaka-player from 4.11.9 to 4.11.10 ([08822b2](https://github.com/synclounge/synclounge/commit/08822b20787f8c14c4e1728d1eac6082343ce545))\n* **deps-dev:** bump shaka-player from 4.12.0 to 4.12.1 ([750bb17](https://github.com/synclounge/synclounge/commit/750bb17b4f2aa0695e1065a25ecfc8b42322035f))\n* **deps-dev:** bump shaka-player from 4.12.1 to 4.12.2 ([18a4869](https://github.com/synclounge/synclounge/commit/18a4869bd5b28736b8bcc19bd3835b7bc70daa5a))\n* **deps-dev:** bump shaka-player from 4.12.2 to 4.12.3 ([a316cae](https://github.com/synclounge/synclounge/commit/a316cae144aa589e20fca24548b0f137256d78fd))\n* **deps-dev:** bump shaka-player from 4.12.3 to 4.12.4 ([82db0f0](https://github.com/synclounge/synclounge/commit/82db0f0a94f80268e6bb2a82bfa060ee93afd009))\n* **deps-dev:** bump shaka-player from 4.12.4 to 4.12.5 ([ae854cb](https://github.com/synclounge/synclounge/commit/ae854cb03247260c0f9aaa20ad8499c3399022c2))\n* **deps-dev:** bump socket.io-client from 4.8.0 to 4.8.1 ([4fac87b](https://github.com/synclounge/synclounge/commit/4fac87b40d34584c5e3cc6dae403a8ee068aed04))\n* **deps:** bump path-to-regexp and express ([10d5862](https://github.com/synclounge/synclounge/commit/10d586204f5979f02c89388615fd1cd96f4f691c))\n* **docker:** bump nginx from 1.27.2-alpine to 1.27.3-alpine ([05b20ec](https://github.com/synclounge/synclounge/commit/05b20ec39255d651103d96ba9e9dcf147fc3eb06))\n\n\n### CI/CD\n\n* **action:** bump actions/checkout from 4.2.1 to 4.2.2 ([019e630](https://github.com/synclounge/synclounge/commit/019e6306e4c810a0141073456b6d4a275192a71c))\n* **action:** bump actions/setup-node from 4.0.4 to 4.1.0 ([09323c4](https://github.com/synclounge/synclounge/commit/09323c4ab0f22338a827d644a2f6218e4cec3096))\n* **action:** bump docker/build-push-action from 6.9.0 to 6.10.0 ([9e62f4f](https://github.com/synclounge/synclounge/commit/9e62f4f8126c6aa10ae7079a74d66c2f8af1920c))\n* **action:** bump docker/setup-buildx-action from 3.7.1 to 3.8.0 ([44a53e4](https://github.com/synclounge/synclounge/commit/44a53e4f72bfef3a197d3ea644ef7f8d7db361f2))\n\n",
+   "upstream_url": "https://github.com/synclounge/synclounge/releases/tag/v5.2.35"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 41015,
+    "sha256": "7d8f2775ab3ab424c577a52fe660b48aa311706f81139904c76fa1b13a094de0",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5222,
+    "sha256": "fe362eb152cf82d5c98e34b08f310f04dd8b75756473565dfad159d3ed098f3b",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 65795,
+    "sha256": "a3ddfeee3440feb29f8cc0e8c89db0ffc88e7608b45c2caa6611c2d3ca7fe1a8",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2575,
+    "sha256": "20c254ee21d5a2ae9fafdaccbbb8a59703a2c1f93432caa82613851b34cbb68e",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 47974,
+    "sha256": "718b2ae44bde23439397a8f86ae91304b74d4fcbd6dd0a75088e931a9ec2f3b1",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 12312,
+    "sha256": "f61d1a3cbbde44f024c973779a127ca837a85248090fd3b5696b98ea23a9f705",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 41047,
+    "sha256": "45e9dc2884d68269845cfe2e076e67937f100014a5d473fd496931e65dc0087c",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5239,
+    "sha256": "da088cdb87fab94a0e81c44b098c9f4780ebaf1dcc643a10aa8c0565bd2dc19e",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 66009,
+    "sha256": "bb3dfe95edc9240b7d939b72cc0a3425492e501fa4838dd8f8727f66330ce877",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2575,
+    "sha256": "d828a45cf59617c6aa8ee95070a501ce79c5ac9492824ac763048e75d6843603",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 47882,
+    "sha256": "e99cf3d0405e48ae4ac0c90abb25489fe2f5ea964f6c0bd78fe049af87eb5473",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 12312,
+    "sha256": "f61d1a3cbbde44f024c973779a127ca837a85248090fd3b5696b98ea23a9f705",
+    "url": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 41131443897,
+   "run_url": "https://github.com/linuxserver-playground/docker-synclounge/actions/runs/41131443897",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/synclounge",
+   "tags": [
+    "latest",
+    "5.2.35-ls5",
+    "version-5.2.35",
+    "5.2.35",
+    "amd64-latest",
+    "amd64-5.2.35-ls5",
+    "amd64-version-5.2.35",
+    "amd64-5.2.35",
+    "arm64v8-latest",
+    "arm64v8-5.2.35-ls5",
+    "arm64v8-version-5.2.35",
+    "arm64v8-5.2.35"
+   ]
+  }
+ },
+ "diff": {
+  "image": "synclounge",
+  "branch": "master",
+  "tag": "5.2.35-ls5",
+  "previous_tag": "5.2.35-ls4",
+  "classification": "none",
+  "reasons": [
+   "nothing observable changed"
+  ],
+  "upstream": {
+   "from": "5.2.35",
+   "to": "5.2.35",
+   "changed": false
+  },
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 55865376,
+    "to": 55865747,
+    "delta": 371
+   },
+   "arm64": {
+    "from": 56530368,
+    "to": 56530824,
+    "delta": 456
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {},
+   "arm64": {}
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 0,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:589803e87188fe95e3165a8e9187c6731e15603dd7a74dc6534f5f95b84e7ed1",
+    "diff_id": "sha256:0b99ea0c13ad1a760422d7e1f69f2c3d13e525d4c088a216d5662c6292139cc3",
+    "size": 6265106,
+    "uncompressed_size": 13707104,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dd3c4763431fc043f72fc92f11325e747aa19f0b7f4ffd80517b5fa481ba041f",
+    "diff_id": "sha256:1e91ca23263f0d3a483cf7c05ec39d0d57c50778ffd8616345ba1286c41c06de",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:249f35cba001ff3d0ddf7581471f6edb98d9dbb361c67b26fb2fa5ab692b6660",
+    "diff_id": "sha256:3559f1f3d49deb06085010b784908957b88928276ec7558d8ad77dbbf9a89fdd",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:b7d1faa21c64f4326523fab2a06c795639fe1376a23ff0d181572d53ca5586f4",
+    "diff_id": "sha256:2d06e6867adf71ae6a4ef4870814b2c2292f68ce890dafef59a1dca3440a3898",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:a861600f1bf8431781e397e10f319d78ead8d622c2aa8b91d2a6b5249a4030c6",
+    "diff_id": "sha256:6292ce65870e4f1a225a829ee83f814667a6397e7cbe48c7e52f267943b945f2",
+    "size": 6091115,
+    "uncompressed_size": 14407494,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:06:22Z VERSION=bc9f8d41-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:0df303fa4d766b7825d742864244937b74ee6bf523fb7b6572deee90009e0c12",
+    "diff_id": "sha256:a33689d0fe508cb641cfba678a9a95904dc7ce37322a5b05290a69df700f2c6d",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+    "diff_id": "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+    "size": 32,
+    "uncompressed_size": 0,
+    "created_by": "WORKDIR /app",
+    "from_base": false,
+    "empty": true
+   },
+   {
+    "index": 8,
+    "digest": "sha256:d177cf39227ca5bfd86a2601d700931b7620b817fe2b182b4b712e61cabd8950",
+    "diff_id": "sha256:8b2115cf5d8de2967375d6ff2b9418cb90b63a48be28b1a5f1756fc4849649bf",
+    "size": 43495418,
+    "uncompressed_size": 120766786,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T21:30:12Z VERSION=5.2.35-ls5 SYNCLOUNGE_RELEASE=5.2.35 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     nodejs &&   apk add --no-cache --virtual=build-dependencies     build-base     git     npm &&   echo \"**** install SyncLounge ****\" &&   if [ -z ${SYNCLOUNGE_RELEASE+x} ]; then     SYNCLOUNGE_RELEASE=$(curl -sX GET \"https://registry.npmjs.org/synclounge/\"       | jq -r '.\"dist-tags\".latest');   fi &&   npm install -g --omit=dev synclounge@\"$SYNCLOUNGE_RELEASE\" &&   npm prune --omit=dev &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     18,
+     39
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:466a52853cc074cd06a4a4e39f066422d01a89369dab7fca27efc2ae68cba49f",
+    "diff_id": "sha256:959638be59b31fe501dbd76d24288f8eef5d8007f49a283c5bcde24ab6478740",
+    "size": 717,
+    "uncompressed_size": 622,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     42,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:1cd35515ce1a5bc0117474968b266414e9a91ef99075a268adde897972d892b2",
+    "diff_id": "sha256:3415d3b1946bed135e557eff27451a76bdeaabe3fde8b52a1d7844fcd4126ae9",
+    "size": 7081730,
+    "uncompressed_size": 18542591,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:dee64e5694572850ee9673269eeb89465be67dae5fcee1e29c9aa56ad728a5b5",
+    "diff_id": "sha256:5323a65059c682158a782051cf4e13d726a8932c2e2affcf2e76ac5d3c7b461a",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:4af5a54b292f879fc2302386da26ef76c5ed3db24532819f961c11ceb9829d23",
+    "diff_id": "sha256:626e29f4e2488ba06ebde8f123b299add5c55e9c5227cab90006c8d31d48c88c",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:2fbd35a78b7ee61742257273cab91ba4a6225edd4bc1730ad8a3f21864d490e8",
+    "diff_id": "sha256:f25d5fb1cb94efa44855da1ddaff8563c657115135bc19d1864c72aab3d2863c",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:e7671b4018139e055361ffac46bbc0238dd938e07984e1536f9c7ead2f14ec5f",
+    "diff_id": "sha256:615f3472d38777c86fc2dee4e742e1c1065581d04133040630ca69842aadb668",
+    "size": 6326020,
+    "uncompressed_size": 21489258,
+    "created_by": "RUN |6 BUILD_DATE=2026-10-27T17:06:22Z VERSION=bc9f8d41-ls4 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:a41e0be880b2df1376ffe0adef1b0158277abc81fa0186cf5b9de51a938a08da",
+    "diff_id": "sha256:08b597c734c6b5e3650735d97cbf8eeb882cc4b519ddecee888f5666a384eb69",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:4f4fb700ef54461cfa02571ae0db9a0dc1e0cdb5577484a6d75e68dc38e8acc1",
+    "diff_id": "sha256:5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+    "size": 32,
+    "uncompressed_size": 0,
+    "created_by": "WORKDIR /app",
+    "from_base": false,
+    "empty": true
+   },
+   {
+    "index": 8,
+    "digest": "sha256:35aa36c4f9d5acd987aad26c4d34620fdbd6b8dde695a80cc50d82c82c99a118",
+    "diff_id": "sha256:82bb5e89829e6ff87a3b154e6dcefd78cdf15812da70cb74ba328c66eece6f7d",
+    "size": 43108971,
+    "uncompressed_size": 118039853,
+    "created_by": "RUN |3 BUILD_DATE=2026-10-30T21:30:12Z VERSION=5.2.35-ls5 SYNCLOUNGE_RELEASE=5.2.35 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache     nodejs &&   apk add --no-cache --virtual=build-dependencies     build-base     npm     python3-dev &&   echo \"**** install SyncLounge ****\" &&   if [ -z ${SYNCLOUNGE_RELEASE+x} ]; then     SYNCLOUNGE_RELEASE=$(curl -sX GET \"https://registry.npmjs.org/synclounge/\"       | jq -r '.\"dist-tags\".latest');   fi &&   npm install -g --omit=dev synclounge@\"$SYNCLOUNGE_RELEASE\" --unsafe &&   npm prune --omit=dev &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     18,
+     39
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:f9d469ecd5a6957bd1d444e13effc6677dc374bb4d7f50bfcfa3fa1c152d18e7",
+    "diff_id": "sha256:156e438e564874b0279be6cfb4945a11f32dc16be4822073628b4e2bb9567188",
+    "size": 717,
+    "uncompressed_size": 622,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     42,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "synclounge",
+  "tag": "5.2.35-ls5",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/synclounge/builds/5.2.35-ls5/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.018,
+    "listening_ports": [
+     "8088/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 80281600,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.012,
+    "listening_ports": [
+     "8088/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 77283328,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-synclounge/releases/download/5.2.35-ls5/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-synclounge/builds/5.2.35-ls5/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "synclounge",
+    "tag": "amd64-9f7c11d-41131443897",
+    "arch": "amd64",
+    "started": "2026-10-30T21:32:14Z",
+    "finished": "2026-10-30T21:32:34Z",
+    "success": true,
+    "runner": "2cbae4188728",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.018,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.018
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-synclounge",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8088/tcp",
+      "seconds": 0.079
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8088/ after 0.0s",
+      "seconds": 0.028
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "179 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "179 packages: syft JSON 41015 bytes gzipped, SPDX for the image attestation 297844 bytes",
+      "seconds": 0.141
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1258 dirs, 3185 files (148636483 bytes), 1212 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.08s, total 0.13s",
+      "seconds": 0.271
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.368
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "18 units, 1 from this image, base units assumed",
+      "seconds": 0.064
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8088/",
+      "seconds": 10.949
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8088], rss 80281600 bytes",
+      "seconds": 0.457
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 80281600,
+     "pids": 13,
+     "listening_tcp": [
+      8088
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-synclounge"
+     ],
+     "changed_paths": 209
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "synclounge",
+    "tag": "arm64-9f7c11d-41131443897",
+    "arch": "arm64",
+    "started": "2026-10-30T21:31:55Z",
+    "finished": "2026-10-30T21:32:15Z",
+    "success": true,
+    "runner": "14f2322e0ea4",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.012,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.012
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-synclounge",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8088/tcp",
+      "seconds": 0.043
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8088/ after 0.0s",
+      "seconds": 0.018
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "179 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "179 packages: syft JSON 41047 bytes gzipped, SPDX for the image attestation 297904 bytes",
+      "seconds": 0.121
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1296 dirs, 3214 files (157826846 bytes), 1212 symlinks, 256 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.07s",
+      "seconds": 0.182
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.532
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "18 units, 1 from this image, base units assumed",
+      "seconds": 0.048
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8088/",
+      "seconds": 10.912
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8088], rss 77283328 bytes",
+      "seconds": 0.272
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 77283328,
+     "pids": 13,
+     "listening_tcp": [
+      8088
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-synclounge"
+     ],
+     "changed_paths": 209
+    }
+   }
+  }
+ }
+}
