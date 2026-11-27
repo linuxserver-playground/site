@@ -1,0 +1,1465 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "pairdrop",
+  "repository": "linuxserver-playground/docker-pairdrop",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "v1.11.3",
+   "upstream_clean": "v1.11.3",
+   "semver": "1.11.3",
+   "ls_build": 8,
+   "tag": "v1.11.3-ls8",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v1.11.3-ls8",
+    "version-v1.11.3",
+    "1.11.3",
+    "amd64-latest",
+    "amd64-v1.11.3-ls8",
+    "amd64-version-v1.11.3",
+    "amd64-1.11.3",
+    "arm64v8-latest",
+    "arm64v8-v1.11.3-ls8",
+    "arm64v8-version-v1.11.3",
+    "arm64v8-1.11.3"
+   ],
+   "source": "json",
+   "source_url": "https://api.github.com/repos/schlagmichdoch/pairdrop/tags"
+  },
+  "commit": "d05f1e96e21c57cf825ac255391273718a760ae7",
+  "created": "2026-11-26T21:26:25Z",
+  "reason": "upstream",
+  "previous": {
+   "tag": "v1.11.2-ls7",
+   "release_url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/tag/v1.11.2-ls7"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+   "digest": "sha256:e37f235623e89ea3cceb36519a1bdc247225f6fe6850b7e54358763f0c426d1c"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:80595230efb8fbf6fa6cfc6b90e5cf08dc58a65a6a6f324576ec9dde36d6717e",
+    "size": 53302495,
+    "uncompressed_size": 125073924,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 21
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:1825d02764676f8604accea718ae0ce46baa7382dbc72a12b153338a6a28cd40",
+    "size": 53539502,
+    "uncompressed_size": 132556311,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 21
+   }
+  ],
+  "index_digest": "sha256:b44631fa563ae9abf3db35b94136f06428e39e70bd9f48f927f206bcdc8a38c2",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v1.11.3-ls8 Build-date:- 2026-11-26T21:21:07Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22@sha256:e37f235623e89ea3cceb36519a1bdc247225f6fe6850b7e54358763f0c426d1c",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v1.11.3",
+   "maintainer": "thespad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-26T21:21:07Z",
+   "org.opencontainers.image.description": "PairDrop is a sublime alternative to AirDrop that works on all platforms.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-pairdrop",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "d05f1e96e21c57cf825ac255391273718a760ae7",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-pairdrop",
+   "org.opencontainers.image.title": "Pairdrop",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-pairdrop/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v1.11.3-ls8"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "NODE_ENV=production"
+   ],
+   "exposed_ports": [
+    "3000/tcp"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PAIRDROP_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\n# environment settings\nENV NODE_ENV=\"production\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    nodejs \\\n    npm && \\\n  echo \"**** install pairdrop ****\" && \\\n  mkdir -p /app/pairdrop && \\\n  if [ -z ${PAIRDROP_RELEASE} ]; then \\\n    PAIRDROP_RELEASE=$(curl -sL \"https://api.github.com/repos/schlagmichdoch/pairdrop/tags\" \\\n    | jq -r '.[0].name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/pairdrop.tar.gz -L \\\n    \"https://github.com/schlagmichdoch/PairDrop/archive/refs/tags/${PAIRDROP_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/pairdrop.tar.gz -C \\\n    /app/pairdrop/ --strip-components=1 && \\\n  cd /app/pairdrop && \\\n  chown -R abc:abc ./ && \\\n  su -s /bin/sh abc -c 'HOME=/tmp NODE_ENV=production npm ci' && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/* \\\n    /tmp/.npm\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.22\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PAIRDROP_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\n# environment settings\nENV NODE_ENV=\"production\"\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    nodejs \\\n    npm && \\\n  echo \"**** install pairdrop ****\" && \\\n  mkdir -p /app/pairdrop && \\\n  if [ -z ${PAIRDROP_RELEASE} ]; then \\\n    PAIRDROP_RELEASE=$(curl -sL \"https://api.github.com/repos/schlagmichdoch/pairdrop/tags\" \\\n    | jq -r '.[0].name'); \\\n  fi && \\\n  curl -o \\\n    /tmp/pairdrop.tar.gz -L \\\n    \"https://github.com/schlagmichdoch/PairDrop/archive/refs/tags/${PAIRDROP_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/pairdrop.tar.gz -C \\\n    /app/pairdrop/ --strip-components=1 && \\\n  cd /app/pairdrop && \\\n  chown -R abc:abc ./ && \\\n  su -s /bin/sh abc -c 'HOME=/tmp NODE_ENV=production npm ci' && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/* \\\n    /tmp/.npm\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 3000\n"
+  },
+  "init_graph": {
+   "d2": "\"pairdrop:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-pairdrop-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-pairdrop-config\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-pairdrop\n  svc-pairdrop -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.22\"\n}\n\"pairdrop:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-pairdrop-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-pairdrop-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    lsiown -R abc:abc \\\n        /config\nfi\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-pairdrop",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ ${RATE_LIMIT,,} = \"true\" ]]; then\n    OPT_RATE_LIMIT=\"--rate-limit\"\nfi\n\nif [[ ${WS_FALLBACK,,} = \"true\" ]]; then\n    OPT_WS_FALLBACK=\"--include-ws-fallback\"\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    HOME=/config exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 3000\" \\\n        cd /app/pairdrop s6-setuidgid abc npm start -- \"${OPT_RATE_LIMIT}\" \"${OPT_WS_FALLBACK}\"\nelse\n    HOME=/config exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 3000\" \\\n        cd /app/pairdrop npm start -- \"${OPT_RATE_LIMIT}\" \"${OPT_WS_FALLBACK}\"\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 300,
+    "distro": "Alpine Linux v3.22",
+    "hash": "c43b3b66",
+    "by_type": {
+     "npm": 239,
+     "apk": 61
+    }
+   },
+   "arm64": {
+    "count": 300,
+    "distro": "Alpine Linux v3.22",
+    "hash": "c43b3b66",
+    "by_type": {
+     "npm": 239,
+     "apk": 61
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/pairdrop/builds/v1.11.3-ls8/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-pairdrop/compare/v1.11.2-ls7...v1.11.3-ls8",
+   "upstream": "## Enhancements\r\n- Changed language buttons to sort by language code\r\n\r\n## Fixes\r\n- Updated node dependencies\r\n- Updated dependabot config and add Docker and github-actions\r\n- Added Persian to RTL languages\r\n- Fixed language button titles for Chinese language variants (@dday55)\r\n\r\n## Languages\r\n- New language Azerbaijani\r\n- New language Bengali (@sarf137inverse)\r\n- New language Greek\r\n- New language Finnish\r\n- New language Malayalam (@sreeroop)\r\n- New language Portuguese\r\n- New language Slovenian\r\n- New language Serbian\r\n- New language Swedish\r\n- New language Telugu (@agnivesh13)\r\n- New language Thai\r\n- New language Uzbek\r\n- New language Vietnamese",
+   "upstream_url": "https://github.com/schlagmichdoch/PairDrop/releases/tag/v1.11.3"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 64698,
+    "sha256": "772e9559449a5bcf8837c77080ba8d1e407aa9f3c3bb7fef94275e6888ca47bf",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5044,
+    "sha256": "ce4483660b00e608d391d2c43a16bd46d24adf70242ded3257fa2e3b92f20329",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 40541,
+    "sha256": "97d1f71b6e306b6015fb528b4b340af9da36f520c7caa2a0b0a50bb781e5a32d",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2580,
+    "sha256": "15c59a32ef5893aa8e932176d7d91e672bdae4bd133087f56b5a76915ec4e7f8",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 100168,
+    "sha256": "af98d040671918816192602a34f1931fb4801db3acdacc50bc79653cf02d545a",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 23088,
+    "sha256": "aa75ef51f76fe8038f638c77136fc31a4a5d3191a721615544fc5ee0ee85c9a0",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 64403,
+    "sha256": "cdf365b6f30df2ece2841f4d4840e6f9aba983faaaac65d39ef87bc43a63f145",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5044,
+    "sha256": "2b4114addf1261ab28277178e774bf811fe9ad6e744624568ef4067a515374ef",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 40309,
+    "sha256": "55c3202029531fc3e3265c9c62e8ed5e3fda1b05a965717f521ecc136d83bd02",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2580,
+    "sha256": "65668333622c9bef234d1cfb23fcadad0506baf4e72e2415989a1a7411811199",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 99845,
+    "sha256": "85f183769d4b6f7a81541e18d7067f64f25b73511702d19ba39c0ee45146c01f",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 23088,
+    "sha256": "aa75ef51f76fe8038f638c77136fc31a4a5d3191a721615544fc5ee0ee85c9a0",
+    "url": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 45897478193,
+   "run_url": "https://github.com/linuxserver-playground/docker-pairdrop/actions/runs/45897478193",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/pairdrop",
+   "tags": [
+    "latest",
+    "v1.11.3-ls8",
+    "version-v1.11.3",
+    "1.11.3",
+    "amd64-latest",
+    "amd64-v1.11.3-ls8",
+    "amd64-version-v1.11.3",
+    "amd64-1.11.3",
+    "arm64v8-latest",
+    "arm64v8-v1.11.3-ls8",
+    "arm64v8-version-v1.11.3",
+    "arm64v8-1.11.3"
+   ]
+  }
+ },
+ "diff": {
+  "image": "pairdrop",
+  "branch": "main",
+  "tag": "v1.11.3-ls8",
+  "previous_tag": "v1.11.2-ls2",
+  "classification": "mixed",
+  "reasons": [
+   "upstream version changed",
+   "repository files that reach the image changed (image.yml or root/)",
+   "base image digest changed",
+   "packages changed",
+   "7 commits (9a3d209 → d05f1e9): changed image.yml, generated files, the package table"
+  ],
+  "upstream": {
+   "from": "v1.11.2",
+   "to": "v1.11.3",
+   "changed": true
+  },
+  "commit": {
+   "from": "9a3d209c9f184e6e8200ec76c28194e0c57cdccf",
+   "to": "d05f1e96e21c57cf825ac255391273718a760ae7",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-pairdrop/compare/9a3d209c9f184e6e8200ec76c28194e0c57cdccf...d05f1e96e21c57cf825ac255391273718a760ae7",
+   "commits": [
+    {
+     "sha": "5c9ce3245d95f69f3692a6c704ea8c4060a7bdf2",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "thelamer",
+      "login": "thelamer"
+     },
+     "date": "2026-10-28T14:49:20Z",
+     "url": "https://github.com/linuxserver-playground/docker-pairdrop/commit/5c9ce3245d95f69f3692a6c704ea8c4060a7bdf2",
+     "bot": true
+    },
+    {
+     "sha": "77e596839f054912a62a228582a13ef697335918",
+     "subject": "Add the upstream release notes source",
+     "author": {
+      "name": "thelamer",
+      "login": "thelamer"
+     },
+     "date": "2026-10-30T19:37:45Z",
+     "url": "https://github.com/linuxserver-playground/docker-pairdrop/commit/77e596839f054912a62a228582a13ef697335918",
+     "bot": false
+    },
+    {
+     "sha": "6b8cf1357b2c56e72fbf0b2f0a6f1b2995018ce3",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-30T19:44:39Z",
+     "url": "https://github.com/linuxserver-playground/docker-pairdrop/commit/6b8cf1357b2c56e72fbf0b2f0a6f1b2995018ce3",
+     "bot": true
+    },
+    {
+     "sha": "09db04a2b0ec6a70749e574f4a57cb9c26317f78",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-31T16:27:00Z",
+     "url": "https://github.com/linuxserver-playground/docker-pairdrop/commit/09db04a2b0ec6a70749e574f4a57cb9c26317f78",
+     "bot": true
+    },
+    {
+     "sha": "05638687a5db2af9dc2110bf1bd0c4b39e581b56",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-04T20:21:08Z",
+     "url": "https://github.com/linuxserver-playground/docker-pairdrop/commit/05638687a5db2af9dc2110bf1bd0c4b39e581b56",
+     "bot": true
+    },
+    {
+     "sha": "688fa12e832d52e71fa6943f4a080687a9f94c40",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T16:27:14Z",
+     "url": "https://github.com/linuxserver-playground/docker-pairdrop/commit/688fa12e832d52e71fa6943f4a080687a9f94c40",
+     "bot": true
+    },
+    {
+     "sha": "d05f1e96e21c57cf825ac255391273718a760ae7",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-14T16:27:59Z",
+     "url": "https://github.com/linuxserver-playground/docker-pairdrop/commit/d05f1e96e21c57cf825ac255391273718a760ae7",
+     "bot": true
+    }
+   ],
+   "count": 7,
+   "truncated": false,
+   "areas": {
+    "manifest": 1,
+    "generated": 4,
+    "packages": 1
+   }
+  },
+  "trigger": "upstream",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:c9849bb7e2f68a29927bfd73214675e1209240eeb03444d1a603321c47af4db4"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.22",
+    "digest": "sha256:e37f235623e89ea3cceb36519a1bdc247225f6fe6850b7e54358763f0c426d1c"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 53265799,
+    "to": 53302495,
+    "delta": 36696
+   },
+   "arm64": {
+    "from": 53492606,
+    "to": 53539502,
+    "delta": 46896
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.22.7-r0",
+       "to": "3.22.8-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.22.8-r0?arch=x86_64&distro=alpine-3.22.8&upstream=alpine-base"
+      },
+      {
+       "name": "apk-tools",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/apk-tools@2.14.13-r0?arch=x86_64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "libapk2",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/libapk2@2.14.13-r0?arch=x86_64&distro=alpine-3.22.8&upstream=apk-tools"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r2",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r2?arch=x86_64&distro=alpine-3.22.8&upstream=openssl"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r2",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r2?arch=x86_64&distro=alpine-3.22.8&upstream=openssl"
+      },
+      {
+       "name": "nodejs",
+       "from": "22.23.4-r0",
+       "to": "22.23.5-r0",
+       "purl": "pkg:apk/alpine/nodejs@22.23.5-r0?arch=x86_64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=x86_64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=x86_64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "zstd-libs",
+       "from": "1.5.7-r0",
+       "to": "1.6.0-r1",
+       "purl": "pkg:apk/alpine/zstd-libs@1.6.0-r1?arch=x86_64&distro=alpine-3.22.8&upstream=zstd"
+      }
+     ],
+     "downgraded": []
+    },
+    "npm": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "body-parser",
+       "from": "1.20.3",
+       "to": "1.20.9",
+       "purl": "pkg:npm/body-parser@1.20.9"
+      },
+      {
+       "name": "call-bound",
+       "from": "1.0.3",
+       "to": "1.0.4",
+       "purl": "pkg:npm/call-bound@1.0.4"
+      },
+      {
+       "name": "cookie",
+       "from": "0.7.1",
+       "to": "0.7.2",
+       "purl": "pkg:npm/cookie@0.7.2"
+      },
+      {
+       "name": "cookie-signature",
+       "from": "1.0.6",
+       "to": "1.0.7",
+       "purl": "pkg:npm/cookie-signature@1.0.7"
+      },
+      {
+       "name": "encodeurl",
+       "from": "2.0.0",
+       "to": "2.0.3",
+       "purl": "pkg:npm/encodeurl@2.0.3"
+      },
+      {
+       "name": "es-object-atoms",
+       "from": "1.1.1",
+       "to": "1.1.2",
+       "purl": "pkg:npm/es-object-atoms@1.1.2"
+      },
+      {
+       "name": "express",
+       "from": "4.21.2",
+       "to": "4.22.3",
+       "purl": "pkg:npm/express@4.22.3"
+      },
+      {
+       "name": "express-rate-limit",
+       "from": "7.5.0",
+       "to": "7.5.1",
+       "purl": "pkg:npm/express-rate-limit@7.5.1"
+      },
+      {
+       "name": "finalhandler",
+       "from": "1.3.1",
+       "to": "1.3.2",
+       "purl": "pkg:npm/finalhandler@1.3.2"
+      },
+      {
+       "name": "hasown",
+       "from": "2.0.2",
+       "to": "2.0.4",
+       "purl": "pkg:npm/hasown@2.0.4"
+      },
+      {
+       "name": "http-errors",
+       "from": "2.0.0",
+       "to": "2.0.1",
+       "purl": "pkg:npm/http-errors@2.0.1"
+      },
+      {
+       "name": "object-inspect",
+       "from": "1.13.4",
+       "to": "1.14.0",
+       "purl": "pkg:npm/object-inspect@1.14.0"
+      },
+      {
+       "name": "on-finished",
+       "from": "2.4.1",
+       "to": "2.4.2",
+       "purl": "pkg:npm/on-finished@2.4.2"
+      },
+      {
+       "name": "pairdrop",
+       "from": "1.11.2",
+       "to": "1.11.3",
+       "purl": "pkg:npm/pairdrop@1.11.3"
+      },
+      {
+       "name": "path-to-regexp",
+       "from": "0.1.12",
+       "to": "0.1.13",
+       "purl": "pkg:npm/path-to-regexp@0.1.13"
+      },
+      {
+       "name": "proxy-addr",
+       "from": "2.0.7",
+       "to": "2.0.8",
+       "purl": "pkg:npm/proxy-addr@2.0.8"
+      },
+      {
+       "name": "qs",
+       "from": "6.13.0",
+       "to": "6.16.2",
+       "purl": "pkg:npm/qs@6.16.2"
+      },
+      {
+       "name": "raw-body",
+       "from": "2.5.2",
+       "to": "2.5.3",
+       "purl": "pkg:npm/raw-body@2.5.3"
+      },
+      {
+       "name": "send",
+       "from": "0.19.0",
+       "to": "0.19.2",
+       "purl": "pkg:npm/send@0.19.2"
+      },
+      {
+       "name": "serve-static",
+       "from": "1.16.2",
+       "to": "1.16.3",
+       "purl": "pkg:npm/serve-static@1.16.3"
+      },
+      {
+       "name": "side-channel",
+       "from": "1.1.0",
+       "to": "1.1.1",
+       "purl": "pkg:npm/side-channel@1.1.1"
+      },
+      {
+       "name": "side-channel-list",
+       "from": "1.0.0",
+       "to": "1.0.1",
+       "purl": "pkg:npm/side-channel-list@1.0.1"
+      },
+      {
+       "name": "statuses",
+       "from": "2.0.1",
+       "to": "2.0.2",
+       "purl": "pkg:npm/statuses@2.0.2"
+      },
+      {
+       "name": "ua-parser-js",
+       "from": "1.0.40",
+       "to": "1.0.41",
+       "purl": "pkg:npm/ua-parser-js@1.0.41"
+      },
+      {
+       "name": "ws",
+       "from": "8.18.1",
+       "to": "8.23.0",
+       "purl": "pkg:npm/ws@8.23.0"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.22.7-r0",
+       "to": "3.22.8-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.22.8-r0?arch=aarch64&distro=alpine-3.22.8&upstream=alpine-base"
+      },
+      {
+       "name": "apk-tools",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/apk-tools@2.14.13-r0?arch=aarch64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "libapk2",
+       "from": "2.14.12-r0",
+       "to": "2.14.13-r0",
+       "purl": "pkg:apk/alpine/libapk2@2.14.13-r0?arch=aarch64&distro=alpine-3.22.8&upstream=apk-tools"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r2",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r2?arch=aarch64&distro=alpine-3.22.8&upstream=openssl"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r2",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r2?arch=aarch64&distro=alpine-3.22.8&upstream=openssl"
+      },
+      {
+       "name": "nodejs",
+       "from": "22.23.4-r0",
+       "to": "22.23.5-r0",
+       "purl": "pkg:apk/alpine/nodejs@22.23.5-r0?arch=aarch64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=aarch64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=aarch64&distro=alpine-3.22.8"
+      },
+      {
+       "name": "zstd-libs",
+       "from": "1.5.7-r0",
+       "to": "1.6.0-r1",
+       "purl": "pkg:apk/alpine/zstd-libs@1.6.0-r1?arch=aarch64&distro=alpine-3.22.8&upstream=zstd"
+      }
+     ],
+     "downgraded": []
+    },
+    "npm": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "body-parser",
+       "from": "1.20.3",
+       "to": "1.20.9",
+       "purl": "pkg:npm/body-parser@1.20.9"
+      },
+      {
+       "name": "call-bound",
+       "from": "1.0.3",
+       "to": "1.0.4",
+       "purl": "pkg:npm/call-bound@1.0.4"
+      },
+      {
+       "name": "cookie",
+       "from": "0.7.1",
+       "to": "0.7.2",
+       "purl": "pkg:npm/cookie@0.7.2"
+      },
+      {
+       "name": "cookie-signature",
+       "from": "1.0.6",
+       "to": "1.0.7",
+       "purl": "pkg:npm/cookie-signature@1.0.7"
+      },
+      {
+       "name": "encodeurl",
+       "from": "2.0.0",
+       "to": "2.0.3",
+       "purl": "pkg:npm/encodeurl@2.0.3"
+      },
+      {
+       "name": "es-object-atoms",
+       "from": "1.1.1",
+       "to": "1.1.2",
+       "purl": "pkg:npm/es-object-atoms@1.1.2"
+      },
+      {
+       "name": "express",
+       "from": "4.21.2",
+       "to": "4.22.3",
+       "purl": "pkg:npm/express@4.22.3"
+      },
+      {
+       "name": "express-rate-limit",
+       "from": "7.5.0",
+       "to": "7.5.1",
+       "purl": "pkg:npm/express-rate-limit@7.5.1"
+      },
+      {
+       "name": "finalhandler",
+       "from": "1.3.1",
+       "to": "1.3.2",
+       "purl": "pkg:npm/finalhandler@1.3.2"
+      },
+      {
+       "name": "hasown",
+       "from": "2.0.2",
+       "to": "2.0.4",
+       "purl": "pkg:npm/hasown@2.0.4"
+      },
+      {
+       "name": "http-errors",
+       "from": "2.0.0",
+       "to": "2.0.1",
+       "purl": "pkg:npm/http-errors@2.0.1"
+      },
+      {
+       "name": "object-inspect",
+       "from": "1.13.4",
+       "to": "1.14.0",
+       "purl": "pkg:npm/object-inspect@1.14.0"
+      },
+      {
+       "name": "on-finished",
+       "from": "2.4.1",
+       "to": "2.4.2",
+       "purl": "pkg:npm/on-finished@2.4.2"
+      },
+      {
+       "name": "pairdrop",
+       "from": "1.11.2",
+       "to": "1.11.3",
+       "purl": "pkg:npm/pairdrop@1.11.3"
+      },
+      {
+       "name": "path-to-regexp",
+       "from": "0.1.12",
+       "to": "0.1.13",
+       "purl": "pkg:npm/path-to-regexp@0.1.13"
+      },
+      {
+       "name": "proxy-addr",
+       "from": "2.0.7",
+       "to": "2.0.8",
+       "purl": "pkg:npm/proxy-addr@2.0.8"
+      },
+      {
+       "name": "qs",
+       "from": "6.13.0",
+       "to": "6.16.2",
+       "purl": "pkg:npm/qs@6.16.2"
+      },
+      {
+       "name": "raw-body",
+       "from": "2.5.2",
+       "to": "2.5.3",
+       "purl": "pkg:npm/raw-body@2.5.3"
+      },
+      {
+       "name": "send",
+       "from": "0.19.0",
+       "to": "0.19.2",
+       "purl": "pkg:npm/send@0.19.2"
+      },
+      {
+       "name": "serve-static",
+       "from": "1.16.2",
+       "to": "1.16.3",
+       "purl": "pkg:npm/serve-static@1.16.3"
+      },
+      {
+       "name": "side-channel",
+       "from": "1.1.0",
+       "to": "1.1.1",
+       "purl": "pkg:npm/side-channel@1.1.1"
+      },
+      {
+       "name": "side-channel-list",
+       "from": "1.0.0",
+       "to": "1.0.1",
+       "purl": "pkg:npm/side-channel-list@1.0.1"
+      },
+      {
+       "name": "statuses",
+       "from": "2.0.1",
+       "to": "2.0.2",
+       "purl": "pkg:npm/statuses@2.0.2"
+      },
+      {
+       "name": "ua-parser-js",
+       "from": "1.0.40",
+       "to": "1.0.41",
+       "purl": "pkg:npm/ua-parser-js@1.0.41"
+      },
+      {
+       "name": "ws",
+       "from": "8.18.1",
+       "to": "8.23.0",
+       "purl": "pkg:npm/ws@8.23.0"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 68,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:21cce45c337e0a367a0fa54a381847a2906cffb4a8b3ead5ae1a20a6c033f56a",
+    "diff_id": "sha256:a1c4e0db5a7a2b52e6a98f2d0d6b6ac0d6884c07cb082a0c714da1cceea79280",
+    "size": 6206986,
+    "uncompressed_size": 13585008,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:14ba87e0a637c812c6efcdfae16fa58746badaa0fc6da20fd0acf791dfb7b9f4",
+    "diff_id": "sha256:2a6cd04da3a38c72388e651fe911fd8aa6963439b8e52ac43a94abe8cb36cfa3",
+    "size": 1357,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:bcde40c54db889de7a665ac8f1c3fd3b45af0f3f3c5ce02c6c16e6d12d3fe057",
+    "diff_id": "sha256:b02347d11de80e1cec3c608455f2fe38045fa6fdf4705b1cff63a8dd28b95ded",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:e443a42c958c752a9c06dd57e84ea78d0c1a68ee1a5b2510ebf8991bf40d8c6e",
+    "diff_id": "sha256:24b4bbb98c5159b630a95360144e5804b02f93b01d28e6921251cb6205899cf7",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c30044932503448a41924592a29002886d72271c4eb828c8c62fc3244061e996",
+    "diff_id": "sha256:09d5baecdbe639bfebb174dd9c54de5bfb2c4e56137a8f3b58dc485d0e284384",
+    "size": 5864850,
+    "uncompressed_size": 13913915,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-25T21:16:22Z VERSION=f97ec89f-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:584d6df73983ce6ed555644fdbb29c8c0b70aa020ac62c862ae11dc0ce750571",
+    "diff_id": "sha256:de59231fc3b8f0236454e1f49596ba14fa229fce58f5b82d04fa566e068f2e8c",
+    "size": 4633,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:28490549a096d90fc029b3b7ca154de04fac76c7451518c3e3fd31073025381a",
+    "diff_id": "sha256:2ec22d1bdb1dcd195054b149b4ed913d3966e88686647ccbccf1555657c00777",
+    "size": 41216352,
+    "uncompressed_size": 97527899,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-26T21:21:07Z VERSION=v1.11.3-ls8 PAIRDROP_RELEASE= /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     nodejs     npm &&   echo \"**** install pairdrop ****\" &&   mkdir -p /app/pairdrop &&   if [ -z ${PAIRDROP_RELEASE} ]; then     PAIRDROP_RELEASE=$(curl -sL \"https://api.github.com/repos/schlagmichdoch/pairdrop/tags\"     | jq -r '.[0].name');   fi &&   curl -o     /tmp/pairdrop.tar.gz -L     \"https://github.com/schlagmichdoch/PairDrop/archive/refs/tags/${PAIRDROP_RELEASE}.tar.gz\" &&   tar xf     /tmp/pairdrop.tar.gz -C     /app/pairdrop/ --strip-components=1 &&   cd /app/pairdrop &&   chown -R abc:abc ./ &&   su -s /bin/sh abc -c 'HOME=/tmp NODE_ENV=production npm ci' &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     $HOME/.cache     /tmp/*     /tmp/.npm",
+    "dockerfile_lines": [
+     17,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:a9efa03f06c101d352d08fa08e687980d4139fcb873c10090bc3b485b2bbd31d",
+    "diff_id": "sha256:ca1801cfa8bd9bc2d6f60264570ed794d6a0c7d5ffb1a8a662b03da6a3bb19ef",
+    "size": 949,
+    "uncompressed_size": 886,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     45,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:adf6fa9192ea574aa7e1498a4603740670d67364c1029117ee4746f41f7795e5",
+    "diff_id": "sha256:f6870b1829292f5a4816dc009f23f8fca7d47db7624b6d00278858b508b1f1f8",
+    "size": 7021084,
+    "uncompressed_size": 18421348,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:ea52c628748188e13822e8ac662cb3f2effbd63490eaac027b6aab9a4878e52c",
+    "diff_id": "sha256:f8c845f22a2025674e213f5469c823267c75e63731b20b6d1b2801a235643e42",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:e7c939d589b9fc1beb14973c337ad609fb4620c0cbee33c71e2e729863e749d6",
+    "diff_id": "sha256:dba9df2505443d68a0729c2db2d48be92bab150377e862ff06b318516367ff32",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:fc92d5b0c7230ac6872adf742b363df890de78b40c89451db52adf5da43bdff8",
+    "diff_id": "sha256:f888985a0604af54014d4e053d94eb468e56bd6c2e7777f7bc324f53c4e538ba",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:c562e824e653689a9cad736fe0d1a789c45a2c474b03fa7b39962d954a61125a",
+    "diff_id": "sha256:579f4423a80a8af3befe483ffe9f50f3e41b13ed7796fc532ed1c99e20bcdfab",
+    "size": 6079996,
+    "uncompressed_size": 20828030,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-25T21:16:22Z VERSION=f97ec89f-ls7 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:1673831b670f4e3c2cae73793ae033e378e4694100cdfa33e681444a262978ca",
+    "diff_id": "sha256:d98599ba4ada51ff2674dedb4ac4968e7114c3063fd7727f9928c7e864edd1d6",
+    "size": 4631,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:55ea11e2474896163dac926d199e882100f27993dba3036776ef5648151f0ae4",
+    "diff_id": "sha256:4b64872b2fd6164a1f74908132e318a73534f44e9edf0c6182e4fc01350e74be",
+    "size": 40424119,
+    "uncompressed_size": 93259831,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-26T21:21:07Z VERSION=v1.11.3-ls8 PAIRDROP_RELEASE= /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     nodejs     npm &&   echo \"**** install pairdrop ****\" &&   mkdir -p /app/pairdrop &&   if [ -z ${PAIRDROP_RELEASE} ]; then     PAIRDROP_RELEASE=$(curl -sL \"https://api.github.com/repos/schlagmichdoch/pairdrop/tags\"     | jq -r '.[0].name');   fi &&   curl -o     /tmp/pairdrop.tar.gz -L     \"https://github.com/schlagmichdoch/PairDrop/archive/refs/tags/${PAIRDROP_RELEASE}.tar.gz\" &&   tar xf     /tmp/pairdrop.tar.gz -C     /app/pairdrop/ --strip-components=1 &&   cd /app/pairdrop &&   chown -R abc:abc ./ &&   su -s /bin/sh abc -c 'HOME=/tmp NODE_ENV=production npm ci' &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     $HOME/.cache     /tmp/*     /tmp/.npm",
+    "dockerfile_lines": [
+     17,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:6f98fd421613a2414454fe8591709548a57ce8db1821de004d2c0f7bdac0b072",
+    "diff_id": "sha256:3c071c2b88c72430db76ed4e8b26579ec7a265e349cb87c880a3b1a568e7299f",
+    "size": 949,
+    "uncompressed_size": 886,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     45,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "pairdrop",
+  "tag": "v1.11.3-ls8",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/pairdrop/builds/v1.11.3-ls8/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.016,
+    "listening_ports": [
+     "3000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 146649088,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.012,
+    "listening_ports": [
+     "3000/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 141565952,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-pairdrop/releases/download/v1.11.3-ls8/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-pairdrop/builds/v1.11.3-ls8/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "pairdrop",
+    "tag": "amd64-d05f1e9-45897478193",
+    "arch": "amd64",
+    "started": "2026-11-26T21:25:03Z",
+    "finished": "2026-11-26T21:25:25Z",
+    "success": true,
+    "runner": "0662fbacec18",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.016,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.016
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-pairdrop",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.074
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 0.0s",
+      "seconds": 0.018
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "300 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "300 packages: syft JSON 64698 bytes gzipped, SPDX for the image attestation 572513 bytes",
+      "seconds": 0.178
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "834 dirs, 3200 files (124763040 bytes), 1212 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.07s, total 0.12s",
+      "seconds": 0.262
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.916
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.071
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 10.749
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [3000], rss 146649088 bytes",
+      "seconds": 0.416
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 146649088,
+     "pids": 14,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-pairdrop"
+     ],
+     "changed_paths": 215
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "pairdrop",
+    "tag": "arm64-d05f1e9-45897478193",
+    "arch": "arm64",
+    "started": "2026-11-26T21:23:03Z",
+    "finished": "2026-11-26T21:23:24Z",
+    "success": true,
+    "runner": "c646b43a7a77",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.012,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.012
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-pairdrop",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 3000/tcp",
+      "seconds": 0.045
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:3000/ after 0.0s",
+      "seconds": 0.015
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "300 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "300 packages: syft JSON 64403 bytes gzipped, SPDX for the image attestation 572574 bytes",
+      "seconds": 0.156
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "834 dirs, 3200 files (132245300 bytes), 1212 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.04s, total 0.06s",
+      "seconds": 0.197
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 1.131
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.056
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:3000/",
+      "seconds": 10.679
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [3000], rss 141565952 bytes",
+      "seconds": 0.267
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 141565952,
+     "pids": 14,
+     "listening_tcp": [
+      3000
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-pairdrop"
+     ],
+     "changed_paths": 215
+    }
+   }
+  }
+ }
+}

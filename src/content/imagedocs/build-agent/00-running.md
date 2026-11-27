@@ -1,0 +1,33 @@
+---
+image: "build-agent"
+section: "running"
+title: "Running"
+order: 0
+---
+```yml
+services:
+  build-agent:
+    image: lscr.io/linuxserver/build-agent:latest
+    privileged: true
+    container_name: build-agent
+    environment:
+      - TZ=London/Europe
+      - 'PUBLIC_KEY=<jenkins public key>'
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - ./docker-data:/config
+    ports:
+      - 2222:2222
+    restart: unless-stopped
+```
+
+For x86_64 machines, run `docker run --rm --privileged ghcr.io/linuxserver/qemu-static --reset -p yes` on the host to enable qemu before bringing any build agent containers up.
+
+- { date: "21.10.26:", desc: "Add xmlstarlet and pandoc." }
+- { date: "07.10.26:", desc: "Update JRE to 25." }
+- { date: "09.05.25:", desc: "Push riscv64 tag." }
+- { date: "02.04.25:", desc: "Update JRE to 21." }
+- { date: "01.07.24:", desc: "Update JRE to 17." }
+- { date: "16.01.24:", desc: "Add yq." }
+- { date: "30.04.23:", desc: "Initial Release." }
