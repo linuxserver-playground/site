@@ -1,0 +1,1 @@
+import{a as e}from"./format.CyHGtvOK.js";var t=()=>{let t=new Date;for(let n of document.querySelectorAll(`time[data-ago]`))n.textContent=e(n.dateTime,t)};t(),setInterval(t,6e4);
