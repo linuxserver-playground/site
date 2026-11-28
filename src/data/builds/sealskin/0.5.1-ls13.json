@@ -1,0 +1,2642 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "sealskin",
+  "repository": "linuxserver-playground/docker-sealskin",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "0.5.1",
+   "upstream_clean": "0.5.1",
+   "semver": "0.5.1",
+   "ls_build": 13,
+   "tag": "0.5.1-ls13",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "0.5.1-ls13",
+    "version-0.5.1",
+    "0.5.1",
+    "amd64-latest",
+    "amd64-0.5.1-ls13",
+    "amd64-version-0.5.1",
+    "amd64-0.5.1",
+    "arm64v8-latest",
+    "arm64v8-0.5.1-ls13",
+    "arm64v8-version-0.5.1",
+    "arm64v8-0.5.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/selkies-project/sealskin/releases/tag/0.5.1"
+  },
+  "commit": "7fea542e63cfe7b9dabf92e83fe58f13961159dd",
+  "created": "2026-11-23T05:57:31Z",
+  "reason": "upstream",
+  "previous": {
+   "tag": "0.5.0-ls12",
+   "release_url": "https://github.com/linuxserver-playground/docker-sealskin/releases/tag/0.5.0-ls12"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:c01adea0c873b7c0b36886f8e33a1c284075592a6de13e6a1dfd89b7401bc396",
+    "size": 91658226,
+    "uncompressed_size": 246577885,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 34
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:94b3466cc9ce447f42ffc6aec6d34b2d36da62c0f423d07a2ae6681496d4f84c",
+    "size": 89651176,
+    "uncompressed_size": 258052038,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 26
+   }
+  ],
+  "index_digest": "sha256:05ff97f345e8bb7f914b8f61a2276e549b7dde0bd5b220b4b1286044acf5b622",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 0.5.1-ls13 Build-date:- 2026-11-23T05:52:37Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "0.5.1",
+   "maintainer": "thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-23T05:52:37Z",
+   "org.opencontainers.image.description": "Sealskin is a self-hosted browser isolation and remote application streaming platform.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-sealskin",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "7fea542e63cfe7b9dabf92e83fe58f13961159dd",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-sealskin",
+   "org.opencontainers.image.title": "Sealskin",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-sealskin/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "0.5.1-ls13"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "8000/tcp",
+    "8443/tcp"
+   ],
+   "volumes": [
+    "/config",
+    "/storage"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SEALSKIN_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\nENV HOME=/config\n\n# install software\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    python3-dev \\\n    py3-pip && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    caddy \\\n    openssl \\\n    python3 && \\\n  echo \"**** install sealskin ****\" && \\\n  if [ -z ${SEALSKIN_VERSION+x} ]; then \\\n    SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L \\\n    \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" && \\\n  pip3 install \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages && \\\n  echo \"**** cleanup ****\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8000 8443\nVOLUME /config /storage\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG SEALSKIN_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\nENV HOME=/config\n\n# install software\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --upgrade --virtual=build-dependencies \\\n    python3-dev \\\n    py3-pip && \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    caddy \\\n    openssl \\\n    python3 && \\\n  echo \"**** install sealskin ****\" && \\\n  if [ -z ${SEALSKIN_VERSION+x} ]; then \\\n    SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  curl -o \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L \\\n    \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" && \\\n  pip3 install \\\n    \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages && \\\n  echo \"**** cleanup ****\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    /tmp/*\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8000 8443\nVOLUME /config /storage\n"
+  },
+  "init_graph": {
+   "d2": "\"sealskin:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-sealskin -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-sealskin\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-sealskin\n  svc-sealskin -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"sealskin:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-sealskin"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-sealskin",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p /config/ssl\n\n# create self signed cert\nif [ ! -f \"/config/ssl/proxy_key.pem\" ]; then\n  openssl req -new -x509 \\\n    -days 3650 -nodes \\\n    -out /config/ssl/proxy_cert.pem \\\n    -keyout /config/ssl/proxy_key.pem \\\n    -subj \"/C=US/ST=CA/L=Carlsbad/O=Linuxserver.io/OU=LSIO Server/CN=*\"\n  chmod 600 /config/ssl/proxy_key.pem\nfi\n\n# generate server key\nif [ ! -f \"/config/ssl/server_key.pem\" ]; then\n  openssl genpkey \\\n    -algorithm RSA \\\n    -out /config/ssl/server_key.pem \\\n    -pkeyopt rsa_keygen_bits:4096\n  chmod 600 /config/ssl/server_key.pem\nfi\n\n# docker socket perms\nDOCKER_SOCK_PATH=\"/var/run/docker.sock\"\nif [ -S \"${DOCKER_SOCK_PATH}\" ]; then\n  DOCKER_GID=$(stat -c '%g' \"${DOCKER_SOCK_PATH}\")\n  if ! id -G abc | grep -qw \"${DOCKER_GID}\"; then\n    DOCKER_GROUP_NAME=$(getent group \"${DOCKER_GID}\" | awk -F: '{print $1}')\n    if [ -z \"${DOCKER_GROUP_NAME}\" ]; then\n      DOCKER_GROUP_NAME=\"docker_sock_group\"\n      echo \"**** Creating group '${DOCKER_GROUP_NAME}' with GID ${DOCKER_GID} for the Docker socket ****\"\n      groupadd -g \"${DOCKER_GID}\" \"${DOCKER_GROUP_NAME}\"\n    fi\n    echo \"**** Adding user 'abc' to group '${DOCKER_GROUP_NAME}' (GID: ${DOCKER_GID}) ****\"\n    usermod -a -G \"${DOCKER_GROUP_NAME}\" abc\n  fi\n  if [ \"$(stat -c '%A' \"${DOCKER_SOCK_PATH}\" | cut -c 5,6)\" != \"rw\" ]; then\n    echo -e \"\\n**** WARNING: The Docker socket ${DOCKER_SOCK_PATH} does not have group read/write permissions. ****\"\n    echo \"**** To fix this, run the following command on your DOCKER HOST: ****\"\n    echo -e \"sudo chmod g+rw ${DOCKER_SOCK_PATH}\\n\"\n  fi\nfi\n\n# perms\nlsiown abc:abc /storage\nlsiown -R abc:abc /config\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-sealskin",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# Run SealSkin\nexec s6-setuidgid abc \\\n  sealskin-server\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 297,
+    "distro": "Alpine Linux v3.24",
+    "hash": "b06c0de1",
+    "by_type": {
+     "UnknownPackage": 13,
+     "python": 50,
+     "apk": 72,
+     "go-module": 162
+    }
+   },
+   "arm64": {
+    "count": 297,
+    "distro": "Alpine Linux v3.24",
+    "hash": "b06c0de1",
+    "by_type": {
+     "UnknownPackage": 13,
+     "python": 50,
+     "apk": 72,
+     "go-module": 162
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/sealskin/builds/0.5.1-ls13/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-sealskin/compare/0.5.0-ls12...0.5.1-ls13",
+   "upstream": "# SealSkin 0.5.1\n\nMaintenance release. On Kubernetes, SealSkin now installs with a namespace's\nown admin role, and its administrators shape session pods in SealSkin's\nsettings without any access to the namespace. Launches behind a proxy that\ngives up on long requests now reach their session, and sessions open once\ntheir stream is ready.\n\n## Kubernetes\n\n* **Installs with the namespace admin role alone.** `kubernetes/sealskin.yml`\n  no longer asks for PodTemplates, which Kubernetes' own namespace roles do\n  not grant, so a namespace administrator who is not a cluster administrator\n  can apply it. The PodTemplate read grant and the `sealskin-session`\n  template moved to `kubernetes/pod-templates.yml`, for whoever may apply\n  them.\n* **Pod overlays.** `kubernetes_session_overlay` (under every session pod),\n  `KUBERNETES_POD_OVERLAY` in an app template (under its applications'\n  pods), and `kubernetes_gpu_options` (the GPU options) take YAML of a pod\n  template, kept in SealSkin and edited in the dashboard. They take labels\n  and annotations, placement, runtime, priority, DNS and security fields,\n  image pull secrets, device claims, and the application container's\n  resources and security context, and refuse anything else by name, so an\n  administrator of SealSkin reaches none of the namespace's objects through\n  them. PodTemplates stay as an optional layer beneath.\n\n## Fixes\n\n* A launch behind a reverse proxy that ends long requests with 502, 503, or\n  504 is followed to its session, or to the server's own reason, instead of\n  failing with the proxy's page. This covers the launcher, the extension's\n  popup, the App Laboratory, the Bakery's trial, and application addresses.\n* A session opens once Selkies' stream route answers rather than when the\n  container's web server first does, so a stream opened right after launch\n  is no longer refused.\n* The app stores' autostart scripts are fetched eight at a time over one\n  client, which ends the bursts of failed fetches on nodes of large\n  clusters.\n* The dashboard's certificate notice shows the days left instead of\n  `{days}`.\n* The cookie of a root key sign-in is handed out again with a token the\n  server mints, at most once a day, instead of the one the browser sent.\n  Signing out with either ends both.\n\n## Sign-in\n\n* The **Sign In** test says whether the OpenID Connect scopes ask for\n  `offline_access`, and warns when the provider offers it and they do not.\n  Without a refresh token a sign-in ends with its ID token, which some\n  providers issue for only minutes, so users were asked to sign in on nearly\n  every visit. The server also logs, once an hour, a sign-in that comes back\n  short for want of a refresh token, and the Authentik preset says to give\n  the provider the scope.\n\n## Upgrading\n\n* **Kubernetes:** applying the new `kubernetes/sealskin.yml` over an\n  existing install takes away the server's access to PodTemplates. If you use\n  the `sealskin-session` template, `KUBERNETES_POD_TEMPLATE`, or GPU\n  templates, also apply `kubernetes/pod-templates.yml` as someone allowed to\n  grant access to PodTemplates, or move them into the new pod overlay\n  settings. Without the grant, the server treats PodTemplates as absent.\n* **OpenID Connect:** if users have to sign in on nearly every visit, add\n  `offline_access` to the scopes, and to the provider's scopes where it asks\n  for that, as Authentik does. The **Sign In** test shows whether it is\n  needed.\n",
+   "upstream_url": "https://github.com/selkies-project/sealskin/releases/tag/0.5.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 52866,
+    "sha256": "a0eff064df81c5594eed53244e25b8a114bb654aceb70f80ab4338aaa397a0fe",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5220,
+    "sha256": "36a7551887b21c021f2751acc1bba031b17b8f8bc4ed3538c294348e1657feda",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 54331,
+    "sha256": "6f1bc48c8e641d75ee54248b0d1ee25d942eeda342e8b562e5a8f2922a45983a",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2658,
+    "sha256": "bc3e1f484f53fef598b221a4807f3cf1e9e62be8e53288b709236724b1cbcf90",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 80288,
+    "sha256": "76125026fd814d4b0e83ef3a1807ebb584dcc29d60ca26182ad5769f7306a8c2",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 40710,
+    "sha256": "eae8b1f6bead2053f5ccbfae995e654db5aed12365a154c9a9944a733c478bbb",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 52902,
+    "sha256": "2b06c6c737597e8c65e0c49298a4fe2c4d6c8689101095a0feff3b15c3194ee5",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5220,
+    "sha256": "61b411ebcbd5a6bc46572595c4f4d4c2b9cd03442b1df377d4a9a24e105a6234",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 54053,
+    "sha256": "b0c17a0d607d31b6d3c56afa794a4a91b7aa0198bdb95beab12b02c8a921a755",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2660,
+    "sha256": "2058d2a8c2013bf5c0b4dcf214105df54ff253437f4a3fc2b1fe487d82af77b6",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 81101,
+    "sha256": "dd52061131eb2076f2c6fb7e2c75648790de5e003181db135cce98536f702fe7",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 40710,
+    "sha256": "eae8b1f6bead2053f5ccbfae995e654db5aed12365a154c9a9944a733c478bbb",
+    "url": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 45120454125,
+   "run_url": "https://github.com/linuxserver-playground/docker-sealskin/actions/runs/45120454125",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/sealskin",
+   "tags": [
+    "latest",
+    "0.5.1-ls13",
+    "version-0.5.1",
+    "0.5.1",
+    "amd64-latest",
+    "amd64-0.5.1-ls13",
+    "amd64-version-0.5.1",
+    "amd64-0.5.1",
+    "arm64v8-latest",
+    "arm64v8-0.5.1-ls13",
+    "arm64v8-version-0.5.1",
+    "arm64v8-0.5.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "sealskin",
+  "branch": "master",
+  "tag": "0.5.1-ls13",
+  "previous_tag": "0.4.1-ls4",
+  "classification": "mixed",
+  "reasons": [
+   "upstream version changed",
+   "base image digest changed",
+   "packages changed",
+   "10 commits (3015504 → 7fea542): the pipeline's own generated files"
+  ],
+  "upstream": {
+   "from": "0.4.1",
+   "to": "0.5.1",
+   "changed": true
+  },
+  "commit": {
+   "from": "3015504585a02d5e44c445f713403d7b9582ee23",
+   "to": "7fea542e63cfe7b9dabf92e83fe58f13961159dd",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-sealskin/compare/3015504585a02d5e44c445f713403d7b9582ee23...7fea542e63cfe7b9dabf92e83fe58f13961159dd",
+   "commits": [
+    {
+     "sha": "b3a11b5c025b87cb2a2af28957ed78c7ed7316fb",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-31T12:52:02Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/b3a11b5c025b87cb2a2af28957ed78c7ed7316fb",
+     "bot": true
+    },
+    {
+     "sha": "00584ad63da1e7a85c28e178a32e5dbc13ac55e3",
+     "subject": "Update package versions",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-31T12:55:05Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/00584ad63da1e7a85c28e178a32e5dbc13ac55e3",
+     "bot": true
+    },
+    {
+     "sha": "11d07f46c87fa1df211699465519898dd9c545f1",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-04T16:52:40Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/11d07f46c87fa1df211699465519898dd9c545f1",
+     "bot": true
+    },
+    {
+     "sha": "4540a53b5ad49d4204555259124154f2460f5ed4",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-04T17:01:02Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/4540a53b5ad49d4204555259124154f2460f5ed4",
+     "bot": true
+    },
+    {
+     "sha": "deaf8ea1be2e08a18638335a0e8579bb6bd5888e",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T01:00:26Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/deaf8ea1be2e08a18638335a0e8579bb6bd5888e",
+     "bot": true
+    },
+    {
+     "sha": "23a91fad8156c9759e3a49a7f3fc685950806761",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T12:59:56Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/23a91fad8156c9759e3a49a7f3fc685950806761",
+     "bot": true
+    },
+    {
+     "sha": "f006d25d2da8a53f58cae702ea2149b30c26e23c",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-11T17:02:40Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/f006d25d2da8a53f58cae702ea2149b30c26e23c",
+     "bot": true
+    },
+    {
+     "sha": "d518403a3e6260f3947178262a9e2b9a50c54228",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-18T17:00:08Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/d518403a3e6260f3947178262a9e2b9a50c54228",
+     "bot": true
+    },
+    {
+     "sha": "de8e4b0d40357df94db3c8ebfb954c0ee3d3fa4a",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-20T20:57:35Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/de8e4b0d40357df94db3c8ebfb954c0ee3d3fa4a",
+     "bot": true
+    },
+    {
+     "sha": "7fea542e63cfe7b9dabf92e83fe58f13961159dd",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-21T13:00:10Z",
+     "url": "https://github.com/linuxserver-playground/docker-sealskin/commit/7fea542e63cfe7b9dabf92e83fe58f13961159dd",
+     "bot": true
+    }
+   ],
+   "count": 10,
+   "truncated": false,
+   "areas": {
+    "generated": 3,
+    "packages": 1
+   }
+  },
+  "trigger": "upstream",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:a27e524bc36b0c5029c9cc9d6b4c7e3c3b0dd2e5197a9c8c5dadd3ffc4337a0b"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 88299978,
+    "to": 91658226,
+    "delta": 3358248
+   },
+   "arm64": {
+    "from": 86371006,
+    "to": 89651176,
+    "delta": 3280170
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.24.3-r0",
+       "to": "3.24.4-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.24.4-r0?arch=x86_64&distro=alpine-3.24.4&upstream=alpine-base"
+      },
+      {
+       "name": "apk-tools",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/apk-tools@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "caddy",
+       "from": "2.11.4-r2",
+       "to": "2.11.9-r0",
+       "purl": "pkg:apk/alpine/caddy@2.11.9-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "libapk",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/libapk@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4&upstream=apk-tools"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "libexpat",
+       "from": "2.9.0-r0",
+       "to": "2.10.0-r0",
+       "purl": "pkg:apk/alpine/libexpat@2.10.0-r0?arch=x86_64&distro=alpine-3.24.4&upstream=expat"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "openssl",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/openssl@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=x86_64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    },
+    "go-module": {
+     "added": [
+      {
+       "name": "cel.dev/cel-go",
+       "version": "v0.32.0",
+       "purl": "pkg:golang/cel.dev/cel-go@v0.32.0"
+      },
+      {
+       "name": "github.com/bits-and-blooms/bitset",
+       "version": "v1.25.0",
+       "purl": "pkg:golang/github.com/bits-and-blooms/bitset@v1.25.0"
+      },
+      {
+       "name": "github.com/dlclark/regexp2/v2",
+       "version": "v2.8.0",
+       "purl": "pkg:golang/github.com/dlclark/regexp2/v2@v2.8.0"
+      },
+      {
+       "name": "github.com/dunglas/go-urlpattern",
+       "version": "v1.0.0",
+       "purl": "pkg:golang/github.com/dunglas/go-urlpattern@v1.0.0"
+      },
+      {
+       "name": "github.com/dunglas/httpsfv",
+       "version": "v1.1.1",
+       "purl": "pkg:golang/github.com/dunglas/httpsfv@v1.1.1"
+      },
+      {
+       "name": "github.com/nlnwa/whatwg-url",
+       "version": "v0.6.2",
+       "purl": "pkg:golang/github.com/nlnwa/whatwg-url@v0.6.2"
+      }
+     ],
+     "removed": [
+      {
+       "name": "github.com/dlclark/regexp2",
+       "version": "v1.12.0",
+       "purl": "pkg:golang/github.com/dlclark/regexp2@v1.12.0"
+      },
+      {
+       "name": "github.com/google/cel-go",
+       "version": "v0.28.1",
+       "purl": "pkg:golang/github.com/google/cel-go@v0.28.1"
+      },
+      {
+       "name": "go.yaml.in/yaml/v2",
+       "version": "v2.4.4",
+       "purl": "pkg:golang/go.yaml.in/yaml/v2@v2.4.4"
+      }
+     ],
+     "upgraded": [
+      {
+       "name": "cel.dev/expr",
+       "from": "v0.25.1",
+       "to": "v0.25.3",
+       "purl": "pkg:golang/cel.dev/expr@v0.25.3"
+      },
+      {
+       "name": "cloud.google.com/go/auth",
+       "from": "v0.20.0",
+       "to": "v0.23.3",
+       "purl": "pkg:golang/cloud.google.com/go/auth@v0.23.3"
+      },
+      {
+       "name": "cloud.google.com/go/compute/metadata",
+       "from": "v0.9.0",
+       "to": "v0.9.1",
+       "purl": "pkg:golang/cloud.google.com/go/compute/metadata@v0.9.1"
+      },
+      {
+       "name": "github.com/DeRuina/timberjack",
+       "from": "v1.4.2",
+       "to": "v1.4.8",
+       "purl": "pkg:golang/github.com/DeRuina/timberjack@v1.4.8"
+      },
+      {
+       "name": "github.com/KimMachineGun/automemlimit",
+       "from": "v0.7.5",
+       "to": "v1.0.0",
+       "purl": "pkg:golang/github.com/KimMachineGun/automemlimit@v1.0.0"
+      },
+      {
+       "name": "github.com/Masterminds/semver/v3",
+       "from": "v3.4.0",
+       "to": "v3.5.0",
+       "purl": "pkg:golang/github.com/Masterminds/semver/v3@v3.5.0"
+      },
+      {
+       "name": "github.com/alecthomas/chroma/v2",
+       "from": "v2.24.1",
+       "to": "v2.27.0",
+       "purl": "pkg:golang/github.com/alecthomas/chroma/v2@v2.27.0"
+      },
+      {
+       "name": "github.com/caddyserver/caddy/v2",
+       "from": "v2.11.4",
+       "to": "v2.11.9",
+       "purl": "pkg:golang/github.com/caddyserver/caddy/v2@v2.11.9"
+      },
+      {
+       "name": "github.com/caddyserver/certmagic",
+       "from": "v0.25.3",
+       "to": "v0.25.6",
+       "purl": "pkg:golang/github.com/caddyserver/certmagic@v0.25.6"
+      },
+      {
+       "name": "github.com/caddyserver/zerossl",
+       "from": "v0.1.5",
+       "to": "v0.1.6",
+       "purl": "pkg:golang/github.com/caddyserver/zerossl@v0.1.6"
+      },
+      {
+       "name": "github.com/ccoveille/go-safecast/v2",
+       "from": "v2.0.0",
+       "to": "v2.0.1",
+       "purl": "pkg:golang/github.com/ccoveille/go-safecast/v2@v2.0.1"
+      },
+      {
+       "name": "github.com/cloudflare/circl",
+       "from": "v1.6.3",
+       "to": "v1.6.5",
+       "purl": "pkg:golang/github.com/cloudflare/circl@v1.6.5"
+      },
+      {
+       "name": "github.com/coreos/go-oidc/v3",
+       "from": "v3.17.0",
+       "to": "v3.21.0",
+       "purl": "pkg:golang/github.com/coreos/go-oidc/v3@v3.21.0"
+      },
+      {
+       "name": "github.com/dgryski/go-farm",
+       "from": "v0.0.0-20200201041132-a6ae2369ad13",
+       "to": "v0.0.0-20240924180020-3414d57e47da",
+       "purl": "pkg:golang/github.com/dgryski/go-farm@v0.0.0-20240924180020-3414d57e47da"
+      },
+      {
+       "name": "github.com/dustin/go-humanize",
+       "from": "v1.0.1",
+       "to": "v1.1.0",
+       "purl": "pkg:golang/github.com/dustin/go-humanize@v1.1.0"
+      },
+      {
+       "name": "github.com/felixge/httpsnoop",
+       "from": "v1.0.4",
+       "to": "v1.1.0",
+       "purl": "pkg:golang/github.com/felixge/httpsnoop@v1.1.0"
+      },
+      {
+       "name": "github.com/fxamacker/cbor/v2",
+       "from": "v2.9.0",
+       "to": "v2.9.4",
+       "purl": "pkg:golang/github.com/fxamacker/cbor/v2@v2.9.4"
+      },
+      {
+       "name": "github.com/go-chi/chi/v5",
+       "from": "v5.2.5",
+       "to": "v5.4.0",
+       "purl": "pkg:golang/github.com/go-chi/chi/v5@v5.4.0"
+      },
+      {
+       "name": "github.com/go-jose/go-jose/v4",
+       "from": "v4.1.4",
+       "to": "v4.1.6",
+       "purl": "pkg:golang/github.com/go-jose/go-jose/v4@v4.1.6"
+      },
+      {
+       "name": "github.com/go-logr/logr",
+       "from": "v1.4.3",
+       "to": "v1.4.4",
+       "purl": "pkg:golang/github.com/go-logr/logr@v1.4.4"
+      },
+      {
+       "name": "github.com/go-sql-driver/mysql",
+       "from": "v1.9.3",
+       "to": "v1.10.1",
+       "purl": "pkg:golang/github.com/go-sql-driver/mysql@v1.10.1"
+      },
+      {
+       "name": "github.com/golang/snappy",
+       "from": "v0.0.4",
+       "to": "v1.0.0",
+       "purl": "pkg:golang/github.com/golang/snappy@v1.0.0"
+      },
+      {
+       "name": "github.com/google/certificate-transparency-go",
+       "from": "v1.1.8-0.20240110162603-74a5dd331745",
+       "to": "v1.3.3",
+       "purl": "pkg:golang/github.com/google/certificate-transparency-go@v1.3.3"
+      },
+      {
+       "name": "github.com/google/s2a-go",
+       "from": "v0.1.9",
+       "to": "v0.1.10",
+       "purl": "pkg:golang/github.com/google/s2a-go@v0.1.10"
+      },
+      {
+       "name": "github.com/googleapis/enterprise-certificate-proxy",
+       "from": "v0.3.15",
+       "to": "v0.3.22",
+       "purl": "pkg:golang/github.com/googleapis/enterprise-certificate-proxy@v0.3.22"
+      },
+      {
+       "name": "github.com/googleapis/gax-go/v2",
+       "from": "v2.22.0",
+       "to": "v2.25.0",
+       "purl": "pkg:golang/github.com/googleapis/gax-go/v2@v2.25.0"
+      },
+      {
+       "name": "github.com/grpc-ecosystem/grpc-gateway/v2",
+       "from": "v2.28.0",
+       "to": "v2.30.0",
+       "purl": "pkg:golang/github.com/grpc-ecosystem/grpc-gateway/v2@v2.30.0"
+      },
+      {
+       "name": "github.com/huandu/xstrings",
+       "from": "v1.5.0",
+       "to": "v1.6.1",
+       "purl": "pkg:golang/github.com/huandu/xstrings@v1.6.1"
+      },
+      {
+       "name": "github.com/jackc/pgx/v5",
+       "from": "v5.9.2",
+       "to": "v5.11.0",
+       "purl": "pkg:golang/github.com/jackc/pgx/v5@v5.11.0"
+      },
+      {
+       "name": "github.com/klauspost/compress",
+       "from": "v1.18.6",
+       "to": "v1.20.1",
+       "purl": "pkg:golang/github.com/klauspost/compress@v1.20.1"
+      },
+      {
+       "name": "github.com/klauspost/cpuid/v2",
+       "from": "v2.3.0",
+       "to": "v2.4.0",
+       "purl": "pkg:golang/github.com/klauspost/cpuid/v2@v2.4.0"
+      },
+      {
+       "name": "github.com/mattn/go-colorable",
+       "from": "v0.1.14",
+       "to": "v0.1.15",
+       "purl": "pkg:golang/github.com/mattn/go-colorable@v0.1.15"
+      },
+      {
+       "name": "github.com/mattn/go-isatty",
+       "from": "v0.0.20",
+       "to": "v0.0.24",
+       "purl": "pkg:golang/github.com/mattn/go-isatty@v0.0.24"
+      },
+      {
+       "name": "github.com/mholt/acmez/v3",
+       "from": "v3.1.6",
+       "to": "v3.1.7",
+       "purl": "pkg:golang/github.com/mholt/acmez/v3@v3.1.7"
+      },
+      {
+       "name": "github.com/miekg/dns",
+       "from": "v1.1.72",
+       "to": "v1.1.73",
+       "purl": "pkg:golang/github.com/miekg/dns@v1.1.73"
+      },
+      {
+       "name": "github.com/pires/go-proxyproto",
+       "from": "v0.12.0",
+       "to": "v0.15.0",
+       "purl": "pkg:golang/github.com/pires/go-proxyproto@v0.15.0"
+      },
+      {
+       "name": "github.com/prometheus/client_golang",
+       "from": "v1.23.2",
+       "to": "v1.24.1",
+       "purl": "pkg:golang/github.com/prometheus/client_golang@v1.24.1"
+      },
+      {
+       "name": "github.com/prometheus/client_model",
+       "from": "v0.6.2",
+       "to": "v0.6.3",
+       "purl": "pkg:golang/github.com/prometheus/client_model@v0.6.3"
+      },
+      {
+       "name": "github.com/prometheus/common",
+       "from": "v0.67.5",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/github.com/prometheus/common@v0.71.0"
+      },
+      {
+       "name": "github.com/prometheus/procfs",
+       "from": "v0.20.1",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/github.com/prometheus/procfs@v0.22.0"
+      },
+      {
+       "name": "github.com/quic-go/quic-go",
+       "from": "v0.59.1",
+       "to": "v0.63.0",
+       "purl": "pkg:golang/github.com/quic-go/quic-go@v0.63.0"
+      },
+      {
+       "name": "github.com/sirupsen/logrus",
+       "from": "v1.9.4",
+       "to": "v1.10.2",
+       "purl": "pkg:golang/github.com/sirupsen/logrus@v1.10.2"
+      },
+      {
+       "name": "github.com/slackhq/nebula",
+       "from": "v1.10.3",
+       "to": "v1.11.2",
+       "purl": "pkg:golang/github.com/slackhq/nebula@v1.11.2"
+      },
+      {
+       "name": "github.com/smallstep/go-attestation",
+       "from": "v0.4.4-0.20241119153605-2306d5b464ca",
+       "to": "v0.4.4-0.20260814222900-a849f4e2cd68",
+       "purl": "pkg:golang/github.com/smallstep/go-attestation@v0.4.4-0.20260814222900-a849f4e2cd68"
+      },
+      {
+       "name": "github.com/smallstep/linkedca",
+       "from": "v0.25.0",
+       "to": "v0.26.0",
+       "purl": "pkg:golang/github.com/smallstep/linkedca@v0.26.0"
+      },
+      {
+       "name": "github.com/smallstep/pkcs7",
+       "from": "v0.2.1",
+       "to": "v0.2.3",
+       "purl": "pkg:golang/github.com/smallstep/pkcs7@v0.2.3"
+      },
+      {
+       "name": "github.com/smallstep/scep",
+       "from": "v0.0.0-20250318231241-a25cabb69492",
+       "to": "v0.0.0-20260331191114-261f960a40d1",
+       "purl": "pkg:golang/github.com/smallstep/scep@v0.0.0-20260331191114-261f960a40d1"
+      },
+      {
+       "name": "github.com/spf13/cast",
+       "from": "v1.7.0",
+       "to": "v1.10.0",
+       "purl": "pkg:golang/github.com/spf13/cast@v1.10.0"
+      },
+      {
+       "name": "github.com/yuin/goldmark",
+       "from": "v1.8.2",
+       "to": "v1.8.6",
+       "purl": "pkg:golang/github.com/yuin/goldmark@v1.8.6"
+      },
+      {
+       "name": "go.etcd.io/bbolt",
+       "from": "v1.4.3",
+       "to": "v1.5.0",
+       "purl": "pkg:golang/go.etcd.io/bbolt@v1.5.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/bridges/prometheus",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/bridges/prometheus@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/exporters/autoexport",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/exporters/autoexport@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/autoprop",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/autoprop@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/aws",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/aws@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/b3",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/b3@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/jaeger",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/jaeger@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/ot",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/ot@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlptrace",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/prometheus",
+       "from": "v0.65.0",
+       "to": "v0.68.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/prometheus@v0.68.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/stdout/stdoutlog",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/stdout/stdoutlog@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/stdout/stdoutmetric",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/stdout/stdoutmetric@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/stdout/stdouttrace",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/stdout/stdouttrace@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/log",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/log@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/metric",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/metric@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/sdk",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/sdk/log",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk/log@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/sdk/metric",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk/metric@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/trace",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/trace@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/proto/otlp",
+       "from": "v1.10.0",
+       "to": "v1.11.0",
+       "purl": "pkg:golang/go.opentelemetry.io/proto/otlp@v1.11.0"
+      },
+      {
+       "name": "go.step.sm/crypto",
+       "from": "v0.81.0",
+       "to": "v0.91.0",
+       "purl": "pkg:golang/go.step.sm/crypto@v0.91.0"
+      },
+      {
+       "name": "go.yaml.in/yaml/v3",
+       "from": "v3.0.4",
+       "to": "v3.0.5",
+       "purl": "pkg:golang/go.yaml.in/yaml/v3@v3.0.5"
+      },
+      {
+       "name": "golang.org/x/crypto",
+       "from": "v0.52.0",
+       "to": "v0.57.0",
+       "purl": "pkg:golang/golang.org/x/crypto@v0.57.0"
+      },
+      {
+       "name": "golang.org/x/crypto/x509roots/fallback",
+       "from": "v0.0.0-20260213171211-a408498e5541",
+       "to": "v0.0.0-20261030153154-30a33513ff6d",
+       "purl": "pkg:golang/golang.org/x/crypto/x509roots/fallback@v0.0.0-20261030153154-30a33513ff6d"
+      },
+      {
+       "name": "golang.org/x/exp",
+       "from": "v0.0.0-20251023183803-a4bb9ffd2546",
+       "to": "v0.0.0-20260908205506-85c1c2202aba",
+       "purl": "pkg:golang/golang.org/x/exp@v0.0.0-20260908205506-85c1c2202aba"
+      },
+      {
+       "name": "golang.org/x/net",
+       "from": "v0.55.0",
+       "to": "v0.60.0",
+       "purl": "pkg:golang/golang.org/x/net@v0.60.0"
+      },
+      {
+       "name": "golang.org/x/oauth2",
+       "from": "v0.36.0",
+       "to": "v0.37.0",
+       "purl": "pkg:golang/golang.org/x/oauth2@v0.37.0"
+      },
+      {
+       "name": "golang.org/x/sync",
+       "from": "v0.20.0",
+       "to": "v0.23.0",
+       "purl": "pkg:golang/golang.org/x/sync@v0.23.0"
+      },
+      {
+       "name": "golang.org/x/sys",
+       "from": "v0.45.0",
+       "to": "v0.48.0",
+       "purl": "pkg:golang/golang.org/x/sys@v0.48.0"
+      },
+      {
+       "name": "golang.org/x/term",
+       "from": "v0.43.0",
+       "to": "v0.46.0",
+       "purl": "pkg:golang/golang.org/x/term@v0.46.0"
+      },
+      {
+       "name": "golang.org/x/text",
+       "from": "v0.37.0",
+       "to": "v0.42.0",
+       "purl": "pkg:golang/golang.org/x/text@v0.42.0"
+      },
+      {
+       "name": "golang.org/x/time",
+       "from": "v0.15.0",
+       "to": "v0.16.0",
+       "purl": "pkg:golang/golang.org/x/time@v0.16.0"
+      },
+      {
+       "name": "google.golang.org/api",
+       "from": "v0.277.0",
+       "to": "v0.298.0",
+       "purl": "pkg:golang/google.golang.org/api@v0.298.0"
+      },
+      {
+       "name": "google.golang.org/genproto/googleapis/api",
+       "from": "v0.0.0-20260406210006-6f92a3bedf2d",
+       "to": "v0.0.0-20260921155816-b14227669459",
+       "purl": "pkg:golang/google.golang.org/genproto/googleapis/api@v0.0.0-20260921155816-b14227669459"
+      },
+      {
+       "name": "google.golang.org/genproto/googleapis/rpc",
+       "from": "v0.0.0-20260427160629-7cedc36a6bc4",
+       "to": "v0.0.0-20260921155816-b14227669459",
+       "purl": "pkg:golang/google.golang.org/genproto/googleapis/rpc@v0.0.0-20260921155816-b14227669459"
+      },
+      {
+       "name": "google.golang.org/grpc",
+       "from": "v1.81.0",
+       "to": "v1.83.2",
+       "purl": "pkg:golang/google.golang.org/grpc@v1.83.2"
+      },
+      {
+       "name": "google.golang.org/protobuf",
+       "from": "v1.36.11",
+       "to": "v1.36.12",
+       "purl": "pkg:golang/google.golang.org/protobuf@v1.36.12"
+      },
+      {
+       "name": "stdlib",
+       "from": "go1.26.9",
+       "to": "go1.26.11",
+       "purl": "pkg:golang/stdlib@1.26.11"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "annotated-doc",
+       "from": "0.0.5",
+       "to": "0.0.7",
+       "purl": "pkg:pypi/annotated-doc@0.0.7"
+      },
+      {
+       "name": "anyio",
+       "from": "4.15.1",
+       "to": "4.16.0",
+       "purl": "pkg:pypi/anyio@4.16.0"
+      },
+      {
+       "name": "certifi",
+       "from": "2026.10.23",
+       "to": "2026.11.20",
+       "purl": "pkg:pypi/certifi@2026.11.20"
+      },
+      {
+       "name": "charset-normalizer",
+       "from": "3.5.2",
+       "to": "3.5.3",
+       "purl": "pkg:pypi/charset-normalizer@3.5.3"
+      },
+      {
+       "name": "click",
+       "from": "8.5.0",
+       "to": "8.5.1",
+       "purl": "pkg:pypi/click@8.5.1"
+      },
+      {
+       "name": "fastapi",
+       "from": "0.162.0",
+       "to": "0.163.1",
+       "purl": "pkg:pypi/fastapi@0.163.1"
+      },
+      {
+       "name": "pydantic",
+       "from": "2.14.1",
+       "to": "2.14.3",
+       "purl": "pkg:pypi/pydantic@2.14.3"
+      },
+      {
+       "name": "pydantic-core",
+       "from": "2.50.1",
+       "to": "2.50.4",
+       "purl": "pkg:pypi/pydantic-core@2.50.4"
+      },
+      {
+       "name": "python-multipart",
+       "from": "0.0.32",
+       "to": "0.0.33",
+       "purl": "pkg:pypi/python-multipart@0.0.33"
+      },
+      {
+       "name": "sealskin-server",
+       "from": "0.4.1",
+       "to": "0.5.1",
+       "purl": "pkg:pypi/sealskin-server@0.5.1"
+      },
+      {
+       "name": "signxml",
+       "from": "5.2.0",
+       "to": "5.3.0",
+       "purl": "pkg:pypi/signxml@5.3.0"
+      },
+      {
+       "name": "typing-inspection",
+       "from": "0.4.4",
+       "to": "0.4.5",
+       "purl": "pkg:pypi/typing-inspection@0.4.5"
+      },
+      {
+       "name": "websockets",
+       "from": "17.3",
+       "to": "17.4",
+       "purl": "pkg:pypi/websockets@17.4"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.24.3-r0",
+       "to": "3.24.4-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.24.4-r0?arch=aarch64&distro=alpine-3.24.4&upstream=alpine-base"
+      },
+      {
+       "name": "apk-tools",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/apk-tools@3.0.9-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "caddy",
+       "from": "2.11.4-r2",
+       "to": "2.11.9-r0",
+       "purl": "pkg:apk/alpine/caddy@2.11.9-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "libapk",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/libapk@3.0.9-r0?arch=aarch64&distro=alpine-3.24.4&upstream=apk-tools"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "libexpat",
+       "from": "2.9.0-r0",
+       "to": "2.10.0-r0",
+       "purl": "pkg:apk/alpine/libexpat@2.10.0-r0?arch=aarch64&distro=alpine-3.24.4&upstream=expat"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "openssl",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/openssl@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=aarch64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    },
+    "go-module": {
+     "added": [
+      {
+       "name": "cel.dev/cel-go",
+       "version": "v0.32.0",
+       "purl": "pkg:golang/cel.dev/cel-go@v0.32.0"
+      },
+      {
+       "name": "github.com/bits-and-blooms/bitset",
+       "version": "v1.25.0",
+       "purl": "pkg:golang/github.com/bits-and-blooms/bitset@v1.25.0"
+      },
+      {
+       "name": "github.com/dlclark/regexp2/v2",
+       "version": "v2.8.0",
+       "purl": "pkg:golang/github.com/dlclark/regexp2/v2@v2.8.0"
+      },
+      {
+       "name": "github.com/dunglas/go-urlpattern",
+       "version": "v1.0.0",
+       "purl": "pkg:golang/github.com/dunglas/go-urlpattern@v1.0.0"
+      },
+      {
+       "name": "github.com/dunglas/httpsfv",
+       "version": "v1.1.1",
+       "purl": "pkg:golang/github.com/dunglas/httpsfv@v1.1.1"
+      },
+      {
+       "name": "github.com/nlnwa/whatwg-url",
+       "version": "v0.6.2",
+       "purl": "pkg:golang/github.com/nlnwa/whatwg-url@v0.6.2"
+      }
+     ],
+     "removed": [
+      {
+       "name": "github.com/dlclark/regexp2",
+       "version": "v1.12.0",
+       "purl": "pkg:golang/github.com/dlclark/regexp2@v1.12.0"
+      },
+      {
+       "name": "github.com/google/cel-go",
+       "version": "v0.28.1",
+       "purl": "pkg:golang/github.com/google/cel-go@v0.28.1"
+      },
+      {
+       "name": "go.yaml.in/yaml/v2",
+       "version": "v2.4.4",
+       "purl": "pkg:golang/go.yaml.in/yaml/v2@v2.4.4"
+      }
+     ],
+     "upgraded": [
+      {
+       "name": "cel.dev/expr",
+       "from": "v0.25.1",
+       "to": "v0.25.3",
+       "purl": "pkg:golang/cel.dev/expr@v0.25.3"
+      },
+      {
+       "name": "cloud.google.com/go/auth",
+       "from": "v0.20.0",
+       "to": "v0.23.3",
+       "purl": "pkg:golang/cloud.google.com/go/auth@v0.23.3"
+      },
+      {
+       "name": "cloud.google.com/go/compute/metadata",
+       "from": "v0.9.0",
+       "to": "v0.9.1",
+       "purl": "pkg:golang/cloud.google.com/go/compute/metadata@v0.9.1"
+      },
+      {
+       "name": "github.com/DeRuina/timberjack",
+       "from": "v1.4.2",
+       "to": "v1.4.8",
+       "purl": "pkg:golang/github.com/DeRuina/timberjack@v1.4.8"
+      },
+      {
+       "name": "github.com/KimMachineGun/automemlimit",
+       "from": "v0.7.5",
+       "to": "v1.0.0",
+       "purl": "pkg:golang/github.com/KimMachineGun/automemlimit@v1.0.0"
+      },
+      {
+       "name": "github.com/Masterminds/semver/v3",
+       "from": "v3.4.0",
+       "to": "v3.5.0",
+       "purl": "pkg:golang/github.com/Masterminds/semver/v3@v3.5.0"
+      },
+      {
+       "name": "github.com/alecthomas/chroma/v2",
+       "from": "v2.24.1",
+       "to": "v2.27.0",
+       "purl": "pkg:golang/github.com/alecthomas/chroma/v2@v2.27.0"
+      },
+      {
+       "name": "github.com/caddyserver/caddy/v2",
+       "from": "v2.11.4",
+       "to": "v2.11.9",
+       "purl": "pkg:golang/github.com/caddyserver/caddy/v2@v2.11.9"
+      },
+      {
+       "name": "github.com/caddyserver/certmagic",
+       "from": "v0.25.3",
+       "to": "v0.25.6",
+       "purl": "pkg:golang/github.com/caddyserver/certmagic@v0.25.6"
+      },
+      {
+       "name": "github.com/caddyserver/zerossl",
+       "from": "v0.1.5",
+       "to": "v0.1.6",
+       "purl": "pkg:golang/github.com/caddyserver/zerossl@v0.1.6"
+      },
+      {
+       "name": "github.com/ccoveille/go-safecast/v2",
+       "from": "v2.0.0",
+       "to": "v2.0.1",
+       "purl": "pkg:golang/github.com/ccoveille/go-safecast/v2@v2.0.1"
+      },
+      {
+       "name": "github.com/cloudflare/circl",
+       "from": "v1.6.3",
+       "to": "v1.6.5",
+       "purl": "pkg:golang/github.com/cloudflare/circl@v1.6.5"
+      },
+      {
+       "name": "github.com/coreos/go-oidc/v3",
+       "from": "v3.17.0",
+       "to": "v3.21.0",
+       "purl": "pkg:golang/github.com/coreos/go-oidc/v3@v3.21.0"
+      },
+      {
+       "name": "github.com/dgryski/go-farm",
+       "from": "v0.0.0-20200201041132-a6ae2369ad13",
+       "to": "v0.0.0-20240924180020-3414d57e47da",
+       "purl": "pkg:golang/github.com/dgryski/go-farm@v0.0.0-20240924180020-3414d57e47da"
+      },
+      {
+       "name": "github.com/dustin/go-humanize",
+       "from": "v1.0.1",
+       "to": "v1.1.0",
+       "purl": "pkg:golang/github.com/dustin/go-humanize@v1.1.0"
+      },
+      {
+       "name": "github.com/felixge/httpsnoop",
+       "from": "v1.0.4",
+       "to": "v1.1.0",
+       "purl": "pkg:golang/github.com/felixge/httpsnoop@v1.1.0"
+      },
+      {
+       "name": "github.com/fxamacker/cbor/v2",
+       "from": "v2.9.0",
+       "to": "v2.9.4",
+       "purl": "pkg:golang/github.com/fxamacker/cbor/v2@v2.9.4"
+      },
+      {
+       "name": "github.com/go-chi/chi/v5",
+       "from": "v5.2.5",
+       "to": "v5.4.0",
+       "purl": "pkg:golang/github.com/go-chi/chi/v5@v5.4.0"
+      },
+      {
+       "name": "github.com/go-jose/go-jose/v4",
+       "from": "v4.1.4",
+       "to": "v4.1.6",
+       "purl": "pkg:golang/github.com/go-jose/go-jose/v4@v4.1.6"
+      },
+      {
+       "name": "github.com/go-logr/logr",
+       "from": "v1.4.3",
+       "to": "v1.4.4",
+       "purl": "pkg:golang/github.com/go-logr/logr@v1.4.4"
+      },
+      {
+       "name": "github.com/go-sql-driver/mysql",
+       "from": "v1.9.3",
+       "to": "v1.10.1",
+       "purl": "pkg:golang/github.com/go-sql-driver/mysql@v1.10.1"
+      },
+      {
+       "name": "github.com/golang/snappy",
+       "from": "v0.0.4",
+       "to": "v1.0.0",
+       "purl": "pkg:golang/github.com/golang/snappy@v1.0.0"
+      },
+      {
+       "name": "github.com/google/certificate-transparency-go",
+       "from": "v1.1.8-0.20240110162603-74a5dd331745",
+       "to": "v1.3.3",
+       "purl": "pkg:golang/github.com/google/certificate-transparency-go@v1.3.3"
+      },
+      {
+       "name": "github.com/google/s2a-go",
+       "from": "v0.1.9",
+       "to": "v0.1.10",
+       "purl": "pkg:golang/github.com/google/s2a-go@v0.1.10"
+      },
+      {
+       "name": "github.com/googleapis/enterprise-certificate-proxy",
+       "from": "v0.3.15",
+       "to": "v0.3.22",
+       "purl": "pkg:golang/github.com/googleapis/enterprise-certificate-proxy@v0.3.22"
+      },
+      {
+       "name": "github.com/googleapis/gax-go/v2",
+       "from": "v2.22.0",
+       "to": "v2.25.0",
+       "purl": "pkg:golang/github.com/googleapis/gax-go/v2@v2.25.0"
+      },
+      {
+       "name": "github.com/grpc-ecosystem/grpc-gateway/v2",
+       "from": "v2.28.0",
+       "to": "v2.30.0",
+       "purl": "pkg:golang/github.com/grpc-ecosystem/grpc-gateway/v2@v2.30.0"
+      },
+      {
+       "name": "github.com/huandu/xstrings",
+       "from": "v1.5.0",
+       "to": "v1.6.1",
+       "purl": "pkg:golang/github.com/huandu/xstrings@v1.6.1"
+      },
+      {
+       "name": "github.com/jackc/pgx/v5",
+       "from": "v5.9.2",
+       "to": "v5.11.0",
+       "purl": "pkg:golang/github.com/jackc/pgx/v5@v5.11.0"
+      },
+      {
+       "name": "github.com/klauspost/compress",
+       "from": "v1.18.6",
+       "to": "v1.20.1",
+       "purl": "pkg:golang/github.com/klauspost/compress@v1.20.1"
+      },
+      {
+       "name": "github.com/klauspost/cpuid/v2",
+       "from": "v2.3.0",
+       "to": "v2.4.0",
+       "purl": "pkg:golang/github.com/klauspost/cpuid/v2@v2.4.0"
+      },
+      {
+       "name": "github.com/mattn/go-colorable",
+       "from": "v0.1.14",
+       "to": "v0.1.15",
+       "purl": "pkg:golang/github.com/mattn/go-colorable@v0.1.15"
+      },
+      {
+       "name": "github.com/mattn/go-isatty",
+       "from": "v0.0.20",
+       "to": "v0.0.24",
+       "purl": "pkg:golang/github.com/mattn/go-isatty@v0.0.24"
+      },
+      {
+       "name": "github.com/mholt/acmez/v3",
+       "from": "v3.1.6",
+       "to": "v3.1.7",
+       "purl": "pkg:golang/github.com/mholt/acmez/v3@v3.1.7"
+      },
+      {
+       "name": "github.com/miekg/dns",
+       "from": "v1.1.72",
+       "to": "v1.1.73",
+       "purl": "pkg:golang/github.com/miekg/dns@v1.1.73"
+      },
+      {
+       "name": "github.com/pires/go-proxyproto",
+       "from": "v0.12.0",
+       "to": "v0.15.0",
+       "purl": "pkg:golang/github.com/pires/go-proxyproto@v0.15.0"
+      },
+      {
+       "name": "github.com/prometheus/client_golang",
+       "from": "v1.23.2",
+       "to": "v1.24.1",
+       "purl": "pkg:golang/github.com/prometheus/client_golang@v1.24.1"
+      },
+      {
+       "name": "github.com/prometheus/client_model",
+       "from": "v0.6.2",
+       "to": "v0.6.3",
+       "purl": "pkg:golang/github.com/prometheus/client_model@v0.6.3"
+      },
+      {
+       "name": "github.com/prometheus/common",
+       "from": "v0.67.5",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/github.com/prometheus/common@v0.71.0"
+      },
+      {
+       "name": "github.com/prometheus/procfs",
+       "from": "v0.20.1",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/github.com/prometheus/procfs@v0.22.0"
+      },
+      {
+       "name": "github.com/quic-go/quic-go",
+       "from": "v0.59.1",
+       "to": "v0.63.0",
+       "purl": "pkg:golang/github.com/quic-go/quic-go@v0.63.0"
+      },
+      {
+       "name": "github.com/sirupsen/logrus",
+       "from": "v1.9.4",
+       "to": "v1.10.2",
+       "purl": "pkg:golang/github.com/sirupsen/logrus@v1.10.2"
+      },
+      {
+       "name": "github.com/slackhq/nebula",
+       "from": "v1.10.3",
+       "to": "v1.11.2",
+       "purl": "pkg:golang/github.com/slackhq/nebula@v1.11.2"
+      },
+      {
+       "name": "github.com/smallstep/go-attestation",
+       "from": "v0.4.4-0.20241119153605-2306d5b464ca",
+       "to": "v0.4.4-0.20260814222900-a849f4e2cd68",
+       "purl": "pkg:golang/github.com/smallstep/go-attestation@v0.4.4-0.20260814222900-a849f4e2cd68"
+      },
+      {
+       "name": "github.com/smallstep/linkedca",
+       "from": "v0.25.0",
+       "to": "v0.26.0",
+       "purl": "pkg:golang/github.com/smallstep/linkedca@v0.26.0"
+      },
+      {
+       "name": "github.com/smallstep/pkcs7",
+       "from": "v0.2.1",
+       "to": "v0.2.3",
+       "purl": "pkg:golang/github.com/smallstep/pkcs7@v0.2.3"
+      },
+      {
+       "name": "github.com/smallstep/scep",
+       "from": "v0.0.0-20250318231241-a25cabb69492",
+       "to": "v0.0.0-20260331191114-261f960a40d1",
+       "purl": "pkg:golang/github.com/smallstep/scep@v0.0.0-20260331191114-261f960a40d1"
+      },
+      {
+       "name": "github.com/spf13/cast",
+       "from": "v1.7.0",
+       "to": "v1.10.0",
+       "purl": "pkg:golang/github.com/spf13/cast@v1.10.0"
+      },
+      {
+       "name": "github.com/yuin/goldmark",
+       "from": "v1.8.2",
+       "to": "v1.8.6",
+       "purl": "pkg:golang/github.com/yuin/goldmark@v1.8.6"
+      },
+      {
+       "name": "go.etcd.io/bbolt",
+       "from": "v1.4.3",
+       "to": "v1.5.0",
+       "purl": "pkg:golang/go.etcd.io/bbolt@v1.5.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/bridges/prometheus",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/bridges/prometheus@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/exporters/autoexport",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/exporters/autoexport@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/autoprop",
+       "from": "v0.68.0",
+       "to": "v0.71.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/autoprop@v0.71.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/aws",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/aws@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/b3",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/b3@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/jaeger",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/jaeger@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/contrib/propagators/ot",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/contrib/propagators/ot@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlptrace",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/prometheus",
+       "from": "v0.65.0",
+       "to": "v0.68.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/prometheus@v0.68.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/stdout/stdoutlog",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/stdout/stdoutlog@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/stdout/stdoutmetric",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/stdout/stdoutmetric@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/exporters/stdout/stdouttrace",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/stdout/stdouttrace@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/log",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/log@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/metric",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/metric@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/sdk",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/sdk/log",
+       "from": "v0.19.0",
+       "to": "v0.22.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk/log@v0.22.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/sdk/metric",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/sdk/metric@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/otel/trace",
+       "from": "v1.43.0",
+       "to": "v1.46.0",
+       "purl": "pkg:golang/go.opentelemetry.io/otel/trace@v1.46.0"
+      },
+      {
+       "name": "go.opentelemetry.io/proto/otlp",
+       "from": "v1.10.0",
+       "to": "v1.11.0",
+       "purl": "pkg:golang/go.opentelemetry.io/proto/otlp@v1.11.0"
+      },
+      {
+       "name": "go.step.sm/crypto",
+       "from": "v0.81.0",
+       "to": "v0.91.0",
+       "purl": "pkg:golang/go.step.sm/crypto@v0.91.0"
+      },
+      {
+       "name": "go.yaml.in/yaml/v3",
+       "from": "v3.0.4",
+       "to": "v3.0.5",
+       "purl": "pkg:golang/go.yaml.in/yaml/v3@v3.0.5"
+      },
+      {
+       "name": "golang.org/x/crypto",
+       "from": "v0.52.0",
+       "to": "v0.57.0",
+       "purl": "pkg:golang/golang.org/x/crypto@v0.57.0"
+      },
+      {
+       "name": "golang.org/x/crypto/x509roots/fallback",
+       "from": "v0.0.0-20260213171211-a408498e5541",
+       "to": "v0.0.0-20261030153154-30a33513ff6d",
+       "purl": "pkg:golang/golang.org/x/crypto/x509roots/fallback@v0.0.0-20261030153154-30a33513ff6d"
+      },
+      {
+       "name": "golang.org/x/exp",
+       "from": "v0.0.0-20251023183803-a4bb9ffd2546",
+       "to": "v0.0.0-20260908205506-85c1c2202aba",
+       "purl": "pkg:golang/golang.org/x/exp@v0.0.0-20260908205506-85c1c2202aba"
+      },
+      {
+       "name": "golang.org/x/net",
+       "from": "v0.55.0",
+       "to": "v0.60.0",
+       "purl": "pkg:golang/golang.org/x/net@v0.60.0"
+      },
+      {
+       "name": "golang.org/x/oauth2",
+       "from": "v0.36.0",
+       "to": "v0.37.0",
+       "purl": "pkg:golang/golang.org/x/oauth2@v0.37.0"
+      },
+      {
+       "name": "golang.org/x/sync",
+       "from": "v0.20.0",
+       "to": "v0.23.0",
+       "purl": "pkg:golang/golang.org/x/sync@v0.23.0"
+      },
+      {
+       "name": "golang.org/x/sys",
+       "from": "v0.45.0",
+       "to": "v0.48.0",
+       "purl": "pkg:golang/golang.org/x/sys@v0.48.0"
+      },
+      {
+       "name": "golang.org/x/term",
+       "from": "v0.43.0",
+       "to": "v0.46.0",
+       "purl": "pkg:golang/golang.org/x/term@v0.46.0"
+      },
+      {
+       "name": "golang.org/x/text",
+       "from": "v0.37.0",
+       "to": "v0.42.0",
+       "purl": "pkg:golang/golang.org/x/text@v0.42.0"
+      },
+      {
+       "name": "golang.org/x/time",
+       "from": "v0.15.0",
+       "to": "v0.16.0",
+       "purl": "pkg:golang/golang.org/x/time@v0.16.0"
+      },
+      {
+       "name": "google.golang.org/api",
+       "from": "v0.277.0",
+       "to": "v0.298.0",
+       "purl": "pkg:golang/google.golang.org/api@v0.298.0"
+      },
+      {
+       "name": "google.golang.org/genproto/googleapis/api",
+       "from": "v0.0.0-20260406210006-6f92a3bedf2d",
+       "to": "v0.0.0-20260921155816-b14227669459",
+       "purl": "pkg:golang/google.golang.org/genproto/googleapis/api@v0.0.0-20260921155816-b14227669459"
+      },
+      {
+       "name": "google.golang.org/genproto/googleapis/rpc",
+       "from": "v0.0.0-20260427160629-7cedc36a6bc4",
+       "to": "v0.0.0-20260921155816-b14227669459",
+       "purl": "pkg:golang/google.golang.org/genproto/googleapis/rpc@v0.0.0-20260921155816-b14227669459"
+      },
+      {
+       "name": "google.golang.org/grpc",
+       "from": "v1.81.0",
+       "to": "v1.83.2",
+       "purl": "pkg:golang/google.golang.org/grpc@v1.83.2"
+      },
+      {
+       "name": "google.golang.org/protobuf",
+       "from": "v1.36.11",
+       "to": "v1.36.12",
+       "purl": "pkg:golang/google.golang.org/protobuf@v1.36.12"
+      },
+      {
+       "name": "stdlib",
+       "from": "go1.26.9",
+       "to": "go1.26.11",
+       "purl": "pkg:golang/stdlib@1.26.11"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "annotated-doc",
+       "from": "0.0.5",
+       "to": "0.0.7",
+       "purl": "pkg:pypi/annotated-doc@0.0.7"
+      },
+      {
+       "name": "anyio",
+       "from": "4.15.1",
+       "to": "4.16.0",
+       "purl": "pkg:pypi/anyio@4.16.0"
+      },
+      {
+       "name": "certifi",
+       "from": "2026.10.23",
+       "to": "2026.11.20",
+       "purl": "pkg:pypi/certifi@2026.11.20"
+      },
+      {
+       "name": "charset-normalizer",
+       "from": "3.5.2",
+       "to": "3.5.3",
+       "purl": "pkg:pypi/charset-normalizer@3.5.3"
+      },
+      {
+       "name": "click",
+       "from": "8.5.0",
+       "to": "8.5.1",
+       "purl": "pkg:pypi/click@8.5.1"
+      },
+      {
+       "name": "fastapi",
+       "from": "0.162.0",
+       "to": "0.163.1",
+       "purl": "pkg:pypi/fastapi@0.163.1"
+      },
+      {
+       "name": "pydantic",
+       "from": "2.14.1",
+       "to": "2.14.3",
+       "purl": "pkg:pypi/pydantic@2.14.3"
+      },
+      {
+       "name": "pydantic-core",
+       "from": "2.50.1",
+       "to": "2.50.4",
+       "purl": "pkg:pypi/pydantic-core@2.50.4"
+      },
+      {
+       "name": "python-multipart",
+       "from": "0.0.32",
+       "to": "0.0.33",
+       "purl": "pkg:pypi/python-multipart@0.0.33"
+      },
+      {
+       "name": "sealskin-server",
+       "from": "0.4.1",
+       "to": "0.5.1",
+       "purl": "pkg:pypi/sealskin-server@0.5.1"
+      },
+      {
+       "name": "signxml",
+       "from": "5.2.0",
+       "to": "5.3.0",
+       "purl": "pkg:pypi/signxml@5.3.0"
+      },
+      {
+       "name": "typing-inspection",
+       "from": "0.4.4",
+       "to": "0.4.5",
+       "purl": "pkg:pypi/typing-inspection@0.4.5"
+      },
+      {
+       "name": "websockets",
+       "from": "17.3",
+       "to": "17.4",
+       "purl": "pkg:pypi/websockets@17.4"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 12,
+   "removed": 6,
+   "upgraded": 236,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:003287dee557b82fe441c508fcff1d1fd3cddcb43df9cadbbe68d9120debbc4c",
+    "diff_id": "sha256:7f37cf5f9b5522a446306a2dd927b07608322b340295d9c8cc5767c887a7d593",
+    "size": 6266914,
+    "uncompressed_size": 13715352,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:0a587a9d93c81feff6014be50cab1a7efc58b6f192c9ad23e3120b5fe1165743",
+    "diff_id": "sha256:c921bd0be3b6cb2fc35e2fa6122dca3fc9b5d1d56996d2e329ceb498d6862b09",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:5d76566ef9a576619f53c1e73b05b38cf3f5e9a4cac44a2ac3cb6763ab49ac8f",
+    "diff_id": "sha256:28e461b56469c1c8cb71681d4e7a6d8a57cd6d8519fe88a3273f72ef39a423dc",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:1cc8426acb56d991126b44f2571acb57305dae4ad4ebf0b8bda0803ab4bf506a",
+    "diff_id": "sha256:d9d6f53df346c09163d57981f07d68f0c2851cacd589f98be03741eac504d536",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5edfe3e2a1577f28de7c8f243093888f599aaa1986cccdfa855ac582220b0f7f",
+    "diff_id": "sha256:4372cf3a91b4aef6bec542d21438a77c29aba7cbf0af5194453e1aa12d171f0c",
+    "size": 6091117,
+    "uncompressed_size": 14407458,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-21T01:57:59Z VERSION=9ed8ed67-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:93bc1ab02b82c38040ca2672fbed3077a4e9f67592760b73a16267e73ba0e35f",
+    "diff_id": "sha256:411965d01477a819496d799e905aa12b57d97a099e2eeb98b85cda52873af134",
+    "size": 4633,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:36a9a6945061f3fd887bff4f558541df9679e2a925248c53d4a972c5ca6bf229",
+    "diff_id": "sha256:86d6daf8efe6119ed7ea172866873aebf2cac9f6fff27d12bde3f9fa14b5c8f2",
+    "size": 79285510,
+    "uncompressed_size": 218407004,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-23T05:52:37Z VERSION=0.5.1-ls13 SEALSKIN_VERSION=0.5.1 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     python3-dev     py3-pip &&   echo \"**** install packages ****\" &&   apk add --no-cache     caddy     openssl     python3 &&   echo \"**** install sealskin ****\" &&   if [ -z ${SEALSKIN_VERSION+x} ]; then     SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L     \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" &&   pip3 install     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages &&   echo \"**** cleanup ****\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:310fc3a40e1b7f2e02d14239e99687cd6097db187ceb442152fabf6aca519345",
+    "diff_id": "sha256:4ef292985252b82ae195f2191b65d5ba3342121682e19e5ecc6c47a77f874629",
+    "size": 1324,
+    "uncompressed_size": 1855,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     45,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:5eb3b899491d026ce9a1dd8d1ec992ed8c2f5d871a0ecbf002d2d6665998bb9d",
+    "diff_id": "sha256:e7480ae57975b87a437c9aee5dfc2382476e70adc93404b39feac14897529574",
+    "size": 7083924,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:6d7fea758837fab8e692ad30f0f7d8a8657284978d242b76a0e84ef60ba2cca0",
+    "diff_id": "sha256:eb2ab95a0263da9ab800379e909659ea13bbe01fbe00aa13cc6842a78423bfc3",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:6b86deb612a6754df530592d36d0709ad3e283ab98af16cf70bce538cfcc5dfa",
+    "diff_id": "sha256:38b16f1b63604662a58d78a33a278b8fe8d32ad3757b6b9134c982a057c61ed1",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:6766149f36541ecd60321fc61529d223066c6f6a7f2afb78f6e27003976707dc",
+    "diff_id": "sha256:d8dc14dde51b61145efbe6d9a1c40c079b0866c91570f7a87778e0a8e2149dbe",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:f7925dae9e14f51dfb9c3ba991d8fb13926cd7ff417f31feae9adfd644e95f61",
+    "diff_id": "sha256:188a811e804883067f53142574c7a653f44d540d471a8d13a4afd68f9f907ef9",
+    "size": 6326024,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-21T01:57:59Z VERSION=9ed8ed67-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b99ac5ac22c6cb08da288cd34c8e9fbed0516758b5cf63914805e61029586f24",
+    "diff_id": "sha256:a39ec37631e1275ef6e526578795adfb5ecc66b7a68a35ec2aa5eb2306cc5a41",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:46fcdf20776b0524964f57ad2eaacd6226ef2af97622964a986c38e7025df3d5",
+    "diff_id": "sha256:a6e21141f3e3addadac605a931673e601e3299909aad98fdf515c4eb13cc0815",
+    "size": 76226549,
+    "uncompressed_size": 217972106,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-23T05:52:37Z VERSION=0.5.1-ls13 SEALSKIN_VERSION=0.5.1 /bin/sh -c echo \"**** install build packages ****\" &&   apk add --no-cache --upgrade --virtual=build-dependencies     python3-dev     py3-pip &&   echo \"**** install packages ****\" &&   apk add --no-cache     caddy     openssl     python3 &&   echo \"**** install sealskin ****\" &&   if [ -z ${SEALSKIN_VERSION+x} ]; then     SEALSKIN_VERSION=$(curl -sX GET \"https://api.github.com/repos/selkies-project/sealskin/releases/latest\"     | jq -r '.tag_name');   fi &&   curl -o     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" -L     \"https://github.com/selkies-project/sealskin/releases/download/${SEALSKIN_VERSION}/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" &&   pip3 install     \"/tmp/sealskin_server-${SEALSKIN_VERSION}-py3-none-any.whl\" --break-system-packages &&   echo \"**** cleanup ****\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   apk del --purge     build-dependencies &&   rm -rf     $HOME/.cache     /tmp/*",
+    "dockerfile_lines": [
+     16,
+     42
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:310fc3a40e1b7f2e02d14239e99687cd6097db187ceb442152fabf6aca519345",
+    "diff_id": "sha256:4ef292985252b82ae195f2191b65d5ba3342121682e19e5ecc6c47a77f874629",
+    "size": 1324,
+    "uncompressed_size": 1855,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     45,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "sealskin",
+  "tag": "0.5.1-ls13",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/sealskin/builds/0.5.1-ls13/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [
+     "2019/tcp",
+     "8000/tcp",
+     "8443/tcp",
+     "8444/tcp",
+     "8443/udp",
+     "8444/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 178683904,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [
+     "2019/tcp",
+     "8000/tcp",
+     "8443/tcp",
+     "8444/tcp",
+     "8443/udp",
+     "8444/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 176885760,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-sealskin/releases/download/0.5.1-ls13/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-sealskin/builds/0.5.1-ls13/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "sealskin",
+    "tag": "amd64-7fea542-45120454125",
+    "arch": "amd64",
+    "started": "2026-11-23T05:55:51Z",
+    "finished": "2026-11-23T05:56:15Z",
+    "success": true,
+    "runner": "cfde587b9fec",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 18s: svc-cron, svc-sealskin",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8443/tcp",
+      "seconds": 0.08
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8000/ after 6.1s",
+      "seconds": 6.12
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "297 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "297 packages: syft JSON 52866 bytes gzipped, SPDX for the image attestation 643244 bytes",
+      "seconds": 0.172
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "708 dirs, 4988 files (246282951 bytes), 1210 symlinks, 254 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.08s, total 0.14s",
+      "seconds": 0.29
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.926
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.069
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8000/",
+      "seconds": 10.799
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [2019, 8000, 8443, 8444], rss 178683904 bytes",
+      "seconds": 0.475
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 178683904,
+     "pids": 14,
+     "listening_tcp": [
+      2019,
+      8000,
+      8443,
+      8444
+     ],
+     "listening_udp": [
+      8443,
+      8444
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-sealskin"
+     ],
+     "changed_paths": 207
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "sealskin",
+    "tag": "arm64-7fea542-45120454125",
+    "arch": "arm64",
+    "started": "2026-11-23T05:53:52Z",
+    "finished": "2026-11-23T05:54:12Z",
+    "success": true,
+    "runner": "9cf57d3887fd",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-sealskin",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8443/tcp",
+      "seconds": 0.05
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8000/ after 3.1s",
+      "seconds": 3.103
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "297 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "297 packages: syft JSON 52902 bytes gzipped, SPDX for the image attestation 643350 bytes",
+      "seconds": 0.155
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "708 dirs, 4987 files (257757149 bytes), 1210 symlinks, 254 hardlinks, 0 special, 7 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.08s",
+      "seconds": 0.209
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.554
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.057
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8000/",
+      "seconds": 10.717
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [2019, 8000, 8443, 8444], rss 176885760 bytes",
+      "seconds": 0.306
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 176885760,
+     "pids": 14,
+     "listening_tcp": [
+      2019,
+      8000,
+      8443,
+      8444
+     ],
+     "listening_udp": [
+      8443,
+      8444
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-sealskin"
+     ],
+     "changed_paths": 207
+    }
+   }
+  }
+ }
+}

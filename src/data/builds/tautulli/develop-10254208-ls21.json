@@ -1,0 +1,1455 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "tautulli",
+  "repository": "linuxserver-playground/docker-tautulli",
+  "branch": "develop",
+  "mode": "live",
+  "version": {
+   "upstream": "10254208",
+   "upstream_clean": "10254208",
+   "ls_build": 21,
+   "tag": "develop-10254208-ls21",
+   "release_tag": "develop",
+   "tags": [
+    "develop",
+    "develop-10254208-ls21",
+    "develop-version-10254208",
+    "amd64-develop",
+    "amd64-develop-10254208-ls21",
+    "amd64-develop-version-10254208",
+    "arm64v8-develop",
+    "arm64v8-develop-10254208-ls21",
+    "arm64v8-develop-version-10254208"
+   ],
+   "source": "github_commit",
+   "source_url": "https://github.com/Tautulli/Tautulli/commit/1025420854076ae150c3b274c3852d8ec55aa67a"
+  },
+  "commit": "7e92002864e37ac2fbb50f8fed9c95c02e3937ab",
+  "created": "2026-11-22T00:05:36Z",
+  "reason": "upstream",
+  "previous": {
+   "tag": "develop-918f078e-ls20",
+   "release_url": "https://github.com/linuxserver-playground/docker-tautulli/releases/tag/develop-918f078e-ls20"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:75000322ebcb441e8e66c91605c9b15c0372afe9063eed139e85ad8a340080a6",
+    "size": 62662806,
+    "uncompressed_size": 156207230,
+    "layers": 9,
+    "runner": "Linux-X64",
+    "build_seconds": 33
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:2d0f44baa220a6991580a4ba580470df7c62a3c1bfa3a8c919524f3e97eee936",
+    "size": 63537095,
+    "uncompressed_size": 170811280,
+    "layers": 9,
+    "runner": "Linux-ARM64",
+    "build_seconds": 25
+   }
+  ],
+  "index_digest": "sha256:352d4d0005b9d324a317022300978bb22e50d0e46ce6cdd39077088763f3462d",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 10254208-ls21 Build-date:- 2026-11-22T00:01:43Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067",
+   "io.linuxserver.image.branch": "develop",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "10254208",
+   "maintainer": "nemchik,thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-22T00:01:43Z",
+   "org.opencontainers.image.description": "Tautulli is a python based web application for monitoring, analytics and notifications for Plex Media Server.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-tautulli",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "7e92002864e37ac2fbb50f8fed9c95c02e3937ab",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-tautulli",
+   "org.opencontainers.image.title": "Tautulli",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-tautulli/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "10254208-ls21"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "TAUTULLI_DOCKER=True"
+   ],
+   "exposed_ports": [
+    "8181/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG TAUTULLI_COMMIT\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik,thelamer\"\n\n# Inform app this is a docker env\nENV TAUTULLI_DOCKER=True\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    git \\\n    python3 && \\\n  echo \"**** install tautulli ****\" && \\\n  if [ -z ${TAUTULLI_COMMIT+x} ]; then \\\n    TAUTULLI_COMMIT=$(curl -s https://api.github.com/repos/Tautulli/Tautulli/commits/nightly \\\n      | jq -r '. | .sha' \\\n      | cut -c1-8); \\\n  fi && \\\n  mkdir -p /app/tautulli && \\\n  curl -o \\\n    /tmp/tautulli.tar.gz -L \\\n    \"https://github.com/Tautulli/Tautulli/archive/${TAUTULLI_COMMIT}.tar.gz\" && \\\n  tar xf \\\n    /tmp/tautulli.tar.gz -C \\\n    /app/tautulli --strip-components=1 && \\\n  cd /app/tautulli && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ \\\n    -r https://raw.githubusercontent.com/Tautulli/tautulli-baseimage/refs/heads/python3/requirements.txt && \\\n  echo \"**** Hard Coding versioning ****\" && \\\n  echo \"${TAUTULLI_COMMIT}\" > /app/tautulli/version.txt && \\\n  echo \"nightly\" > /app/tautulli/branch.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8181\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG TAUTULLI_COMMIT\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"nemchik,thelamer\"\n\n# Inform app this is a docker env\nENV TAUTULLI_DOCKER=True\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add --no-cache \\\n    git \\\n    python3 && \\\n  echo \"**** install tautulli ****\" && \\\n  if [ -z ${TAUTULLI_COMMIT+x} ]; then \\\n    TAUTULLI_COMMIT=$(curl -s https://api.github.com/repos/Tautulli/Tautulli/commits/nightly \\\n      | jq -r '. | .sha' \\\n      | cut -c1-8); \\\n  fi && \\\n  mkdir -p /app/tautulli && \\\n  curl -o \\\n    /tmp/tautulli.tar.gz -L \\\n    \"https://github.com/Tautulli/Tautulli/archive/${TAUTULLI_COMMIT}.tar.gz\" && \\\n  tar xf \\\n    /tmp/tautulli.tar.gz -C \\\n    /app/tautulli --strip-components=1 && \\\n  cd /app/tautulli && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ \\\n    -r https://raw.githubusercontent.com/Tautulli/tautulli-baseimage/refs/heads/python3/requirements.txt && \\\n  echo \"**** Hard Coding versioning ****\" && \\\n  echo \"${TAUTULLI_COMMIT}\" > /app/tautulli/version.txt && \\\n  echo \"nightly\" > /app/tautulli/branch.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /tmp/* \\\n    $HOME/.cache\n\n# add local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8181\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"tautulli:develop\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-tautulli-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-config -> init-tautulli-config\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-tautulli\n  svc-tautulli -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"tautulli:develop\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-tautulli-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-tautulli-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # permissions\n    lsiown -R abc:abc \\\n        /config\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-tautulli",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8181\" \\\n            s6-setuidgid abc python3 /app/tautulli/Tautulli.py --datadir /config\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8181\" \\\n            python3 /app/tautulli/Tautulli.py --datadir /config\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 126,
+    "distro": "Alpine Linux v3.24",
+    "hash": "573a6b76",
+    "by_type": {
+     "python": 37,
+     "binary": 15,
+     "apk": 69,
+     "deb": 3,
+     "UnknownPackage": 1,
+     "npm": 1
+    }
+   },
+   "arm64": {
+    "count": 126,
+    "distro": "Alpine Linux v3.24",
+    "hash": "573a6b76",
+    "by_type": {
+     "python": 37,
+     "binary": 15,
+     "apk": 69,
+     "deb": 3,
+     "UnknownPackage": 1,
+     "npm": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/tautulli/builds/develop-10254208-ls21/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-tautulli/compare/develop-918f078e-ls20...develop-10254208-ls21",
+   "upstream": "Update nightly docs URL",
+   "upstream_url": "https://github.com/Tautulli/Tautulli/commit/1025420854076ae150c3b274c3852d8ec55aa67a"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 36276,
+    "sha256": "be114334c3c34de14cd9efc9a34ad5dba70aa9d0fe00dce855ef0f74394a43cc",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5389,
+    "sha256": "5d4b83c551e70d3da7509601b1c26ab64dfd1b0e41b84396efa77f51f720ba05",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 82609,
+    "sha256": "42485efc7ef0819e5421ec60e3c8f56b81c76a8d0f22b5d6b532be0402bab5de",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2576,
+    "sha256": "5d72ceee3b16c1d0146673a6002b845cfbf65566b6b85c371b013ba189bf3283",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 30882,
+    "sha256": "a464a1bf18dca5424b4471a2f0d793d965925b3b9d0c5dd51b6aad4163cd0739",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 9120,
+    "sha256": "98b45a7e516c47edc51d947b5cd86c70a3fc493fd7ad6d6903e5bc292b997124",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 36341,
+    "sha256": "5d5d7b8258b427336f02895ee1a7650781d40c93c040860bfaaba79a52dbc05c",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5389,
+    "sha256": "a295c54e72c21b76831848e3de22ee49b868f5ce8619602e96f83403e483c25a",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 82325,
+    "sha256": "ef2c8a721f2f8adf5277cb4daa6fa1ef2a3c05383c92c52de2fb85871680b77c",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2576,
+    "sha256": "67f8863727c824f09a42f41caa2ed1f0bdf3992316d5bf935b04e95765c74a1c",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 30761,
+    "sha256": "d6422bc96d3ad993d52ad924009b331c091538ced8a9d8515305257b0e01b4bc",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 9120,
+    "sha256": "98b45a7e516c47edc51d947b5cd86c70a3fc493fd7ad6d6903e5bc292b997124",
+    "url": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 44964579992,
+   "run_url": "https://github.com/linuxserver-playground/docker-tautulli/actions/runs/44964579992",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/tautulli",
+   "tags": [
+    "develop",
+    "develop-10254208-ls21",
+    "develop-version-10254208",
+    "amd64-develop",
+    "amd64-develop-10254208-ls21",
+    "amd64-develop-version-10254208",
+    "arm64v8-develop",
+    "arm64v8-develop-10254208-ls21",
+    "arm64v8-develop-version-10254208"
+   ]
+  }
+ },
+ "diff": {
+  "image": "tautulli",
+  "branch": "develop",
+  "tag": "develop-10254208-ls21",
+  "previous_tag": "develop-30f7c4f4-ls1",
+  "classification": "mixed",
+  "reasons": [
+   "upstream version changed",
+   "Dockerfile changed",
+   "base image digest changed",
+   "packages changed",
+   "11 commits (acde978 → 7e92002): changed the Dockerfiles, generated files, the package table"
+  ],
+  "upstream": {
+   "from": "30f7c4f4",
+   "to": "10254208",
+   "changed": true
+  },
+  "commit": {
+   "from": "acde9789ec11b54b55b20a8dfb2b4f0d35f2c4f7",
+   "to": "7e92002864e37ac2fbb50f8fed9c95c02e3937ab",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-tautulli/compare/acde9789ec11b54b55b20a8dfb2b4f0d35f2c4f7...7e92002864e37ac2fbb50f8fed9c95c02e3937ab",
+   "commits": [
+    {
+     "sha": "7a0ae4c0f951b3c77ab0d3657cf46bddd13b033f",
+     "subject": "Build on the playground base images",
+     "author": {
+      "name": "thelamer",
+      "login": "thelamer"
+     },
+     "date": "2026-10-26T19:32:20Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/7a0ae4c0f951b3c77ab0d3657cf46bddd13b033f",
+     "bot": false
+    },
+    {
+     "sha": "7e7cc94f55f5afd10e6b71b65d963ad8fe7f9518",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "thelamer",
+      "login": "thelamer"
+     },
+     "date": "2026-10-28T14:52:26Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/7e7cc94f55f5afd10e6b71b65d963ad8fe7f9518",
+     "bot": true
+    },
+    {
+     "sha": "3b496e4f1c5dbebbc03d8f58978cdd13e82378b4",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-31T18:01:09Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/3b496e4f1c5dbebbc03d8f58978cdd13e82378b4",
+     "bot": true
+    },
+    {
+     "sha": "e09108affde8c87b85cd0832d4480882482765b0",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-10-31T18:05:06Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/e09108affde8c87b85cd0832d4480882482765b0",
+     "bot": true
+    },
+    {
+     "sha": "fd5e1019a34591a825f5a9e5219029ac4223364a",
+     "subject": "Update generated files [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-02T20:00:46Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/fd5e1019a34591a825f5a9e5219029ac4223364a",
+     "bot": true
+    },
+    {
+     "sha": "db2bd772e37e6bc8917644f398cca0d65f82ecf6",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-02T20:08:04Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/db2bd772e37e6bc8917644f398cca0d65f82ecf6",
+     "bot": true
+    },
+    {
+     "sha": "5b52be750360e3f9e3f314a130b1681e247bc7d8",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-04T22:07:20Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/5b52be750360e3f9e3f314a130b1681e247bc7d8",
+     "bot": true
+    },
+    {
+     "sha": "54173076c5bc964e1b44258a8fca52453fee7bde",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-07T18:06:49Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/54173076c5bc964e1b44258a8fca52453fee7bde",
+     "bot": true
+    },
+    {
+     "sha": "fe4ca7e0e2c275c56b3b0308494a99d94e96afe5",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-10T23:12:20Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/fe4ca7e0e2c275c56b3b0308494a99d94e96afe5",
+     "bot": true
+    },
+    {
+     "sha": "9fd32fc1774220b0e1f3d5136aed578e0478ec36",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-21T18:07:15Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/9fd32fc1774220b0e1f3d5136aed578e0478ec36",
+     "bot": true
+    },
+    {
+     "sha": "7e92002864e37ac2fbb50f8fed9c95c02e3937ab",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-21T22:06:04Z",
+     "url": "https://github.com/linuxserver-playground/docker-tautulli/commit/7e92002864e37ac2fbb50f8fed9c95c02e3937ab",
+     "bot": true
+    }
+   ],
+   "count": 11,
+   "truncated": false,
+   "areas": {
+    "dockerfile": 2,
+    "generated": 4,
+    "packages": 1
+   }
+  },
+  "trigger": "upstream",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver/baseimage-alpine:3.24",
+    "digest": "sha256:52106d187a66ccb92e3289cb6dd25c549cb0b6b7bfec38a51994434c96db2d35"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 58678599,
+    "to": 62662806,
+    "delta": 3984207
+   },
+   "arm64": {
+    "from": 59558985,
+    "to": 63537095,
+    "delta": 3978110
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "--- a/Dockerfile\n+++ b/Dockerfile\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:3.24\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n \n ENV LSIO_FIRST_PARTY=true\n \n",
+   "arm64": "--- a/Dockerfile.aarch64\n+++ b/Dockerfile.aarch64\n@@ -1,6 +1,6 @@\n # syntax=docker/dockerfile:1\n \n-FROM ghcr.io/linuxserver/baseimage-alpine:arm64v8-3.24\n+FROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n \n ENV LSIO_FIRST_PARTY=true\n \n"
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.24.3-r0",
+       "to": "3.24.4-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.24.4-r0?arch=x86_64&distro=alpine-3.24.4&upstream=alpine-base"
+      },
+      {
+       "name": "apk-tools",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/apk-tools@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "curl",
+       "from": "8.22.0-r0",
+       "to": "8.23.0-r0",
+       "purl": "pkg:apk/alpine/curl@8.23.0-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git@2.54.1-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git-init-template",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git-init-template@2.54.1-r0?arch=x86_64&distro=alpine-3.24.4&upstream=git"
+      },
+      {
+       "name": "libapk",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/libapk@3.0.9-r0?arch=x86_64&distro=alpine-3.24.4&upstream=apk-tools"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "libcurl",
+       "from": "8.22.0-r0",
+       "to": "8.23.0-r0",
+       "purl": "pkg:apk/alpine/libcurl@8.23.0-r0?arch=x86_64&distro=alpine-3.24.4&upstream=curl"
+      },
+      {
+       "name": "libexpat",
+       "from": "2.9.0-r0",
+       "to": "2.10.0-r0",
+       "purl": "pkg:apk/alpine/libexpat@2.10.0-r0?arch=x86_64&distro=alpine-3.24.4&upstream=expat"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=x86_64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "pyc",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/pyc@3.14.10-r1?arch=x86_64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/python3@3.14.10-r1?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "python3-pyc",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/python3-pyc@3.14.10-r1?arch=x86_64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3-pycache-pyc0",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/python3-pycache-pyc0@3.14.10-r1?arch=x86_64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=x86_64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    },
+    "npm": {
+     "added": [
+      {
+       "name": "tautulli-docs",
+       "version": "UNKNOWN",
+       "purl": "pkg:npm/tautulli-docs"
+      }
+     ],
+     "removed": [],
+     "upgraded": [],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "certifi",
+       "from": "2026.10.19",
+       "to": "2026.10.23",
+       "purl": "pkg:pypi/certifi@2026.10.23"
+      },
+      {
+       "name": "distlib",
+       "from": "0.4.2",
+       "to": "0.4.4",
+       "purl": "pkg:pypi/distlib@0.4.4"
+      },
+      {
+       "name": "idna",
+       "from": "3.18",
+       "to": "3.20",
+       "purl": "pkg:pypi/idna@3.20"
+      },
+      {
+       "name": "msgpack",
+       "from": "1.1.2",
+       "to": "1.2.4",
+       "purl": "pkg:pypi/msgpack@1.2.4"
+      },
+      {
+       "name": "pip",
+       "from": "26.2.2",
+       "to": "26.3",
+       "purl": "pkg:pypi/pip@26.3"
+      },
+      {
+       "name": "pygments",
+       "from": "2.20.0",
+       "to": "2.21.0",
+       "purl": "pkg:pypi/pygments@2.21.0"
+      },
+      {
+       "name": "pyproject-hooks",
+       "from": "1.2.0",
+       "to": "1.3.3",
+       "purl": "pkg:pypi/pyproject-hooks@1.3.3"
+      },
+      {
+       "name": "rich",
+       "from": "14.2.0",
+       "to": "15.0.0",
+       "purl": "pkg:pypi/rich@15.0.0"
+      },
+      {
+       "name": "truststore",
+       "from": "0.10.4",
+       "to": "0.10.5",
+       "purl": "pkg:pypi/truststore@0.10.5"
+      },
+      {
+       "name": "urllib3",
+       "from": "2.7.0",
+       "to": "2.8.0",
+       "purl": "pkg:pypi/urllib3@2.8.0"
+      }
+     ],
+     "downgraded": [
+      {
+       "name": "tomli",
+       "from": "2.4.1",
+       "to": "2.4.0",
+       "purl": "pkg:pypi/tomli@2.4.0"
+      }
+     ]
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "alpine-release",
+       "from": "3.24.3-r0",
+       "to": "3.24.4-r0",
+       "purl": "pkg:apk/alpine/alpine-release@3.24.4-r0?arch=aarch64&distro=alpine-3.24.4&upstream=alpine-base"
+      },
+      {
+       "name": "apk-tools",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/apk-tools@3.0.9-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "curl",
+       "from": "8.22.0-r0",
+       "to": "8.23.0-r0",
+       "purl": "pkg:apk/alpine/curl@8.23.0-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git@2.54.1-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "git-init-template",
+       "from": "2.54.0-r0",
+       "to": "2.54.1-r0",
+       "purl": "pkg:apk/alpine/git-init-template@2.54.1-r0?arch=aarch64&distro=alpine-3.24.4&upstream=git"
+      },
+      {
+       "name": "libapk",
+       "from": "3.0.8-r0",
+       "to": "3.0.9-r0",
+       "purl": "pkg:apk/alpine/libapk@3.0.9-r0?arch=aarch64&distro=alpine-3.24.4&upstream=apk-tools"
+      },
+      {
+       "name": "libcrypto3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libcrypto3@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "libcurl",
+       "from": "8.22.0-r0",
+       "to": "8.23.0-r0",
+       "purl": "pkg:apk/alpine/libcurl@8.23.0-r0?arch=aarch64&distro=alpine-3.24.4&upstream=curl"
+      },
+      {
+       "name": "libexpat",
+       "from": "2.9.0-r0",
+       "to": "2.10.0-r0",
+       "purl": "pkg:apk/alpine/libexpat@2.10.0-r0?arch=aarch64&distro=alpine-3.24.4&upstream=expat"
+      },
+      {
+       "name": "libssl3",
+       "from": "3.5.9-r0",
+       "to": "3.5.9-r1",
+       "purl": "pkg:apk/alpine/libssl3@3.5.9-r1?arch=aarch64&distro=alpine-3.24.4&upstream=openssl"
+      },
+      {
+       "name": "pyc",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/pyc@3.14.10-r1?arch=aarch64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/python3@3.14.10-r1?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "python3-pyc",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/python3-pyc@3.14.10-r1?arch=aarch64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3-pycache-pyc0",
+       "from": "3.14.8-r0",
+       "to": "3.14.10-r1",
+       "purl": "pkg:apk/alpine/python3-pycache-pyc0@3.14.10-r1?arch=aarch64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-r0",
+       "to": "2026f-r0",
+       "purl": "pkg:apk/alpine/tzdata@2026f-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zlib",
+       "from": "1.3.2-r1",
+       "to": "1.4-r0",
+       "purl": "pkg:apk/alpine/zlib@1.4-r0?arch=aarch64&distro=alpine-3.24.4"
+      }
+     ],
+     "downgraded": []
+    },
+    "npm": {
+     "added": [
+      {
+       "name": "tautulli-docs",
+       "version": "UNKNOWN",
+       "purl": "pkg:npm/tautulli-docs"
+      }
+     ],
+     "removed": [],
+     "upgraded": [],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "certifi",
+       "from": "2026.10.19",
+       "to": "2026.10.23",
+       "purl": "pkg:pypi/certifi@2026.10.23"
+      },
+      {
+       "name": "distlib",
+       "from": "0.4.2",
+       "to": "0.4.4",
+       "purl": "pkg:pypi/distlib@0.4.4"
+      },
+      {
+       "name": "idna",
+       "from": "3.18",
+       "to": "3.20",
+       "purl": "pkg:pypi/idna@3.20"
+      },
+      {
+       "name": "msgpack",
+       "from": "1.1.2",
+       "to": "1.2.4",
+       "purl": "pkg:pypi/msgpack@1.2.4"
+      },
+      {
+       "name": "pip",
+       "from": "26.2.2",
+       "to": "26.3",
+       "purl": "pkg:pypi/pip@26.3"
+      },
+      {
+       "name": "pygments",
+       "from": "2.20.0",
+       "to": "2.21.0",
+       "purl": "pkg:pypi/pygments@2.21.0"
+      },
+      {
+       "name": "pyproject-hooks",
+       "from": "1.2.0",
+       "to": "1.3.3",
+       "purl": "pkg:pypi/pyproject-hooks@1.3.3"
+      },
+      {
+       "name": "rich",
+       "from": "14.2.0",
+       "to": "15.0.0",
+       "purl": "pkg:pypi/rich@15.0.0"
+      },
+      {
+       "name": "truststore",
+       "from": "0.10.4",
+       "to": "0.10.5",
+       "purl": "pkg:pypi/truststore@0.10.5"
+      },
+      {
+       "name": "urllib3",
+       "from": "2.7.0",
+       "to": "2.8.0",
+       "purl": "pkg:pypi/urllib3@2.8.0"
+      }
+     ],
+     "downgraded": [
+      {
+       "name": "tomli",
+       "from": "2.4.1",
+       "to": "2.4.0",
+       "purl": "pkg:pypi/tomli@2.4.0"
+      }
+     ]
+    }
+   }
+  },
+  "totals": {
+   "added": 2,
+   "removed": 0,
+   "upgraded": 52,
+   "downgraded": 2
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:003287dee557b82fe441c508fcff1d1fd3cddcb43df9cadbbe68d9120debbc4c",
+    "diff_id": "sha256:7f37cf5f9b5522a446306a2dd927b07608322b340295d9c8cc5767c887a7d593",
+    "size": 6266914,
+    "uncompressed_size": 13715352,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:0a587a9d93c81feff6014be50cab1a7efc58b6f192c9ad23e3120b5fe1165743",
+    "diff_id": "sha256:c921bd0be3b6cb2fc35e2fa6122dca3fc9b5d1d56996d2e329ceb498d6862b09",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:5d76566ef9a576619f53c1e73b05b38cf3f5e9a4cac44a2ac3cb6763ab49ac8f",
+    "diff_id": "sha256:28e461b56469c1c8cb71681d4e7a6d8a57cd6d8519fe88a3273f72ef39a423dc",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:1cc8426acb56d991126b44f2571acb57305dae4ad4ebf0b8bda0803ab4bf506a",
+    "diff_id": "sha256:d9d6f53df346c09163d57981f07d68f0c2851cacd589f98be03741eac504d536",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5edfe3e2a1577f28de7c8f243093888f599aaa1986cccdfa855ac582220b0f7f",
+    "diff_id": "sha256:4372cf3a91b4aef6bec542d21438a77c29aba7cbf0af5194453e1aa12d171f0c",
+    "size": 6091117,
+    "uncompressed_size": 14407458,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-21T01:57:59Z VERSION=9ed8ed67-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:93bc1ab02b82c38040ca2672fbed3077a4e9f67592760b73a16267e73ba0e35f",
+    "diff_id": "sha256:411965d01477a819496d799e905aa12b57d97a099e2eeb98b85cda52873af134",
+    "size": 4633,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:0f573dcc6719f88b8bbf375f2af2f18f3a1b73021e69bd878ede1d9ba35133fa",
+    "diff_id": "sha256:2c33b3454914e24f762f2bfb006938e2fdaba9d2506fcc98113234ff8d7f2734",
+    "size": 50290565,
+    "uncompressed_size": 128037531,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-22T00:01:43Z VERSION=10254208-ls21 TAUTULLI_COMMIT=10254208 /bin/sh -c echo \"**** install packages ****\" &&   apk add --no-cache     git     python3 &&   echo \"**** install tautulli ****\" &&   if [ -z ${TAUTULLI_COMMIT+x} ]; then     TAUTULLI_COMMIT=$(curl -s https://api.github.com/repos/Tautulli/Tautulli/commits/nightly       | jq -r '. | .sha'       | cut -c1-8);   fi &&   mkdir -p /app/tautulli &&   curl -o     /tmp/tautulli.tar.gz -L     \"https://github.com/Tautulli/Tautulli/archive/${TAUTULLI_COMMIT}.tar.gz\" &&   tar xf     /tmp/tautulli.tar.gz -C     /app/tautulli --strip-components=1 &&   cd /app/tautulli &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/     -r https://raw.githubusercontent.com/Tautulli/tautulli-baseimage/refs/heads/python3/requirements.txt &&   echo \"**** Hard Coding versioning ****\" &&   echo \"${TAUTULLI_COMMIT}\" > /app/tautulli/version.txt &&   echo \"nightly\" > /app/tautulli/branch.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     17,
+     49
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:60ef323a8fa959d0421683239917565dc51f23cd37d46430f6d2bad2b04d222d",
+    "diff_id": "sha256:7ff92d1f22254c4bf4a283008869832a2a3d00bdc761855d4b1b685cba9886d5",
+    "size": 849,
+    "uncompressed_size": 673,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     52,
+     52
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:5eb3b899491d026ce9a1dd8d1ec992ed8c2f5d871a0ecbf002d2d6665998bb9d",
+    "diff_id": "sha256:e7480ae57975b87a437c9aee5dfc2382476e70adc93404b39feac14897529574",
+    "size": 7083924,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:6d7fea758837fab8e692ad30f0f7d8a8657284978d242b76a0e84ef60ba2cca0",
+    "diff_id": "sha256:eb2ab95a0263da9ab800379e909659ea13bbe01fbe00aa13cc6842a78423bfc3",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:6b86deb612a6754df530592d36d0709ad3e283ab98af16cf70bce538cfcc5dfa",
+    "diff_id": "sha256:38b16f1b63604662a58d78a33a278b8fe8d32ad3757b6b9134c982a057c61ed1",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:6766149f36541ecd60321fc61529d223066c6f6a7f2afb78f6e27003976707dc",
+    "diff_id": "sha256:d8dc14dde51b61145efbe6d9a1c40c079b0866c91570f7a87778e0a8e2149dbe",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:f7925dae9e14f51dfb9c3ba991d8fb13926cd7ff417f31feae9adfd644e95f61",
+    "diff_id": "sha256:188a811e804883067f53142574c7a653f44d540d471a8d13a4afd68f9f907ef9",
+    "size": 6326024,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-21T01:57:59Z VERSION=9ed8ed67-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b99ac5ac22c6cb08da288cd34c8e9fbed0516758b5cf63914805e61029586f24",
+    "diff_id": "sha256:a39ec37631e1275ef6e526578795adfb5ecc66b7a68a35ec2aa5eb2306cc5a41",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:d8923c4d6c193487b50022e9cadbe1a437dbf40dbf83eeca8a6e12472810f273",
+    "diff_id": "sha256:d5c40ffd5b18bca9825aebe718febb12fd09b8c3a6890b017997978ce3d87276",
+    "size": 50112943,
+    "uncompressed_size": 130732530,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-22T00:01:43Z VERSION=10254208-ls21 TAUTULLI_COMMIT=10254208 /bin/sh -c echo \"**** install packages ****\" &&   apk add --no-cache     git     python3 &&   echo \"**** install tautulli ****\" &&   if [ -z ${TAUTULLI_COMMIT+x} ]; then     TAUTULLI_COMMIT=$(curl -s https://api.github.com/repos/Tautulli/Tautulli/commits/nightly       | jq -r '. | .sha'       | cut -c1-8);   fi &&   mkdir -p /app/tautulli &&   curl -o     /tmp/tautulli.tar.gz -L     \"https://github.com/Tautulli/Tautulli/archive/${TAUTULLI_COMMIT}.tar.gz\" &&   tar xf     /tmp/tautulli.tar.gz -C     /app/tautulli --strip-components=1 &&   cd /app/tautulli &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/     -r https://raw.githubusercontent.com/Tautulli/tautulli-baseimage/refs/heads/python3/requirements.txt &&   echo \"**** Hard Coding versioning ****\" &&   echo \"${TAUTULLI_COMMIT}\" > /app/tautulli/version.txt &&   echo \"nightly\" > /app/tautulli/branch.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*     $HOME/.cache",
+    "dockerfile_lines": [
+     17,
+     49
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:e752e6532eebb27cc09d02d2d9f51f1f13b7ece1351432ddf5777a56c5bbd864",
+    "diff_id": "sha256:e0cd62527e5e971a0244e84210da0953fc9a2ed275446ddb945d9f65997772a5",
+    "size": 849,
+    "uncompressed_size": 673,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     52,
+     52
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "tautulli",
+  "tag": "develop-10254208-ls21",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/tautulli/builds/develop-10254208-ls21/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 5.038,
+    "listening_ports": [
+     "8181/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 97132544,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 4.019,
+    "listening_ports": [
+     "8181/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 97869824,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-tautulli/releases/download/develop-10254208-ls21/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-tautulli/builds/develop-10254208-ls21/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "tautulli",
+    "tag": "amd64-7e92002-44964579992",
+    "arch": "amd64",
+    "started": "2026-11-22T00:03:55Z",
+    "finished": "2026-11-22T00:04:19Z",
+    "success": true,
+    "runner": "3db7232f80e5",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 5.038,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 5.0s",
+      "seconds": 5.038
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-tautulli",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8181/tcp",
+      "seconds": 0.075
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8181/ after 0.0s",
+      "seconds": 0.017
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "126 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "126 packages: syft JSON 36276 bytes gzipped, SPDX for the image attestation 310559 bytes",
+      "seconds": 0.138
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "900 dirs, 7963 files (155915507 bytes), 1367 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.12s, total 0.21s",
+      "seconds": 0.362
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 1.08
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.071
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8181/",
+      "seconds": 10.744
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8181], rss 97132544 bytes",
+      "seconds": 0.593
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 97132544,
+     "pids": 13,
+     "listening_tcp": [
+      8181
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-tautulli"
+     ],
+     "changed_paths": 208
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "tautulli",
+    "tag": "arm64-7e92002-44964579992",
+    "arch": "arm64",
+    "started": "2026-11-22T00:02:59Z",
+    "finished": "2026-11-22T00:03:20Z",
+    "success": true,
+    "runner": "75a6792ea402",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 4.019,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 4.0s",
+      "seconds": 4.019
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-tautulli",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8181/tcp",
+      "seconds": 0.048
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8181/ after 0.0s",
+      "seconds": 0.015
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "126 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "126 packages: syft JSON 36341 bytes gzipped, SPDX for the image attestation 310659 bytes",
+      "seconds": 0.124
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "900 dirs, 7962 files (170519602 bytes), 1367 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.06s, total 0.11s",
+      "seconds": 0.246
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "9 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.526
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.058
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8181/",
+      "seconds": 10.74
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8181], rss 97869824 bytes",
+      "seconds": 0.377
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 97869824,
+     "pids": 13,
+     "listening_tcp": [
+      8181
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-tautulli"
+     ],
+     "changed_paths": 208
+    }
+   }
+  }
+ }
+}

@@ -1,0 +1,1033 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "code-server",
+  "repository": "linuxserver-playground/docker-code-server",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "4.145.2",
+   "upstream_clean": "4.145.2",
+   "semver": "4.145.2",
+   "ls_build": 10,
+   "tag": "4.145.2-ls10",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "4.145.2-ls10",
+    "version-4.145.2",
+    "4.145.2",
+    "amd64-latest",
+    "amd64-4.145.2-ls10",
+    "amd64-version-4.145.2",
+    "amd64-4.145.2",
+    "arm64v8-latest",
+    "arm64v8-4.145.2-ls10",
+    "arm64v8-version-4.145.2",
+    "arm64v8-4.145.2"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/coder/code-server/releases/tag/v4.145.2"
+  },
+  "commit": "f91ec372fb286b0b636f9a0dd4bcb5aa0320b2b2",
+  "created": "2026-11-19T22:03:04Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "4.145.2-ls9",
+   "release_url": "https://github.com/linuxserver-playground/docker-code-server/releases/tag/4.145.2-ls9"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+   "digest": "sha256:5625688e073ff0f6795f3f5e3687c4f4ab313dd4881b1964627094e5ac12c4ee"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:c533fedd0f02b513993e3afb9542f69eed18eb0b60af605552b87714152732ac",
+    "size": 319843879,
+    "uncompressed_size": 927920140,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 63
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:1b53c310868ef72c701b32ea807c8918656bc7d8855c199aebd63ec650607038",
+    "size": 319538956,
+    "uncompressed_size": 935455963,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 59
+   }
+  ],
+  "index_digest": "sha256:e58815a3431471a6fc5c5de4482fdd98eec8fa14532a5dba58e533a85ea06d00",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 4.145.2-ls10 Build-date:- 2026-11-19T21:54:17Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble@sha256:5625688e073ff0f6795f3f5e3687c4f4ab313dd4881b1964627094e5ac12c4ee",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "4.145.2",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-19T21:54:17Z",
+   "org.opencontainers.image.description": "Code-server is VS Code running on a remote server, accessible through the browser.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-code-server",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "f91ec372fb286b0b636f9a0dd4bcb5aa0320b2b2",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-code-server",
+   "org.opencontainers.image.title": "Code-server",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-code-server/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "4.145.2-ls10"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/config",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "8443/tcp"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-ubuntu:noble\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG CODE_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment settings\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** install runtime dependencies ****\" && \\\n  apt-get update && \\\n  apt-get install -y \\\n    git \\\n    libatomic1 \\\n    nano \\\n    net-tools \\\n    sudo && \\\n  echo \"**** install code-server ****\" && \\\n  if [ -z ${CODE_RELEASE+x} ]; then \\\n    CODE_RELEASE=$(curl -sX GET https://api.github.com/repos/coder/code-server/releases/latest \\\n      | jq -r '.tag_name' | sed 's|^v||'); \\\n  fi && \\\n  mkdir -p /app/code-server && \\\n  curl -o \\\n    /tmp/code-server.tar.gz -L \\\n    \"https://github.com/coder/code-server/releases/download/v${CODE_RELEASE}/code-server-${CODE_RELEASE}-linux-amd64.tar.gz\" && \\\n  tar xf /tmp/code-server.tar.gz -C \\\n    /app/code-server --strip-components=1 && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  apt-get clean && \\\n  rm -rf \\\n    /config/* \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/*\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 8443\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-ubuntu:arm64v8-noble\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG CODE_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\n# environment settings\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** install runtime dependencies ****\" && \\\n  apt-get update && \\\n  apt-get install -y \\\n    git \\\n    libatomic1 \\\n    nano \\\n    net-tools \\\n    sudo && \\\n  echo \"**** install code-server ****\" && \\\n  if [ -z ${CODE_RELEASE+x} ]; then \\\n    CODE_RELEASE=$(curl -sX GET https://api.github.com/repos/coder/code-server/releases/latest \\\n      | jq -r '.tag_name' | sed 's|^v||'); \\\n  fi && \\\n  mkdir -p /app/code-server && \\\n  curl -o \\\n    /tmp/code-server.tar.gz -L \\\n    \"https://github.com/coder/code-server/releases/download/v${CODE_RELEASE}/code-server-${CODE_RELEASE}-linux-arm64.tar.gz\" && \\\n  tar xf /tmp/code-server.tar.gz -C \\\n    /app/code-server --strip-components=1 && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** clean up ****\" && \\\n  apt-get clean && \\\n  rm -rf \\\n    /config/* \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/*\n\n# add local files\nCOPY /root /\n\n# ports and volumes\nEXPOSE 8443\n"
+  },
+  "init_graph": {
+   "d2": "\"code-server:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-config -> init-code-server\n  init-os-end -> init-config\n  init-code-server -> init-config-end\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-code-server\n  svc-code-server -> legacy-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"baseimage-ubuntu:noble\"\n}\n\"code-server:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-code-server",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p /config/{extensions,data,workspace,.ssh}\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]] && [[ -z ${LSIO_READ_ONLY_FS} ]]; then\n    if [[ -n \"${SUDO_PASSWORD}\" ]] || [[ -n \"${SUDO_PASSWORD_HASH}\" ]]; then\n        echo \"setting up sudo access\"\n        if ! grep -q 'abc' /etc/sudoers; then\n            echo \"adding abc to sudoers\"\n            echo \"abc ALL=(ALL:ALL) ALL\" >> /etc/sudoers\n        fi\n        if [[ -n \"${SUDO_PASSWORD_HASH}\" ]]; then\n            echo \"setting sudo password using sudo password hash\"\n            sed -i \"s|^abc:\\!:|abc:${SUDO_PASSWORD_HASH}:|\" /etc/shadow\n        else\n            echo \"setting sudo password using SUDO_PASSWORD env var\"\n            echo -e \"${SUDO_PASSWORD}\\n${SUDO_PASSWORD}\" | passwd abc\n        fi\n    fi\nfi\n\nif [[ ! -f /config/.bashrc ]]; then\n    cp /root/.bashrc /config/.bashrc\nfi\n\nif [[ ! -f /config/.profile ]]; then\n    cp /root/.profile /config/.profile\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    # fix permissions (ignore contents of workspace)\n    PUID=${PUID:-911}\n    if [[ ! \"$(stat -c %u /config/.profile)\" == \"${PUID}\" ]]; then\n        echo \"Change in ownership or new install detected, please be patient while we chown existing files\"\n        echo \"This could take some time\"\n        find /config -path \"/config/workspace\" -prune -o -exec lsiown abc:abc {} +\n        lsiown abc:abc /config/workspace\n    fi\n    chmod 700 /config/.ssh\n    if [[ -n \"$(ls -A /config/.ssh)\" ]]; then\n        find /config/.ssh/ -type d -exec chmod 700 '{}' \\;\n        find /config/.ssh/ -type f -exec chmod 600 '{}' \\;\n        find /config/.ssh/ -type f -iname '*.pub' -exec chmod 644 '{}' \\;\n    fi\nfi\n"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-code-server",
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-code-server",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -n \"${PASSWORD}\" ]] || [[ -n \"${HASHED_PASSWORD}\" ]]; then\n    AUTH=\"password\"\nelse\n    AUTH=\"none\"\n    echo \"starting with no password\"\nfi\n\nif [[ -z ${PROXY_DOMAIN+x} ]]; then\n    PROXY_DOMAIN_ARG=\"\"\nelse\n    PROXY_DOMAIN_ARG=\"--proxy-domain=${PROXY_DOMAIN}\"\nfi\n\nif [[ -z ${PWA_APPNAME} ]]; then\n    PWA_APPNAME=\"code-server\"\nfi\n\nif test -f /proc/net/if_inet6; then\n    BIND_ADDR=\"[::]:8443\"\nelse\n    BIND_ADDR=\"0.0.0.0:8443\"\nfi\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z 127.0.0.1 8443\" \\\n            s6-setuidgid abc \\\n                /app/code-server/bin/code-server \\\n                    --bind-addr \"${BIND_ADDR}\" \\\n                    --user-data-dir /config/data \\\n                    --extensions-dir /config/extensions \\\n                    --disable-telemetry \\\n                    --auth \"${AUTH}\" \\\n                    --app-name \"${PWA_APPNAME}\" \\\n                    \"${PROXY_DOMAIN_ARG}\" \\\n                    \"${DEFAULT_WORKSPACE:-/config/workspace}\"\nelse\n    exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z 127.0.0.1 8443\" \\\n            /app/code-server/bin/code-server \\\n                --bind-addr \"${BIND_ADDR}\" \\\n                --user-data-dir /config/data \\\n                --extensions-dir /config/extensions \\\n                --disable-telemetry \\\n                --auth \"${AUTH}\" \\\n                --app-name \"${PWA_APPNAME}\" \\\n                \"${PROXY_DOMAIN_ARG}\" \\\n                \"${DEFAULT_WORKSPACE:-/config/workspace}\"\nfi\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 550,
+    "distro": "Ubuntu 24.04.5 LTS",
+    "hash": "01eeef0d",
+    "by_type": {
+     "npm": 374,
+     "dotnet": 4,
+     "deb": 171,
+     "binary": 1
+    }
+   },
+   "arm64": {
+    "count": 550,
+    "distro": "Ubuntu 24.04.5 LTS",
+    "hash": "392e3d6b",
+    "by_type": {
+     "npm": 374,
+     "dotnet": 4,
+     "deb": 171,
+     "binary": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/code-server/builds/4.145.2-ls10/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-code-server/compare/4.145.2-ls9...4.145.2-ls10",
+   "upstream": "Code v1.145.2\r\n\r\n### Changed\r\n\r\n- Update to Code 1.145.2\r\n",
+   "upstream_url": "https://github.com/coder/code-server/releases/tag/v4.145.2"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 104959,
+    "sha256": "f0cc1450363bcd542f1cdf756edf5038ab7dff0dffbc9c12ac8c7e318ffc74d4",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 7136,
+    "sha256": "a8213f16772ac8e2533430d2b50a0ad83c169490bc783fcb858b17f67aeb3c09",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 112419,
+    "sha256": "e3cf7b17c4c2eb06d82be1f260eefc5a5a608ac0610f758c8e8ed435b7fdf3df",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2588,
+    "sha256": "2a65f81b2d04a90219bd6c10fbe0cb7fccdca027824bd7760538fa17ec172c9b",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 220682,
+    "sha256": "696073ebfecbe9adefef7e9fc3bf1d1cc64cca980cf4ad1f6ef370edcf1ec1f0",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 58320,
+    "sha256": "96321aa5f64825e729cf17db201c7c7fc7177bfcf3ae848d227c3b16a091f60d",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 104868,
+    "sha256": "73162ef82f4c6057b24883684d65c9001b2973c2a9963f38c51352b4c55232db",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 7153,
+    "sha256": "aeb863b968384fd02c6e91ccfbf18bd9ba6330902c62c42395907a8eefaf3334",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 111640,
+    "sha256": "0ee15b0e1b4d2acb476ce7de04ccc9e9586195da83300e5d5405a08de1762468",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2590,
+    "sha256": "d72ed882322338ee34caa816b855042cb961e2f0d282151a0ebb0221a047a97a",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 218894,
+    "sha256": "78243214076f15b97076cc657f674d4117f3fca07e2a0f3c078ec1964512c2e7",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 58320,
+    "sha256": "ebc2b0bfd9054ddc87b0e173d92e3497c7f75a41416e855867b4f1e63521595c",
+    "url": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 44623302165,
+   "run_url": "https://github.com/linuxserver-playground/docker-code-server/actions/runs/44623302165",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/code-server",
+   "tags": [
+    "latest",
+    "4.145.2-ls10",
+    "version-4.145.2",
+    "4.145.2",
+    "amd64-latest",
+    "amd64-4.145.2-ls10",
+    "amd64-version-4.145.2",
+    "amd64-4.145.2",
+    "arm64v8-latest",
+    "arm64v8-4.145.2-ls10",
+    "arm64v8-version-4.145.2",
+    "arm64v8-4.145.2"
+   ]
+  }
+ },
+ "diff": {
+  "image": "code-server",
+  "branch": "master",
+  "tag": "4.145.2-ls10",
+  "previous_tag": "4.145.2-ls9",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (6a7474e → f91ec37): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "4.145.2",
+   "to": "4.145.2",
+   "changed": false
+  },
+  "commit": {
+   "from": "6a7474e7a024c22a71f7c688fd7d2bc3660a4bc5",
+   "to": "f91ec372fb286b0b636f9a0dd4bcb5aa0320b2b2",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-code-server/compare/6a7474e7a024c22a71f7c688fd7d2bc3660a4bc5...f91ec372fb286b0b636f9a0dd4bcb5aa0320b2b2",
+   "commits": [
+    {
+     "sha": "f91ec372fb286b0b636f9a0dd4bcb5aa0320b2b2",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-12T22:01:54Z",
+     "url": "https://github.com/linuxserver-playground/docker-code-server/commit/f91ec372fb286b0b636f9a0dd4bcb5aa0320b2b2",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+    "digest": "sha256:f3184f0873fff9a934155ac787603c2d43c1b7fc45bffc9357136ad77d3dc8e3"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:noble",
+    "digest": "sha256:5625688e073ff0f6795f3f5e3687c4f4ab313dd4881b1964627094e5ac12c4ee"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 313745244,
+    "to": 319843879,
+    "delta": 6098635
+   },
+   "arm64": {
+    "from": 313676109,
+    "to": 319538956,
+    "delta": 5862847
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libc-bin",
+       "from": "2.39-0ubuntu8.9",
+       "to": "2.39-0ubuntu8.12",
+       "purl": "pkg:deb/ubuntu/libc-bin@2.39-0ubuntu8.12?arch=amd64&distro=ubuntu-24.04&upstream=glibc"
+      },
+      {
+       "name": "libc6",
+       "from": "2.39-0ubuntu8.9",
+       "to": "2.39-0ubuntu8.12",
+       "purl": "pkg:deb/ubuntu/libc6@2.39-0ubuntu8.12?arch=amd64&distro=ubuntu-24.04&upstream=glibc"
+      },
+      {
+       "name": "locales",
+       "from": "2.39-0ubuntu8.9",
+       "to": "2.39-0ubuntu8.12",
+       "purl": "pkg:deb/ubuntu/locales@2.39-0ubuntu8.12?arch=all&distro=ubuntu-24.04&upstream=glibc"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libc-bin",
+       "from": "2.39-0ubuntu8.9",
+       "to": "2.39-0ubuntu8.12",
+       "purl": "pkg:deb/ubuntu/libc-bin@2.39-0ubuntu8.12?arch=arm64&distro=ubuntu-24.04&upstream=glibc"
+      },
+      {
+       "name": "libc6",
+       "from": "2.39-0ubuntu8.9",
+       "to": "2.39-0ubuntu8.12",
+       "purl": "pkg:deb/ubuntu/libc6@2.39-0ubuntu8.12?arch=arm64&distro=ubuntu-24.04&upstream=glibc"
+      },
+      {
+       "name": "locales",
+       "from": "2.39-0ubuntu8.9",
+       "to": "2.39-0ubuntu8.12",
+       "purl": "pkg:deb/ubuntu/locales@2.39-0ubuntu8.12?arch=all&distro=ubuntu-24.04&upstream=glibc"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 6,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:a99cfbc35bdb5779c7a53590b44467ab0c87e65cfe38390f129d567d9e953606",
+    "diff_id": "sha256:a7ab4e1aa16cfda1148d4725e4d0e67a953c38f6437282d66ee803794f95c817",
+    "size": 33033116,
+    "uncompressed_size": 83225986,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:ddcecfbe88327e6dd1e8ba9b66c04a0c644de1ab51e085241304b19a9654becf",
+    "diff_id": "sha256:5079200f3c26a2a830b5ca0a96ef11b4c66092297ba433a4cdd191a65adb513c",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:a406bda1af3ac379f17bc33c771ef9d737ed5fece622b28b38553d9042a1809b",
+    "diff_id": "sha256:cdeebfa317ef993f1fbd5ed1b23381b7af6927a85acbfa993fad207ae370bcaa",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:06543b087af5abf4e5b8760c664bdba39e3f80b6b4a419f6295f15e8844a76c4",
+    "diff_id": "sha256:16772aa49c811929482d58645924431d1775d8b0aa61f3183b8ae1a4170031de",
+    "size": 429,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:6ae3c7ed2380c106f0fe6aad175964a880f5827d98c58ef59956f84d263444a3",
+    "diff_id": "sha256:af39297143ec44a250e96fcd99862d3693fed2c9bcc931d6fccac6bf7309a53d",
+    "size": 275,
+    "uncompressed_size": 836,
+    "created_by": "COPY sources.list /etc/apt/",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:8ce156ed097ed16da50e1934be072f4161b93a1f572eef95876481fbaf8097e4",
+    "diff_id": "sha256:8d39c82a000d28bfec5fa9439500a594197d5f99a52337332fd9c12201ee105f",
+    "size": 20892716,
+    "uncompressed_size": 54960212,
+    "created_by": "RUN |7 BUILD_DATE=2026-11-16T03:14:39Z VERSION=a084ed68-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   rm -f /etc/apt/sources.list.d/ubuntu.sources &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:a33f4434bf448d44e175abf19d56f1ecd2a5c1d6b1303a2bcee94d2476918c49",
+    "diff_id": "sha256:273d88938075e10494d6ca90a1ffec2addc0a997f3f92652e7defb021a03d26f",
+    "size": 4636,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:f2314288035cba34f6e5eea5dbb8ca51c324c20d31d8b176511ee239885507ad",
+    "diff_id": "sha256:05c087bb8ca24d7f10deaa28baf728f0057e40dcf312fe0da294a486471dda4c",
+    "size": 265902621,
+    "uncompressed_size": 789683231,
+    "created_by": "RUN |4 BUILD_DATE=2026-11-19T21:54:17Z VERSION=4.145.2-ls10 CODE_RELEASE=4.145.2 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** install runtime dependencies ****\" &&   apt-get update &&   apt-get install -y     git     libatomic1     nano     net-tools     sudo &&   echo \"**** install code-server ****\" &&   if [ -z ${CODE_RELEASE+x} ]; then     CODE_RELEASE=$(curl -sX GET https://api.github.com/repos/coder/code-server/releases/latest       | jq -r '.tag_name' | sed 's|^v||');   fi &&   mkdir -p /app/code-server &&   curl -o     /tmp/code-server.tar.gz -L     \"https://github.com/coder/code-server/releases/download/v${CODE_RELEASE}/code-server-${CODE_RELEASE}-linux-amd64.tar.gz\" &&   tar xf /tmp/code-server.tar.gz -C     /app/code-server --strip-components=1 &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   apt-get clean &&   rm -rf     /config/*     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*",
+    "dockerfile_lines": [
+     18,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:19a716f526a55005e3d48e30535f0727ff46c6de948e1506b76e7a5225bc6e4d",
+    "diff_id": "sha256:4ac6a9e8fc3c786e403b787860685c2ca7b8bd0cd5779696fbcc4b9477c478e7",
+    "size": 1785,
+    "uncompressed_size": 3631,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     48,
+     48
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:12b3f15ca013d3004c9b9389eb40e942566c90c54b614b2da8c2152795a1ec5f",
+    "diff_id": "sha256:c06419bfeac63e8f3ebc9579b4bb162eb7c1e158cf872df1234995c3b9b4a37c",
+    "size": 32909461,
+    "uncompressed_size": 110434556,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:f3dad2851a45452fd022fe553cdd1eef51676cf7ed8b54b9f9defbcfbac19aad",
+    "diff_id": "sha256:413184881bc4d7a2c7ef605adf8a4133d4f7343632cbd812c6c8b4e0aebce12b",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:bcc1cffa0e6b20c82f6b4427215e915f84a5ecadef19073517162a06d543cd8c",
+    "diff_id": "sha256:d5fe76ebd07cada6eb49153ae3b0093441530419e1ec5dada3a5fa6ffff586b2",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:e5f6cbab606ba7e9a28bb741a807de8968eb923b8dca7e2cc4ec16d90e95e495",
+    "diff_id": "sha256:d551f5ec13e6e8d70277177fde6d41793a162d663d06509260b409f4f7ccba8f",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:712e011fa3dec0cfe53fd8fa72e49ac0f3b6f8bf2580f4410b07fd9a073a4841",
+    "diff_id": "sha256:9d4f6fadde9daf7c1fc74511c1d8665f350eb89a3f13f669959a4dd255949ee7",
+    "size": 273,
+    "uncompressed_size": 884,
+    "created_by": "COPY sources.list.arm /etc/apt/sources.list",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:c19a945b979578bc449f4f05b4f736dbb591b082bb43d157b3ed892b5b8df9e5",
+    "diff_id": "sha256:b29561e1e750901e665d297bd79c580d7c28e10ccb38479ba21ddafd809018a8",
+    "size": 20603399,
+    "uncompressed_size": 66768070,
+    "created_by": "RUN |7 BUILD_DATE=2026-11-16T03:14:39Z VERSION=a084ed68-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   rm -f /etc/apt/sources.list.d/ubuntu.sources &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b2fc3b53d354af888c1ad109a95bba2033ed00bdd2758cb31a71740aa198d1f1",
+    "diff_id": "sha256:70e56003b87368f79e4c0cc53cb48a7d23fa7118d79a1dc751724eb9f9b48fc6",
+    "size": 4640,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:900c97a195836206dd5997ca7c831f91bcb2843c3a055cc508afb630db44c5a8",
+    "diff_id": "sha256:2d30c31e9945def71d2ec579d120e73ce85bbfa09ffcc1c2f41718fd42da22c0",
+    "size": 266010670,
+    "uncompressed_size": 758202578,
+    "created_by": "RUN |4 BUILD_DATE=2026-11-19T21:54:17Z VERSION=4.145.2-ls10 CODE_RELEASE=4.145.2 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** install runtime dependencies ****\" &&   apt-get update &&   apt-get install -y     git     libatomic1     nano     net-tools     sudo &&   echo \"**** install code-server ****\" &&   if [ -z ${CODE_RELEASE+x} ]; then     CODE_RELEASE=$(curl -sX GET https://api.github.com/repos/coder/code-server/releases/latest       | jq -r '.tag_name' | sed 's|^v||');   fi &&   mkdir -p /app/code-server &&   curl -o     /tmp/code-server.tar.gz -L     \"https://github.com/coder/code-server/releases/download/v${CODE_RELEASE}/code-server-${CODE_RELEASE}-linux-arm64.tar.gz\" &&   tar xf /tmp/code-server.tar.gz -C     /app/code-server --strip-components=1 &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** clean up ****\" &&   apt-get clean &&   rm -rf     /config/*     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*",
+    "dockerfile_lines": [
+     18,
+     45
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:95696bc0f1514e1d8f6948e689254b35c999c068b26583f05643aa88090f827b",
+    "diff_id": "sha256:21406aa992d516bc8a641ffec8bbf0d01eadeefe6916bc7fb099dadd8d688128",
+    "size": 1785,
+    "uncompressed_size": 3631,
+    "created_by": "COPY /root /",
+    "dockerfile_lines": [
+     48,
+     48
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "code-server",
+  "tag": "4.145.2-ls10",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/code-server/builds/4.145.2-ls10/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.009,
+    "listening_ports": [
+     "8443/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 216350720,
+    "pids": 15,
+    "tarball": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "8443/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 197103616,
+    "pids": 15,
+    "tarball": "https://github.com/linuxserver-playground/docker-code-server/releases/download/4.145.2-ls10/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-code-server/builds/4.145.2-ls10/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "code-server",
+    "tag": "amd64-f91ec37-44623302165",
+    "arch": "amd64",
+    "started": "2026-11-19T21:58:48Z",
+    "finished": "2026-11-19T21:59:13Z",
+    "success": true,
+    "runner": "35ce5f5bf0f3",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-code-server, svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8443/tcp",
+      "seconds": 0.048
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8443/ after 0.2s",
+      "seconds": 0.209
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "550 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "550 packages: syft JSON 104959 bytes gzipped, SPDX for the image attestation 961017 bytes",
+      "seconds": 0.189
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2637 dirs, 12772 files (911502879 bytes), 1377 symlinks, 3 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.08s, total 0.15s",
+      "seconds": 0.237
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.913
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.03
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8443/",
+      "seconds": 11.675
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "15 pids, tcp [8443], rss 216350720 bytes",
+      "seconds": 0.4
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 216350720,
+     "pids": 15,
+     "listening_tcp": [
+      8443
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-code-server",
+      "svc-cron"
+     ],
+     "changed_paths": 242
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "code-server",
+    "tag": "arm64-f91ec37-44623302165",
+    "arch": "arm64",
+    "started": "2026-11-19T21:56:18Z",
+    "finished": "2026-11-19T21:56:43Z",
+    "success": true,
+    "runner": "5d9ef4084692",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-code-server, svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8443/tcp",
+      "seconds": 0.045
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8443/ after 0.3s",
+      "seconds": 0.28
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Node.js; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "550 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "550 packages: syft JSON 104868 bytes gzipped, SPDX for the image attestation 961069 bytes",
+      "seconds": 0.242
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "2639 dirs, 12781 files (908712536 bytes), 1374 symlinks, 3 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.11s, total 0.18s",
+      "seconds": 0.321
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.536
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.052
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8443/",
+      "seconds": 12.014
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "15 pids, tcp [8443], rss 197103616 bytes",
+      "seconds": 0.514
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 197103616,
+     "pids": 15,
+     "listening_tcp": [
+      8443
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-code-server",
+      "svc-cron"
+     ],
+     "changed_paths": 242
+    }
+   }
+  }
+ }
+}

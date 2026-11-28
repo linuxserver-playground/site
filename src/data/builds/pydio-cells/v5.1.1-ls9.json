@@ -1,0 +1,1025 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "pydio-cells",
+  "repository": "linuxserver-playground/docker-pydio-cells",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v5.1.1",
+   "upstream_clean": "v5.1.1",
+   "semver": "5.1.1",
+   "ls_build": 9,
+   "tag": "v5.1.1-ls9",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v5.1.1-ls9",
+    "version-v5.1.1",
+    "5.1.1",
+    "amd64-latest",
+    "amd64-v5.1.1-ls9",
+    "amd64-version-v5.1.1",
+    "amd64-5.1.1",
+    "arm64v8-latest",
+    "arm64v8-v5.1.1-ls9",
+    "arm64v8-version-v5.1.1",
+    "arm64v8-5.1.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/pydio/cells/releases/tag/v5.1.1"
+  },
+  "commit": "bdfcdd9e8b178cbc2c4f96172d69045b99f70cef",
+  "created": "2026-11-27T09:28:22Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v5.1.1-ls8",
+   "release_url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/tag/v5.1.1-ls8"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:9c7d0c9a503ff7deddf92621de1b54f0a04ebbfec481cc96844d09b53e04fde3"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:139a2a66887cc16e96eb27f9e87031d316afb01c7b02873dff8906720181863e",
+    "size": 154622893,
+    "uncompressed_size": 367052668,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 259
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:6e2ebc926b834935fb120c49329ed53a8cfc80d231fc195750b11c50175211b3",
+    "size": 146738383,
+    "uncompressed_size": 363393509,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 194
+   }
+  ],
+  "index_digest": "sha256:36ade5f396fae4bdfaa69ec49bf4aaac5c8e382cecd97eb879cf55c9c348ce1c",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v5.1.1-ls9 Build-date:- 2026-11-27T09:20:12Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:9c7d0c9a503ff7deddf92621de1b54f0a04ebbfec481cc96844d09b53e04fde3",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v5.1.1",
+   "maintainer": "aptalca",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-27T09:20:12Z",
+   "org.opencontainers.image.description": "Pydio-cells is the nextgen file sharing platform for organizations.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-pydio-cells",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "bdfcdd9e8b178cbc2c4f96172d69045b99f70cef",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-pydio-cells",
+   "org.opencontainers.image.title": "Pydio-cells",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-pydio-cells/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v5.1.1-ls9"
+  },
+  "config": {
+   "env": [
+    "PATH=/app/:/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "CELLS_WORKING_DIR=/config",
+    "GOPATH=/tmp"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:edge AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\nARG CELLS_RELEASE\n\nENV \\\n  HOME=\"/config\" \\\n  CELLS_WORKING_DIR=\"/config\" \\\n  GOPATH=\"/tmp\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    go \\\n    openssl && \\\n  echo \"**** fetch source code ****\" && \\\n  mkdir -p \\\n    /tmp/src/github.com/pydio/cells && \\\n  if [ -z ${CELLS_RELEASE+x} ]; then \\\n    CELLS_RELEASE=$(curl -sX GET https://api.github.com/repos/pydio/cells/releases \\\n      | jq -r '.[] | select(.prerelease != true) | .tag_name' \\\n      | sort -rV | head -1); \\\n  fi && \\\n  curl -o \\\n    /tmp/cells-src.tar.gz -L \\\n    https://github.com/pydio/cells/archive/${CELLS_RELEASE}.tar.gz && \\\n  tar xf \\\n    /tmp/cells-src.tar.gz -C \\\n    /tmp/src/github.com/pydio/cells --strip-components=1 && \\\n  echo \"**** compile cells  ****\" && \\\n  cd /tmp/src/github.com/pydio/cells && \\\n  GOARCH=amd64 GOOS=linux go build -trimpath \\\n    -ldflags \"\\\n    -X github.com/pydio/cells/v4/common.version=${CELLS_RELEASE:1} \\\n    -X github.com/pydio/cells/v4/common.BuildStamp=${BUILD_DATE} \\\n    -X github.com/pydio/cells/v4/common.BuildRevision=${VERSION}\" \\\n    -o /app/cells -x . && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    \"${HOME}\"/.cache \\\n    \"${HOME}\"/go\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\nENV \\\n  HOME=\"/config\" \\\n  CELLS_WORKING_DIR=\"/config\" \\\n  GOPATH=\"/tmp\" \\\n  PATH=/app/:$PATH\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    openssl && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\nCOPY --from=buildstage /app/cells /app/\n\nCOPY root/ /\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-edge AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\nARG CELLS_RELEASE\n\nENV \\\n  HOME=\"/config\" \\\n  CELLS_WORKING_DIR=\"/config\" \\\n  GOPATH=\"/tmp\"\n\nRUN \\\n  echo \"**** install build packages ****\" && \\\n  apk add --no-cache --virtual=build-dependencies \\\n    build-base \\\n    go \\\n    openssl && \\\n  echo \"**** fetch source code ****\" && \\\n  mkdir -p \\\n    /tmp/src/github.com/pydio/cells && \\\n  if [ -z ${CELLS_RELEASE+x} ]; then \\\n    CELLS_RELEASE=$(curl -sX GET https://api.github.com/repos/pydio/cells/releases \\\n      | jq -r '.[] | select(.prerelease != true) | .tag_name' \\\n      | sort -rV | head -1); \\\n  fi && \\\n  curl -o \\\n    /tmp/cells-src.tar.gz -L \\\n    https://github.com/pydio/cells/archive/${CELLS_RELEASE}.tar.gz && \\\n  tar xf \\\n    /tmp/cells-src.tar.gz -C \\\n    /tmp/src/github.com/pydio/cells --strip-components=1 && \\\n  echo \"**** compile cells  ****\" && \\\n  cd /tmp/src/github.com/pydio/cells && \\\n  GOARCH=arm64 GOOS=linux go build -trimpath \\\n    -ldflags \"\\\n    -X github.com/pydio/cells/v4/common.version=${CELLS_RELEASE:1} \\\n    -X github.com/pydio/cells/v4/common.BuildStamp=${BUILD_DATE} \\\n    -X github.com/pydio/cells/v4/common.BuildRevision=${VERSION}\" \\\n    -o /app/cells -x . && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    /tmp/* \\\n    \"${HOME}\"/.cache \\\n    \"${HOME}\"/go\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"aptalca\"\n\nENV \\\n  HOME=\"/config\" \\\n  CELLS_WORKING_DIR=\"/config\" \\\n  GOPATH=\"/tmp\" \\\n  PATH=/app/:$PATH\n\nRUN \\\n  echo \"**** install runtime packages ****\" && \\\n  apk add --no-cache \\\n    openssl && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\nCOPY --from=buildstage /app/cells /app/\n\nCOPY root/ /\n"
+  },
+  "init_graph": {
+   "d2": "\"pydio-cells:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-pydio-cells-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-pydio-cells-config\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-pydio-cells\n  svc-pydio-cells -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"pydio-cells:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-pydio-cells-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-pydio-cells-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p /config/keys\nSERVER_IP=${SERVER_IP:-0.0.0.0}\nif [[ -f \"/config/keys/cert.crt\" ]] && openssl x509 -in /config/keys/cert.crt -noout -text | grep -q \"$SERVER_IP\"; then\n    echo \"using existing self signed cert\"\nelse\n    echo \"generating self signed cert with SAN $SERVER_IP\"\n    openssl req -new -x509 -days 3650 -nodes -out /config/keys/cert.crt -keyout /config/keys/cert.key -extensions 'v3_req' \\\n        -config <(printf \"[req]\\nprompt=no\\ndistinguished_name=all_the_dn_details\\nreq_extensions=v3_req\\n[all_the_dn_details]\\nC=US\\nST=CA\\nL=Carlsbad\\nO=Linuxserver.io\\nOU=LSIO Server\\nCN=*\\n[v3_req]\\nsubjectAltName=DNS:pydio-cells,IP:${SERVER_IP}\")\nfi\n\nif [[ -f /config/pydio.json ]]; then\n    CURRENTURL=$(jq -r '.defaults.url' /config/pydio.json)\n    if [[ \"$CURRENTURL\" != \"$EXTERNALURL\" ]]; then\n        echo \"Updating external url from environment variable.\"\n        jq  \".defaults.url = \\\"$EXTERNALURL\\\"\" /config/pydio.json > /tmp/pydio.json\n        mv /tmp/pydio.json /config/pydio.json\n    fi\nfi\n\n# permissions\nlsiown -R abc:abc \\\n    /app \\\n    /config\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-pydio-cells",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -f /config/pydio.json ]]; then\n    RUN_OPTS=\"start --log=production\"\nelse\n    RUN_OPTS=\"configure --site_bind 0.0.0.0:8080 --site_external $EXTERNALURL --tls_cert_file /config/keys/cert.crt --tls_key_file /config/keys/cert.key\"\nfi\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8080\" \\\n        s6-setuidgid abc /app/cells ${RUN_OPTS}\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 573,
+    "distro": "Alpine Linux v3.24",
+    "hash": "953c0275",
+    "by_type": {
+     "apk": 52,
+     "go-module": 521
+    }
+   },
+   "arm64": {
+    "count": 573,
+    "distro": "Alpine Linux v3.24",
+    "hash": "953c0275",
+    "by_type": {
+     "apk": 52,
+     "go-module": 521
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/pydio-cells/builds/v5.1.1-ls9/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-pydio-cells/compare/v5.1.1-ls8...v5.1.1-ls9",
+   "upstream": "# Release Notes — v5.1.1 — Performance and bug fixes\n\n---\n\n## Overview\n\nThis release adds small improvment for metadata console, caching performance, and minor bug fixes.\n\n- Fix: Enable Toggling Restrict values for TagCloud on/off [WPB-29504](https://wearezeta.atlassian.net/browse/WPB-29504).\n- Perf: PolicyGroup concurrent-safe Caching memoization [WPB-28683](https://wearezeta.atlassian.net/browse/WPB-28683).\n- Fix: Policy concurrent map in policy dao.\n- Security: Updates for dependency vulnerabilities.\n- Maintenance: Update the Go toolchain to version 1.27.3. \n## Change log\n\nYou can find [a summary of the change log here](https://github.com/pydio/cells/compare/v5.1.0...v5.1.1).",
+   "upstream_url": "https://github.com/pydio/cells/releases/tag/v5.1.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 75491,
+    "sha256": "027688215521286832712fcf84515b61c216f7132820be91029d939aa5d4f302",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4715,
+    "sha256": "0deb7f53b817b7ccb374245863dff668aae9b8268a217c7b9890bcbfc2bbf590",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 22896,
+    "sha256": "a6a9f59b99c0635606cd7af9d168c262fc989f47ebd914bce0ab62762938b1f3",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2643,
+    "sha256": "95ef202bbe7e7a81e4d87e54a0fedf23bc24eab80c445f0e503202c8fd7a3ae5",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 629820,
+    "sha256": "ea303996d8bc164b5b47b1e23abd2170216920395d321c7068f9867caaec948e",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 76342,
+    "sha256": "174f2b6ac660cdf46447668e18d0b133f5cca356200a3459860f5becd1aec634",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 75614,
+    "sha256": "9e8dfdf5253ebe627affbbe35d79ce01bdd70f062805ae9c50cccc0670f1ef85",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4715,
+    "sha256": "e21d74bacd96e34ef93d3e1cec8bedb1637152a7fdda6c64f0d9f98341db27d4",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 22664,
+    "sha256": "c6ff632f484cf44d8c66bbca99d4b0ea8bd1a6455252d87b3c8172d15be0bfc1",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2642,
+    "sha256": "0edb2189cb811b8e4b9cb3ceda9ac7615d87c1e8dea31536da587e1d1a4f78dc",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 629860,
+    "sha256": "b3ee2274100699d156dbf8d57c93f4e4123aceb8231d225578f697d277589a94",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 76342,
+    "sha256": "174f2b6ac660cdf46447668e18d0b133f5cca356200a3459860f5becd1aec634",
+    "url": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 45972776070,
+   "run_url": "https://github.com/linuxserver-playground/docker-pydio-cells/actions/runs/45972776070",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/pydio-cells",
+   "tags": [
+    "latest",
+    "v5.1.1-ls9",
+    "version-v5.1.1",
+    "5.1.1",
+    "amd64-latest",
+    "amd64-v5.1.1-ls9",
+    "amd64-version-v5.1.1",
+    "amd64-5.1.1",
+    "arm64v8-latest",
+    "arm64v8-v5.1.1-ls9",
+    "arm64v8-version-v5.1.1",
+    "arm64v8-5.1.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "pydio-cells",
+  "branch": "master",
+  "tag": "v5.1.1-ls9",
+  "previous_tag": "v5.1.1-ls8",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (11a2711 → bdfcdd9): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v5.1.1",
+   "to": "v5.1.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "11a27112e36dd1fcc54a6ef9d262cc6efe8a648b",
+   "to": "bdfcdd9e8b178cbc2c4f96172d69045b99f70cef",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-pydio-cells/compare/11a27112e36dd1fcc54a6ef9d262cc6efe8a648b...bdfcdd9e8b178cbc2c4f96172d69045b99f70cef",
+   "commits": [
+    {
+     "sha": "bdfcdd9e8b178cbc2c4f96172d69045b99f70cef",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-20T09:32:45Z",
+     "url": "https://github.com/linuxserver-playground/docker-pydio-cells/commit/bdfcdd9e8b178cbc2c4f96172d69045b99f70cef",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:812764aac8af18073bb92faed4540b64dbbe6316d1cbb6e8fee51e0c3fa943e7"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:9c7d0c9a503ff7deddf92621de1b54f0a04ebbfec481cc96844d09b53e04fde3"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 157259450,
+    "to": 154622893,
+    "delta": -2636557
+   },
+   "arm64": {
+    "from": 149687251,
+    "to": 146738383,
+    "delta": -2948868
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "shadow",
+       "from": "4.18.0-r1",
+       "to": "4.20.4-r0",
+       "purl": "pkg:apk/alpine/shadow@4.20.4-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zstd-libs",
+       "from": "1.5.7-r2",
+       "to": "1.6.0-r1",
+       "purl": "pkg:apk/alpine/zstd-libs@1.6.0-r1?arch=x86_64&distro=alpine-3.24.4&upstream=zstd"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "shadow",
+       "from": "4.18.0-r1",
+       "to": "4.20.4-r0",
+       "purl": "pkg:apk/alpine/shadow@4.20.4-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zstd-libs",
+       "from": "1.5.7-r2",
+       "to": "1.6.0-r1",
+       "purl": "pkg:apk/alpine/zstd-libs@1.6.0-r1?arch=aarch64&distro=alpine-3.24.4&upstream=zstd"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 4,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:1555b667dd5e93b5088e7022475794af63a1b26bd6d0a5888300da28184f43a6",
+    "diff_id": "sha256:b81a04081d3f3241b5ebaa072520f07426ef78c4627f12673972ce75cc14da95",
+    "size": 6266961,
+    "uncompressed_size": 13715352,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:52ad9774581b6e574ee894db088f1359de605157d5fd72100c51cbb43a715e8d",
+    "diff_id": "sha256:9ab2789a05399599b7d81c1e6f0b2e8e0481454ecb640ec908657c4d68a1643d",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:49acadac6711b40a94bbb03c13b0fd83a0d2e79b650da65b6874237b73d6e907",
+    "diff_id": "sha256:4858e704ed84087691a23e153bf88ea9dd5143dea30a97a60a98db59d1146238",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:192d850f34ba32d5c85f37f7fa1bdeee446f1ec691f992a7ad310423a63e222f",
+    "diff_id": "sha256:f6a9323354229e1e52f2d6171132db5fb537f305ad937d277ab9af2d81839e75",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:920455572fbf25e5c605a8978f6f7579dd576c61d5e0a49814a61989c65a4720",
+    "diff_id": "sha256:bc25d32e72e0d4396fc2ea70c691e138ba56a9d54b2609129a830a1d65d4168f",
+    "size": 6034633,
+    "uncompressed_size": 14236440,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-25T05:58:49Z VERSION=cc4c19f6-ls9 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:dd908985543d385fcca401e4136ce4975f2df4f19565cd29fc4ff2b398224da2",
+    "diff_id": "sha256:425e09045acde3e5a26b41fc06d1b0e0f5ca7f42a961dfcddd7dc8d7cfd5d8f8",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:393434d85874c41660c2067b6c2b48617931d50d76b16fa336e684260d4cd82f",
+    "diff_id": "sha256:c5539cde3bc93322dde3398186d3fc8df55a9da9ea1e4f1170c96aa621a2014f",
+    "size": 391346,
+    "uncompressed_size": 912850,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-27T09:20:12Z VERSION=v5.1.1-ls9 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     openssl &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     65,
+     69
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:1ea92e012ee24be0bcda98b1bda33ac1d2eb8891022e3c168e58645d9320c158",
+    "diff_id": "sha256:4e6d32c262b6ee9a88daa52db12997bbd95fa08a4a3642b36e27a7a0cc1da2de",
+    "size": 141915233,
+    "uncompressed_size": 338140134,
+    "created_by": "COPY /app/cells /app/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:ba28dcea7193fe74429624e8f682e91f8e559fcc969c3943a31ad2daf697a60e",
+    "diff_id": "sha256:800ad2cbbb5345ba6380ec4978ef0544ed11ee4dae9c5411a2b7186679dd524e",
+    "size": 1367,
+    "uncompressed_size": 1676,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     73,
+     73
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:6b57b01e2746ceb662a9cdfddf325d2030822d67fc05bc4007e049b3055a0505",
+    "diff_id": "sha256:30cc532f6a1888aefb9c156987451627050a58714beb2e29d37a554c785dfd82",
+    "size": 7083798,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:19d1c10c5c7fb6d6fd7dc683c593769b0380e38781dbb79e89387d7c738b27aa",
+    "diff_id": "sha256:494d5c9dddeb568db0890f63dc303243c2e94ac0014f171ccb29f48bf6f85a3e",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:eb09c3cd3a5bf39bf062756de52e15f3fd91a7857cd3308987f22efa3a3cb232",
+    "diff_id": "sha256:14ff9c94887cab1b2c0ad2d9543474960221b248398b7fa6fb015bf59303c551",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:5896007315696f8414f541d64e00611a2afeb45b5d321e0688b751dc53b4b9d0",
+    "diff_id": "sha256:106d37760d0cf168c0790a1e71201f9f93dbf3b244617c93fa6ad57726ae7918",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:76ca7e40d52aa24d7cfa791e62a3f89d5254af1586c8c6aacde7de26a28d4998",
+    "diff_id": "sha256:d1ba0db396e4b4ec548f31bbf3fbaa009c94507b28d1616b4be82ed44023ce20",
+    "size": 6257826,
+    "uncompressed_size": 21085915,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-25T05:58:49Z VERSION=cc4c19f6-ls9 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:c68164c92482b4a7b83d370f86a4d70f44f20a28211dd25d86efb297640b4e2c",
+    "diff_id": "sha256:dd71e2f86b45bf2e55ef53a5e4386f7937408f15ce275cecfd26a4c8265d01ad",
+    "size": 4629,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:339d1986fbaa648b36f9df77abc8bcdb66a521b40415bec3b0b18c1f797830bc",
+    "diff_id": "sha256:35e1bfea829aae72f1ad72f84a8cee72cc82910fe5475930c82ea4d95fb2004e",
+    "size": 381204,
+    "uncompressed_size": 912376,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-27T09:20:12Z VERSION=v5.1.1-ls9 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     openssl &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     65,
+     69
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:828907a9d559d1c82f8e81434b861572db44651224c5cdc8e333bf6411ab215f",
+    "diff_id": "sha256:0304142fa35180eace936f1246489cb852fa6cc63631480bfe4a1a68f67ede54",
+    "size": 133000831,
+    "uncompressed_size": 322804687,
+    "created_by": "COPY /app/cells /app/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:d6f9365d1917fa6ea4978548c3164aee5953c3db7c5b4177531b893c1e983e72",
+    "diff_id": "sha256:6edb8080b85098bc3de0cd1b91040f6aa8cf790f5f36fe767f6d23015d7e7953",
+    "size": 1367,
+    "uncompressed_size": 1676,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     73,
+     73
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "pydio-cells",
+  "tag": "v5.1.1-ls9",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/pydio-cells/builds/v5.1.1-ls9/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 3.015,
+    "listening_ports": [
+     "8033/tcp",
+     "8080/tcp",
+     "8080/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 187957248,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 3.017,
+    "listening_ports": [
+     "8033/tcp",
+     "8080/tcp",
+     "8080/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 180932608,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-pydio-cells/releases/download/v5.1.1-ls9/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-pydio-cells/builds/v5.1.1-ls9/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "pydio-cells",
+    "tag": "amd64-bdfcdd9-45972776070",
+    "arch": "amd64",
+    "started": "2026-11-27T09:27:08Z",
+    "finished": "2026-11-27T09:27:28Z",
+    "success": true,
+    "runner": "af0107ab966a",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.015,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.015
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-pydio-cells",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8080/tcp",
+      "seconds": 0.065
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from https://172.17.0.4:8080/ after 0.0s",
+      "seconds": 0.02
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "573 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "573 packages: syft JSON 75491 bytes gzipped, SPDX for the image attestation 785741 bytes",
+      "seconds": 0.147
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "234 dirs, 1049 files (366761195 bytes), 1196 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.03s, total 0.05s",
+      "seconds": 0.242
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.373
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.053
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of https://172.17.0.4:8080/",
+      "seconds": 11.168
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8033, 8080], rss 187957248 bytes",
+      "seconds": 0.264
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 187957248,
+     "pids": 13,
+     "listening_tcp": [
+      8033,
+      8080
+     ],
+     "listening_udp": [
+      8080
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-pydio-cells"
+     ],
+     "changed_paths": 234
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "pydio-cells",
+    "tag": "arm64-bdfcdd9-45972776070",
+    "arch": "arm64",
+    "started": "2026-11-27T09:24:33Z",
+    "finished": "2026-11-27T09:24:53Z",
+    "success": true,
+    "runner": "68cef2822893",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.017,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.017
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-pydio-cells",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8080/tcp",
+      "seconds": 0.045
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from https://172.17.0.4:8080/ after 0.0s",
+      "seconds": 0.028
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "573 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "573 packages: syft JSON 75614 bytes gzipped, SPDX for the image attestation 785793 bytes",
+      "seconds": 0.162
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "234 dirs, 1048 files (363102082 bytes), 1196 symlinks, 254 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.03s",
+      "seconds": 0.14
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.514
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.052
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of https://172.17.0.4:8080/",
+      "seconds": 11.104
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [8033, 8080], rss 180932608 bytes",
+      "seconds": 0.21
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 180932608,
+     "pids": 13,
+     "listening_tcp": [
+      8033,
+      8080
+     ],
+     "listening_udp": [
+      8080
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-pydio-cells"
+     ],
+     "changed_paths": 234
+    }
+   }
+  }
+ }
+}

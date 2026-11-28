@@ -1,0 +1,1038 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "syncthing",
+  "repository": "linuxserver-playground/docker-syncthing",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "v2.1.7",
+   "upstream_clean": "v2.1.7",
+   "semver": "2.1.7",
+   "ls_build": 7,
+   "tag": "v2.1.7-ls7",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v2.1.7-ls7",
+    "version-v2.1.7",
+    "2.1.7",
+    "amd64-latest",
+    "amd64-v2.1.7-ls7",
+    "amd64-version-v2.1.7",
+    "amd64-2.1.7",
+    "arm64v8-latest",
+    "arm64v8-v2.1.7-ls7",
+    "arm64v8-version-v2.1.7",
+    "arm64v8-2.1.7"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/syncthing/syncthing/releases/tag/v2.1.7"
+  },
+  "commit": "bd9055c29f794111143446783d179c8cf19ac7fe",
+  "created": "2026-11-27T19:53:22Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v2.1.7-ls6",
+   "release_url": "https://github.com/linuxserver-playground/docker-syncthing/releases/tag/v2.1.7-ls6"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:9c7d0c9a503ff7deddf92621de1b54f0a04ebbfec481cc96844d09b53e04fde3"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:934b024123afbc524819a2f5e4dbc08f74d1352cd1b94806065edb6a8d281547",
+    "size": 28056857,
+    "uncompressed_size": 68130093,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 64
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:8228a61d99ef4edba98114a40335ca768a34e70dfb05e90a06dc8e0a9f0b5bb0",
+    "size": 27993816,
+    "uncompressed_size": 77598922,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 72
+   }
+  ],
+  "index_digest": "sha256:2f8002a88e49110ce2b09b35cd1988746d72decb577f5778b3728ec926d2167e",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v2.1.7-ls7 Build-date:- 2026-11-27T19:47:45Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:9c7d0c9a503ff7deddf92621de1b54f0a04ebbfec481cc96844d09b53e04fde3",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v2.1.7",
+   "maintainer": "thelamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-27T19:47:45Z",
+   "org.opencontainers.image.description": "Syncthing replaces proprietary sync and cloud services with something open, trustworthy and decentralized.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-syncthing",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "bd9055c29f794111143446783d179c8cf19ac7fe",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-syncthing",
+   "org.opencontainers.image.title": "Syncthing",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-syncthing/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v2.1.7-ls7"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/config",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "21027/udp",
+    "22000/tcp",
+    "22000/udp",
+    "8384/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:edge AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# build variables\nARG SYNCTHING_RELEASE\n\nRUN \\\n echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    build-base \\\n    go\n\nRUN \\\n  echo \"**** fetch source code ****\" && \\\n  if [ -z ${SYNCTHING_RELEASE+x} ]; then \\\n    SYNCTHING_RELEASE=$(curl -sX GET \"https://api.github.com/repos/syncthing/syncthing/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/sync && \\\n  curl -o \\\n  /tmp/syncthing-src.tar.gz -L \\\n    \"https://github.com/syncthing/syncthing/archive/${SYNCTHING_RELEASE}.tar.gz\" && \\\n  tar xf \\\n  /tmp/syncthing-src.tar.gz -C \\\n    /tmp/sync --strip-components=1 && \\\n  echo \"**** compile syncthing  ****\" && \\\n  cd /tmp/sync && \\\n  go clean -modcache && \\\n  CGO_ENABLED=0 go run build.go \\\n    -no-upgrade \\\n    -version=${SYNCTHING_RELEASE} \\\n    build syncthing\n\n############## runtime stage ##############\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\n# environment settings\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** create var lib folder ****\" && \\\n  install -d -o abc -g abc \\\n    /var/lib/syncthing && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# copy files from build stage and local files\nCOPY --from=buildstage /tmp/sync/syncthing /usr/bin/\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8384 22000/tcp 22000/udp 21027/udp\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-edge AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# build variables\nARG SYNCTHING_RELEASE\n\nRUN \\\n echo \"**** install build packages ****\" && \\\n  apk add --no-cache \\\n    build-base \\\n    go\n\nRUN \\\n  echo \"**** fetch source code ****\" && \\\n  if [ -z ${SYNCTHING_RELEASE+x} ]; then \\\n    SYNCTHING_RELEASE=$(curl -sX GET \"https://api.github.com/repos/syncthing/syncthing/releases/latest\" \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p \\\n    /tmp/sync && \\\n  curl -o \\\n  /tmp/syncthing-src.tar.gz -L \\\n    \"https://github.com/syncthing/syncthing/archive/${SYNCTHING_RELEASE}.tar.gz\" && \\\n  tar xf \\\n  /tmp/syncthing-src.tar.gz -C \\\n    /tmp/sync --strip-components=1 && \\\n  echo \"**** compile syncthing  ****\" && \\\n  cd /tmp/sync && \\\n  go clean -modcache && \\\n  CGO_ENABLED=0 go run build.go \\\n    -no-upgrade \\\n    -version=${SYNCTHING_RELEASE} \\\n    build syncthing\n\n############## runtime stage ##############\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thelamer\"\n\n# environment settings\nENV HOME=\"/config\"\n\nRUN \\\n  echo \"**** create var lib folder ****\" && \\\n  install -d -o abc -g abc \\\n    /var/lib/syncthing && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version\n\n# copy files from build stage and local files\nCOPY --from=buildstage /tmp/sync/syncthing /usr/bin/\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 8384 22000/tcp 22000/udp 21027/udp\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"syncthing:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-syncthing\n  svc-syncthing -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"syncthing:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-syncthing",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 8384\" \\\n        s6-setuidgid abc syncthing \\\n        --home=/config --no-browser --no-restart \\\n        --gui-address=\"0.0.0.0:8384\"\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 119,
+    "distro": "Alpine Linux v3.24",
+    "hash": "6994253f",
+    "by_type": {
+     "apk": 51,
+     "go-module": 68
+    }
+   },
+   "arm64": {
+    "count": 119,
+    "distro": "Alpine Linux v3.24",
+    "hash": "6994253f",
+    "by_type": {
+     "apk": 51,
+     "go-module": 68
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/syncthing/builds/v2.1.7-ls7/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-syncthing/compare/v2.1.7-ls6...v2.1.7-ls7",
+   "upstream": "## What's Changed\r\n\r\nBuilt with Go 1.27.3.\r\n\r\n### Fixes\r\n* fix: handle missing max-sequence file entries by @calmh in https://github.com/syncthing/syncthing/pull/10912\r\n* fix(sqlite): avoid early garbage collection of deleted recv-enc files by @calmh in https://github.com/syncthing/syncthing/pull/10916\r\n* fix(sqlite): do not generate unbounded prepared statements (ref #10913) by @calmh in https://github.com/syncthing/syncthing/pull/10915\r\n* fix(discover): skip unnecessary identical global announce updates; obey retry-after by @calmh in https://github.com/syncthing/syncthing/pull/10918\r\n* fix(protocol): convert panics on bad data to protocol errors by @calmh in https://github.com/syncthing/syncthing/pull/10923\r\n* fix(model): verify local change before applying metadata shortcut (fixes #10924) by @calmh in https://github.com/syncthing/syncthing/pull/10925\r\n* fix(model): ensure parent ownership is copied properly (fixes #8399) by @calmh in https://github.com/syncthing/syncthing/pull/10926\r\n* fix(model): properly compare blocks when reconciling receive-only (fixes #10928) by @calmh in https://github.com/syncthing/syncthing/pull/10929\r\n### Other\r\n* build(deps): update dependencies by @calmh in https://github.com/syncthing/syncthing/pull/10917\r\n* chore(protocol): add protovalidate validation of incoming messages, reasonable limits by @calmh in https://github.com/syncthing/syncthing/pull/10838\r\n\r\n**Full Changelog**: https://github.com/syncthing/syncthing/compare/v2.1.6...v2.1.7",
+   "upstream_url": "https://github.com/syncthing/syncthing/releases/tag/v2.1.7"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 28751,
+    "sha256": "3e2b60c525d8fadc361ddd84ec30db9ad10f746f6242dfef3054e66fc67aab08",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 4731,
+    "sha256": "f141048741340cdbc90072053766919e9a9bfd25c12bc92c20fff4144079d820",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 22900,
+    "sha256": "a2e64d6a51bad3f309066c5b289cdd7803b0a1e482c272bd2ec4ee9e75a755ed",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2720,
+    "sha256": "7b3a60e6eb49b605948ffce3b1dc6c1cf5977bd1424b564ed732654e9128cbfd",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 123642,
+    "sha256": "fb052da2c2dfbcd25bea7cfa2bfee67c09effa2a890ad46a22fb4d9611135c34",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 13440,
+    "sha256": "4f564a6092f921411a10067b1e798b5ac29882c0a6c527d804ec8ff4beac68f5",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 28509,
+    "sha256": "ea211e4d69ca1167a33846543a0b49083ac753b6b812508efd6022a2df5f7372",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 4731,
+    "sha256": "5a0240a1f3c7c450ec68ab95066776db7714418e7276f54855b5c84485df7491",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 22661,
+    "sha256": "a069dd189f53be15b5f4c91fec0af2a44643cd32e2f53eaa750df5c401a9ff41",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2719,
+    "sha256": "30ac28ad07c7cfa79421621d7b7c024cc189f08b42d7ba68b54fe447875185c3",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 124658,
+    "sha256": "518530b0ad2d911e2a4ccb55cdb6d2804efc168ba3f23804b26adb9cf777337a",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 13440,
+    "sha256": "4f564a6092f921411a10067b1e798b5ac29882c0a6c527d804ec8ff4beac68f5",
+    "url": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 46059136788,
+   "run_url": "https://github.com/linuxserver-playground/docker-syncthing/actions/runs/46059136788",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/syncthing",
+   "tags": [
+    "latest",
+    "v2.1.7-ls7",
+    "version-v2.1.7",
+    "2.1.7",
+    "amd64-latest",
+    "amd64-v2.1.7-ls7",
+    "amd64-version-v2.1.7",
+    "amd64-2.1.7",
+    "arm64v8-latest",
+    "arm64v8-v2.1.7-ls7",
+    "arm64v8-version-v2.1.7",
+    "arm64v8-2.1.7"
+   ]
+  }
+ },
+ "diff": {
+  "image": "syncthing",
+  "branch": "master",
+  "tag": "v2.1.7-ls7",
+  "previous_tag": "v2.1.7-ls6",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (10db867 → bd9055c): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v2.1.7",
+   "to": "v2.1.7",
+   "changed": false
+  },
+  "commit": {
+   "from": "10db867d0a7c508cc341323dbe1f02738c3a5df8",
+   "to": "bd9055c29f794111143446783d179c8cf19ac7fe",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-syncthing/compare/10db867d0a7c508cc341323dbe1f02738c3a5df8...bd9055c29f794111143446783d179c8cf19ac7fe",
+   "commits": [
+    {
+     "sha": "bd9055c29f794111143446783d179c8cf19ac7fe",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-24T23:54:04Z",
+     "url": "https://github.com/linuxserver-playground/docker-syncthing/commit/bd9055c29f794111143446783d179c8cf19ac7fe",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:9c7d0c9a503ff7deddf92621de1b54f0a04ebbfec481cc96844d09b53e04fde3"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 28113303,
+    "to": 28056857,
+    "delta": -56446
+   },
+   "arm64": {
+    "from": 28062156,
+    "to": 27993816,
+    "delta": -68340
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "shadow",
+       "from": "4.18.0-r1",
+       "to": "4.20.4-r0",
+       "purl": "pkg:apk/alpine/shadow@4.20.4-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zstd-libs",
+       "from": "1.5.7-r2",
+       "to": "1.6.0-r1",
+       "purl": "pkg:apk/alpine/zstd-libs@1.6.0-r1?arch=x86_64&distro=alpine-3.24.4&upstream=zstd"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "shadow",
+       "from": "4.18.0-r1",
+       "to": "4.20.4-r0",
+       "purl": "pkg:apk/alpine/shadow@4.20.4-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "zstd-libs",
+       "from": "1.5.7-r2",
+       "to": "1.6.0-r1",
+       "purl": "pkg:apk/alpine/zstd-libs@1.6.0-r1?arch=aarch64&distro=alpine-3.24.4&upstream=zstd"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 4,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:1555b667dd5e93b5088e7022475794af63a1b26bd6d0a5888300da28184f43a6",
+    "diff_id": "sha256:b81a04081d3f3241b5ebaa072520f07426ef78c4627f12673972ce75cc14da95",
+    "size": 6266961,
+    "uncompressed_size": 13738493,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:52ad9774581b6e574ee894db088f1359de605157d5fd72100c51cbb43a715e8d",
+    "diff_id": "sha256:9ab2789a05399599b7d81c1e6f0b2e8e0481454ecb640ec908657c4d68a1643d",
+    "size": 1356,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:49acadac6711b40a94bbb03c13b0fd83a0d2e79b650da65b6874237b73d6e907",
+    "diff_id": "sha256:4858e704ed84087691a23e153bf88ea9dd5143dea30a97a60a98db59d1146238",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:192d850f34ba32d5c85f37f7fa1bdeee446f1ec691f992a7ad310423a63e222f",
+    "diff_id": "sha256:f6a9323354229e1e52f2d6171132db5fb537f305ad937d277ab9af2d81839e75",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:920455572fbf25e5c605a8978f6f7579dd576c61d5e0a49814a61989c65a4720",
+    "diff_id": "sha256:bc25d32e72e0d4396fc2ea70c691e138ba56a9d54b2609129a830a1d65d4168f",
+    "size": 6034633,
+    "uncompressed_size": 14250891,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-25T05:58:49Z VERSION=cc4c19f6-ls9 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:dd908985543d385fcca401e4136ce4975f2df4f19565cd29fc4ff2b398224da2",
+    "diff_id": "sha256:425e09045acde3e5a26b41fc06d1b0e0f5ca7f42a961dfcddd7dc8d7cfd5d8f8",
+    "size": 4630,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:20aea963a2335c08a833c646ebe99a12ec72be7f6af456d05d0d590bd6d0bdaa",
+    "diff_id": "sha256:873e15b969d08691e4c99bf00227fcf499d85e1e95eeff82b01a042cabdd417d",
+    "size": 249,
+    "uncompressed_size": 67,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-27T19:47:45Z VERSION=v2.1.7-ls7 /bin/sh -c echo \"**** create var lib folder ****\" &&   install -d -o abc -g abc     /var/lib/syncthing &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     52,
+     56
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:81621638cc590f89a60924381653d0f0b5a2ebb4c1f7c7733aafb309d99f0fe5",
+    "diff_id": "sha256:ecadf214612f611f9c50178b4388bc57e4deb991928ea3c6722e7116d2752042",
+    "size": 15740999,
+    "uncompressed_size": 40094052,
+    "created_by": "COPY /tmp/sync/syncthing /usr/bin/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:87188abb6d4977695bcf967d8db44c18ca09a0e34ba6391882372b8dbbaee67f",
+    "diff_id": "sha256:463f6043a54fe95a53dd55e5f397b25b12be3c580d93a5963dbacc3462d80327",
+    "size": 662,
+    "uncompressed_size": 374,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     60,
+     60
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:6b57b01e2746ceb662a9cdfddf325d2030822d67fc05bc4007e049b3055a0505",
+    "diff_id": "sha256:30cc532f6a1888aefb9c156987451627050a58714beb2e29d37a554c785dfd82",
+    "size": 7083798,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:19d1c10c5c7fb6d6fd7dc683c593769b0380e38781dbb79e89387d7c738b27aa",
+    "diff_id": "sha256:494d5c9dddeb568db0890f63dc303243c2e94ac0014f171ccb29f48bf6f85a3e",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:eb09c3cd3a5bf39bf062756de52e15f3fd91a7857cd3308987f22efa3a3cb232",
+    "diff_id": "sha256:14ff9c94887cab1b2c0ad2d9543474960221b248398b7fa6fb015bf59303c551",
+    "size": 702,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:5896007315696f8414f541d64e00611a2afeb45b5d321e0688b751dc53b4b9d0",
+    "diff_id": "sha256:106d37760d0cf168c0790a1e71201f9f93dbf3b244617c93fa6ad57726ae7918",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:76ca7e40d52aa24d7cfa791e62a3f89d5254af1586c8c6aacde7de26a28d4998",
+    "diff_id": "sha256:d1ba0db396e4b4ec548f31bbf3fbaa009c94507b28d1616b4be82ed44023ce20",
+    "size": 6257826,
+    "uncompressed_size": 21085915,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-25T05:58:49Z VERSION=cc4c19f6-ls9 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:c68164c92482b4a7b83d370f86a4d70f44f20a28211dd25d86efb297640b4e2c",
+    "diff_id": "sha256:dd71e2f86b45bf2e55ef53a5e4386f7937408f15ce275cecfd26a4c8265d01ad",
+    "size": 4629,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:193290398d82c50541f0501c8f6cc7321587f216f38c405203a17c83b2c0f47d",
+    "diff_id": "sha256:ddaf2b582342e26780d3256ffb812cfb7294136bdb0bba09b404332dd3b76805",
+    "size": 249,
+    "uncompressed_size": 67,
+    "created_by": "RUN |2 BUILD_DATE=2026-11-27T19:47:45Z VERSION=v2.1.7-ls7 /bin/sh -c echo \"**** create var lib folder ****\" &&   install -d -o abc -g abc     /var/lib/syncthing &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version",
+    "dockerfile_lines": [
+     52,
+     56
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:7e7a0228ba351a13e3fdaea2d1b56edfeabe781ae14d6e70e7aa556032946fb2",
+    "diff_id": "sha256:0c7dd2bc7befa11308bf0e5e457717fee02b110ded4e940ccd6f2d85c98cbf74",
+    "size": 14637923,
+    "uncompressed_size": 37923711,
+    "created_by": "COPY /tmp/sync/syncthing /usr/bin/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:d426426f98df86da81ad7dcbc02100d17a966fb7541416c8b52ea3888090f239",
+    "diff_id": "sha256:932704297e17c9185ce6c38715a426fa4876af2a4f80df33009f0f52610bc98f",
+    "size": 663,
+    "uncompressed_size": 374,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     60,
+     60
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "syncthing",
+  "tag": "v2.1.7-ls7",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/syncthing/builds/v2.1.7-ls7/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "8384/tcp",
+     "22000/tcp",
+     "21027/udp",
+     "22000/udp",
+     "40936/udp",
+     "41818/udp",
+     "55898/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 76308480,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/test.amd64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/amd64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/amd64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/amd64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 12,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.016,
+    "listening_ports": [
+     "8384/tcp",
+     "22000/tcp",
+     "21027/udp",
+     "22000/udp",
+     "41358/udp",
+     "53146/udp",
+     "58193/udp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 72822784,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-syncthing/releases/download/v2.1.7-ls7/test.arm64.tar.gz",
+    "files": {
+     "browser_log": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/arm64/browser.log",
+     "container_log": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/arm64/container.log",
+     "screenshot": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/arm64/screenshot.png",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-syncthing/builds/v2.1.7-ls7/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "syncthing",
+    "tag": "amd64-bd9055c-46059136788",
+    "arch": "amd64",
+    "started": "2026-11-27T19:51:41Z",
+    "finished": "2026-11-27T19:51:59Z",
+    "success": true,
+    "runner": "28d13aec986d",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-syncthing",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8384/tcp, 21027/udp, 22000/tcp, 22000/udp",
+      "seconds": 0.052
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8384/ after 0.0s",
+      "seconds": 0.002
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "119 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "119 packages: syft JSON 28751 bytes gzipped, SPDX for the image attestation 187009 bytes",
+      "seconds": 0.09
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "233 dirs, 1042 files (67892815 bytes), 1196 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.03s",
+      "seconds": 0.119
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.279
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "18 units, 1 from this image, own units from the repository",
+      "seconds": 0.034
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8384/",
+      "seconds": 10.646
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [8384, 22000], rss 76308480 bytes",
+      "seconds": 0.195
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 76308480,
+     "pids": 14,
+     "listening_tcp": [
+      8384,
+      22000
+     ],
+     "listening_udp": [
+      21027,
+      22000,
+      40936,
+      41818,
+      55898
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-syncthing"
+     ],
+     "changed_paths": 207
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "syncthing",
+    "tag": "arm64-bd9055c-46059136788",
+    "arch": "arm64",
+    "started": "2026-11-27T19:50:20Z",
+    "finished": "2026-11-27T19:50:40Z",
+    "success": true,
+    "runner": "d3d563a1b86b",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.016,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.016
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-syncthing",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 8384/tcp, 21027/udp, 22000/tcp, 22000/udp",
+      "seconds": 0.05
+     },
+     {
+      "name": "Web response",
+      "status": "PASS",
+      "message": "HTTP 200 from http://172.17.0.4:8384/ after 0.0s",
+      "seconds": 0.002
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "119 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "119 packages: syft JSON 28509 bytes gzipped, SPDX for the image attestation 187060 bytes",
+      "seconds": 0.112
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "233 dirs, 1041 files (77399293 bytes), 1196 symlinks, 254 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.02s, total 0.04s",
+      "seconds": 0.182
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.93
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "18 units, 1 from this image, own units from the repository",
+      "seconds": 0.067
+     },
+     {
+      "name": "Take screenshot",
+      "status": "PASS",
+      "message": "screenshot of http://172.17.0.4:8384/",
+      "seconds": 11.018
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [8384, 22000], rss 72822784 bytes",
+      "seconds": 0.249
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "screenshot": "screenshot.png",
+     "browser_log": "browser.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 72822784,
+     "pids": 14,
+     "listening_tcp": [
+      8384,
+      22000
+     ],
+     "listening_udp": [
+      21027,
+      22000,
+      41358,
+      53146,
+      58193
+     ],
+     "s6_services": [
+      "svc-cron",
+      "svc-syncthing"
+     ],
+     "changed_paths": 207
+    }
+   }
+  }
+ }
+}

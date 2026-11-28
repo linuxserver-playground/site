@@ -1,0 +1,1054 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "piper",
+  "repository": "linuxserver-playground/docker-piper",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "2.5.4",
+   "upstream_clean": "2.5.4",
+   "semver": "2.5.4",
+   "ls_build": 15,
+   "tag": "2.5.4-ls15",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "2.5.4-ls15",
+    "version-2.5.4",
+    "2.5.4",
+    "amd64-latest",
+    "amd64-2.5.4-ls15",
+    "amd64-version-2.5.4",
+    "amd64-2.5.4",
+    "arm64v8-latest",
+    "arm64v8-2.5.4-ls15",
+    "arm64v8-version-2.5.4",
+    "arm64v8-2.5.4"
+   ],
+   "source": "pip",
+   "source_url": "https://pypi.org/project/wyoming-piper/"
+  },
+  "commit": "f944173c808ac6e145d8f8741bc56ff1424d7414",
+  "created": "2026-11-28T05:07:08Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "2.5.4-ls14",
+   "release_url": "https://github.com/linuxserver-playground/docker-piper/releases/tag/2.5.4-ls14"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+   "digest": "sha256:a44688d5617b27712df6770f62ca32516191b2728cbfe6b08da12acff4175797"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:46132b112d2fa4b3d0f41b0291127f651d4b2767205984067c57b0d362b457ba",
+    "size": 169080630,
+    "uncompressed_size": 414487386,
+    "layers": 10,
+    "runner": "Linux-X64",
+    "build_seconds": 45
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:7863cd7a0e3fdd527313943e659b3d0e92db1f473e5da652208de4873aa815ab",
+    "size": 164149205,
+    "uncompressed_size": 425294044,
+    "layers": 10,
+    "runner": "Linux-ARM64",
+    "build_seconds": 48
+   }
+  ],
+  "index_digest": "sha256:af5ffe4edb526cd1c788526b0bb7d4d56b7d69026935bd3236055df4e04c1b51",
+  "labels": {
+   "build_version": "Linuxserver.io version:- 2.5.4-ls15 Build-date:- 2026-11-28T05:02:40Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute@sha256:a44688d5617b27712df6770f62ca32516191b2728cbfe6b08da12acff4175797",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "2.5.4",
+   "maintainer": "thespad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-28T05:02:40Z",
+   "org.opencontainers.image.description": "Piper is a fast, local neural text to speech system that sounds great and is optimized for the Raspberry Pi 4.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-piper",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "f944173c808ac6e145d8f8741bc56ff1424d7414",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-piper",
+   "org.opencontainers.image.title": "Piper",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-piper/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "2.5.4-ls15"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/root",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true",
+    "DEBIAN_FRONTEND=noninteractive",
+    "TMPDIR=/run/piper-temp"
+   ],
+   "exposed_ports": [
+    "10200/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PIPER_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nENV DEBIAN_FRONTEND=\"noninteractive\" \\\n  TMPDIR=\"/run/piper-temp\"\n\nRUN \\\n  apt-get update && \\\n  apt-get install -y --no-install-recommends \\\n    python3-venv && \\\n  if [ -z ${PIPER_VERSION+x} ]; then \\\n    PIPER_VERSION=$(curl -sL  https://pypi.python.org/pypi/wyoming-piper/json |jq -r '. | .info.version'); \\\n  fi && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/ubuntu/ \\\n    piper-tts \\\n    \"wyoming-piper==${PIPER_VERSION}\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /var/lib/apt/lists/* \\\n    /tmp/*\n\nCOPY root /\n\nVOLUME /config\n\nEXPOSE 10200\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-ubuntu:arm64v8-resolute\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG BUILD_DATE\nARG VERSION\nARG PIPER_VERSION\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nENV DEBIAN_FRONTEND=\"noninteractive\" \\\n  TMPDIR=\"/run/piper-temp\"\n\nRUN \\\n  apt-get update && \\\n  apt-get install -y --no-install-recommends \\\n    python3-venv && \\\n  if [ -z ${PIPER_VERSION+x} ]; then \\\n    PIPER_VERSION=$(curl -sL  https://pypi.python.org/pypi/wyoming-piper/json |jq -r '. | .info.version'); \\\n  fi && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/ubuntu/ \\\n    piper-tts \\\n    \"wyoming-piper==${PIPER_VERSION}\" && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  echo \"**** cleanup ****\" && \\\n  rm -rf \\\n    /var/lib/apt/lists/* \\\n    /tmp/*\n\nCOPY root /\n\nVOLUME /config\n\nEXPOSE 10200\n"
+  },
+  "init_graph": {
+   "d2": "\"piper:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-piper-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-piper-config\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-piper\n  svc-piper -> legacy-services\n}\nBase Images: {\n  \"baseimage-ubuntu:resolute\"\n}\n\"piper:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-piper-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-piper-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nmkdir -p /run/piper-temp\n\n# permissions\nlsiown -R abc:abc \\\n    /config \\\n    /run/piper-temp\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-piper",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nunset UPDATE_MODELS\n\nif [[ -z ${LOCAL_ONLY} ]]; then\n    UPDATE_MODELS=true\nfi\n\nexec \\\n    s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 10200\" \\\n        s6-setuidgid abc python3 -m wyoming_piper \\\n        --uri 'tcp://0.0.0.0:10200' \\\n        --length-scale \"${PIPER_LENGTH:-1.0}\" \\\n        --noise-scale \"${PIPER_NOISE:-0.667}\" \\\n        --noise-w \"${PIPER_NOISEW:-0.333}\" \\\n        --speaker \"${PIPER_SPEAKER:-0}\" \\\n        --voice \"${PIPER_VOICE}\" \\\n        --data-dir /config \\\n        --download-dir /config \\\n        ${UPDATE_MODELS:+--update-voices} \\\n        ${NO_STREAMING:+--no-streaming}\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 228,
+    "distro": "Ubuntu 26.04.1 LTS",
+    "hash": "82fb24bb",
+    "by_type": {
+     "python": 43,
+     "binary": 14,
+     "deb": 159,
+     "go-module": 11,
+     "UnknownPackage": 1
+    }
+   },
+   "arm64": {
+    "count": 228,
+    "distro": "Ubuntu 26.04.1 LTS",
+    "hash": "d4f99674",
+    "by_type": {
+     "python": 43,
+     "binary": 14,
+     "deb": 159,
+     "go-module": 11,
+     "UnknownPackage": 1
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/piper/builds/2.5.4-ls15/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-piper/compare/2.5.4-ls14...2.5.4-ls15",
+   "upstream": "- Update `voices.json`: add `fa_IR-magnoliasis-medium` and update the files of\n  10 re-released voices\n- Reload a Piper voice whose files changed on disk. The loaded voice was\n  cached by name only, so uploading a voice again under the same name in the\n  web UI kept speaking with the old model, and a deleted voice kept being\n  spoken, until another voice was used or the server restarted\n- Make web UI voice uploads atomic. Piper uploads wrote the config and then\n  streamed the model straight to their final paths, so a request during a large\n  upload could load a half-written model, and an interrupted upload left a\n  broken voice behind. Both files are now written under hidden temporary names\n  and renamed into place once complete. OmniVoice uploads are filled in a\n  hidden directory that is renamed into place, and hidden directories are\n  skipped when scanning reference voices",
+   "upstream_url": "https://github.com/OHF-Voice/wyoming-piper/releases/tag/v2.5.4"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 62279,
+    "sha256": "f1e5a70ad903b9bd5caa0156cfcf7579bb66cb104e57c521d17f196c35dcb04b",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 6836,
+    "sha256": "78ab12786e962744eef0e65a3ecc5b9ee9ef47cc64063951c7a6054ffad3d842",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 111911,
+    "sha256": "f9363a9fc46fe5a981445be5c7a9a558cd59a25fb09755077eef754b6e05cdd8",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2418,
+    "sha256": "8df3794542ddc1035ea00b08d39ed553422e880204827bd9bc3d28d198637fe8",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 3740,
+    "sha256": "0d99e41bb250d9f7f5c87bf779d1e642f1abe104568b1a721990f2e09950fa2a",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 23192,
+    "sha256": "3c1b4cb10d40a4d879f2297ab694186f2e042bcb32bcc80b104def7b9763b1d8",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 62024,
+    "sha256": "d4d6e1de9422444f9ae2c94a0c99e31001093cab5eba8d101c02de83588b79e0",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 6840,
+    "sha256": "27c664ee85b2b6dea9f2cf82a349be6df9151287b1ecd03ada1e9aaad3cca257",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 111170,
+    "sha256": "6d70c9d90b8b01c0c74725b8fa3a653245ef3f6ef196961996ff4f52d3b8ab86",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2417,
+    "sha256": "b867b3986c33a9bc7cf81c2c662a606c167eebdd713374696f8fb9d13c4efcba",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 3753,
+    "sha256": "647a314172df4b2a0b8c8f56486dda4dc894d1e991a0d69e3c73b22223cfe803",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 23192,
+    "sha256": "fa2e247d58b3c8ab7d8842ad7a2a3520955c5cace740b8c97e862edc72b3c67f",
+    "url": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 46110257710,
+   "run_url": "https://github.com/linuxserver-playground/docker-piper/actions/runs/46110257710",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/piper",
+   "tags": [
+    "latest",
+    "2.5.4-ls15",
+    "version-2.5.4",
+    "2.5.4",
+    "amd64-latest",
+    "amd64-2.5.4-ls15",
+    "amd64-version-2.5.4",
+    "amd64-2.5.4",
+    "arm64v8-latest",
+    "arm64v8-2.5.4-ls15",
+    "arm64v8-version-2.5.4",
+    "arm64v8-2.5.4"
+   ]
+  }
+ },
+ "diff": {
+  "image": "piper",
+  "branch": "main",
+  "tag": "2.5.4-ls15",
+  "previous_tag": "2.5.4-ls14",
+  "classification": "base",
+  "reasons": [
+   "base image digest changed",
+   "packages changed",
+   "1 commit (eee94d0 → f944173): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "2.5.4",
+   "to": "2.5.4",
+   "changed": false
+  },
+  "commit": {
+   "from": "eee94d07f28b23a9151401301c9354960ed35f55",
+   "to": "f944173c808ac6e145d8f8741bc56ff1424d7414",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-piper/compare/eee94d07f28b23a9151401301c9354960ed35f55...f944173c808ac6e145d8f8741bc56ff1424d7414",
+   "commits": [
+    {
+     "sha": "f944173c808ac6e145d8f8741bc56ff1424d7414",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-24T01:10:06Z",
+     "url": "https://github.com/linuxserver-playground/docker-piper/commit/f944173c808ac6e145d8f8741bc56ff1424d7414",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+    "digest": "sha256:474ae94121b29ecb1165cc9ba08d55f1245dcf53e20532808e3c0c61200ec682"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "ghcr.io/linuxserver-playground/baseimage-ubuntu:resolute",
+    "digest": "sha256:a44688d5617b27712df6770f62ca32516191b2728cbfe6b08da12acff4175797"
+   },
+   "changed": true
+  },
+  "size": {
+   "amd64": {
+    "from": 177801109,
+    "to": 169080630,
+    "delta": -8720479
+   },
+   "arm64": {
+    "from": 172661914,
+    "to": 164149205,
+    "delta": -8512709
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libexpat1",
+       "from": "2.7.4-1ubuntu0.2",
+       "to": "2.7.4-1ubuntu0.3",
+       "purl": "pkg:deb/ubuntu/libexpat1@2.7.4-1ubuntu0.3?arch=amd64&distro=ubuntu-26.04&upstream=expat"
+      },
+      {
+       "name": "libsqlite3-0",
+       "from": "3.46.1-9ubuntu0.3",
+       "to": "3.46.1-9ubuntu0.4",
+       "purl": "pkg:deb/ubuntu/libsqlite3-0@3.46.1-9ubuntu0.4?arch=amd64&distro=ubuntu-26.04&upstream=sqlite3"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-0ubuntu0.26.04.1",
+       "to": "2026f-0ubuntu0.26.04.1",
+       "purl": "pkg:deb/ubuntu/tzdata@2026f-0ubuntu0.26.04.1?arch=all&distro=ubuntu-26.04"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "regex",
+       "from": "2026.11.23",
+       "to": "2026.11.25",
+       "purl": "pkg:pypi/regex@2026.11.25"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libexpat1",
+       "from": "2.7.4-1ubuntu0.2",
+       "to": "2.7.4-1ubuntu0.3",
+       "purl": "pkg:deb/ubuntu/libexpat1@2.7.4-1ubuntu0.3?arch=arm64&distro=ubuntu-26.04&upstream=expat"
+      },
+      {
+       "name": "libsqlite3-0",
+       "from": "3.46.1-9ubuntu0.3",
+       "to": "3.46.1-9ubuntu0.4",
+       "purl": "pkg:deb/ubuntu/libsqlite3-0@3.46.1-9ubuntu0.4?arch=arm64&distro=ubuntu-26.04&upstream=sqlite3"
+      },
+      {
+       "name": "tzdata",
+       "from": "2026e-0ubuntu0.26.04.1",
+       "to": "2026f-0ubuntu0.26.04.1",
+       "purl": "pkg:deb/ubuntu/tzdata@2026f-0ubuntu0.26.04.1?arch=all&distro=ubuntu-26.04"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "regex",
+       "from": "2026.11.23",
+       "to": "2026.11.25",
+       "purl": "pkg:pypi/regex@2026.11.25"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 8,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:960ac90a01def72f9b52b2a4dfb7b90e6e9565898581b06282d7c3a24dcfbae6",
+    "diff_id": "sha256:9793011d1f4eb9f31619edd8dbb596b79eb397f00d3f7076d5f8d12a3c40c1a2",
+    "size": 42696290,
+    "uncompressed_size": 106540469,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:c30ca7cce1bd03b50b7249f0fe37852d92bb7da87cc9006015bb56b6170ee0c0",
+    "diff_id": "sha256:80e466fe380ecf9680c4cd859a37bd47b1094402c4cff258388e014bb56e0971",
+    "size": 1358,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:8bf1a2ae8ed95e1f119e0fe73d08dc4de93d64e1d8cc337e49f026718ec94fc5",
+    "diff_id": "sha256:cd9b9badc01078c8bb1ce1f3352202f054318cdca995328b76cf9757fa2f5a83",
+    "size": 699,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:954f454921ba2ee63c7c9438fd7921d546a272abdfc414f0a3e379bf6ccb346e",
+    "diff_id": "sha256:7d936b4bbcc8fc6a830d315d9383d364e403382ce5d610919f913802d8e39d2b",
+    "size": 426,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:2cbd573c4869785f5a1f1a4018a27bd930110ba502c580a9db1efa2697ad1947",
+    "diff_id": "sha256:6f59097035f44fe13d21bf2617d4d4c134932761ceb085fb3fb9bf01218e053d",
+    "size": 338,
+    "uncompressed_size": 413,
+    "created_by": "COPY ubuntu.sources /etc/apt/sources.d/ubuntu.sources",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:a5f6f36e2ae7b7c667a66f010b06af3c9d12043344420369e2dfd03ca41871df",
+    "diff_id": "sha256:fcf0949b14a011cebf721be90086cd0272876d891ec387bbe84233ffcee9dfbc",
+    "size": 18220671,
+    "uncompressed_size": 48837804,
+    "created_by": "RUN |7 BUILD_DATE=2026-11-25T07:23:18Z VERSION=41cff06a-ls11 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:6de021126fe765e81e7491f757c87e287f8608aa52f330e1559fc0214d961154",
+    "diff_id": "sha256:d0b7d487836dabcc06cdd9e2bffbfc81ddc04e89e7c4e29edde5f4eacd52fb10",
+    "size": 4640,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:ab0bee3d479b3b13a013c6a47e9e21db3e4e7896aa38e2a85ce999d79f975bd9",
+    "diff_id": "sha256:757fd02725a8f629bbb536f27b2fa4e0d52e0051e24155f9bb4463343c44805b",
+    "size": 108148984,
+    "uncompressed_size": 259061581,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-28T05:02:40Z VERSION=2.5.4-ls15 PIPER_VERSION=2.5.4 /bin/sh -c apt-get update &&   apt-get install -y --no-install-recommends     python3-venv &&   if [ -z ${PIPER_VERSION+x} ]; then     PIPER_VERSION=$(curl -sL  https://pypi.python.org/pypi/wyoming-piper/json |jq -r '. | .info.version');   fi &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/ubuntu/     piper-tts     \"wyoming-piper==${PIPER_VERSION}\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /var/lib/apt/lists/*     /tmp/*",
+    "dockerfile_lines": [
+     17,
+     35
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:d37637e40c9d3ddc782015048505b969bc5c84b05f16554e85d6a768088692a9",
+    "diff_id": "sha256:5de71aa635e48f44f28fb5e22451cd8a5a356fb3a970d92460ceed3534bd1408",
+    "size": 985,
+    "uncompressed_size": 875,
+    "created_by": "COPY root /",
+    "dockerfile_lines": [
+     37,
+     37
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:bba37090e02bcea023cbdd93faa01cf34e8df813349727ba7f8575cd123f240a",
+    "diff_id": "sha256:afcdcd376dea9c1335684825196a4b41513c26246ee1fd07504d403062d24871",
+    "size": 42468840,
+    "uncompressed_size": 130633464,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:a7c763656803e7922daf9be1bfce286b01ec103b97972a19c2d31b689d202b43",
+    "diff_id": "sha256:e1bc321b47accb800378cb8b9e32f4deaecb5829ae7660321d69aab5d18ec887",
+    "size": 1361,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:5c4c9c75533fd1863b02c6a922e0d01c0672b44b2e41cd76e8ea23eb0fd91213",
+    "diff_id": "sha256:943a6074e59dd0356946571e446baeae09ed145cfcea0924ff9dcd98ba19c0e4",
+    "size": 700,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:69e6056b5db94c83c6d00c7fa3545f6a1ac08eb2cbc2fc44c0b0a1c108714691",
+    "diff_id": "sha256:e3bac779fefa93936f6d035477a3604a5e799c2ab6091d81afd31902c406a9ac",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:0d1531cc67664c8638bb84d70ac6776a135ba0048f99d0e56d84592c5d083031",
+    "diff_id": "sha256:d6fbd3d3bc2942ecdcb8aa98123efb8f4719d600a45c07b12a0b5f5beb865bcc",
+    "size": 336,
+    "uncompressed_size": 417,
+    "created_by": "COPY ubuntu.sources.arm /etc/apt/sources.d/ubuntu.sources",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:007a40bfd83e68311dcc48a130192d1ed933b872b786315f700b7f948dbb5415",
+    "diff_id": "sha256:24dd42f1b7f98a215b26aed478ea0c2e015d92e200da67cbcde10dd9294d01a6",
+    "size": 17963122,
+    "uncompressed_size": 50715032,
+    "created_by": "RUN |7 BUILD_DATE=2026-11-25T07:23:18Z VERSION=41cff06a-ls11 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   set -xe &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-openbsd     systemd-standalone-sysusers     tzdata &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   userdel ubuntu &&   apt-get autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:357fcb6a9c1ec1c1d112979a12afbcc588bec89f9a1d7c2eda7526c260a7cb87",
+    "diff_id": "sha256:82db6098212893b1b46b6a3f7456c7b399b1e1c12119fe9599de409836f4560c",
+    "size": 4640,
+    "uncompressed_size": 9450,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:29ab7fc240d2efccb8f2c07bdc0f4c32afef30f2fdc1df6cf6629c91cad7b060",
+    "diff_id": "sha256:470a5abb3248d342c3e10c553abf84ef2c39dad0fa8d7b9b2ac58bd699cf9a03",
+    "size": 103702555,
+    "uncompressed_size": 243898012,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-28T05:02:40Z VERSION=2.5.4-ls15 PIPER_VERSION=2.5.4 /bin/sh -c apt-get update &&   apt-get install -y --no-install-recommends     python3-venv &&   if [ -z ${PIPER_VERSION+x} ]; then     PIPER_VERSION=$(curl -sL  https://pypi.python.org/pypi/wyoming-piper/json |jq -r '. | .info.version');   fi &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/ubuntu/     piper-tts     \"wyoming-piper==${PIPER_VERSION}\" &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   echo \"**** cleanup ****\" &&   rm -rf     /var/lib/apt/lists/*     /tmp/*",
+    "dockerfile_lines": [
+     17,
+     35
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:93f9015fcdc47c1dce4b705c0cf0d153553189aec0a3713052954ffc0eb4d06a",
+    "diff_id": "sha256:cdb99e82397b7a3846a764d760778d7834ed87a108ad9eea7449636c007ee620",
+    "size": 985,
+    "uncompressed_size": 875,
+    "created_by": "COPY root /",
+    "dockerfile_lines": [
+     37,
+     37
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "piper",
+  "tag": "2.5.4-ls15",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/piper/builds/2.5.4-ls15/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 2.011,
+    "listening_ports": [
+     "10200/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 85053440,
+    "pids": 13,
+    "tarball": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-piper/builds/2.5.4-ls15/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-piper/builds/2.5.4-ls15/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 10,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 3.014,
+    "listening_ports": [
+     "10200/tcp"
+    ],
+    "warnings": 0,
+    "rss_bytes": 82423808,
+    "pids": 14,
+    "tarball": "https://github.com/linuxserver-playground/docker-piper/releases/download/2.5.4-ls15/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-piper/builds/2.5.4-ls15/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-piper/builds/2.5.4-ls15/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "piper",
+    "tag": "amd64-f944173-46110257710",
+    "arch": "amd64",
+    "started": "2026-11-28T05:05:42Z",
+    "finished": "2026-11-28T05:06:04Z",
+    "success": true,
+    "runner": "bc3702a1d46a",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 2.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 2.0s",
+      "seconds": 2.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-piper",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 10200/tcp",
+      "seconds": 0.065
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "228 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "228 packages: syft JSON 62279 bytes gzipped, SPDX for the image attestation 562325 bytes",
+      "seconds": 0.158
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1689 dirs, 13796 files (413576577 bytes), 1836 symlinks, 116 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.17s, total 0.28s",
+      "seconds": 0.456
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.381
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.052
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "13 pids, tcp [10200], rss 85053440 bytes",
+      "seconds": 0.773
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 85053440,
+     "pids": 13,
+     "listening_tcp": [
+      10200
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-piper"
+     ],
+     "changed_paths": 207
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "piper",
+    "tag": "arm64-f944173-46110257710",
+    "arch": "arm64",
+    "started": "2026-11-28T05:04:47Z",
+    "finished": "2026-11-28T05:05:10Z",
+    "success": true,
+    "runner": "1ea30baaab33",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 3.014,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 3.0s",
+      "seconds": 3.014
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "2 services stayed up for 15s: svc-cron, svc-piper",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "PASS",
+      "message": "listening: 10200/tcp",
+      "seconds": 0.047
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "running Python; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "228 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "228 packages: syft JSON 62024 bytes gzipped, SPDX for the image attestation 562325 bytes",
+      "seconds": 0.181
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1688 dirs, 13795 files (424382487 bytes), 1833 symlinks, 116 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.10s, total 0.18s",
+      "seconds": 0.32
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "10 layers, 8 from base, compressed sizes from registry",
+      "seconds": 0.924
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.056
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "14 pids, tcp [10200], rss 82423808 bytes",
+      "seconds": 0.515
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 82423808,
+     "pids": 14,
+     "listening_tcp": [
+      10200
+     ],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron",
+      "svc-piper"
+     ],
+     "changed_paths": 207
+    }
+   }
+  }
+ }
+}
