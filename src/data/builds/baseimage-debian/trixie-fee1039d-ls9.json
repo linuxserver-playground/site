@@ -1,0 +1,1043 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "baseimage-debian",
+  "repository": "linuxserver-playground/docker-baseimage-debian",
+  "branch": "master",
+  "mode": "live",
+  "version": {
+   "upstream": "fee1039d",
+   "upstream_clean": "fee1039d",
+   "ls_build": 9,
+   "tag": "trixie-fee1039d-ls9",
+   "release_tag": "trixie",
+   "tags": [
+    "trixie",
+    "trixie-fee1039d-ls9",
+    "trixie-version-fee1039d",
+    "amd64-trixie",
+    "amd64-trixie-fee1039d-ls9",
+    "amd64-trixie-version-fee1039d",
+    "arm64v8-trixie",
+    "arm64v8-trixie-fee1039d-ls9",
+    "arm64v8-trixie-version-fee1039d"
+   ],
+   "source": "os",
+   "source_url": "none"
+  },
+  "commit": "8296fbe4238e3b3c439991e4caae999e3aed01c8",
+  "created": "2026-11-23T12:38:32Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "trixie-7c3a4fd0-ls8",
+   "release_url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/tag/trixie-7c3a4fd0-ls8"
+  },
+  "base": {
+   "family": "ubuntu",
+   "image": "scratch"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:380279055b1b35e8fda8a1577f73036dd37a609bb7b23f69c6cf01a7acd58b62",
+    "size": 80777385,
+    "uncompressed_size": 228854891,
+    "layers": 7,
+    "runner": "Linux-X64",
+    "build_seconds": 29
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:de3eb64bb854e4ace5b5e87a8b845947948450d4469e6d441f80a21b1ce680d1",
+    "size": 81811391,
+    "uncompressed_size": 275487527,
+    "layers": 7,
+    "runner": "Linux-ARM64",
+    "build_seconds": 41
+   }
+  ],
+  "index_digest": "sha256:9e296d7b5daafebd3d6b7c320eafaa1d7574afe417b21556c27f972cc3d22edd",
+  "labels": {
+   "build_version": "Linuxserver.io version:- fee1039d-ls9 Build-date:- 2026-11-23T12:33:31Z",
+   "io.linuxserver.image.base": "scratch",
+   "io.linuxserver.image.branch": "master",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "fee1039d",
+   "maintainer": "TheLamer",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-23T12:33:31Z",
+   "org.opencontainers.image.description": "baseimage-debian container image.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-baseimage-debian",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "8296fbe4238e3b3c439991e4caae999e3aed01c8",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-baseimage-debian",
+   "org.opencontainers.image.title": "Baseimage-debian",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-baseimage-debian/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "fee1039d-ls9"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "HOME=/root",
+    "LANGUAGE=en_US.UTF-8",
+    "LANG=en_US.UTF-8",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 AS rootfs-stage\n\n# environment\nENV REL=trixie\nENV ARCH=amd64\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    tzdata \\\n    xz\n\n# grab base tarball\nRUN \\\n  mkdir /root-out && \\\n  curl -o \\\n    /rootfs.tar.gz -L \\\n    https://github.com/debuerreotype/docker-debian-artifacts/raw/refs/heads/dist-${ARCH}/${REL}/slim/oci/blobs/rootfs.tar.gz && \\\n  tar xf \\\n    /rootfs.tar.gz -C \\\n    /root-out && \\\n  rm -rf \\\n    /root-out/var/log/*\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"x86_64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    netcat-traditional \\\n    tzdata && \\\n  echo \"**** add all sources ****\" && \\\n  echo \"deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" > /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  rm -f /etc/apt/sources.list.d/debian.sources && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get -y autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/* \\\n    /usr/share/man\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM alpine:3 AS rootfs-stage\n\n# environment\nENV REL=trixie\nENV ARCH=arm64v8\n\n# install packages\nRUN \\\n  apk add --no-cache \\\n    bash \\\n    curl \\\n    tzdata \\\n    xz\n\n# grab base tarball\nRUN \\\n  mkdir /root-out && \\\n  curl -o \\\n    /rootfs.tar.gz -L \\\n    https://github.com/debuerreotype/docker-debian-artifacts/raw/refs/heads/dist-${ARCH}/${REL}/slim/oci/blobs/rootfs.tar.gz && \\\n  tar xf \\\n    /rootfs.tar.gz -C \\\n    /root-out && \\\n  rm -rf \\\n    /root-out/var/log/*\n\n# set version for s6 overlay\nARG S6_OVERLAY_VERSION=\"3.2.1.0\"\nARG S6_OVERLAY_ARCH=\"aarch64\"\n\n# add s6 overlay\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-noarch.tar.xz\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-${S6_OVERLAY_ARCH}.tar.xz\n\n# add s6 optional symlinks\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-noarch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-noarch.tar.xz && unlink /root-out/usr/bin/with-contenv\nADD https://github.com/just-containers/s6-overlay/releases/download/v${S6_OVERLAY_VERSION}/s6-overlay-symlinks-arch.tar.xz /tmp\nRUN tar -C /root-out -Jxpf /tmp/s6-overlay-symlinks-arch.tar.xz\n\n# Runtime stage\nFROM scratch\nCOPY --from=rootfs-stage /root-out/ /\nARG BUILD_DATE\nARG VERSION\nARG MODS_VERSION=\"v3\"\nARG PKG_INST_VERSION=\"v1\"\nARG LSIOWN_VERSION=\"v1\"\nARG WITHCONTENV_VERSION=\"v1\"\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"TheLamer\"\n\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.${MODS_VERSION}\" \"/docker-mods\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.${PKG_INST_VERSION}\" \"/etc/s6-overlay/s6-rc.d/init-mods-package-install/run\"\nADD --chmod=744 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.${LSIOWN_VERSION}\" \"/usr/bin/lsiown\"\nADD --chmod=755 \"https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.${WITHCONTENV_VERSION}\" \"/usr/bin/with-contenv\"\n\n# set environment variables\nARG DEBIAN_FRONTEND=\"noninteractive\"\nENV HOME=\"/root\" \\\n  LANGUAGE=\"en_US.UTF-8\" \\\n  LANG=\"en_US.UTF-8\" \\\n  TERM=\"xterm\" \\\n  S6_CMD_WAIT_FOR_SERVICES_MAXTIME=\"0\" \\\n  S6_VERBOSITY=1 \\\n  S6_STAGE2_HOOK=/docker-mods \\\n  VIRTUAL_ENV=/lsiopy \\\n  PATH=\"/lsiopy/bin:$PATH\"\n\nRUN \\\n  echo \"**** Ripped from Ubuntu Docker Logic ****\" && \\\n  echo '#!/bin/sh' \\\n    > /usr/sbin/policy-rc.d && \\\n  echo 'exit 101' \\\n    >> /usr/sbin/policy-rc.d && \\\n  chmod +x \\\n    /usr/sbin/policy-rc.d && \\\n  dpkg-divert --local --rename --add /sbin/initctl && \\\n  cp -a \\\n    /usr/sbin/policy-rc.d \\\n    /sbin/initctl && \\\n  sed -i \\\n    's/^exit.*/exit 0/' \\\n    /sbin/initctl && \\\n  echo 'force-unsafe-io' \\\n    > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup && \\\n  echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    > /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";' \\\n    >> /etc/apt/apt.conf.d/docker-clean && \\\n  echo 'Acquire::Languages \"none\";' \\\n    > /etc/apt/apt.conf.d/docker-no-languages && \\\n  echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";' \\\n    > /etc/apt/apt.conf.d/docker-gzip-indexes && \\\n  echo 'Apt::AutoRemove::SuggestsImportant \"false\";' \\\n    > /etc/apt/apt.conf.d/docker-autoremove-suggests && \\\n  mkdir -p /run/systemd && \\\n  echo 'docker' \\\n    > /run/systemd/container && \\\n  echo \"**** install apt-utils and locales ****\" && \\\n  apt-get update && \\\n  apt-get upgrade -y && \\\n  apt-get install -y \\\n    apt-utils \\\n    locales && \\\n  echo \"**** install packages ****\" && \\\n  apt-get install -y \\\n    catatonit \\\n    cron \\\n    curl \\\n    gnupg \\\n    jq \\\n    netcat-traditional \\\n    tzdata && \\\n  echo \"**** add all sources ****\" && \\\n  echo \"deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" > /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  echo \"deb-src http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list && \\\n  rm -f /etc/apt/sources.list.d/debian.sources && \\\n  echo \"**** generate locale ****\" && \\\n  locale-gen en_US.UTF-8 && \\\n  echo \"**** create abc user and make our folders ****\" && \\\n  useradd -u 911 -U -d /config -s /bin/false abc && \\\n  usermod -G users abc && \\\n  mkdir -p \\\n    /app \\\n    /config \\\n    /defaults \\\n    /lsiopy && \\\n  echo \"**** cleanup ****\" && \\\n  apt-get -y autoremove && \\\n  apt-get clean && \\\n  rm -rf \\\n    /tmp/* \\\n    /var/lib/apt/lists/* \\\n    /var/tmp/* \\\n    /var/log/* \\\n    /usr/share/man\n\n# add local files\nCOPY root/ /\n\nENTRYPOINT [\"/init\"]\n"
+  },
+  "init_graph": {
+   "d2": "\"baseimage-debian:trixie\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n}\nBase Images: {\n  \"scratch\"\n}\n\"baseimage-debian:trixie\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "image",
+     "script": "echo \"[ls.io-init] done.\""
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nPUID=${PUID:-911}\nPGID=${PGID:-911}\n\nif [[ -z ${LSIO_READ_ONLY_FS} ]] && [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    USERHOME=$(grep abc /etc/passwd | cut -d \":\" -f6)\n    usermod -d \"/root\" abc\n\n    groupmod -o -g \"${PGID}\" abc\n    usermod -o -u \"${PUID}\" abc\n\n    usermod -d \"${USERHOME}\" abc\nfi\n\ncat /etc/s6-overlay/s6-rc.d/init-adduser/branding\n\nif [[ -f /donate.txt ]]; then\n    echo '\nTo support the app dev(s) visit:'\n    cat /donate.txt\nfi\necho '\nTo support LSIO projects visit:\nhttps://www.linuxserver.io/donate/\n\n───────────────────────────────────────\nGID/UID\n───────────────────────────────────────'\necho \"\nUser UID:    $(id -u abc)\nUser GID:    $(id -g abc)\n───────────────────────────────────────\"\nif [[ -f /build_version ]]; then\n    cat /build_version\n    echo '\n───────────────────────────────────────\n    '\nfi\n\nlsiown abc:abc /app\nlsiown abc:abc /config\nlsiown abc:abc /defaults\n"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the start of the downstream image init process\n"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the downstream image init process\n"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nfor cron_user in abc root; do\n    if [[ -f \"/etc/crontabs/${cron_user}\" ]]; then\n        lsiown \"${cron_user}\":\"${cron_user}\" \"/etc/crontabs/${cron_user}\"\n        crontab -u \"${cron_user}\" \"/etc/crontabs/${cron_user}\"\n    fi\n\n    if [[ -f \"/defaults/crontabs/${cron_user}\" ]]; then\n        # make folders\n        mkdir -p \\\n            /config/crontabs\n\n        # if crontabs do not exist in config\n        if [[ ! -f \"/config/crontabs/${cron_user}\" ]]; then\n            # copy crontab from system\n            if crontab -l -u \"${cron_user}\" >/dev/null 2>&1; then\n                crontab -l -u \"${cron_user}\" >\"/config/crontabs/${cron_user}\"\n            fi\n\n            # if crontabs still do not exist in config (were not copied from system)\n            # copy crontab from image defaults (using -n, do not overwrite an existing file)\n            cp -n \"/defaults/crontabs/${cron_user}\" /config/crontabs/\n        fi\n\n        # set permissions and import user crontabs\n        lsiown \"${cron_user}\":\"${cron_user}\" \"/config/crontabs/${cron_user}\"\n        crontab -u \"${cron_user}\" \"/config/crontabs/${cron_user}\"\n    fi\ndone\n"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# Directories\nSCRIPTS_DIR=\"/custom-cont-init.d\"\n\n# Make sure custom init directory exists and has files in it\nif [[ -e \"${SCRIPTS_DIR}\" ]] && [[ -n \"$(/bin/ls -A ${SCRIPTS_DIR} 2>/dev/null)\" ]]; then\n    echo \"[custom-init] Files found, executing\"\n    for SCRIPT in \"${SCRIPTS_DIR}\"/*; do\n        NAME=\"$(basename \"${SCRIPT}\")\"\n        if [[ -x \"${SCRIPT}\" ]]; then\n            echo \"[custom-init] ${NAME}: executing...\"\n            /bin/bash \"${SCRIPT}\"\n            echo \"[custom-init] ${NAME}: exited $?\"\n        elif [[ ! -x \"${SCRIPT}\" ]]; then\n            echo \"[custom-init] ${NAME}: is not an executable file\"\n        fi\n    done\nelse\n    echo \"[custom-init] No custom files found, skipping...\"\nfi\n"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]] && [[ -n ${ATTACHED_DEVICES_PERMS} ]]; then\n    FILES=$(find ${ATTACHED_DEVICES_PERMS} -print 2>/dev/null)\n\n    for i in ${FILES}; do\n        FILE_GID=$(stat -c '%g' \"${i}\")\n        FILE_UID=$(stat -c '%u' \"${i}\")\n        # check if user matches device\n        if id -u abc | grep -qw \"${FILE_UID}\"; then\n            echo \"**** permissions for ${i} are good ****\"\n        else\n            # check if group matches and that device has group rw\n            if id -G abc | grep -qw \"${FILE_GID}\" && [[ $(stat -c '%A' \"${i}\" | cut -b 5,6) == \"rw\" ]]; then\n                echo \"**** permissions for ${i} are good ****\"\n            # check if device needs to be added to group\n            elif ! id -G abc | grep -qw \"${FILE_GID}\"; then\n                # check if group needs to be created\n                GROUP_NAME=$(getent group \"${FILE_GID}\" | awk -F: '{print $1}')\n                if [[ -z \"${GROUP_NAME}\" ]]; then\n                    GROUP_NAME=\"group$(head /dev/urandom | tr -dc 'a-z0-9' | head -c4)\"\n                    groupadd \"${GROUP_NAME}\"\n                    groupmod -g \"${FILE_GID}\" \"${GROUP_NAME}\"\n                    echo \"**** creating group ${GROUP_NAME} with id ${FILE_GID} ****\"\n                fi\n                echo \"**** adding ${i} to group ${GROUP_NAME} with id ${FILE_GID} ****\"\n                usermod -a -G \"${GROUP_NAME}\" abc\n            fi\n            # check if device has group rw\n            if [[ $(stat -c '%A' \"${i}\" | cut -b 5,6) != \"rw\" ]]; then\n                echo -e \"**** The device ${i} does not have group read/write permissions, attempting to fix inside the container. ****\"\n                chmod g+rw \"${i}\"\n            fi\n        fi\n    done\nfi\n"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif find /run/s6/container_environment/FILE__* -maxdepth 1 > /dev/null 2>&1; then\n    for FILENAME in /run/s6/container_environment/FILE__*; do\n            SECRETFILE=$(cat \"${FILENAME}\")\n            if [[ -f ${SECRETFILE} ]]; then\n                FILESTRIP=${FILENAME//FILE__/}\n                if [[ $(tail -n1 \"${SECRETFILE}\" | wc -l) != 0 ]]; then\n                    echo \"[env-init] Your secret: ${FILENAME##*/}\"\n                    echo \"           contains a trailing newline and may not work as expected\"\n                fi\n                cat \"${SECRETFILE}\" >\"${FILESTRIP}\"\n                echo \"[env-init] ${FILESTRIP##*/} set from ${FILENAME##*/}\"\n            else\n                echo \"[env-init] cannot find secret in ${FILENAME##*/}\"\n            fi\n    done\nfi\n"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nMIGRATIONS_DIR=\"/migrations\"\nMIGRATIONS_HISTORY=\"/config/.migrations\"\n\necho \"[migrations] started\"\n\nif [[ ! -d ${MIGRATIONS_DIR} ]]; then\n    echo \"[migrations] no migrations found\"\n    exit\nfi\n\nfor MIGRATION in $(find ${MIGRATIONS_DIR}/* | sort -n); do\n    NAME=\"$(basename \"${MIGRATION}\")\"\n    if [[ -f ${MIGRATIONS_HISTORY} ]] && grep -Fxq \"${NAME}\" ${MIGRATIONS_HISTORY}; then\n        echo \"[migrations] ${NAME}: skipped\"\n        continue\n    fi\n    echo \"[migrations] ${NAME}: executing...\"\n    chmod +x \"${MIGRATION}\"\n    # Execute migration script in a subshell to prevent it from modifying the current environment\n    (\"${MIGRATION}\")\n    EXIT_CODE=$?\n    if [[ ${EXIT_CODE} -ne 0 ]]; then\n        echo \"[migrations] ${NAME}: failed with exit code ${EXIT_CODE}, contact support\"\n        exit \"${EXIT_CODE}\"\n    fi\n    echo \"${NAME}\" >>${MIGRATIONS_HISTORY}\n    echo \"[migrations] ${NAME}: succeeded\"\ndone\n\necho \"[migrations] done\"\n"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the start of the mod init process\n"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the mod init process\n"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\n# Version 1\n# 2024-03-26 - Initial Version\nPKG_SCRIPT_VER=\"1.20240608\"\n\nwrite_mod_info() {\n    local MSG=$*\n    echo \"[pkg-install-init] **** $MSG ****\"\n}\n\nwrite_mod_debug() {\n    local MSG=$*\n    if [[ ${DOCKER_MODS_DEBUG,,} = \"true\" ]]; then echo \"[pkg-install-init] (DEBUG) $MSG\"; fi\n}\n\nwrite_mod_debug \"Package install script version ${PKG_SCRIPT_VER}\"\n\nif [[ -f \"/mod-pip-packages-to-install.list\" ]]; then\n    IFS=' ' read -ra PIP_PACKAGES <<< \"$(tr '\\n' ' ' < /mod-pip-packages-to-install.list)\"\n    if [[ ${#PIP_PACKAGES[@]} -ne 0 ]] && [[ ${PIP_PACKAGES[*]} != \"\" ]]; then\n        if [[ \"$(command -v python3)\" != \"/lsiopy/bin/python3\" ]]; then\n            CREATE_VENV=\"true\"\n            write_mod_debug \"Marking venv for creation and adding python os dependencies to install list.\"\n            if [[ -f /usr/bin/apt ]]; then\n                echo \"python3-venv\" >> /mod-repo-packages-to-install.list\n            elif [[ -f /sbin/apk ]]; then\n                echo \"python3\" >> /mod-repo-packages-to-install.list\n            elif [[ -f /usr/sbin/pacman ]]; then\n                echo \"python\" >> /mod-repo-packages-to-install.list\n            elif [[ -f /usr/bin/dnf ]]; then\n                echo \"python3\" >> /mod-repo-packages-to-install.list\n            fi\n        else\n            write_mod_debug \"Venv at /lsiopy is already active\"\n        fi\n    else\n        write_mod_debug \"No pip packages identified in install list, skipping.\"\n    fi\nelse\n    write_mod_debug \"No pip packages defined for install, skipping.\"\nfi\n\nif [[ -f \"/mod-repo-packages-to-install.list\" ]]; then\n    IFS=' ' read -ra REPO_PACKAGES <<< \"$(tr '\\n' ' ' < /mod-repo-packages-to-install.list)\"\n    if [[ ${#REPO_PACKAGES[@]} -ne 0 ]] && [[ ${REPO_PACKAGES[*]} != \"\" ]]; then\n        write_mod_info \"Installing all mod packages\"\n        write_mod_debug \"Defined packages: ${REPO_PACKAGES[*]}\"\n        if [[ -f /usr/bin/apt ]]; then\n            export DEBIAN_FRONTEND=\"noninteractive\"\n            apt-get update\n            apt-get install -y --no-install-recommends \\\n                \"${REPO_PACKAGES[@]}\"\n        elif [[ -f /sbin/apk ]]; then\n            apk add --no-cache \\\n                \"${REPO_PACKAGES[@]}\"\n        elif [[ -f /usr/sbin/pacman ]]; then\n            pacman -Sy --noconfirm \\\n                \"${REPO_PACKAGES[@]}\"\n        elif [[ -f /usr/bin/dnf ]]; then\n            dnf install -y --setopt=install_weak_deps=False --best \\\n                \"${REPO_PACKAGES[@]}\"\n        fi\n    else\n        write_mod_debug \"No os packages identified in install list, skipping.\"\n    fi\nelse\n    write_mod_debug \"No os packages defined for install, skipping.\"\nfi\n\nif [[ -f \"/mod-pip-packages-to-install.list\" ]]; then\n    IFS=' ' read -ra PIP_PACKAGES <<< \"$(tr '\\n' ' ' < /mod-pip-packages-to-install.list)\"\n    if [[ ${#PIP_PACKAGES[@]} -ne 0 ]] && [[ ${PIP_PACKAGES[*]} != \"\" ]]; then\n        write_mod_info \"Installing all pip packages\"\n        if [[ ${CREATE_VENV} == \"true\" ]]; then\n            write_mod_info \"Creating venv\"\n            python3 -m venv /lsiopy\n        fi\n        write_mod_debug \"Updating/installing pip, wheel and setuptools.\"\n        python3 -m pip install -U pip wheel setuptools\n        PIP_ARGS=()\n        if [[ -f /usr/bin/apt ]] && grep -q 'ID=ubuntu' /etc/os-release; then\n            PIP_ARGS+=(\"-f\" \"https://wheel-index.linuxserver.io/ubuntu/\")\n        elif [[ -f /sbin/apk ]]; then\n            ALPINE_VER=$(grep main /etc/apk/repositories | sed 's|.*alpine/v||' | sed 's|/main.*||')\n            PIP_ARGS+=(\"-f\" \"https://wheel-index.linuxserver.io/alpine-${ALPINE_VER}/\")\n        fi\n        write_mod_debug \"Installing defined pip packages: ${PIP_PACKAGES[*]}\"\n        write_mod_debug \"Using pip args ${PIP_ARGS[*]}\"\n        python3 -m pip install \\\n            \"${PIP_ARGS[@]}\" \\\n            \"${PIP_PACKAGES[@]}\"\n    fi\nfi\n\nwrite_mod_debug \"Deleting temporary install lists for os and pip packages.\"\nif [[ -f \"/mod-repo-packages-to-install.list\" ]]; then\n    rm -rf /mod-repo-packages-to-install.list\nfi\nif [[ -f \"/mod-pip-packages-to-install.list\" ]]; then\n    rm -rf /mod-pip-packages-to-install.list\nfi\n"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it's just the end of the mod init process\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "image",
+     "script": "# This file doesn't do anything, it just signals that services can start\n"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nif builtin command -v crontab >/dev/null 2>&1 && [[ -n \"$(crontab -l -u abc 2>/dev/null || true)\" || -n \"$(crontab -l -u root 2>/dev/null || true)\" ]]; then\n    if builtin command -v busybox >/dev/null 2>&1 && [[ $(busybox || true) =~ [[:space:]](crond)([,]|$) ]]; then\n        exec busybox crond -f -S -l 5\n    elif [[ -f /usr/bin/apt ]] && [[ -f /usr/sbin/cron ]]; then\n        exec /usr/sbin/cron -f -L 5\n    else\n        echo \"**** cron not found ****\"\n        sleep infinity\n    fi\nelse\n    sleep infinity\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "image"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "image"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 180,
+    "distro": "Debian GNU/Linux 13 (trixie)",
+    "hash": "0094b882",
+    "by_type": {
+     "deb": 180
+    }
+   },
+   "arm64": {
+    "count": 180,
+    "distro": "Debian GNU/Linux 13 (trixie)",
+    "hash": "6870c700",
+    "by_type": {
+     "deb": 180
+    }
+   }
+  },
+  "test": {
+   "enabled": true,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-debian/builds/trixie-fee1039d-ls9/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-baseimage-debian/compare/trixie-7c3a4fd0-ls8...trixie-fee1039d-ls9"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 53343,
+    "sha256": "496506e63b59291e0263471a8c45f6462144ed2bb4ba076ebfe247bb89dbd2f3",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 6025,
+    "sha256": "d0216049cf70bd2eaa63aa7db041b1df3c145018f508ac93ac61b7f9e4338b9d",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 77083,
+    "sha256": "1ccff4dbc440d8db5d5ef571cb5da313771d321940e3971d8521e460082ffde6",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 2407,
+    "sha256": "1780e679bc6a9e566d7f154b1921b2211112d3692bf50e59553988b8390b01ad",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 2809,
+    "sha256": "34876da5bd61fb5c5b4fcffff4af92ba930af44e9504530a87408fc0b336832f",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 12127,
+    "sha256": "543e5b68425897c3fc2399623f2262b025f27e2bb0b1181a2b764c1eea3c99d5",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 53354,
+    "sha256": "8e79ca9783049e7356e4460fb8ac0d077eb0abc30707e22aa9b4a1fa9e51788b",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 6026,
+    "sha256": "680e28c3485e38db74898f8bc79c5214655f401781614fe1abdbae78bed00de8",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 76373,
+    "sha256": "63f93b9b83d2d79c9d18a30084640251342d80e5ab332f57d8031f933782ba1d",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 2406,
+    "sha256": "c53b34c06ee759956ba3dab345bcadbbcb90c134e64bd5d4a95d095e4fc84e77",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 2818,
+    "sha256": "c49e41b78a89df7dba9fa9481d24c0e0fbe398b72c7ea8d8b7e95f7f0600a54f",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 12127,
+    "sha256": "61e2c6aacfe2acd1e7cb37174235fc71368f918d1670a65eda4edf58ce84d63e",
+    "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 45175340835,
+   "run_url": "https://github.com/linuxserver-playground/docker-baseimage-debian/actions/runs/45175340835",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/baseimage-debian",
+   "tags": [
+    "trixie",
+    "trixie-fee1039d-ls9",
+    "trixie-version-fee1039d",
+    "amd64-trixie",
+    "amd64-trixie-fee1039d-ls9",
+    "amd64-trixie-version-fee1039d",
+    "arm64v8-trixie",
+    "arm64v8-trixie-fee1039d-ls9",
+    "arm64v8-trixie-version-fee1039d"
+   ]
+  }
+ },
+ "diff": {
+  "image": "baseimage-debian",
+  "branch": "master",
+  "tag": "trixie-fee1039d-ls9",
+  "previous_tag": "trixie-7c3a4fd0-ls8",
+  "classification": "upstream",
+  "reasons": [
+   "package set changed (an os image's version is the hash of package_versions.txt)",
+   "packages changed",
+   "1 commit (e5950c6 → 8296fbe): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "7c3a4fd0",
+   "to": "fee1039d",
+   "changed": true
+  },
+  "commit": {
+   "from": "e5950c67c31b9742703f92a6337ed2692568f92e",
+   "to": "8296fbe4238e3b3c439991e4caae999e3aed01c8",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-baseimage-debian/compare/e5950c67c31b9742703f92a6337ed2692568f92e...8296fbe4238e3b3c439991e4caae999e3aed01c8",
+   "commits": [
+    {
+     "sha": "8296fbe4238e3b3c439991e4caae999e3aed01c8",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-09T12:39:53Z",
+     "url": "https://github.com/linuxserver-playground/docker-baseimage-debian/commit/8296fbe4238e3b3c439991e4caae999e3aed01c8",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "ubuntu",
+    "image": "scratch"
+   },
+   "to": {
+    "family": "ubuntu",
+    "image": "scratch"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 71933889,
+    "to": 80777385,
+    "delta": 8843496
+   },
+   "arm64": {
+    "from": 72596607,
+    "to": 81811391,
+    "delta": 9214784
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "base-files",
+       "from": "13.8+deb13u7",
+       "to": "13.8+deb13u8",
+       "purl": "pkg:deb/debian/base-files@13.8%2Bdeb13u8?arch=amd64&distro=debian-13.8"
+      },
+      {
+       "name": "krb5-locales",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/krb5-locales@1.21.3-5%2Bdeb13u2?arch=all&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libc-bin",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/libc-bin@2.41-12%2Bdeb13u5?arch=amd64&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "libc-l10n",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/libc-l10n@2.41-12%2Bdeb13u5?arch=all&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "libc6",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/libc6@2.41-12%2Bdeb13u5?arch=amd64&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "libgssapi-krb5-2",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libgssapi-krb5-2@1.21.3-5%2Bdeb13u2?arch=amd64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libk5crypto3",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libk5crypto3@1.21.3-5%2Bdeb13u2?arch=amd64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libkrb5-3",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libkrb5-3@1.21.3-5%2Bdeb13u2?arch=amd64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libkrb5support0",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libkrb5support0@1.21.3-5%2Bdeb13u2?arch=amd64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libnghttp2-14",
+       "from": "1.64.0-1.1+deb13u1",
+       "to": "1.64.0-1.1+deb13u2",
+       "purl": "pkg:deb/debian/libnghttp2-14@1.64.0-1.1%2Bdeb13u2?arch=amd64&distro=debian-13.8&upstream=nghttp2"
+      },
+      {
+       "name": "libssl3t64",
+       "from": "3.5.7-1~deb13u3",
+       "to": "3.5.9-1~deb13u1",
+       "purl": "pkg:deb/debian/libssl3t64@3.5.9-1~deb13u1?arch=amd64&distro=debian-13.8&upstream=openssl"
+      },
+      {
+       "name": "locales",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/locales@2.41-12%2Bdeb13u5?arch=all&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "openssl",
+       "from": "3.5.7-1~deb13u3",
+       "to": "3.5.9-1~deb13u1",
+       "purl": "pkg:deb/debian/openssl@3.5.9-1~deb13u1?arch=amd64&distro=debian-13.8"
+      },
+      {
+       "name": "openssl-provider-legacy",
+       "from": "3.5.7-1~deb13u3",
+       "to": "3.5.9-1~deb13u1",
+       "purl": "pkg:deb/debian/openssl-provider-legacy@3.5.9-1~deb13u1?arch=amd64&distro=debian-13.8&upstream=openssl"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "deb": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "base-files",
+       "from": "13.8+deb13u7",
+       "to": "13.8+deb13u8",
+       "purl": "pkg:deb/debian/base-files@13.8%2Bdeb13u8?arch=arm64&distro=debian-13.8"
+      },
+      {
+       "name": "krb5-locales",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/krb5-locales@1.21.3-5%2Bdeb13u2?arch=all&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libc-bin",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/libc-bin@2.41-12%2Bdeb13u5?arch=arm64&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "libc-l10n",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/libc-l10n@2.41-12%2Bdeb13u5?arch=all&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "libc6",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/libc6@2.41-12%2Bdeb13u5?arch=arm64&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "libgssapi-krb5-2",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libgssapi-krb5-2@1.21.3-5%2Bdeb13u2?arch=arm64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libk5crypto3",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libk5crypto3@1.21.3-5%2Bdeb13u2?arch=arm64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libkrb5-3",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libkrb5-3@1.21.3-5%2Bdeb13u2?arch=arm64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libkrb5support0",
+       "from": "1.21.3-5+deb13u1",
+       "to": "1.21.3-5+deb13u2",
+       "purl": "pkg:deb/debian/libkrb5support0@1.21.3-5%2Bdeb13u2?arch=arm64&distro=debian-13.8&upstream=krb5"
+      },
+      {
+       "name": "libnghttp2-14",
+       "from": "1.64.0-1.1+deb13u1",
+       "to": "1.64.0-1.1+deb13u2",
+       "purl": "pkg:deb/debian/libnghttp2-14@1.64.0-1.1%2Bdeb13u2?arch=arm64&distro=debian-13.8&upstream=nghttp2"
+      },
+      {
+       "name": "libssl3t64",
+       "from": "3.5.7-1~deb13u3",
+       "to": "3.5.9-1~deb13u1",
+       "purl": "pkg:deb/debian/libssl3t64@3.5.9-1~deb13u1?arch=arm64&distro=debian-13.8&upstream=openssl"
+      },
+      {
+       "name": "locales",
+       "from": "2.41-12+deb13u4",
+       "to": "2.41-12+deb13u5",
+       "purl": "pkg:deb/debian/locales@2.41-12%2Bdeb13u5?arch=all&distro=debian-13.8&upstream=glibc"
+      },
+      {
+       "name": "openssl",
+       "from": "3.5.7-1~deb13u3",
+       "to": "3.5.9-1~deb13u1",
+       "purl": "pkg:deb/debian/openssl@3.5.9-1~deb13u1?arch=arm64&distro=debian-13.8"
+      },
+      {
+       "name": "openssl-provider-legacy",
+       "from": "3.5.7-1~deb13u3",
+       "to": "3.5.9-1~deb13u1",
+       "purl": "pkg:deb/debian/openssl-provider-legacy@3.5.9-1~deb13u1?arch=arm64&distro=debian-13.8&upstream=openssl"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 0,
+   "removed": 0,
+   "upgraded": 28,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:bdc5924b0b4aa9e1537338f87d5b1859924322384f857021c837ad5120d319e7",
+    "diff_id": "sha256:42704d6d02d87f55e1cf3762a254464bdf80b766dfad49287b3712af57d26729",
+    "size": 33274219,
+    "uncompressed_size": 84161288,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:74656138f94cdc06abc01a1fbf595382454d3564bd3f0bc7d28e2072e78f02b1",
+    "diff_id": "sha256:70b696aa60ea0a1c47acac5bf9ba5d9d0b4fa0bc9aa1a871cdaf6fee607bf44a",
+    "size": 1365,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:bf0207ee9ae1528619ef9d467df6b83ae4fc60d19aa0df80dc29f0dbd043a17d",
+    "diff_id": "sha256:35c074b456670b2575d01e9ae90ba9f7541a86ad30f16d679dbe73553a37caf5",
+    "size": 703,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:7da64dbf64fc7dcf9d48b11e9106c89fda50bc20c1d5cde9a94360a8ff921631",
+    "diff_id": "sha256:456c23c7ca9334cf2c2fd3f9ee8c89aea113816dd2b619ca4ac9c08078362c48",
+    "size": 427,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:56fb490cc298b5162d05e7c4dc5bd2b0a54adbe4987d6e80ebc6fdc93207d1ed",
+    "diff_id": "sha256:a4ebec9a461fec325aaea9dccacd126c43d6d26e808bea026db4c7fab2c339a8",
+    "size": 47489861,
+    "uncompressed_size": 144647937,
+    "created_by": "RUN |7 BUILD_DATE=2026-11-23T12:33:31Z VERSION=fee1039d-ls9 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-traditional     tzdata &&   echo \"**** add all sources ****\" &&   echo \"deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" > /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   rm -f /etc/apt/sources.list.d/debian.sources &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   apt-get -y autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*     /usr/share/man",
+    "dockerfile_lines": [
+     74,
+     149
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:743190998653cad90f021a19f9698719555b4527195e1d92803702881bc20bd0",
+    "diff_id": "sha256:41433ed8519b794c16f051cd79ada9e821c2fa6229ed6dffe964108aec5d7234",
+    "size": 4571,
+    "uncompressed_size": 8872,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     152,
+     152
+    ],
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:66ff47f4058bb468e1ff535cac5a42b1854758a37e274df46a0d579227ac5813",
+    "diff_id": "sha256:d4c0c53ef867596e84d4b5fb08516442710e85b8e6c535d3284a9143f994db36",
+    "size": 34344506,
+    "uncompressed_size": 110565953,
+    "created_by": "COPY /root-out/ /",
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:8eb9195ac8d00f47e3cc4f5a1c37627a197248dc5a49eb7a4f1574528ac6a6a6",
+    "diff_id": "sha256:8a4a3d7d85f1d5d75e7bf8b341de79c292f4cbf9b2e955a9af80b0ef08f9967d",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:c46e73c4979454754ecf253378bb460226aedca444ee3f85b6454a2b693b2c13",
+    "diff_id": "sha256:d2345e93b66b581f16d22377f7c3a5d346ebfb60739b3398a4697cab2fa0c0f6",
+    "size": 1365,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:c0301c767b0b782b8ca6dca445c54ea079cbeea2f113b074760ff6bed0d8d630",
+    "diff_id": "sha256:3e8393b946795afce441028521a32243547509590a7c59236fd78dfa7939a1c8",
+    "size": 703,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=744 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:c60b8e769547eb96f166af33d320c8faf919b54306747ba51b35384f760e8b8e",
+    "diff_id": "sha256:0c8aeace7f473f3e45f72c2a055b1723e6fa4b34c5fc08f55c4a658b5e00388d",
+    "size": 426,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:9b480792e870541b0c6a9ab72f5d867ec3b2e8c7d3bd43350ee20287db45874b",
+    "diff_id": "sha256:19f0c278e539eb6791d129a927c4f5e0bed151ad60f0c941c88c1c6a7d021909",
+    "size": 47453579,
+    "uncompressed_size": 164875908,
+    "created_by": "RUN |7 BUILD_DATE=2026-11-23T12:33:31Z VERSION=fee1039d-ls9 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 DEBIAN_FRONTEND=noninteractive /bin/sh -c echo \"**** Ripped from Ubuntu Docker Logic ****\" &&   echo '#!/bin/sh'     > /usr/sbin/policy-rc.d &&   echo 'exit 101'     >> /usr/sbin/policy-rc.d &&   chmod +x     /usr/sbin/policy-rc.d &&   dpkg-divert --local --rename --add /sbin/initctl &&   cp -a     /usr/sbin/policy-rc.d     /sbin/initctl &&   sed -i     's/^exit.*/exit 0/'     /sbin/initctl &&   echo 'force-unsafe-io'     > /etc/dpkg/dpkg.cfg.d/docker-apt-speedup &&   echo 'DPkg::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     > /etc/apt/apt.conf.d/docker-clean &&   echo 'APT::Update::Post-Invoke { \"rm -f /var/cache/apt/archives/*.deb /var/cache/apt/archives/partial/*.deb /var/cache/apt/*.bin || true\"; };'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Dir::Cache::pkgcache \"\"; Dir::Cache::srcpkgcache \"\";'     >> /etc/apt/apt.conf.d/docker-clean &&   echo 'Acquire::Languages \"none\";'     > /etc/apt/apt.conf.d/docker-no-languages &&   echo 'Acquire::GzipIndexes \"true\"; Acquire::CompressionTypes::Order:: \"gz\";'     > /etc/apt/apt.conf.d/docker-gzip-indexes &&   echo 'Apt::AutoRemove::SuggestsImportant \"false\";'     > /etc/apt/apt.conf.d/docker-autoremove-suggests &&   mkdir -p /run/systemd &&   echo 'docker'     > /run/systemd/container &&   echo \"**** install apt-utils and locales ****\" &&   apt-get update &&   apt-get upgrade -y &&   apt-get install -y     apt-utils     locales &&   echo \"**** install packages ****\" &&   apt-get install -y     catatonit     cron     curl     gnupg     jq     netcat-traditional     tzdata &&   echo \"**** add all sources ****\" &&   echo \"deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" > /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian trixie main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://deb.debian.org/debian trixie-backports main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   echo \"deb-src http://security.debian.org/debian-security/ trixie-security main contrib non-free non-free-firmware\" >> /etc/apt/sources.list &&   rm -f /etc/apt/sources.list.d/debian.sources &&   echo \"**** generate locale ****\" &&   locale-gen en_US.UTF-8 &&   echo \"**** create abc user and make our folders ****\" &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   apt-get -y autoremove &&   apt-get clean &&   rm -rf     /tmp/*     /var/lib/apt/lists/*     /var/tmp/*     /var/log/*     /usr/share/man",
+    "dockerfile_lines": [
+     74,
+     149
+    ],
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:761567292ae2c73fb36f846bec190b57336acbaeb0c9f394741f88e26b7afec7",
+    "diff_id": "sha256:1508ae5ab3d55d2cef30f9a3650fd309ecb62f3c55202c073f59d9f1d5f897a6",
+    "size": 4573,
+    "uncompressed_size": 8872,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     152,
+     152
+    ],
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "baseimage-debian",
+  "tag": "trixie-fee1039d-ls9",
+  "enabled": true,
+  "success": true,
+  "report_url": "https://linuxserver-playground.github.io/site/images/baseimage-debian/builds/trixie-fee1039d-ls9/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.009,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 7680000,
+    "pids": 11,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/test.amd64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/trixie-fee1039d-ls9/amd64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/trixie-fee1039d-ls9/amd64/sysinfo.txt"
+    }
+   },
+   "arm64": {
+    "success": true,
+    "passed": 9,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "startup_seconds": 1.011,
+    "listening_ports": [],
+    "warnings": 0,
+    "rss_bytes": 6664192,
+    "pids": 12,
+    "tarball": "https://github.com/linuxserver-playground/docker-baseimage-debian/releases/download/trixie-fee1039d-ls9/test.arm64.tar.gz",
+    "files": {
+     "container_log": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/trixie-fee1039d-ls9/arm64/container.log",
+     "sysinfo": "https://linuxserver-playground.github.io/docker-baseimage-debian/builds/trixie-fee1039d-ls9/arm64/sysinfo.txt"
+    }
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "baseimage-debian",
+    "tag": "amd64-8296fbe-45175340835",
+    "arch": "amd64",
+    "started": "2026-11-23T12:37:04Z",
+    "finished": "2026-11-23T12:37:22Z",
+    "success": true,
+    "runner": "a90c6c653dc3",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.009,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.009
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "180 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "180 packages: syft JSON 53343 bytes gzipped, SPDX for the image attestation 393706 bytes",
+      "seconds": 0.133
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1157 dirs, 7383 files (203657822 bytes), 1830 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.05s, total 0.09s",
+      "seconds": 0.192
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.366
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 17 from this image, own units from the repository",
+      "seconds": 0.032
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "11 pids, tcp [], rss 7680000 bytes",
+      "seconds": 0.281
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 7680000,
+     "pids": 11,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 191
+    }
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "baseimage-debian",
+    "tag": "arm64-8296fbe-45175340835",
+    "arch": "arm64",
+    "started": "2026-11-23T12:35:08Z",
+    "finished": "2026-11-23T12:35:28Z",
+    "success": true,
+    "runner": "9f9f00199f71",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "startup_seconds": 1.011,
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "PASS",
+      "message": "init done after 1.0s",
+      "seconds": 1.011
+     },
+     {
+      "name": "Services",
+      "status": "PASS",
+      "message": "1 service stayed up for 15s: svc-cron",
+      "seconds": 0
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "the manifest declares no required ports",
+      "seconds": 0
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "PASS",
+      "message": "no recognised app runtime running; no known runtime errors in the logs"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "180 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "180 packages: syft JSON 53354 bytes gzipped, SPDX for the image attestation 393742 bytes",
+      "seconds": 0.165
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "1156 dirs, 7389 files (239554488 bytes), 1827 symlinks, 2 hardlinks, 0 special, 5 skipped, 0 non-UTF-8 names; walk 0.07s, total 0.11s",
+      "seconds": 0.223
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "7 layers, 0 from base, compressed sizes from registry",
+      "seconds": 0.711
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "17 units, 17 from this image, own units from the repository",
+      "seconds": 0.05
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "manifest has no test.web"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "PASS",
+      "message": "12 pids, tcp [], rss 6664192 bytes",
+      "seconds": 0.353
+     }
+    ],
+    "files": {
+     "container_log": "container.log",
+     "sysinfo": "sysinfo.txt"
+    },
+    "runtime": {
+     "rss_bytes": 6664192,
+     "pids": 12,
+     "listening_tcp": [],
+     "listening_udp": [],
+     "s6_services": [
+      "svc-cron"
+     ],
+     "changed_paths": 191
+    }
+   }
+  }
+ }
+}

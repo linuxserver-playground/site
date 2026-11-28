@@ -1,0 +1,1065 @@
+{
+ "build": {
+  "schema": 1,
+  "image": "planka",
+  "repository": "linuxserver-playground/docker-planka",
+  "branch": "main",
+  "mode": "live",
+  "version": {
+   "upstream": "v2.3.1",
+   "upstream_clean": "v2.3.1",
+   "semver": "2.3.1",
+   "ls_build": 8,
+   "tag": "v2.3.1-ls8",
+   "release_tag": "latest",
+   "tags": [
+    "latest",
+    "v2.3.1-ls8",
+    "version-v2.3.1",
+    "2.3.1",
+    "amd64-latest",
+    "amd64-v2.3.1-ls8",
+    "amd64-version-v2.3.1",
+    "amd64-2.3.1",
+    "arm64v8-latest",
+    "arm64v8-v2.3.1-ls8",
+    "arm64v8-version-v2.3.1",
+    "arm64v8-2.3.1"
+   ],
+   "source": "github_release",
+   "source_url": "https://github.com/plankanban/planka/releases/tag/v2.3.1"
+  },
+  "commit": "a2c4ab3f6f36a7408081605c37237e19bb4855cf",
+  "created": "2026-11-24T20:15:16Z",
+  "reason": "packages",
+  "previous": {
+   "tag": "v2.3.1-ls7",
+   "release_url": "https://github.com/linuxserver-playground/docker-planka/releases/tag/v2.3.1-ls7"
+  },
+  "base": {
+   "family": "alpine",
+   "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+   "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+  },
+  "platforms": [
+   {
+    "arch": "amd64",
+    "result": "success",
+    "digest": "sha256:34481b4b815ae9601f7d0ddae73ef908fe1e5c7f776515802210dcfb5a9d6674",
+    "size": 118969270,
+    "uncompressed_size": 332067087,
+    "layers": 12,
+    "runner": "Linux-X64",
+    "build_seconds": 77
+   },
+   {
+    "arch": "arm64",
+    "result": "success",
+    "digest": "sha256:370851aa7eeb587a380b2d3e25a58c36c65589bc2ce311bb5b80ea15efe96cce",
+    "size": 119461194,
+    "uncompressed_size": 343857000,
+    "layers": 12,
+    "runner": "Linux-ARM64",
+    "build_seconds": 103
+   }
+  ],
+  "index_digest": "sha256:97add6baee2bfac79f7a54c518ec5dfc9f7705311776ee4795dba40b72ab2599",
+  "labels": {
+   "build_version": "Linuxserver.io version:- v2.3.1-ls8 Build-date:- 2026-11-24T20:10:08Z",
+   "io.linuxserver.image.base": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24@sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067",
+   "io.linuxserver.image.branch": "main",
+   "io.linuxserver.image.mode": "live",
+   "io.linuxserver.image.upstream": "v2.3.1",
+   "maintainer": "thespad",
+   "org.opencontainers.image.authors": "linuxserver.io",
+   "org.opencontainers.image.created": "2026-11-24T20:10:08Z",
+   "org.opencontainers.image.description": "Planka is an elegant open source project tracking tool.",
+   "org.opencontainers.image.documentation": "https://docs.linuxserver.io/images/docker-planka",
+   "org.opencontainers.image.licenses": "GPL-3.0-only",
+   "org.opencontainers.image.revision": "a2c4ab3f6f36a7408081605c37237e19bb4855cf",
+   "org.opencontainers.image.source": "https://github.com/linuxserver-playground/docker-planka",
+   "org.opencontainers.image.title": "Planka",
+   "org.opencontainers.image.url": "https://github.com/linuxserver-playground/docker-planka/packages",
+   "org.opencontainers.image.vendor": "linuxserver.io",
+   "org.opencontainers.image.version": "v2.3.1-ls8"
+  },
+  "config": {
+   "env": [
+    "PATH=/lsiopy/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+    "PS1=$(whoami)@$(hostname):$(pwd)\\$ ",
+    "HOME=/root",
+    "TERM=xterm",
+    "S6_CMD_WAIT_FOR_SERVICES_MAXTIME=0",
+    "S6_VERBOSITY=1",
+    "S6_STAGE2_HOOK=/docker-mods",
+    "VIRTUAL_ENV=/lsiopy",
+    "LSIO_FIRST_PARTY=true"
+   ],
+   "exposed_ports": [
+    "1337/tcp"
+   ],
+   "volumes": [
+    "/config"
+   ],
+   "entrypoint": [
+    "/init"
+   ],
+   "working_dir": "/"
+  },
+  "dockerfile": {
+   "amd64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG PLANKA_RELEASE\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add  --no-cache --virtual=build-dependencies \\\n    build-base \\\n    giflib \\\n    libgsf \\\n    nodejs \\\n    npm \\\n    py3-setuptools \\\n    python3-dev \\\n    vips && \\\n  echo \"**** install planka ****\" && \\\n  if [ -z ${PLANKA_RELEASE+x} ]; then \\\n  PLANKA_RELEASE=$(curl -s https://api.github.com/repos/plankanban/planka/releases/latest \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p /build && \\\n  curl -o \\\n    /tmp/planka.tar.gz -L \\\n    \"https://github.com/plankanban/planka/archive/${PLANKA_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/planka.tar.gz -C \\\n    /build --strip-components=1 && \\\n  cd /build/server && \\\n  npm install --omit=dev && \\\n  cd /build/client && \\\n  npm install --omit=dev && \\\n  INDEX_FORMAT=ejs DISABLE_ESLINT_PLUGIN=true npm run build && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    $HOME/.local \\\n    $HOME/.npm \\\n    /tmp/*\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:3.24\n\nENV LSIO_FIRST_PARTY=true\n\nARG BUILD_DATE\nARG VERSION\nARG PLANKA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nCOPY --from=buildstage /build/server/ /app\nCOPY --from=buildstage /build/server/.env.sample /app/.env\nCOPY --from=buildstage /build/client/dist /app/public/\n\nRUN \\\n  apk add  --no-cache \\\n    nodejs \\\n    npm \\\n    postgresql16-client \\\n    python3 && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r /app/requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  mv /app/public/index.ejs /app/views/ && \\\n  echo \"**** create symlinks ****\" && \\\n  mkdir -p /app/data/private/attachments && \\\n  /bin/bash -c \\\n  'dst=(logs); \\\n  src=(logs); \\\n  for i in \"${!src[@]}\"; do rm -rf /app/\"${src[i]}\" && ln -s /config/\"${dst[i]}\" /app/\"${src[i]}\"; done'\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 1337\n\nVOLUME /config\n",
+   "arm64": "# syntax=docker/dockerfile:1\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24 AS buildstage\n\nENV LSIO_FIRST_PARTY=true\n\n# set version label\nARG PLANKA_RELEASE\n\nRUN \\\n  echo \"**** install packages ****\" && \\\n  apk add  --no-cache --virtual=build-dependencies \\\n    build-base \\\n    giflib \\\n    libgsf \\\n    nodejs \\\n    npm \\\n    py3-setuptools \\\n    python3-dev \\\n    vips && \\\n  echo \"**** install planka ****\" && \\\n  if [ -z ${PLANKA_RELEASE+x} ]; then \\\n  PLANKA_RELEASE=$(curl -s https://api.github.com/repos/plankanban/planka/releases/latest \\\n    | jq -r '.tag_name'); \\\n  fi && \\\n  mkdir -p /build && \\\n  curl -o \\\n    /tmp/planka.tar.gz -L \\\n    \"https://github.com/plankanban/planka/archive/${PLANKA_RELEASE}.tar.gz\" && \\\n  tar xf \\\n    /tmp/planka.tar.gz -C \\\n    /build --strip-components=1 && \\\n  cd /build/server && \\\n  npm install --omit=dev && \\\n  cd /build/client && \\\n  npm install --omit=dev && \\\n  INDEX_FORMAT=ejs DISABLE_ESLINT_PLUGIN=true npm run build && \\\n  echo \"**** cleanup ****\" && \\\n  apk del --purge \\\n    build-dependencies && \\\n  rm -rf \\\n    $HOME/.cache \\\n    $HOME/.local \\\n    $HOME/.npm \\\n    /tmp/*\n\nFROM ghcr.io/linuxserver-playground/baseimage-alpine:arm64v8-3.24\n\nENV LSIO_FIRST_PARTY=true\n\nARG BUILD_DATE\nARG VERSION\nARG PLANKA_RELEASE\nLABEL build_version=\"Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}\"\nLABEL maintainer=\"thespad\"\n\nCOPY --from=buildstage /build/server/ /app\nCOPY --from=buildstage /build/server/.env.sample /app/.env\nCOPY --from=buildstage /build/client/dist /app/public/\n\nRUN \\\n  apk add  --no-cache \\\n    nodejs \\\n    npm \\\n    postgresql16-client \\\n    python3 && \\\n  python3 -m venv /lsiopy && \\\n  pip install -U --no-cache-dir \\\n    pip \\\n    setuptools && \\\n  pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r /app/requirements.txt && \\\n  printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version && \\\n  mv /app/public/index.ejs /app/views/ && \\\n  echo \"**** create symlinks ****\" && \\\n  mkdir -p /app/data/private/attachments && \\\n  /bin/bash -c \\\n  'dst=(logs); \\\n  src=(logs); \\\n  for i in \"${!src[@]}\"; do rm -rf /app/\"${src[i]}\" && ln -s /config/\"${dst[i]}\" /app/\"${src[i]}\"; done'\n\n# copy local files\nCOPY root/ /\n\n# ports and volumes\nEXPOSE 1337\n\nVOLUME /config\n"
+  },
+  "init_graph": {
+   "d2": "\"planka:latest\": {\n  docker-mods\n  base {\n    fix-attr +\\nlegacy cont-init\n  }\n  docker-mods -> base\n  legacy-services\n  custom services\n  init-services -> legacy-services\n  init-services -> custom services\n  custom services -> legacy-services\n  legacy-services -> ci-service-check\n  init-migrations -> init-adduser\n  init-os-end -> init-config\n  init-config -> init-config-end\n  init-crontab-config -> init-config-end\n  init-planka-config -> init-config-end\n  init-config -> init-crontab-config\n  init-mods-end -> init-custom-files\n  init-adduser -> init-device-perms\n  base -> init-envfile\n  base -> init-migrations\n  init-config-end -> init-mods\n  init-mods-package-install -> init-mods-end\n  init-mods -> init-mods-package-install\n  init-adduser -> init-os-end\n  init-device-perms -> init-os-end\n  init-envfile -> init-os-end\n  init-config -> init-planka-config\n  init-custom-files -> init-services\n  init-services -> svc-cron\n  svc-cron -> legacy-services\n  init-services -> svc-planka\n  svc-planka -> legacy-services\n}\nBase Images: {\n  \"baseimage-alpine:3.24\"\n}\n\"planka:latest\" <- Base Images\n",
+   "units": [
+    {
+     "name": "ci-service-check",
+     "type": "oneshot",
+     "depends_on": [
+      "legacy-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-adduser",
+     "type": "oneshot",
+     "depends_on": [
+      "init-migrations"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-os-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-config-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config",
+      "init-crontab-config",
+      "init-planka-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-crontab-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-custom-files",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-device-perms",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-envfile",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-migrations",
+     "type": "oneshot",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "init-mods",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config-end"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods-package-install"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-mods-package-install",
+     "type": "oneshot",
+     "depends_on": [
+      "init-mods"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-os-end",
+     "type": "oneshot",
+     "depends_on": [
+      "init-adduser",
+      "init-device-perms",
+      "init-envfile"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "init-planka-config",
+     "type": "oneshot",
+     "depends_on": [
+      "init-config"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\ncd /app || exit 1\n\nmkdir -p /config/{favicons,images,attachments,logs}\n\nif [[ -n ${DATABASE_URL} ]]; then\n    DB_HOST=$(awk -F '@|:|/' '{print $6}' <<<\"${DATABASE_URL}\")\n    DB_PORT=$(awk -F '@|:|/' '{print $7}' <<<\"${DATABASE_URL}\")\n    DB_USER=$(awk -F '@|:|/' '{print $4}' <<<\"${DATABASE_URL}\")\n    if [[ ! ${DB_PORT} =~ [0-9]+ ]]; then DB_PORT=\"5432\"; fi\n    echo \"Waiting for DB ${DB_HOST} to become available on port ${DB_PORT}...\"\n    END=$((SECONDS + 30))\n    while [[ ${SECONDS} -lt ${END} ]] && [[ -n \"${DB_HOST+x}\" ]]; do\n        if pg_isready -h \"${DB_HOST}\" -p \"${DB_PORT}\" -U \"${DB_USER}\" -q; then\n            if [[ ! -f /run/dbwait.lock ]]; then\n                sleep 5\n            fi\n            touch /run/dbwait.lock\n            break\n        else\n            sleep 1\n        fi\n    done\nelse\n    echo \"No database configured, sleeping...\"\n    sleep infinity\nfi\n\n# v2 migration nonsense\nif [[ ! -f \"/config/v2\" ]] && [[ -f \"/config/logs/planka.log\" ]]; then\n    if [[ -d /config/project-background-images ]]; then\n      mv /config/project-background-images /config/background-images\n      cp -a /config/background-images /config/images\n      rm -rf /config/background-images\n    fi\n    if [[ -d /config/user-avatars ]]; then\n      cp -a /config/user-avatars /config/images\n      rm -rf /config/user-avatars\n    fi\n    TZ=UTC s6-setuidgid abc npm run db:upgrade\n    touch \"/config/v2\"\nfi\n\n# Fix upload paths due to symlinks no longer being supported OOTB because of path traversal concerns\nsed -i -e \"s|uploadsBasePath:.*|uploadsBasePath: '/config',|\" \\\n  -e \"s|faviconsPathSegment:.*|faviconsPathSegment: 'favicons',|\" \\\n  -e \"s|userAvatarsPathSegment:.*|userAvatarsPathSegment: 'images/user-avatars',|\" \\\n  -e \"s|backgroundImagesPathSegment:.*|backgroundImagesPathSegment: 'images/background-images',|\" \\\n  -e \"s|attachmentsPathSegment:.*|attachmentsPathSegment: 'attachments',|\" \\\n  /app/config/custom.js\n\necho \"Running database migrations...\"\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    TZ=UTC s6-setuidgid abc node db/init.js\n\n    # permissions\n    lsiown -R abc:abc \\\n        /config\nelse\n    TZ=UTC node db/init.js\nfi\n"
+    },
+    {
+     "name": "init-services",
+     "type": "oneshot",
+     "depends_on": [
+      "init-custom-files"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-cron",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "base"
+    },
+    {
+     "name": "svc-planka",
+     "type": "longrun",
+     "depends_on": [
+      "init-services"
+     ],
+     "source": "image",
+     "script": "#!/usr/bin/with-contenv bash\n# shellcheck shell=bash\n\nexport NODE_ENV=production\n\n# See https://github.com/plankanban/planka/issues/253\nexport TZ=UTC\n\nif [[ -z ${LSIO_NON_ROOT_USER} ]]; then\n    HOME=/config exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 1337\" \\\n        cd /app s6-setuidgid abc node app.js --prod\nelse\n    HOME=/config exec \\\n        s6-notifyoncheck -d -n 300 -w 1000 -c \"nc -z localhost 1337\" \\\n        cd /app node app.js --prod\nfi\n"
+    },
+    {
+     "name": "user",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    },
+    {
+     "name": "user2",
+     "type": "bundle",
+     "depends_on": [],
+     "source": "base"
+    }
+   ]
+  },
+  "packages": {
+   "amd64": {
+    "count": 900,
+    "distro": "Alpine Linux v3.24",
+    "hash": "ef058a42",
+    "by_type": {
+     "npm": 734,
+     "python": 67,
+     "binary": 20,
+     "apk": 77,
+     "UnknownPackage": 2
+    }
+   },
+   "arm64": {
+    "count": 900,
+    "distro": "Alpine Linux v3.24",
+    "hash": "0d0b41d4",
+    "by_type": {
+     "npm": 734,
+     "python": 67,
+     "binary": 20,
+     "apk": 77,
+     "UnknownPackage": 2
+    }
+   }
+  },
+  "test": {
+   "enabled": false,
+   "success": true,
+   "per_arch": {
+    "amd64": true,
+    "arm64": true
+   },
+   "report_url": "https://linuxserver-playground.github.io/site/images/planka/builds/v2.3.1-ls8/"
+  },
+  "notes": {
+   "linuxserver": "**Full Changelog**: https://github.com/linuxserver-playground/docker-planka/compare/v2.3.1-ls7...v2.3.1-ls8",
+   "upstream": "## PLANKA Community 2.3.1\n\nFixes a crash introduced in 2.3.0. We recommend updating if any of your users has no username.\n\n### Fixed\n\n- **Description editor**: opening a card's description for editing crashed to a blank page on boards with a member who has no username (#1813).\n\n**Full Changelog**: https://github.com/plankanban/planka/compare/v2.3.0...v2.3.1\n",
+   "upstream_url": "https://github.com/plankanban/planka/releases/tag/v2.3.1"
+  },
+  "assets": [
+   {
+    "name": "packages.amd64.json.gz",
+    "size": 149727,
+    "sha256": "ed1c469eb74cd14432246821d13566649958fb174270a3251f4d3adde394b640",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/packages.amd64.json.gz"
+   },
+   {
+    "name": "layers.amd64.json",
+    "size": 5954,
+    "sha256": "bd74486aacb88da0c1da00c6d432055362891a4f2fc62d72baca055a3c999c9b",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/layers.amd64.json"
+   },
+   {
+    "name": "files.amd64.json.gz",
+    "size": 190413,
+    "sha256": "1a393b13026acb10c6745ef92b53ec93fe4a035a57706fcef32f858305ee9ef0",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/files.amd64.json.gz"
+   },
+   {
+    "name": "test.amd64.json",
+    "size": 1955,
+    "sha256": "ea5b5cf36bd863221175b782f18e0e9cf801c696da259ad900311e3e002f7639",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/test.amd64.json"
+   },
+   {
+    "name": "test.amd64.tar.gz",
+    "size": 318,
+    "sha256": "756394268e6ee15714f229bd19211a9fa350fa348ac4b8da79f0f61059a96809",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/test.amd64.tar.gz"
+   },
+   {
+    "name": "package_versions.amd64.txt",
+    "size": 72480,
+    "sha256": "11448a8d238ceb819b81cf8a35cf60d15bca63eadd3490216590fba43e5b3f8e",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/package_versions.amd64.txt"
+   },
+   {
+    "name": "packages.arm64.json.gz",
+    "size": 149817,
+    "sha256": "13ef5f54e0336fdb27f1a4ba4366bbbbfe2b6ad59cff096794c638f26b08c6cd",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/packages.arm64.json.gz"
+   },
+   {
+    "name": "layers.arm64.json",
+    "size": 5954,
+    "sha256": "95962c53cd3db16e3569bd3cf941758b91fe0e6e9f80f20215c2b5fdad479aa2",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/layers.arm64.json"
+   },
+   {
+    "name": "files.arm64.json.gz",
+    "size": 190093,
+    "sha256": "246656f711dc02222b365441dbb2fc194eeee232d0a5bfa784a8072d95575ded",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/files.arm64.json.gz"
+   },
+   {
+    "name": "test.arm64.json",
+    "size": 1953,
+    "sha256": "c0035fa2e2cb656dede31ad9387d49a020b4ee70087cc87c4f9cf1e6cc5c3049",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/test.arm64.json"
+   },
+   {
+    "name": "test.arm64.tar.gz",
+    "size": 319,
+    "sha256": "b4c6fc2dcd6ed8d6fd5fa92e251428e43d6ce82c10582fa26917da5bcc1c2229",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/test.arm64.tar.gz"
+   },
+   {
+    "name": "package_versions.arm64.txt",
+    "size": 72480,
+    "sha256": "3bd69fe965c073f164985f9fea189b970b28cf35766b7c26ddbdefdeda9db869",
+    "url": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/package_versions.arm64.txt"
+   }
+  ],
+  "workflow": {
+   "run_id": 45477831111,
+   "run_url": "https://github.com/linuxserver-playground/docker-planka/actions/runs/45477831111",
+   "workflows_ref": "v1",
+   "ci_version": "latest"
+  },
+  "published": {
+   "image": "ghcr.io/linuxserver-playground/planka",
+   "tags": [
+    "latest",
+    "v2.3.1-ls8",
+    "version-v2.3.1",
+    "2.3.1",
+    "amd64-latest",
+    "amd64-v2.3.1-ls8",
+    "amd64-version-v2.3.1",
+    "amd64-2.3.1",
+    "arm64v8-latest",
+    "arm64v8-v2.3.1-ls8",
+    "arm64v8-version-v2.3.1",
+    "arm64v8-2.3.1"
+   ]
+  }
+ },
+ "diff": {
+  "image": "planka",
+  "branch": "main",
+  "tag": "v2.3.1-ls8",
+  "previous_tag": "v2.3.1-ls7",
+  "classification": "packages",
+  "reasons": [
+   "packages changed",
+   "1 commit (ee8cedc → a2c4ab3): the pipeline's own package table update"
+  ],
+  "upstream": {
+   "from": "v2.3.1",
+   "to": "v2.3.1",
+   "changed": false
+  },
+  "commit": {
+   "from": "ee8cedca5245c09365a5d3c258709c53d86f1caf",
+   "to": "a2c4ab3f6f36a7408081605c37237e19bb4855cf",
+   "changed": true,
+   "compare_url": "https://github.com/linuxserver-playground/docker-planka/compare/ee8cedca5245c09365a5d3c258709c53d86f1caf...a2c4ab3f6f36a7408081605c37237e19bb4855cf",
+   "commits": [
+    {
+     "sha": "a2c4ab3f6f36a7408081605c37237e19bb4855cf",
+     "subject": "Update package versions [skip ci]",
+     "author": {
+      "name": "github-actions[bot]",
+      "login": "github-actions[bot]"
+     },
+     "date": "2026-11-22T00:15:32Z",
+     "url": "https://github.com/linuxserver-playground/docker-planka/commit/a2c4ab3f6f36a7408081605c37237e19bb4855cf",
+     "bot": true
+    }
+   ],
+   "count": 1,
+   "truncated": false,
+   "areas": {
+    "packages": 1
+   }
+  },
+  "trigger": "packages",
+  "base": {
+   "from": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+   },
+   "to": {
+    "family": "alpine",
+    "image": "ghcr.io/linuxserver-playground/baseimage-alpine:3.24",
+    "digest": "sha256:149bdce0bc2d9276e6727f2e6912bc69c0df4d3606b355267cd72a443551f067"
+   },
+   "changed": false
+  },
+  "size": {
+   "amd64": {
+    "from": 118732231,
+    "to": 118969270,
+    "delta": 237039
+   },
+   "arm64": {
+    "from": 119246354,
+    "to": 119461194,
+    "delta": 214840
+   }
+  },
+  "config": {
+   "env": {
+    "added": [],
+    "removed": [],
+    "changed": []
+   },
+   "exposed_ports": {
+    "added": [],
+    "removed": []
+   },
+   "volumes": {
+    "added": [],
+    "removed": []
+   }
+  },
+  "dockerfile": {
+   "amd64": "",
+   "arm64": ""
+  },
+  "packages": {
+   "amd64": {
+    "apk": {
+     "added": [
+      {
+       "name": "python3-ndbm",
+       "version": "3.14.10-r3",
+       "purl": "pkg:apk/alpine/python3-ndbm@3.14.10-r3?arch=x86_64&distro=alpine-3.24.4&upstream=python3-extra"
+      }
+     ],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libffi",
+       "from": "3.5.2-r1",
+       "to": "3.8.1-r0",
+       "purl": "pkg:apk/alpine/libffi@3.8.1-r0?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "pyc",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/pyc@3.14.10-r2?arch=x86_64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/python3@3.14.10-r2?arch=x86_64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "python3-pyc",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/python3-pyc@3.14.10-r2?arch=x86_64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3-pycache-pyc0",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/python3-pycache-pyc0@3.14.10-r2?arch=x86_64&distro=alpine-3.24.4&upstream=python3"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "charset-normalizer",
+       "from": "3.5.2",
+       "to": "3.5.3",
+       "purl": "pkg:pypi/charset-normalizer@3.5.3"
+      }
+     ],
+     "downgraded": []
+    }
+   },
+   "arm64": {
+    "apk": {
+     "added": [
+      {
+       "name": "python3-ndbm",
+       "version": "3.14.10-r3",
+       "purl": "pkg:apk/alpine/python3-ndbm@3.14.10-r3?arch=aarch64&distro=alpine-3.24.4&upstream=python3-extra"
+      }
+     ],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "libffi",
+       "from": "3.5.2-r1",
+       "to": "3.8.1-r0",
+       "purl": "pkg:apk/alpine/libffi@3.8.1-r0?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "pyc",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/pyc@3.14.10-r2?arch=aarch64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/python3@3.14.10-r2?arch=aarch64&distro=alpine-3.24.4"
+      },
+      {
+       "name": "python3-pyc",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/python3-pyc@3.14.10-r2?arch=aarch64&distro=alpine-3.24.4&upstream=python3"
+      },
+      {
+       "name": "python3-pycache-pyc0",
+       "from": "3.14.10-r1",
+       "to": "3.14.10-r2",
+       "purl": "pkg:apk/alpine/python3-pycache-pyc0@3.14.10-r2?arch=aarch64&distro=alpine-3.24.4&upstream=python3"
+      }
+     ],
+     "downgraded": []
+    },
+    "python": {
+     "added": [],
+     "removed": [],
+     "upgraded": [
+      {
+       "name": "charset-normalizer",
+       "from": "3.5.2",
+       "to": "3.5.3",
+       "purl": "pkg:pypi/charset-normalizer@3.5.3"
+      }
+     ],
+     "downgraded": []
+    }
+   }
+  },
+  "totals": {
+   "added": 2,
+   "removed": 0,
+   "upgraded": 12,
+   "downgraded": 0
+  }
+ },
+ "layers": {
+  "amd64": [
+   {
+    "index": 0,
+    "digest": "sha256:003287dee557b82fe441c508fcff1d1fd3cddcb43df9cadbbe68d9120debbc4c",
+    "diff_id": "sha256:7f37cf5f9b5522a446306a2dd927b07608322b340295d9c8cc5767c887a7d593",
+    "size": 6266914,
+    "uncompressed_size": 13738493,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:0a587a9d93c81feff6014be50cab1a7efc58b6f192c9ad23e3120b5fe1165743",
+    "diff_id": "sha256:c921bd0be3b6cb2fc35e2fa6122dca3fc9b5d1d56996d2e329ceb498d6862b09",
+    "size": 1360,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:5d76566ef9a576619f53c1e73b05b38cf3f5e9a4cac44a2ac3cb6763ab49ac8f",
+    "diff_id": "sha256:28e461b56469c1c8cb71681d4e7a6d8a57cd6d8519fe88a3273f72ef39a423dc",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:1cc8426acb56d991126b44f2571acb57305dae4ad4ebf0b8bda0803ab4bf506a",
+    "diff_id": "sha256:d9d6f53df346c09163d57981f07d68f0c2851cacd589f98be03741eac504d536",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:5edfe3e2a1577f28de7c8f243093888f599aaa1986cccdfa855ac582220b0f7f",
+    "diff_id": "sha256:4372cf3a91b4aef6bec542d21438a77c29aba7cbf0af5194453e1aa12d171f0c",
+    "size": 6091117,
+    "uncompressed_size": 14421909,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-21T01:57:59Z VERSION=9ed8ed67-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:93bc1ab02b82c38040ca2672fbed3077a4e9f67592760b73a16267e73ba0e35f",
+    "diff_id": "sha256:411965d01477a819496d799e905aa12b57d97a099e2eeb98b85cda52873af134",
+    "size": 4633,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:b0016075ace8f59fac9c8ad8fb4596dcaed36d57ac85920dd972b5bf3f9d854d",
+    "diff_id": "sha256:c09bb4479ec50ed69d84293dd3011f1136c9a9d595092e5775a67201d3599058",
+    "size": 44619920,
+    "uncompressed_size": 136851677,
+    "created_by": "COPY /build/server/ /app",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:c1e4e4ead2f524079ace8c551d776068f9beb80669306cb86f9ae532e0512ad2",
+    "diff_id": "sha256:3da231f51fbe77c936c5611994d70a908cdd23ac840dea1570595cccf9c1d546",
+    "size": 1951,
+    "uncompressed_size": 3462,
+    "created_by": "COPY /build/server/.env.sample /app/.env",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:3cae0b6e850f09fd36e4623ce48e92583a7e129f70dee6758d19e55904af9ba4",
+    "diff_id": "sha256:62d1da1fa87376850a8ce614b8640323df7fe9426334af3ca31da276d266eaf4",
+    "size": 4661457,
+    "uncompressed_size": 13339369,
+    "created_by": "COPY /build/client/dist /app/public/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:8bc9e8a1b9c240c78db20713ee566d84ef33e7ef0c630a7aaad0fd9912fd1080",
+    "diff_id": "sha256:074c0e608d31c50d150a9d27272c14f5aff48cb141223d56acd60818764a9e34",
+    "size": 57312930,
+    "uncompressed_size": 153663224,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-24T20:10:08Z VERSION=v2.3.1-ls8 PLANKA_RELEASE=v2.3.1 /bin/sh -c apk add  --no-cache     nodejs     npm     postgresql16-client     python3 &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r /app/requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   mv /app/public/index.ejs /app/views/ &&   echo \"**** create symlinks ****\" &&   mkdir -p /app/data/private/attachments &&   /bin/bash -c   'dst=(logs);   src=(logs);   for i in \"${!src[@]}\"; do rm -rf /app/\"${src[i]}\" && ln -s /config/\"${dst[i]}\" /app/\"${src[i]}\"; done'",
+    "dockerfile_lines": [
+     61,
+     79
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 11,
+    "digest": "sha256:80bdc057bc9071a5ee4f64648b81b57c611114f79c2838bfe9c13e5b9d71c9c4",
+    "diff_id": "sha256:8241af4e91d06b100771459a5f2ac8e9cc56fe00ac5936f596a791e5825003b8",
+    "size": 1620,
+    "uncompressed_size": 2737,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     82,
+     82
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ],
+  "arm64": [
+   {
+    "index": 0,
+    "digest": "sha256:5eb3b899491d026ce9a1dd8d1ec992ed8c2f5d871a0ecbf002d2d6665998bb9d",
+    "diff_id": "sha256:e7480ae57975b87a437c9aee5dfc2382476e70adc93404b39feac14897529574",
+    "size": 7083924,
+    "uncompressed_size": 18542639,
+    "created_by": "COPY /root-out/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 1,
+    "digest": "sha256:f6a4c3e338ed76d3e90c1ce7a15013a45c9b55febc952bc905eed245ce0bb8d2",
+    "diff_id": "sha256:4237b4abe0c583f84633de1da55c1e716dbf60660634932965955c149a90929c",
+    "size": 6239,
+    "uncompressed_size": 31193,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/docker-mods.v3 /docker-mods",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 2,
+    "digest": "sha256:6d7fea758837fab8e692ad30f0f7d8a8657284978d242b76a0e84ef60ba2cca0",
+    "diff_id": "sha256:eb2ab95a0263da9ab800379e909659ea13bbe01fbe00aa13cc6842a78423bfc3",
+    "size": 1355,
+    "uncompressed_size": 4178,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/package-install.v1 /etc/s6-overlay/s6-rc.d/init-mods-package-install/run",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 3,
+    "digest": "sha256:6b86deb612a6754df530592d36d0709ad3e283ab98af16cf70bce538cfcc5dfa",
+    "diff_id": "sha256:38b16f1b63604662a58d78a33a278b8fe8d32ad3757b6b9134c982a057c61ed1",
+    "size": 701,
+    "uncompressed_size": 945,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/lsiown.v1 /usr/bin/lsiown",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 4,
+    "digest": "sha256:6766149f36541ecd60321fc61529d223066c6f6a7f2afb78f6e27003976707dc",
+    "diff_id": "sha256:d8dc14dde51b61145efbe6d9a1c40c079b0866c91570f7a87778e0a8e2149dbe",
+    "size": 428,
+    "uncompressed_size": 478,
+    "created_by": "ADD --chmod=755 https://raw.githubusercontent.com/linuxserver-playground/docker-mods/mod-scripts/with-contenv.v1 /usr/bin/with-contenv",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 5,
+    "digest": "sha256:f7925dae9e14f51dfb9c3ba991d8fb13926cd7ff417f31feae9adfd644e95f61",
+    "diff_id": "sha256:188a811e804883067f53142574c7a653f44d540d471a8d13a4afd68f9f907ef9",
+    "size": 6326024,
+    "uncompressed_size": 21489222,
+    "created_by": "RUN |6 BUILD_DATE=2026-11-21T01:57:59Z VERSION=9ed8ed67-ls8 MODS_VERSION=v3 PKG_INST_VERSION=v1 LSIOWN_VERSION=v1 WITHCONTENV_VERSION=v1 /bin/sh -c echo \"**** install runtime packages ****\" &&   apk add --no-cache     alpine-release     bash     ca-certificates     catatonit     coreutils     curl     findutils     jq     netcat-openbsd     procps-ng     shadow     tzdata &&   echo \"**** create abc user and make our folders ****\" &&   groupmod -g 1000 users &&   useradd -u 911 -U -d /config -s /bin/false abc &&   usermod -G users abc &&   mkdir -p     /app     /config     /defaults     /lsiopy &&   echo \"**** cleanup ****\" &&   rm -rf     /tmp/*",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 6,
+    "digest": "sha256:b99ac5ac22c6cb08da288cd34c8e9fbed0516758b5cf63914805e61029586f24",
+    "diff_id": "sha256:a39ec37631e1275ef6e526578795adfb5ecc66b7a68a35ec2aa5eb2306cc5a41",
+    "size": 4632,
+    "uncompressed_size": 9422,
+    "created_by": "COPY root/ /",
+    "from_base": true,
+    "empty": false
+   },
+   {
+    "index": 7,
+    "digest": "sha256:82c09006b064039a22eb05ece70552f538317806aefc936c84e8fb62a177b1c6",
+    "diff_id": "sha256:ac1554d7a545626284b8b4df5ddfdc62800e98c9f7ad2f1dad1f6ab755c14c64",
+    "size": 44855683,
+    "uncompressed_size": 136762349,
+    "created_by": "COPY /build/server/ /app",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 8,
+    "digest": "sha256:24728a6b9635cb3b25f7c9857471f0dcced77ba7a96ba3a4c7a18da31497ed61",
+    "diff_id": "sha256:f985b9535192e4ac9a6b94401fc533b91c5bce9441403c4a5f1da48571d24202",
+    "size": 1953,
+    "uncompressed_size": 3462,
+    "created_by": "COPY /build/server/.env.sample /app/.env",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 9,
+    "digest": "sha256:36dd16555bd29a8a61cca8f14cfeab33451f8c574529feeaefc8f47b115fac5c",
+    "diff_id": "sha256:3b72d2493752af6f928b65b395d06b7541a28265c5a962338cc24f42427e238a",
+    "size": 4661471,
+    "uncompressed_size": 13339369,
+    "created_by": "COPY /build/client/dist /app/public/",
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 10,
+    "digest": "sha256:b81af24d115b441b6b720cab7c5f060c26dd97e9f44d13322697372c04edf98d",
+    "diff_id": "sha256:46a09895027cbc1bfee4d4aff088df30e72ce66341021dcbfb89758f3d48b4cd",
+    "size": 56517164,
+    "uncompressed_size": 153671006,
+    "created_by": "RUN |3 BUILD_DATE=2026-11-24T20:10:08Z VERSION=v2.3.1-ls8 PLANKA_RELEASE=v2.3.1 /bin/sh -c apk add  --no-cache     nodejs     npm     postgresql16-client     python3 &&   python3 -m venv /lsiopy &&   pip install -U --no-cache-dir     pip     setuptools &&   pip install -U --no-cache-dir --find-links https://wheel-index.linuxserver.io/alpine-3.24/ -r /app/requirements.txt &&   printf \"Linuxserver.io version: ${VERSION}\\nBuild-date: ${BUILD_DATE}\" > /build_version &&   mv /app/public/index.ejs /app/views/ &&   echo \"**** create symlinks ****\" &&   mkdir -p /app/data/private/attachments &&   /bin/bash -c   'dst=(logs);   src=(logs);   for i in \"${!src[@]}\"; do rm -rf /app/\"${src[i]}\" && ln -s /config/\"${dst[i]}\" /app/\"${src[i]}\"; done'",
+    "dockerfile_lines": [
+     61,
+     79
+    ],
+    "from_base": false,
+    "empty": false
+   },
+   {
+    "index": 11,
+    "digest": "sha256:dd2f3af4ca3b61551a5c97966b0c915e1053ef1869078fa5120ef9e7b53da1e9",
+    "diff_id": "sha256:52a02e3be7c38fd5fd26beba604f9ebc744f82e8401242681eeb773600ed762d",
+    "size": 1620,
+    "uncompressed_size": 2737,
+    "created_by": "COPY root/ /",
+    "dockerfile_lines": [
+     82,
+     82
+    ],
+    "from_base": false,
+    "empty": false
+   }
+  ]
+ },
+ "tests": {
+  "image": "planka",
+  "tag": "v2.3.1-ls8",
+  "enabled": false,
+  "report_url": "https://linuxserver-playground.github.io/site/images/planka/builds/v2.3.1-ls8/",
+  "summary": {
+   "amd64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/test.amd64.tar.gz",
+    "files": {}
+   },
+   "arm64": {
+    "success": true,
+    "passed": 5,
+    "failed": 0,
+    "total": 12,
+    "failed_tests": [],
+    "listening_ports": [],
+    "warnings": 0,
+    "tarball": "https://github.com/linuxserver-playground/docker-planka/releases/download/v2.3.1-ls8/test.arm64.tar.gz",
+    "files": {}
+   }
+  },
+  "reports": {
+   "amd64": {
+    "schema": 1,
+    "image": "planka",
+    "tag": "amd64-a2c4ab3-45477831111",
+    "arch": "amd64",
+    "started": "2026-11-24T20:14:05Z",
+    "finished": "2026-11-24T20:14:11Z",
+    "success": true,
+    "runner": "fdb1c555b83c",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "900 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "900 packages: syft JSON 149727 bytes gzipped, SPDX for the image attestation 1660899 bytes",
+      "seconds": 0.248
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "4194 dirs, 23994 files (331731651 bytes), 1286 symlinks, 255 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.15s, total 0.26s",
+      "seconds": 0.408
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "12 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.348
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.045
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   },
+   "arm64": {
+    "schema": 1,
+    "image": "planka",
+    "tag": "arm64-a2c4ab3-45477831111",
+    "arch": "arm64",
+    "started": "2026-11-24T20:12:39Z",
+    "finished": "2026-11-24T20:12:48Z",
+    "success": true,
+    "runner": "fcf0130b880b",
+    "ci_version": "2.0.0",
+    "engine": "28.0.4",
+    "tests": [
+     {
+      "name": "Container startup",
+      "status": "SKIP",
+      "message": "test.enabled is false in the manifest"
+     },
+     {
+      "name": "Services",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Ports",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Web response",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime log check",
+      "status": "SKIP",
+      "message": "the container wrote no log"
+     },
+     {
+      "name": "Get package info",
+      "status": "PASS",
+      "message": "900 packages"
+     },
+     {
+      "name": "Create SBOM",
+      "status": "PASS",
+      "message": "900 packages: syft JSON 149817 bytes gzipped, SPDX for the image attestation 1661074 bytes",
+      "seconds": 0.3
+     },
+     {
+      "name": "File tree",
+      "status": "PASS",
+      "message": "4194 dirs, 23993 files (343561177 bytes), 1286 symlinks, 255 hardlinks, 0 special, 6 skipped, 0 non-UTF-8 names; walk 0.18s, total 0.31s",
+      "seconds": 0.473
+     },
+     {
+      "name": "Layers",
+      "status": "PASS",
+      "message": "12 layers, 7 from base, compressed sizes from registry",
+      "seconds": 0.548
+     },
+     {
+      "name": "Init graph",
+      "status": "PASS",
+      "message": "19 units, 2 from this image, own units from the repository",
+      "seconds": 0.052
+     },
+     {
+      "name": "Take screenshot",
+      "status": "SKIP",
+      "message": "container was not started"
+     },
+     {
+      "name": "Runtime probe",
+      "status": "SKIP",
+      "message": "container was not started"
+     }
+    ]
+   }
+  }
+ }
+}

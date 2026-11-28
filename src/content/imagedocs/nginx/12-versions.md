@@ -1,0 +1,60 @@
+---
+image: "nginx"
+section: "versions"
+title: "Versions"
+order: 12
+---
+* **2026-07-05:** - Rebase to Alpine 3.24 with PHP 8.5.
+* **2025-07-13:** - Fixed auto-reload functionality.
+* **2025-06-16:** - Rebase to Alpine 3.22 with PHP 8.4. Add [Auto Reload](https://github.com/linuxserver/docker-mods/tree/swag-auto-reload) functionality. Drop PHP bindings for mcrypt as it is no longer maintained.
+* **2024-12-17:** - Rebase to Alpine 3.21.
+* **2024-05-31:** - Rebase to Alpine 3.20. Existing users should update their nginx confs to avoid http2 deprecation warnings.
+* **2024-03-05:** - Rebase to Alpine 3.19 with php 8.3.
+* **2023-05-25:** - Rebase to Alpine 3.18, deprecate armhf.
+* **2023-01-16:** - Remove nchan module because it keeps causing crashes.
+* **2022-12-22:** - Rebase to Alpine 3.17 with PHP 8.1, migrate to s6v3.
+* **2022-08-20:** - Rebasing to alpine 3.15 with php8. Restructure nginx configs ([see changes announcement](https://info.linuxserver.io/issues/2022-08-20-nginx-base)).
+* **2022-05-22:** - Install nginx version from 3.14.
+* **2021-07-01:** - Rebasing to alpine 3.14.
+* **2021-06-24:** - Update default nginx conf folder.
+* **2021-04-12:** - Add php7-gmp and php7-pecl-mailparse.
+* **2021-02-13:** - Remove php7-pecl-imagick (it now installs the full imagemagick with too much crud). Users can install it via [this docker mod](https://github.com/linuxserver/docker-mods/tree/swag-imagemagick).
+* **2021-02-09:** - Rebasing to alpine 3.13. Add nginx mods brotli and dav-ext. Remove nginx mods lua and lua-upstream (due to regression over the last couple of years).
+* **2020-09-08:** - Add php7-xsl.
+* **2020-06-01:** - Rebasing to alpine 3.12.
+* **2020-04-18:** - Fix unwanted shutdown of the container.
+* **2020-03-11:** - Add php7-sodium.
+* **2020-02-18:** - Add geoip2, suppress lua warning.
+* **2019-12-19:** - Rebasing to alpine 3.11.
+* **2019-12-18:** - Add php7-imap and php7-pecl-apcu.
+* **2019-11-13:** - Add php7-pdo_odbc.
+* **2019-10-24:** - Add php7-pecl-imagick.
+* **2019-08-06:** - Add php7-bcmath, ph7-pear, php7-xmlrpc and php7-ftp.
+* **2019-08-02:** - Add php7-ldap.
+* **2019-06-28:** - Rebasing to alpine 3.10.
+* **2019-05-08:** - Remove default.conf when nginx is upgraded in downstream image.
+* **2019-04-30:** - Add php-redis.
+* **2019-03-23:** - Switching to new Base images, shift to arm32v7 tag.
+* **2019-03-02:** - Add php intl and posix modules.
+* **2019-02-28:** - Add php7-opcache, remove memcached service due to issues on aarch64 (let us know if you need to enable it).
+* **2019-02-22:** - Rebasing to alpine 3.9.
+* **2018-11-18:** - Attempt to upgrade packages during build.
+* **2018-09-28:** - Multi-arch image.
+* **2018-08-17:** - Rebase to alpine 3.8, inherit nginx.conf from nginx baseimage.
+* **2018-05-11:** - Add php pgsql support.
+* **2018-04-19:** - Bind memcached to localhost only, add php7-sqlite3.
+* **2018-01-05:** - Rebase to alpine 3.7.
+* **2017-11-08:** - Add php7 soap module.
+* **2017-10-31:** - Add php7 exif and xmlreader modules.
+* **2017-09-30:** - Copy additional root files into image.
+* **2017-09-24:** - Add memcached service.
+* **2017-08-31:** - Add php7-phar.
+* **2017-07-14:** - Enable modules dynamically in nginx.conf.
+* **2017-06-22:** - Add various nginx modules and enable all modules in the default nginx.conf.
+* **2017-06-05:** - Add php7-bz2.
+* **2017-05-25:** - Rebase to alpine 3.6.
+* **2017-04-18:** - Add php7-sockets.
+* **2017-02-27:** - Rebase to alpine 3.5, update to nginx 1.10.2 and php7.
+* **2016-10-14:** - Add version layer information.
+* **2016-09-10:** - Add badges to README.
+* **2015-12-05:** - Intial Release.
